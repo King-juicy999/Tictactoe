@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>😇Angelic Tic Tac Toe🤭</title>
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700;900&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="container">
+        <div id="welcome-screen" class="screen active">
+            <h1 class="title">😇Angelic Tic Tac Toe🤭</h1>
+            <div class="form-container">
+                <input type="text" id="player-name" placeholder="Enter your name..." required>
+                
+                <div class="camera-section">
+                    <div class="camera-status" id="camera-status">
+                        <span class="camera-icon">📹</span>
+                        <span class="camera-text">Camera access required to prevent cheating</span>
+                    </div>
+                    <button id="enable-camera-btn" class="camera-btn">Enable Camera</button>
+                    <div class="camera-preview" id="camera-preview" style="display: none;">
+                        <video id="camera-feed" autoplay muted playsinline></video>
+                        <div class="camera-status-indicator">
+                            <span class="status-dot active"></span>
+                            <span>Camera Active - Live Streaming</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <button id="start-btn" disabled>Enter In Peace</button>
+            </div>
+        </div>
+
+        <div id="game-screen" class="screen">
+            <div class="game-info">
+                <div id="player-info">Player: <span id="display-name"></span></div>
+                <div id="wins-counter">Wins: <span id="wins">0</span></div>
+                <div id="losses-counter">Losses: <span id="losses">0</span></div>
+                <div class="game-camera-status">
+                    <span class="camera-icon">📹</span>
+                    <span id="game-camera-status">Monitoring</span>
+                </div>
+            </div>
+            
+            <div id="message-box" class="message"></div>
+            
+            <div class="game-board">
+                <div class="cell" data-index="0"></div>
+                <div class="cell" data-index="1"></div>
+                <div class="cell" data-index="2"></div>
+                <div class="cell" data-index="3"></div>
+                <div class="cell" data-index="4"></div>
+                <div class="cell" data-index="5"></div>
+                <div class="cell" data-index="6"></div>
+                <div class="cell" data-index="7"></div>
+                <div class="cell" data-index="8"></div>
+            </div>
+
+            <button id="reset-btn">Play Again... if you dare</button>
+        </div>
+
+        <div id="tsukuyomi-overlay" class="hidden">
+            <img src="madara.webp" alt="Mangekyō Sharingan" class="sharingan">
+            <div id="tsukuyomi-countdown" class="countdown"></div>
+        </div>
+
+        <div id="demon-overlay" class="hidden">
+            <img src="demon.avif" alt="Demon" class="demon-image">
+        </div>
+
+        <div id="disco-overlay" class="hidden">
+            <div class="disco-lights"></div>
+        </div>
+        
+        <!-- Snowfall effect container for first loss -->
+        <div id="snowfall-container" class="hidden"></div>
+
+        <div id="ai-mock-overlay" class="hidden">
+            <div class="ai-mock-container">
+                <div class="ai-mock-message" id="ai-mock-text"></div>
+                <div class="ai-mock-buttons" id="ai-mock-buttons">
+                    <button class="mock-btn mock-yes" id="mock-yes-btn">YES</button>
+                    <button class="mock-btn mock-no" id="mock-no-btn">NO</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <audio id="click-sound" src="button.mp3"></audio>
+    <audio id="win-sound" src="evil laugh.wav"></audio>
+    <audio id="lose-sound" src="scream.wav"></audio>
+    <audio id="tsukuyomi-sound" src="dark-ambience.wav"></audio>
+    <audio id="bg-music" src="Romantic Rap Instrumental - _Story_ _ Love Rap Beat(MP3_320K).mp3" loop></audio>
+    <audio id="mock-music" src="blackbear - hot girl bummer [Low Budget Video](MP3_128K)_[cut_13sec].mp3"></audio>
+    <audio id="mock-music-2sec" src="blackbear - hot girl bummer [Low Budget Video](MP3_128K)_[cut_2sec].mp3"></audio>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="server/behavior_analyzer.js"></script>
+    <script src="server/ai_learning.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>

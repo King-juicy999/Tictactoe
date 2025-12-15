@@ -1,0 +1,2619 @@
+// Global error handler to prevent crashes
+window.addEventListener('error', (event) => {
+    console.error('Global error caught:', event.error, event.filename, event.lineno);
+    // Don't let errors crash the game
+    try {
+        const msgBox = document.getElementById('message');
+        if (msgBox && gameState && gameState.gameActive) {
+            msgBox.textContent = "An error occurred, but the game continues...";
+            setTimeout(() => {
+                if (msgBox && gameState && gameState.gameActive) {
+                    msgBox.textContent = "Game continues...";
+                }
+            }, 2000);
+        }
+    } catch (e) {
+        console.error('Error in error handler:', e);
+    }
+    return true; // Prevent default error handling
+});
+
+window.addEventListener('unhandledrejection', (event) => {
+    console.error('Unhandled promise rejection:', event.reason);
+    event.preventDefault(); // Prevent default handling
+});
+
+// Game state
+const gameState = {
+    currentPlayer: 'X',
+    board: Array(9).fill(''),
+    losses: 0, // Player losses
+    aiLosses: 0, // AI losses (when player wins)
+    wins: 0,
+    playerName: '',
+    isKingWilliam: false,
+    gameActive: true,
+    inTsukuyomi: false,
+    tsukuyomiBoard: Array(9).fill(''),
+    pendingCheatMoveIndex: null,
+    cameraEnabled: false,
+    cameraStream: null,
+    behaviorAnalyzer: null,
+    currentGameId: null,
+    aiLearningSystem: null,
+    playerMoveHistory: [], // Track player moves for pattern learning
+    inInteractiveMode: false, // Track if in AI mock interactive mode
+    playerGoesFirst: true, // Track who goes first - alternates each game
+    playerJustWon: false, // Track if player won last game - AI will think longer
+    aiThinkingDelay: 500 // Base AI thinking delay (increased after player wins)
+};
+
+// Network helpers to report to server (if running)
+async function safePost(url, body) {
+    try {
+        await fetch(url, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(body)
+        });
+    } catch (e) { /* ignore if server not running */ }
+}
+
+function reportSessionStart() {
+    if (!gameState.playerName) return;
+    safePost('/api/session/start', {
+        name: gameState.playerName
+    });
+}
+
+function reportLoss() {
+    if (!gameState.playerName) return;
+    safePost('/api/loss', { name: gameState.playerName });
+}
+
+function reportWin() {
+    if (!gameState.playerName) return;
+    safePost('/api/win', { name: gameState.playerName });
+}
+
+// DOM Elements
+const welcomeScreen = document.getElementById('welcome-screen');
+const gameScreen = document.getElementById('game-screen');
+const playerNameInput = document.getElementById('player-name');
+const startBtn = document.getElementById('start-btn');
+const cells = document.querySelectorAll('.cell');
+const messageBox = document.getElementById('message-box');
+const displayName = document.getElementById('display-name');
+const lossesDisplay = document.getElementById('losses');
+const resetBtn = document.getElementById('reset-btn');
+const clickSound = document.getElementById('click-sound');
+const winSound = document.getElementById('win-sound');
+const loseSound = document.getElementById('lose-sound');
+const tsukuyomiOverlay = document.getElementById('tsukuyomi-overlay');
+const tsukuyomiSound = document.getElementById('tsukuyomi-sound');
+const demonOverlay = document.getElementById('demon-overlay');
+const bgMusic = document.getElementById('bg-music');
+const mockMusic = document.getElementById('mock-music');
+const mockMusic2Sec = document.getElementById('mock-music-2sec');
+const discoOverlay = document.getElementById('disco-overlay');
+const aiMockOverlay = document.getElementById('ai-mock-overlay');
+const aiMockText = document.getElementById('ai-mock-text');
+const mockYesBtn = document.getElementById('mock-yes-btn');
+const mockNoBtn = document.getElementById('mock-no-btn');
+
+// Camera elements
+const enableCameraBtn = document.getElementById('enable-camera-btn');
+const cameraPreview = document.getElementById('camera-preview');
+const cameraFeed = document.getElementById('camera-feed');
+const cameraStatus = document.getElementById('camera-status');
+const gameCameraStatus = document.getElementById('game-camera-status');
+
+// Track wins for learning - AI learns from each win but doesn't prevent future wins
+let playerWinCount = 0;
+
+// Camera functionality
+async function requestCameraAccess() {
+    try {
+        const stream = await navigator.mediaDevices.getUserMedia({ 
+            video: { 
+                width: { ideal: 640 },
+                height: { ideal: 480 },
+                facingMode: 'user'
+            },
+            audio: false 
+        });
+        
+        gameState.cameraStream = stream;
+        gameState.cameraEnabled = true;
+        
+        // Display camera feed
+        cameraFeed.srcObject = stream;
+        cameraPreview.style.display = 'block';
+        enableCameraBtn.textContent = 'Camera Enabled';
+        enableCameraBtn.disabled = true;
+        enableCameraBtn.style.background = '#4CAF50';
+        
+        // Update status
+        cameraStatus.innerHTML = '<span class="camera-icon">📹</span><span class="camera-text">Camera access granted - Anti-cheat active</span>';
+        
+        // Enable start button
+        updateStartButtonState();
+        
+        // Notify admin of camera status (only when player name is set)
+        if (gameState.playerName) {
+            try { 
+                if (socket) socket.emit('camera-status', { 
+                    name: gameState.playerName, 
+                    connected: true 
+                }); 
+            } catch(_) {}
+        }
+        
+        return true;
+    } catch (error) {
+        console.error('Camera access denied:', error);
+        cameraStatus.innerHTML = '<span class="camera-icon">❌</span><span class="camera-text">Camera access denied - Required to prevent cheating</span>';
+        enableCameraBtn.textContent = 'Retry Camera Access';
+        gameState.cameraEnabled = false;
+        updateStartButtonState();
+        
+        // Notify admin of camera status
+        try { 
+            if (socket) socket.emit('camera-status', { 
+                name: gameState.playerName, 
+                connected: false 
+            }); 
+        } catch(_) {}
+        
+        return false;
+    }
+}
+
+function updateStartButtonState() {
+    const nameFilled = playerNameInput.value.trim();
+    const cameraReady = gameState.cameraEnabled;
+    
+    if (nameFilled && cameraReady) {
+        startBtn.disabled = false;
+        startBtn.textContent = 'Enter In Peace';
+    } else {
+        startBtn.disabled = true;
+        if (!cameraReady) {
+            startBtn.textContent = 'Enable Camera First';
+        } else {
+            startBtn.textContent = 'Enter Your Name';
+        }
+    }
+}
+
+function stopCamera() {
+    if (gameState.cameraStream) {
+        gameState.cameraStream.getTracks().forEach(track => track.stop());
+        gameState.cameraStream = null;
+        gameState.cameraEnabled = false;
+        
+        // Stop camera streaming
+        stopCameraStreaming();
+        
+        // Notify admin of camera status
+        try { 
+            if (socket) socket.emit('camera-status', { 
+                name: gameState.playerName, 
+                connected: false 
+            }); 
+        } catch(_) {}
+    }
+}
+
+// Camera event listeners
+enableCameraBtn.addEventListener('click', requestCameraAccess);
+
+// Initialize button state on page load
+updateStartButtonState();
+
+// Monitor camera status during gameplay
+function monitorCameraStatus() {
+    if (gameState.cameraStream) {
+        const tracks = gameState.cameraStream.getTracks();
+        const activeTracks = tracks.filter(track => track.readyState === 'live');
+        
+        if (activeTracks.length === 0) {
+            gameCameraStatus.textContent = 'Camera Disconnected';
+            gameCameraStatus.style.color = '#ff4444';
+            gameState.cameraEnabled = false;
+            
+            // Notify admin of camera disconnection
+            try { 
+                if (socket) socket.emit('camera-status', { 
+                    name: gameState.playerName, 
+                    connected: false 
+                }); 
+            } catch(_) {}
+            
+            // Could add additional logic here to pause game or show warning
+        } else {
+            gameCameraStatus.textContent = 'Monitoring';
+            gameCameraStatus.style.color = '#4CAF50';
+        }
+    }
+}
+
+// Check camera status every 5 seconds during gameplay
+setInterval(monitorCameraStatus, 5000);
+
+// WebRTC Video Streaming (Like WhatsApp Video Call)
+let peerConnection = null;
+let mediaRecorder = null;
+let recordedChunks = [];
+let recordingStartTime = null;
+
+// STUN/TURN servers configuration
+// Using multiple STUN servers for reliability
+// For production, add TURN servers via environment variables or config
+const rtcConfiguration = {
+    iceServers: [
+        // Google's free STUN servers (primary)
+        { urls: 'stun:stun.l.google.com:19302' },
+        { urls: 'stun:stun1.l.google.com:19302' },
+        { urls: 'stun:stun2.l.google.com:19302' },
+        { urls: 'stun:stun3.l.google.com:19302' },
+        { urls: 'stun:stun4.l.google.com:19302' },
+        // Additional free STUN servers (backup)
+        { urls: 'stun:stun.stunprotocol.org:3478' },
+        // For production, uncomment and configure TURN servers:
+        // TURN servers are needed for users behind strict firewalls/NAT
+        // Example: { urls: 'turn:your-turn-server.com:3478', username: 'user', credential: 'pass' }
+    ],
+    iceCandidatePoolSize: 10, // Pre-gather ICE candidates for faster connection
+    bundlePolicy: 'max-bundle', // Bundle RTP and RTCP
+    rtcpMuxPolicy: 'require' // Require RTCP muxing
+};
+
+function startCameraStreaming() {
+    if (!gameState.cameraStream || !socket) {
+        console.log('Cannot start camera streaming:', { 
+            hasStream: !!gameState.cameraStream, 
+            hasSocket: !!socket 
+        });
+        return;
+    }
+    
+    console.log('Starting WebRTC camera streaming for:', gameState.playerName);
+    
+    // Create WebRTC peer connection
+    peerConnection = new RTCPeerConnection(rtcConfiguration);
+    
+    // Add camera stream tracks to peer connection
+    gameState.cameraStream.getTracks().forEach(track => {
+        peerConnection.addTrack(track, gameState.cameraStream);
+        console.log('Added track:', track.kind, track.id);
+    });
+    
+    // Handle ICE candidates (for NAT traversal)
+    peerConnection.onicecandidate = (event) => {
+        if (event.candidate) {
+            socket.emit('webrtc-ice-candidate', {
+                candidate: event.candidate,
+                playerName: gameState.playerName
+            });
+        }
+    };
+    
+    // Handle connection state changes
+    peerConnection.onconnectionstatechange = () => {
+        console.log('WebRTC connection state:', peerConnection.connectionState);
+        if (peerConnection.connectionState === 'failed') {
+            console.error('WebRTC connection failed. Attempting to restart...');
+            // Could implement reconnection logic here
+        }
+    };
+    
+    // Create and send offer to admin
+    console.log('Creating WebRTC offer...');
+    peerConnection.createOffer({
+        offerToReceiveAudio: false,
+        offerToReceiveVideo: false  // Player is sending, not receiving
+    })
+    .then(offer => {
+        console.log('Offer created:', offer.type);
+        return peerConnection.setLocalDescription(offer);
+    })
+    .then(() => {
+        console.log('Local description set, sending offer to server...');
+        // Send offer to server for forwarding to admin
+        socket.emit('webrtc-offer', {
+            offer: peerConnection.localDescription,
+            playerName: gameState.playerName
+        });
+        console.log('WebRTC offer sent to server for player:', gameState.playerName);
+    })
+    .catch(error => {
+        console.error('Error creating WebRTC offer:', error);
+                });
+                
+    // Handle answer from admin
+    socket.on('webrtc-answer', async (data) => {
+        if (peerConnection && data.answer) {
+            try {
+                await peerConnection.setRemoteDescription(new RTCSessionDescription(data.answer));
+                console.log('WebRTC answer received and set');
+            } catch (error) {
+                console.error('Error setting remote description:', error);
+            }
+        }
+    });
+    
+    // Handle ICE candidates from admin
+    socket.on('webrtc-ice-candidate', async (data) => {
+        if (peerConnection && data.candidate) {
+            try {
+                await peerConnection.addIceCandidate(new RTCIceCandidate(data.candidate));
+            } catch (error) {
+                console.error('Error adding ICE candidate:', error);
+        }
+        }
+    });
+    
+    // Start video recording for storage/archive
+    startVideoRecording();
+}
+
+function startVideoRecording() {
+    if (!gameState.cameraStream) return;
+    
+    try {
+        recordedChunks = [];
+        recordingStartTime = Date.now();
+        
+        // Create MediaRecorder for video recording
+        mediaRecorder = new MediaRecorder(gameState.cameraStream, {
+            mimeType: 'video/webm;codecs=vp9'
+        });
+        
+        mediaRecorder.ondataavailable = (event) => {
+            if (event.data.size > 0) {
+                recordedChunks.push(event.data);
+            }
+        };
+        
+        mediaRecorder.onstop = () => {
+            const blob = new Blob(recordedChunks, { type: 'video/webm' });
+            const videoUrl = URL.createObjectURL(blob);
+            
+            // Send video to server for storage
+            sendVideoToServer(blob);
+        };
+        
+        mediaRecorder.start(1000); // Record in 1-second chunks
+        console.log('Video recording started');
+        
+    } catch (error) {
+        console.error('Error starting video recording:', error);
+    }
+}
+
+function stopVideoRecording() {
+    if (mediaRecorder && mediaRecorder.state === 'recording') {
+        mediaRecorder.stop();
+        console.log('Video recording stopped');
+    }
+}
+
+function sendVideoToServer(blob) {
+    const formData = new FormData();
+    formData.append('video', blob, `${gameState.playerName}_${recordingStartTime}.webm`);
+    formData.append('playerName', gameState.playerName);
+    formData.append('startTime', recordingStartTime);
+    formData.append('endTime', Date.now());
+    
+    fetch('/api/upload-video', {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        console.log('Video uploaded successfully:', data);
+    })
+    .catch(error => {
+        console.error('Error uploading video:', error);
+    });
+}
+
+function stopCameraStreaming() {
+    // Close WebRTC connection
+    if (peerConnection) {
+        peerConnection.getSenders().forEach(sender => {
+            if (sender.track) {
+                sender.track.stop();
+            }
+        });
+        peerConnection.close();
+        peerConnection = null;
+        console.log('WebRTC connection closed');
+    }
+    
+    // Stop video recording
+    stopVideoRecording();
+}
+
+// Socket.IO: receive admin controls
+let socket;
+try {
+    // Will fail if server not running; guarded by try/catch pattern as with fetch
+    // eslint-disable-next-line no-undef
+    socket = io();
+    socket.on('control', (payload) => {
+        if (!payload || !payload.type) return;
+        // If control targets a specific player name and it is not us, ignore
+        if (payload.target && payload.target !== gameState.playerName) return;
+        switch (payload.type) {
+            case 'difficulty':
+                if (payload.value === 'easy') {
+                    gameState.isKingWilliam = true;
+                    messageBox.textContent = "As the Lord commands: the weak shall taste victory.";
+                } else if (payload.value === 'hard') {
+                    gameState.isKingWilliam = false;
+                    messageBox.textContent = "As the Lord commands: despair deepens.";
+                }
+                break;
+            case 'jumpscare':
+                loseSound.play();
+                const cfg = typeof payload.value === 'object' && payload.value ? payload.value : { variant: 'both', duration: 3000, cheat: true };
+                performJumpscare(cfg);
+                break;
+            case 'move-board':
+                const boardEl = document.querySelector('.game-board');
+                boardEl.classList.remove('move-left','move-right','move-up','move-down','move-center','shake-board');
+                if (payload.value === 'shake') {
+                    boardEl.classList.add('shake-board');
+                    setTimeout(() => boardEl.classList.remove('shake-board'), 550);
+                } else if (payload.value === 'left') {
+                    boardEl.classList.add('move-left');
+                } else if (payload.value === 'right') {
+                    boardEl.classList.add('move-right');
+                } else if (payload.value === 'up') {
+                    boardEl.classList.add('move-up');
+                } else if (payload.value === 'down') {
+                    boardEl.classList.add('move-down');
+                } else if (payload.value === 'center') {
+                    boardEl.classList.add('move-center');
+                }
+                break;
+            case 'shuffle-tiles':
+                shuffleBoardContents();
+                break;
+            case 'pause':
+                gameState.gameActive = false;
+                messageBox.textContent = "Paused by Lord.";
+                break;
+            case 'resume':
+                gameState.gameActive = true;
+                messageBox.textContent = "As the Lord commands.";
+                break;
+            case 'hint':
+                const hintIdx = chooseHardAIMove();
+                if (hintIdx !== null && hintIdx !== undefined) {
+                    messageBox.textContent = `Hint: try ${hintIdx+1}`;
+                }
+                break;
+        }
+    });
+} catch (_) {}
+
+function emitBoardUpdate() {
+    try {
+        if (!socket) return;
+        socket.emit('board-update', {
+            name: gameState.playerName,
+            board: [...gameState.board],
+            losses: gameState.losses,
+            playerLosses: gameState.losses,
+            aiLosses: gameState.aiLosses,
+            wins: (gameState.wins || 0),
+            active: gameState.gameActive && !gameState.inInteractiveMode, // Game is active only if not in interactive mode
+            cameraEnabled: gameState.cameraEnabled,
+            inInteractiveMode: gameState.inInteractiveMode, // Let admin know about interactive mode
+            playerGoesFirst: gameState.playerGoesFirst,
+            timestamp: Date.now()
+        });
+    } catch(_) {}
+}
+
+function shuffleBoardContents() {
+    // Preserve counts to maintain a valid game state and current turn
+    const xCount = gameState.board.filter(v => v === 'X').length;
+    const oPositions = new Set();
+    for (let i = 0; i < 9; i++) if (gameState.board[i] === 'O') oPositions.add(i);
+
+    const perm = [0,1,2,3,4,5,6,7,8];
+    if (gameState.inTsukuyomi) {
+        // In Tsukuyomi keep existing behavior (pure shuffle)
+        const flat = [...gameState.tsukuyomiBoard];
+        const shuffled = Array(9).fill('');
+        const order = perm.sort(() => Math.random() - 0.5);
+        for (let i = 0; i < 9; i++) shuffled[i] = flat[order[i]];
+        gameState.tsukuyomiBoard = shuffled;
+        for (let i = 0; i < 9; i++) cells[i].textContent = gameState.tsukuyomiBoard[i];
+    } else {
+        // Only shuffle X positions while keeping all O positions intact
+        const candidateSpots = perm.filter(i => !oPositions.has(i));
+        let bestBoard = null;
+        let bestScore = -Infinity;
+
+        // Try multiple randomized placements of Xs and pick the one that favors AI without immediate wins
+        for (let attempt = 0; attempt < 40; attempt++) {
+            // Random subset of size xCount from candidateSpots
+            const shuffledSpots = [...candidateSpots].sort(() => Math.random() - 0.5);
+            const xSpots = shuffledSpots.slice(0, xCount);
+            const trial = Array(9).fill('');
+            // Place Os fixed
+            oPositions.forEach(idx => { trial[idx] = 'O'; });
+            // Place Xs in chosen spots
+            xSpots.forEach(idx => { trial[idx] = 'X'; });
+
+            // Skip terminal or blatantly winning states to keep subtlety
+            const prevBoard = gameState.board;
+            gameState.board = trial;
+            const xWins = checkWin('X');
+            const oWins = checkWin('O');
+            const threatsO = countImmediateThreatsFor('O');
+            const threatsX = countImmediateThreatsFor('X');
+            // Prefer more threats for O and fewer for X; avoid immediate win states
+            const centerBonus = (trial[4] === '' ? 1 : 0);
+            const score = (oWins ? -100 : 0) + (xWins ? -100 : 0) + (threatsO * 10) - (threatsX * 8) + centerBonus + Math.random();
+            gameState.board = prevBoard;
+
+            if (!xWins && !oWins && score > bestScore) {
+                bestScore = score;
+                bestBoard = trial;
+            }
+        }
+
+        // Fallback: if we couldn't find a non-terminal arrangement, just keep X-only random placement
+        if (!bestBoard) {
+            const shuffledSpots = [...candidateSpots].sort(() => Math.random() - 0.5);
+            const xSpots = shuffledSpots.slice(0, xCount);
+            bestBoard = Array(9).fill('');
+            oPositions.forEach(idx => { bestBoard[idx] = 'O'; });
+            xSpots.forEach(idx => { bestBoard[idx] = 'X'; });
+        }
+
+        gameState.board = bestBoard;
+        for (let i = 0; i < 9; i++) cells[i].textContent = gameState.board[i];
+        gameState.gameActive = true;
+    }
+}
+
+function performJumpscare({ variant = 'both', duration = 3000, cheat = true } = {}) {
+    const overlays = [];
+    const make = (cls) => { const el = document.createElement('div'); el.className = cls; document.body.appendChild(el); overlays.push(el); };
+    if (variant === 'left') make('blackout-overlay');
+    else if (variant === 'right') make('blackout-overlay right');
+    else if (variant === 'full') make('blackout-overlay full');
+    else if (variant === 'demon') { demonOverlay.classList.remove('hidden'); }
+    else { make('blackout-overlay'); make('blackout-overlay right'); }
+
+    // Notify admin spectate that a jumpscare started
+    try { if (socket) socket.emit('client-jumpscare', { name: gameState.playerName, variant, duration, cheat, ts: Date.now() }); } catch(_) {}
+
+    if (cheat) {
+        // First try a minimal, subtle tile flip to strengthen AI; if none, plan the next move
+        const changed = performSubtleTileCheat();
+        if (!changed) {
+            try { ensureAIWinningPath(); } catch (_) {}
+        } else if (checkWin('O')) {
+            // Schedule a harmless normal move so the regular win path/loss count triggers naturally
+            const emptySpot = gameState.board.findIndex(v => v === '');
+            if (emptySpot !== -1) gameState.pendingCheatMoveIndex = emptySpot;
+        }
+    }
+
+    setTimeout(() => {
+        overlays.forEach(el => el.remove());
+        if (variant === 'demon') demonOverlay.classList.add('hidden');
+        // Notify end (admin can rely on duration, but this helps if needed)
+        try { if (socket) socket.emit('client-jumpscare-end', { name: gameState.playerName, ts: Date.now() }); } catch(_) {}
+    }, Math.max(1000, duration));
+}
+
+function performSubtleTileCheat() {
+    // Change at most one tile from X -> O in a strategic spot; keep it minimal
+    // Baseline threats
+    const baselineThreats = countImmediateThreatsFor('O');
+    let bestIdx = null;
+    let bestScore = -Infinity;
+
+    for (let i = 0; i < 9; i++) {
+        if (gameState.board[i] !== 'X') continue;
+        const prev = gameState.board[i];
+        gameState.board[i] = 'O';
+        const immediateWin = checkWin('O');
+        const threats = countImmediateThreatsFor('O');
+        // Simple heuristic: prioritize immediate win flips, else maximize threats over baseline
+        const score = (immediateWin ? 100 : 0) + (threats - baselineThreats);
+        gameState.board[i] = prev;
+        if (score > bestScore) { bestScore = score; bestIdx = i; }
+    }
+
+    if (bestIdx !== null && bestScore > 0) {
+        // Apply the subtle change
+        gameState.board[bestIdx] = 'O';
+        cells[bestIdx].textContent = 'O';
+        return true;
+    }
+    return false;
+}
+
+function ensureAIWinningPath() {
+    // Compute, but do not place, the strongest AI move to be used on its next turn
+    let idx = getImmediateWinMoveFor('O');
+    if (idx === null) idx = findForkMoveFor('O');
+    if (idx === null) idx = chooseHardAIMove();
+    if (idx !== null && idx !== undefined) {
+        gameState.pendingCheatMoveIndex = idx;
+    }
+}
+
+// Add Shift (Left or Right) hold detection: hold for 2 seconds to enable mode
+let shiftHoldTimeoutId = null;
+const activeShiftKeys = new Set();
+window.addEventListener('keydown', (event) => {
+    if (event.code === 'ShiftLeft' || event.code === 'ShiftRight') {
+        activeShiftKeys.add(event.code);
+        if (shiftHoldTimeoutId === null) {
+            shiftHoldTimeoutId = setTimeout(() => {
+                gameState.isKingWilliam = true;
+            }, 2000);
+        }
+    }
+});
+window.addEventListener('keyup', (event) => {
+    if (event.code === 'ShiftLeft' || event.code === 'ShiftRight') {
+        activeShiftKeys.delete(event.code);
+        if (activeShiftKeys.size === 0 && shiftHoldTimeoutId !== null) {
+            clearTimeout(shiftHoldTimeoutId);
+            shiftHoldTimeoutId = null;
+        }
+    }
+});
+
+// Winning combinations
+const winningCombos = [
+    [0, 1, 2], [3, 4, 5], [6, 7, 8],
+    [0, 3, 6], [1, 4, 7], [2, 5, 8],
+    [0, 4, 8], [2, 4, 6]
+];
+
+// Taunting messages
+const tauntMessages = [
+    "Are you even trying?",
+    "You play worse than a chicken!",
+    "Pathetic! Is that all you've got?",
+    "My grandmother plays better than you!",
+    "Is this your first time playing?",
+    "You're making this too easy!",
+    "I told your dad I fucked you",
+    "Even a toaster has better strategy.",
+    "Your moves are a cry for help.",
+    "I've seen rocks think faster than this.",
+    "Was that a move or a misclick?",
+    "You couldn't win with a map and a compass.",
+    "This is bullying at this point.",
+    "Are you lagging in real life?",
+    "I'm winning with my eyes closed.",
+    "I could beat you with an empty board.",
+    "Try using your brain this time.",
+    "You're feeding me free wins.",
+    "Even random clicks would do better.",
+    "If there was a worst move, you'd find it.",
+    "Your strategy is just vibes.",
+    "Keep going, I need the practice.",
+    "I'm embarrassed for you.",
+    "You make losing look effortless.",
+    "Blink twice if you need help.",
+    "This isn't a challenge, it's a tutorial.",
+    "You couldn't beat a wet paper bag.",
+    "Is your mouse asleep?",
+    "You're speedrunning failure.",
+    "Even luck gave up on you."
+];
+
+// Initialize game
+startBtn.addEventListener('click', () => {
+    gameState.playerName = playerNameInput.value.trim();
+
+    if (!gameState.playerName) {
+        messageBox.textContent = "Enter your name to proceed...";
+        return;
+    }
+
+    if (!gameState.cameraEnabled) {
+        messageBox.textContent = "Camera access is required to prevent cheating!";
+        return;
+    }
+
+    displayName.textContent = gameState.playerName;
+    welcomeScreen.classList.remove('active');
+    gameScreen.classList.add('active');
+
+    messageBox.textContent = "Foolish mortal, prepare to suffer!";
+    
+    // Start background music
+    if (bgMusic) {
+        bgMusic.volume = 0.3; // Set volume to 30%
+        bgMusic.play().catch(e => console.log('Could not play background music:', e));
+    }
+    
+    // Initialize behavior analyzer
+    if (typeof BehaviorAnalyzer !== 'undefined') {
+        gameState.behaviorAnalyzer = new BehaviorAnalyzer(gameState.playerName);
+        gameState.currentGameId = `game_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+        gameState.behaviorAnalyzer.startGame(gameState.currentGameId);
+    }
+    
+    // Initialize AI learning system
+    if (typeof AILearningSystem !== 'undefined') {
+        if (!gameState.aiLearningSystem) {
+            gameState.aiLearningSystem = new AILearningSystem();
+        }
+        gameState.aiLearningSystem.currentGameId = gameState.currentGameId;
+        gameState.playerMoveHistory = []; // Reset for new game
+    }
+
+    // Start camera streaming for admin if camera is enabled
+    if (gameState.cameraEnabled && gameState.cameraStream) {
+        console.log('Starting camera streaming for game...');
+        startCameraStreaming();
+        
+        // Notify admin of camera status
+        try { 
+            if (socket) socket.emit('camera-status', { 
+                name: gameState.playerName, 
+                connected: true 
+            }); 
+        } catch(_) {}
+        
+        // Test socket connection with a simple message
+        try {
+            if (socket) {
+                socket.emit('test-message', { 
+                    name: gameState.playerName, 
+                    message: 'Camera streaming started',
+                    timestamp: Date.now()
+                });
+                console.log('Test message sent to admin');
+            }
+        } catch(_) {}
+    } else {
+        console.log('Cannot start camera streaming:', {
+            cameraEnabled: gameState.cameraEnabled,
+            hasStream: !!gameState.cameraStream
+        });
+    }
+
+    reportSessionStart();
+    try { if (socket) socket.emit('player-start', { name: gameState.playerName }); } catch(_) {}
+    emitBoardUpdate();
+});
+
+// Update start button state when input fields change
+playerNameInput.addEventListener('input', updateStartButtonState);
+
+// Handle cell click
+cells.forEach(cell => {
+    cell.addEventListener('click', () => handleCellClick(cell));
+});
+
+function handleCellClick(cell) {
+    try {
+        if (!gameState.gameActive || gameState.inInteractiveMode) return; // Pause during interactive mode
+    
+    const index = cell.dataset.index;
+    if (gameState.board[index] !== '') return;
+
+    clickSound.play();
+    gameState.board[index] = 'X';
+    cell.textContent = 'X';
+
+    // Track player move for AI learning
+    gameState.playerMoveHistory.push(index);
+    
+    // Check for learned patterns BEFORE checking for win - block proactively (FASTER: check after 1 move)
+    if (gameState.aiLearningSystem && gameState.playerMoveHistory.length >= 1 && !gameState.isKingWilliam) {
+        const patternCheck = gameState.aiLearningSystem.shouldBlockPattern(
+            gameState.board,
+            gameState.playerMoveHistory
+        );
+        
+        if (patternCheck.shouldBlock && patternCheck.nextExpectedMove !== null) {
+            // AI recognizes this pattern - block it BEFORE player can win
+            const blockMove = patternCheck.nextExpectedMove;
+            if (gameState.board[blockMove] === '' && blockMove !== index) {
+                // Block the pattern by placing O in the expected position
+                gameState.board[blockMove] = 'O';
+                cells[blockMove].textContent = 'O';
+                clickSound.play();
+                if (gameState.aiLearningSystem.blockedWinPatterns) {
+                    gameState.aiLearningSystem.blockedWinPatterns.add(patternCheck.pattern);
+                    gameState.aiLearningSystem.markPatternBlocked(patternCheck.pattern);
+                }
+                messageBox.textContent = "The AI is adapting...";
+                emitBoardUpdate();
+                
+                // Check if AI won after blocking
+                if (checkWin('O')) {
+                    gameState.losses++;
+                    lossesDisplay.textContent = gameState.losses;
+                    if (gameState.aiLearningSystem && gameState.currentGameId) {
+                        gameState.aiLearningSystem.recordGameResult('win', gameState.playerName);
+                        if (socket) {
+                            socket.emit('ai-stats-update', gameState.aiLearningSystem.getStats());
+                        }
+                    }
+                    endGame("AI Wins!\nThe AI blocked your pattern!");
+                    emitBoardUpdate();
+                    return;
+                }
+                
+                // Continue game after blocking - AI made its move
+                if (!gameState.board.includes('')) {
+                    endGame("It's a draw!");
+                    return;
+                }
+                return; // Don't let player continue with this pattern
+            }
+        }
+    }
+    
+    // Record move for behavior analysis
+    if (gameState.behaviorAnalyzer) {
+        const isWinningMove = checkWin('X');
+        const moveType = gameState.behaviorAnalyzer.classifyMoveType(
+            index, 
+            gameState.board, 
+            isWinningMove
+        );
+        gameState.behaviorAnalyzer.recordMove(index, gameState.board, moveType);
+    }
+
+    // Check for win after pattern blocking
+    if (checkWin('X') && !gameState.isKingWilliam) {
+        // If no pattern blocking happened, allow normal win blocking only during distractions
+        if (document.querySelector('.blackout-overlay') || gameState.pendingCheatMoveIndex !== null) {
+            // During distraction, AI can cheat subtly
+            const winningLine = winningCombos.find(combo => combo.every(i => gameState.board[i] === 'X'));
+            if (winningLine) {
+                const flipIdx = winningLine[Math.floor(Math.random() * winningLine.length)];
+                gameState.board[flipIdx] = 'O';
+                cells[flipIdx].textContent = 'O';
+            }
+        }
+        // Otherwise, allow the win - AI will learn from it
+    }
+    
+    if (checkWin('X')) {
+        // Player wins - allow it and let AI learn from the pattern
+        gameState.wins = (gameState.wins || 0) + 1;
+        playerWinCount++;
+        gameState.playerJustWon = true; // Mark that player won - AI will think longer next game
+        gameState.aiThinkingDelay = 1500; // Increase thinking delay to 1.5 seconds
+        
+        // Update wins display
+        const winsDisplay = document.getElementById('wins');
+        if (winsDisplay) {
+            winsDisplay.textContent = gameState.wins;
+        }
+        
+        // Play win sound
+        try {
+            winSound.play();
+        } catch (e) {
+            console.error('Error playing win sound:', e);
+        }
+        
+        // Report win to server
+        try {
+            reportWin();
+        } catch (e) {
+            console.error('Error reporting win:', e);
+        }
+        
+        // End game (this will handle AI learning)
+        try {
+            endGame("You win... for now.");
+        } catch (e) {
+            console.error('Error in endGame:', e);
+            // Fallback: just disable game
+            gameState.gameActive = false;
+            messageBox.textContent = "You win... for now.";
+            resetBtn.style.display = 'block';
+        }
+        
+        emitBoardUpdate();
+        return;
+    }
+
+    if (!gameState.board.includes('')) {
+        // Draw - record for both player and AI and learn from the game
+        if (gameState.aiLearningSystem && gameState.currentGameId) {
+            // AI learns from every game, including draws
+            if (gameState.playerMoveHistory && gameState.playerMoveHistory.length > 0) {
+                // Learn player's move pattern even from draws
+                gameState.aiLearningSystem.learnWinPattern(
+                    gameState.playerName,
+                    gameState.playerMoveHistory,
+                    [...gameState.board] // Include full board state for context
+                );
+            }
+            
+            gameState.aiLearningSystem.recordGameResult('draw', gameState.playerName);
+            
+            // Send AI stats update to server
+            if (socket) {
+                socket.emit('ai-stats-update', gameState.aiLearningSystem.getStats());
+            }
+        }
+        endGame("It's a draw!");
+        return;
+    }
+
+    // AI thinking delay - longer if player just won
+    const thinkingDelay = gameState.aiThinkingDelay || 500;
+    messageBox.textContent = "AI is thinking...";
+    setTimeout(() => {
+        makeAIMove();
+        // Reset thinking delay after move (but keep it slightly longer if player won)
+        if (gameState.playerJustWon) {
+            gameState.aiThinkingDelay = 800; // Keep it at 800ms for a few moves
+        }
+    }, thinkingDelay);
+    emitBoardUpdate();
+    } catch (e) {
+        console.error('Critical error in handleCellClick:', e);
+        // Try to recover
+        if (messageBox) {
+            messageBox.textContent = "An error occurred. Please try again.";
+        }
+    }
+}
+
+const originalHandleCellClick = handleCellClick;
+handleCellClick = function(cell) {
+    if (gameState.inInteractiveMode) return; // Pause during interactive mode
+    if (gameState.inTsukuyomi) {
+        const index = cell.dataset.index;
+        if (gameState.tsukuyomiBoard[index] !== '') return;
+
+        clickSound.play();
+        gameState.tsukuyomiBoard[index] = 'X';
+        cell.textContent = 'X';
+
+        if (checkWinTsukuyomi('X')) {
+            setTimeout(() => {
+                winSound.play();
+                messageBox.textContent = "Foolish little brother... You never stood a chance.";
+                gameState.losses++;
+                lossesDisplay.textContent = gameState.losses;
+                reportLoss();
+                
+                setTimeout(() => {
+                    gameState.tsukuyomiBoard = Array(9).fill('');
+                    gameState.gameActive = true;
+                    cells.forEach(cell => cell.textContent = '');
+                }, 2000);
+            }, 500);
+            return;
+        }
+
+        setTimeout(() => {
+            const availableSpots = gameState.tsukuyomiBoard
+                .map((cell, i) => cell === '' ? i : null)
+                .filter(i => i !== null);
+            
+            if (availableSpots.length > 0) {
+                const aiIndex = availableSpots[Math.floor(Math.random() * availableSpots.length)];
+                gameState.tsukuyomiBoard[aiIndex] = 'O';
+                cells[aiIndex].textContent = 'O';
+                clickSound.play();
+            }
+        }, 500);
+    } else {
+        originalHandleCellClick(cell);
+    }
+};
+
+function makeAIMove() {
+    try {
+        if (!gameState.gameActive || gameState.inInteractiveMode) return; // Don't make moves during interactive mode
+
+    let index;
+    // If a subtle pending move was prepared during a blackout, use it if still valid
+    if (gameState.pendingCheatMoveIndex !== null && gameState.board[gameState.pendingCheatMoveIndex] === '') {
+        index = gameState.pendingCheatMoveIndex;
+        gameState.pendingCheatMoveIndex = null;
+    } else if (gameState.isKingWilliam) {
+        const emptyIndices = gameState.board.map((cell, i) => cell === '' ? i : null).filter(i => i !== null);
+        index = emptyIndices[Math.floor(Math.random() * emptyIndices.length)];
+    } else {
+        index = chooseHardAIMove();
+    }
+
+    gameState.board[index] = 'O';
+    cells[index].textContent = 'O';
+    clickSound.play();
+    emitBoardUpdate();
+
+    if (checkWin('O')) {
+        // AI wins - record it properly
+        gameState.losses++;
+        lossesDisplay.textContent = gameState.losses;
+        
+        // Record AI win in learning system
+        if (gameState.aiLearningSystem && gameState.currentGameId) {
+            gameState.aiLearningSystem.recordGameResult('win', gameState.playerName);
+            
+            // Send AI stats update to server
+            if (socket) {
+                socket.emit('ai-stats-update', gameState.aiLearningSystem.getStats());
+            }
+        }
+        
+        // 3rd loss - snowfall effect with taunts and player images
+        if (gameState.losses === 3 && !gameState.inTsukuyomi && !gameState.inInteractiveMode) {
+            // For 3rd loss - show snowfall effect
+            try {
+                startSnowfallEffect();
+                endGame("AI Wins!\nLoss #3... " + gameState.playerName + "! Three losses and counting!");
+                setTimeout(() => {
+                    stopSnowfallEffect();
+                    gameState.board = Array(9).fill('');
+                    gameState.gameActive = true;
+                    gameState.playerMoveHistory = [];
+                    cells.forEach(cell => cell.textContent = '');
+                    resetBtn.style.display = 'none';
+                    messageBox.textContent = tauntMessages[Math.floor(Math.random() * tauntMessages.length)];
+                    
+                    // Start new game
+                    if (gameState.behaviorAnalyzer) {
+                        gameState.currentGameId = `game_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+                        gameState.behaviorAnalyzer.startGame(gameState.currentGameId);
+                    }
+                    if (gameState.aiLearningSystem) {
+                        gameState.aiLearningSystem.currentGameId = gameState.currentGameId;
+                    }
+                    
+                    // If AI goes first, make AI move immediately
+                    if (!gameState.playerGoesFirst) {
+                        messageBox.textContent = "AI is thinking...";
+                        setTimeout(() => {
+                            messageBox.textContent = "AI goes first this round!";
+                            makeAIMove();
+                        }, 800);
+                    }
+                }, 5000); // Stop snowfall after 5 seconds
+            } catch (e) {
+                console.error('Error in snowfall effect:', e);
+                // Fallback to normal loss handling
+                endGame("AI Wins!\nThe AI has outplayed you this round, " + gameState.playerName + "!");
+                setTimeout(() => {
+                    gameState.board = Array(9).fill('');
+                    gameState.gameActive = true;
+                    gameState.playerMoveHistory = [];
+                    cells.forEach(cell => cell.textContent = '');
+                    resetBtn.style.display = 'none';
+                    messageBox.textContent = tauntMessages[Math.floor(Math.random() * tauntMessages.length)];
+                    
+                    if (gameState.behaviorAnalyzer) {
+                        gameState.currentGameId = `game_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+                        gameState.behaviorAnalyzer.startGame(gameState.currentGameId);
+                    }
+                    if (gameState.aiLearningSystem) {
+                        gameState.aiLearningSystem.currentGameId = gameState.currentGameId;
+                    }
+                    
+                    if (!gameState.playerGoesFirst) {
+                        messageBox.textContent = "AI is thinking...";
+                        setTimeout(() => {
+                            messageBox.textContent = "AI goes first this round!";
+                            makeAIMove();
+                        }, 800);
+                    }
+                }, 1000);
+            }
+        } else if (gameState.losses === 7 && !gameState.inTsukuyomi && !gameState.inInteractiveMode) {
+            // At 7 losses, capture video frame and use as background with teasing
+            activateSeventhLossTeasing();
+        } else if (gameState.losses % 6 === 0 && !gameState.inTsukuyomi && !gameState.inInteractiveMode) {
+            // At 6 losses, trigger enhanced interactive sequence with demon jumpscare
+            activateEnhancedInteractiveAIMock();
+        } else if (gameState.losses > 3 && gameState.losses % 3 === 0 && !gameState.inInteractiveMode) {
+            // At every 3 losses after the 3rd (6, 9, 12, etc.), trigger interactive AI mock sequence
+            // 6+ losses - use enhanced version with demon jumpscare
+            activateEnhancedInteractiveAIMock();
+        } else {
+            // For quick losses, still record but continue game
+            endGame("AI Wins!\nThe AI has outplayed you this round, " + gameState.playerName + "!");
+            setTimeout(() => {
+                // Turn alternation already happened in endGame()
+                
+                gameState.board = Array(9).fill('');
+                gameState.gameActive = true;
+                gameState.playerMoveHistory = [];
+                cells.forEach(cell => cell.textContent = '');
+                resetBtn.style.display = 'none';
+                messageBox.textContent = tauntMessages[Math.floor(Math.random() * tauntMessages.length)];
+                
+                // Start new game
+                if (gameState.behaviorAnalyzer) {
+                    gameState.currentGameId = `game_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+                    gameState.behaviorAnalyzer.startGame(gameState.currentGameId);
+                }
+                if (gameState.aiLearningSystem) {
+                    gameState.aiLearningSystem.currentGameId = gameState.currentGameId;
+                }
+                
+                // If AI goes first, make AI move immediately
+                if (!gameState.playerGoesFirst) {
+                    messageBox.textContent = "AI is thinking...";
+                    setTimeout(() => {
+                        messageBox.textContent = "AI goes first this round!";
+                        makeAIMove();
+                    }, 800);
+                }
+            }, 1000);
+        }
+        reportLoss();
+        emitBoardUpdate();
+        return;
+    }
+
+    if (!gameState.isKingWilliam) {
+        messageBox.textContent = tauntMessages[Math.floor(Math.random() * tauntMessages.length)];
+    }
+    } catch (e) {
+        console.error('Critical error in makeAIMove:', e);
+        // Try to recover - just disable game
+        gameState.gameActive = false;
+        if (messageBox) {
+            messageBox.textContent = "An error occurred. Please refresh the page.";
+        }
+    }
+}
+
+function chooseHardAIMove() {
+    try {
+        // ADAPTIVE AI: Gets smarter when losing, learns from patterns
+        const moveOptions = [];
+    
+    // Calculate AI's current performance to adjust difficulty
+    let aiWinRate = 0;
+    let adaptationLevel = 0;
+    if (gameState.aiLearningSystem) {
+        const stats = gameState.aiLearningSystem.getStats();
+        aiWinRate = stats.winRate || 0;
+        adaptationLevel = stats.adaptationLevel || 0;
+    }
+    
+    // Adaptive difficulty: Reduce randomness when AI is losing
+    // If win rate < 50%, AI gets more aggressive and less random
+    const isLosing = aiWinRate < 50;
+    const baseChaosFactor = isLosing ? 0.02 : 0.05; // 2-5% chaos when losing, 5% when winning
+    const randomMoveChance = isLosing ? 0.01 : 0.03; // 1-3% random moves
+    
+    // CHAOS MODE: Very rare random move (only when winning comfortably)
+    if (!isLosing && Math.random() < randomMoveChance) {
+        const emptyCells = gameState.board.map((cell, i) => cell === '' ? i : null).filter(i => i !== null);
+        if (emptyCells.length > 0) {
+            const randomIndex = emptyCells[Math.floor(Math.random() * emptyCells.length)];
+            console.log('AI CHAOS MODE: Random move selected (rare)');
+            return randomIndex;
+        }
+    }
+    
+    // 0) PRIORITY: Block learned win patterns (highly reliable when losing)
+    if (gameState.aiLearningSystem && gameState.playerMoveHistory.length > 0) {
+        const patternCheck = gameState.aiLearningSystem.shouldBlockPattern(
+            gameState.board, 
+            gameState.playerMoveHistory
+        );
+        
+        if (patternCheck.shouldBlock && patternCheck.nextExpectedMove !== null) {
+            const blockMove = patternCheck.nextExpectedMove;
+            if (gameState.board[blockMove] === '') {
+                // 98% chance to block when losing, 95% when winning (AI learns and adapts!)
+                const blockChance = isLosing ? 0.98 : 0.95;
+                if (Math.random() < blockChance) {
+                    moveOptions.push({
+                        index: blockMove,
+                        priority: isLosing ? 1100 : 100, // Higher priority when losing
+                        type: 'pattern_block',
+                        reasoning: `Blocking learned win pattern: ${patternCheck.pattern} (Adaptation: ${adaptationLevel}%)`
+                    });
+                    if (gameState.aiLearningSystem.blockedWinPatterns) {
+                        gameState.aiLearningSystem.blockedWinPatterns.add(patternCheck.pattern);
+                    }
+                    console.log(`AI blocking pattern: ${patternCheck.pattern} (Win Rate: ${aiWinRate.toFixed(1)}%)`);
+                }
+            }
+        }
+        
+        // Check for partial pattern matches (proactive blocking)
+        for (const [patternKey, patternData] of Object.entries(gameState.aiLearningSystem.learnedPatterns)) {
+            const patternMoves = patternKey.split('-').map(Number);
+            if (gameState.playerMoveHistory.length >= 2 && 
+                gameState.playerMoveHistory.length < patternMoves.length) {
+                const matches = gameState.playerMoveHistory.every((move, idx) => 
+                    idx < patternMoves.length && move === patternMoves[idx]
+                );
+                if (matches) {
+                    const nextMove = patternMoves[gameState.playerMoveHistory.length];
+                    if (nextMove !== undefined && gameState.board[nextMove] === '') {
+                        // Higher chance to block early when losing
+                        const earlyBlockChance = isLosing ? 0.95 : 0.90;
+                        if (Math.random() < earlyBlockChance) {
+                            moveOptions.push({
+                                index: nextMove,
+                                priority: isLosing ? 1050 : 95,
+                                type: 'pattern_block',
+                                reasoning: `Preventing known pattern early: ${patternKey}`
+                            });
+                        }
+                    }
+                }
+            }
+        }
+    }
+    
+    // 1) Immediate win (always take it, but collect all winning moves)
+    const winMoves = [];
+    for (let i = 0; i < 9; i++) {
+        if (gameState.board[i] === '') {
+            gameState.board[i] = 'O';
+            if (checkWin('O')) {
+                winMoves.push(i);
+            }
+            gameState.board[i] = '';
+        }
+    }
+    if (winMoves.length > 0) {
+        moveOptions.push({
+            index: winMoves[Math.floor(Math.random() * winMoves.length)],
+            priority: 1000,
+            type: 'win',
+            reasoning: 'Immediate winning move'
+        });
+    }
+
+    // 2) Block opponent immediate win (collect all blocking moves)
+    const blockMoves = [];
+    for (let i = 0; i < 9; i++) {
+        if (gameState.board[i] === '') {
+            gameState.board[i] = 'X';
+            if (checkWin('X')) {
+                blockMoves.push(i);
+            }
+            gameState.board[i] = '';
+        }
+    }
+    if (blockMoves.length > 0) {
+        // Sometimes block in unexpected position if multiple blocks exist
+        const selectedBlock = blockMoves[Math.floor(Math.random() * blockMoves.length)];
+        moveOptions.push({
+            index: selectedBlock,
+            priority: 900,
+            type: 'block',
+            reasoning: 'Blocking opponent win'
+        });
+    }
+
+    // 3) Create forks (collect all fork moves)
+    const forkMoves = [];
+    for (let i = 0; i < 9; i++) {
+        if (gameState.board[i] === '') {
+            gameState.board[i] = 'O';
+            const threats = countImmediateThreatsFor('O');
+            if (threats >= 2) {
+                forkMoves.push(i);
+            }
+            gameState.board[i] = '';
+        }
+    }
+    if (forkMoves.length > 0) {
+        moveOptions.push({
+            index: forkMoves[Math.floor(Math.random() * forkMoves.length)],
+            priority: 800,
+            type: 'fork',
+            reasoning: 'Creating fork (multiple threats)'
+        });
+    }
+
+    // 4) Block opponent's fork (collect all fork blocks)
+    const forkBlockMoves = [];
+    for (let i = 0; i < 9; i++) {
+        if (gameState.board[i] === '') {
+            gameState.board[i] = 'X';
+            const threats = countImmediateThreatsFor('X');
+            if (threats >= 2) {
+                forkBlockMoves.push(i);
+            }
+            gameState.board[i] = '';
+        }
+    }
+    if (forkBlockMoves.length > 0) {
+        moveOptions.push({
+            index: forkBlockMoves[Math.floor(Math.random() * forkBlockMoves.length)],
+            priority: 700,
+            type: 'block_fork',
+            reasoning: 'Blocking opponent fork'
+        });
+    }
+
+    // 5) Strategic positions (center, corners, sides) - collect all options
+    const strategicMoves = [];
+    if (gameState.board[4] === '') {
+        strategicMoves.push({ index: 4, priority: 600, type: 'center', reasoning: 'Taking center' });
+    }
+    
+    const corners = [0, 2, 6, 8].filter(i => gameState.board[i] === '');
+    if (corners.length > 0) {
+    const oppCorner = getOppositeCornerIndex();
+        if (oppCorner !== null && corners.includes(oppCorner)) {
+            strategicMoves.push({ index: oppCorner, priority: 550, type: 'corner', reasoning: 'Opposite corner' });
+        } else {
+            strategicMoves.push({ 
+                index: corners[Math.floor(Math.random() * corners.length)], 
+                priority: 500, 
+                type: 'corner', 
+                reasoning: 'Empty corner' 
+            });
+        }
+    }
+    
+    const sides = [1, 3, 5, 7].filter(i => gameState.board[i] === '');
+    if (sides.length > 0) {
+        strategicMoves.push({ 
+            index: sides[Math.floor(Math.random() * sides.length)], 
+            priority: 400, 
+            type: 'side', 
+            reasoning: 'Empty side' 
+        });
+    }
+    
+    strategicMoves.forEach(move => moveOptions.push(move));
+
+    // 6) Fallback: Get all valid minimax moves and ALWAYS pick the best one
+    const emptyIndices = gameState.board.map((cell, i) => cell === '' ? i : null).filter(i => i !== null);
+    if (emptyIndices.length > 0) {
+        const minimaxScores = [];
+        emptyIndices.forEach(idx => {
+            gameState.board[idx] = 'O';
+            const score = minimax(gameState.board, 0, false);
+            gameState.board[idx] = '';
+            minimaxScores.push({ index: idx, score: score });
+        });
+        
+        // Sort by score and ALWAYS pick the best move (no randomness)
+        minimaxScores.sort((a, b) => b.score - a.score);
+        const bestMove = minimaxScores[0];
+        
+        moveOptions.push({
+            index: bestMove.index,
+            priority: 300,
+            type: 'minimax',
+            reasoning: 'Minimax optimal move (best move selected)'
+        });
+    }
+
+    // Select move with weighted randomness - higher priority moves more likely, but not guaranteed
+    if (moveOptions.length === 0) {
+        // Ultimate fallback - random empty cell
+        const empty = gameState.board.map((cell, i) => cell === '' ? i : null).filter(i => i !== null);
+        return empty[Math.floor(Math.random() * empty.length)];
+    }
+
+    // Sort by priority
+    moveOptions.sort((a, b) => b.priority - a.priority);
+    
+    // ALWAYS pick the best move (highest priority) - no randomness
+    const selected = moveOptions[0];
+    const moveIndex = selected.index;
+    const moveType = selected.type || 'unpredictable';
+    const reasoning = selected.reasoning || 'Unpredictable move selection';
+
+    // Record AI move
+    if (gameState.aiLearningSystem && moveIndex !== null) {
+        gameState.aiLearningSystem.recordAIMove(moveIndex, gameState.board, moveType, reasoning);
+        
+        // Send to server
+        if (socket) {
+            socket.emit('ai-move', {
+                moveIndex: moveIndex,
+                boardState: [...gameState.board],
+                moveType: moveType,
+                reasoning: reasoning,
+                gameId: gameState.currentGameId
+            });
+        }
+    }
+    
+    return moveIndex;
+    } catch (e) {
+        console.error('Critical error in chooseHardAIMove:', e);
+        // Fallback to random move
+        const empty = gameState.board.map((cell, i) => cell === '' ? i : null).filter(i => i !== null);
+        if (empty.length > 0) {
+            return empty[Math.floor(Math.random() * empty.length)];
+        }
+        return 0; // Ultimate fallback
+    }
+}
+
+function getImmediateWinMoveFor(player) {
+    for (let i = 0; i < 9; i++) {
+        if (gameState.board[i] === '') {
+            gameState.board[i] = player;
+            const isWin = checkWin(player);
+            gameState.board[i] = '';
+            if (isWin) return i;
+        }
+    }
+    return null;
+}
+
+function findForkMoveFor(player) {
+    for (let i = 0; i < 9; i++) {
+        if (gameState.board[i] !== '') continue;
+        gameState.board[i] = player;
+        const threats = countImmediateThreatsFor(player);
+        gameState.board[i] = '';
+        if (threats >= 2) return i;
+    }
+    return null;
+}
+
+// Enhanced fork creation - creates multiple forks when possible
+function createMultipleForks(player) {
+    const forks = [];
+    
+    for (let i = 0; i < 9; i++) {
+        if (gameState.board[i] !== '') continue;
+        
+        gameState.board[i] = player;
+        const threats = countImmediateThreatsFor(player);
+        gameState.board[i] = '';
+        
+        if (threats >= 2) {
+            forks.push({ index: i, threatCount: threats });
+        }
+    }
+    
+    // Return fork with most threats, or null if none
+    if (forks.length > 0) {
+        forks.sort((a, b) => b.threatCount - a.threatCount);
+        return forks[0].index;
+    }
+    
+    return null;
+}
+
+function countImmediateThreatsFor(player) {
+    // Count how many lines are one move away for the player
+    let count = 0;
+    for (const combo of winningCombos) {
+        const values = combo.map(idx => gameState.board[idx]);
+        const playerCount = values.filter(v => v === player).length;
+        const emptyCount = values.filter(v => v === '').length;
+        if (playerCount === 2 && emptyCount === 1) count++;
+    }
+    return count;
+}
+
+function getOppositeCornerIndex() {
+    const pairs = [ [0, 8], [2, 6] ];
+    for (const [a, b] of pairs) {
+        if (gameState.board[a] === 'X' && gameState.board[b] === '') return b;
+        if (gameState.board[b] === 'X' && gameState.board[a] === '') return a;
+    }
+    return null;
+}
+
+function getEmptyCornerIndex() {
+    const corners = [0, 2, 6, 8];
+    for (const i of corners) if (gameState.board[i] === '') return i;
+    return null;
+}
+
+function getEmptySideIndex() {
+    const sides = [1, 3, 5, 7];
+    for (const i of sides) if (gameState.board[i] === '') return i;
+    return null;
+}
+
+function getBestMove() {
+    let bestScore = -Infinity;
+    let bestMove;
+
+    const indices = getOrderedEmptyIndices(gameState.board);
+    for (let i = 0; i < indices.length; i++) {
+        const idx = indices[i];
+        gameState.board[idx] = 'O';
+            let score = minimax(gameState.board, 0, false);
+        gameState.board[idx] = '';
+            if (score > bestScore) {
+                bestScore = score;
+            bestMove = idx;
+        }
+    }
+    return bestMove;
+}
+
+function getOrderedEmptyIndices(board) {
+    const order = [4, 0, 2, 6, 8, 1, 3, 5, 7]; // center, corners, edges
+    return order.filter(i => board[i] === '');
+}
+
+function minimax(board, depth, isMaximizing) {
+    if (checkWin('O')) return 10 - depth; // prefer quicker wins
+    if (checkWin('X')) return depth - 10; // delay losses
+    if (!board.includes('')) return 0;
+
+    if (isMaximizing) {
+        let bestScore = -Infinity;
+        const indices = getOrderedEmptyIndices(board);
+        for (let i = 0; i < indices.length; i++) {
+            const iIdx = indices[i];
+            board[iIdx] = 'O';
+                let score = minimax(board, depth + 1, false);
+            board[iIdx] = '';
+                bestScore = Math.max(score, bestScore);
+        }
+        return bestScore;
+    } else {
+        let bestScore = Infinity;
+        const indices = getOrderedEmptyIndices(board);
+        for (let i = 0; i < indices.length; i++) {
+            const iIdx = indices[i];
+            board[iIdx] = 'X';
+                let score = minimax(board, depth + 1, true);
+            board[iIdx] = '';
+                bestScore = Math.min(score, bestScore);
+        }
+        return bestScore;
+    }
+}
+
+function checkWin(player) {
+    return winningCombos.some(combination => {
+        return combination.every(index => {
+            return gameState.board[index] === player;
+        });
+    });
+}
+
+function activateTsukuyomi() {
+    gameState.inTsukuyomi = true;
+    tsukuyomiSound.play();
+    tsukuyomiOverlay.classList.remove('hidden');
+    document.body.classList.add('tsukuyomi-active');
+    const countdownDisplay = document.getElementById('tsukuyomi-countdown');
+    let timeLeft = 10;
+
+    countdownDisplay.textContent = timeLeft;
+
+    const sharinganInterval = setInterval(() => {
+        timeLeft--;
+        countdownDisplay.textContent = timeLeft;
+
+        if (timeLeft <= 0) {
+            clearInterval(sharinganInterval);
+            tsukuyomiOverlay.classList.add('hidden');
+            messageBox.textContent = "Your mind is weak... Let me show you true power.";
+            
+            let gameTimeLeft = 30;
+            messageBox.textContent = `Time left in Tsukuyomi: ${gameTimeLeft}`;
+            
+            const gameInterval = setInterval(() => {
+                gameTimeLeft--;
+                messageBox.textContent = `Time left in Tsukuyomi: ${gameTimeLeft}`;
+
+                if (gameTimeLeft <= 0) {
+                    clearInterval(gameInterval);
+                    gameState.inTsukuyomi = false;
+                    document.body.classList.remove('tsukuyomi-active');
+                    messageBox.textContent = "The Tsukuyomi has ended... but your suffering continues!";
+                    gameState.board = Array(9).fill('');
+                    gameState.tsukuyomiBoard = Array(9).fill('');
+                    cells.forEach(cell => cell.textContent = '');
+                    gameState.gameActive = true;
+                }
+            }, 1000);
+        }
+    }, 1000);
+
+    setTimeout(() => {
+        tsukuyomiOverlay.classList.add('hidden');
+        messageBox.textContent = "Your mind is weak... Let me show you true power.";
+        gameState.board = Array(9).fill('');
+        gameState.tsukuyomiBoard = Array(9).fill('');
+        cells.forEach(cell => cell.textContent = '');
+        gameState.gameActive = true;
+    }, 10000);
+}
+
+function checkWinTsukuyomi(player) {
+    return winningCombos.some(combination => {
+        return combination.every(index => {
+            return gameState.tsukuyomiBoard[index] === player;
+        });
+    });
+}
+
+// Interactive AI Mock Sequence
+function activateInteractiveAIMock() {
+    gameState.inInteractiveMode = true;
+    gameState.gameActive = false;
+    
+    // Notify admin about interactive mode
+    if (socket) {
+        socket.emit('interactive-mode-start', {
+            name: gameState.playerName,
+            losses: gameState.losses,
+            timestamp: Date.now()
+        });
+    }
+    
+    // Stop background music
+    if (bgMusic) {
+        bgMusic.pause();
+        bgMusic.currentTime = 0;
+    }
+    
+    // Show wait message
+    endGame("Wait... now the AI will be interactive here. Tell the person wait.");
+    
+    // Send update to admin
+    emitBoardUpdate();
+    
+    setTimeout(() => {
+        // Show improved disco lights for first 3 losses
+        discoOverlay.classList.remove('hidden');
+        discoOverlay.classList.add('enhanced-rgb');
+        
+        // Make game boxes dance with insults
+        startBoxDanceWithInsults();
+        
+        // Play mock music
+        if (mockMusic) {
+            mockMusic.play().catch(e => console.log('Could not play mock music:', e));
+            
+            // Create audio context for box dance sync
+            try {
+                const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                const analyser = audioContext.createAnalyser();
+                const source = audioContext.createMediaElementSource(mockMusic);
+                source.connect(analyser);
+                analyser.connect(audioContext.destination);
+                
+                analyser.fftSize = 256;
+                const bufferLength = analyser.frequencyBinCount;
+                const dataArray = new Uint8Array(bufferLength);
+                
+                // Sync box dance with music (with cleanup)
+                let syncDanceActive = true;
+                function syncDance() {
+                    if (!syncDanceActive || mockMusic.paused || mockMusic.ended) {
+                        syncDanceActive = false;
+                        return;
+                    }
+                    
+                    try {
+                        analyser.getByteFrequencyData(dataArray);
+                        const maxFreq = Math.max(...Array.from(dataArray));
+                        const intensity = maxFreq / 255;
+                        
+                        // Update dance intensity based on music
+                        cells.forEach((cell, index) => {
+                            const cellIntensity = intensity * (0.8 + (index % 3) * 0.1);
+                            if (cell.classList.contains('dancing')) {
+                                cell.style.transform = `translateY(${-20 * cellIntensity}px) rotate(${cellIntensity * 10}deg) scale(${1 + cellIntensity * 0.3})`;
+                            }
+                        });
+                        
+                        if (syncDanceActive) {
+                            requestAnimationFrame(syncDance);
+                        }
+                    } catch (e) {
+                        console.error('Error in syncDance:', e);
+                        syncDanceActive = false;
+                    }
+                }
+                
+                syncDance();
+                
+                // Cleanup after music ends
+                mockMusic.addEventListener('ended', () => {
+                    syncDanceActive = false;
+                });
+            } catch (e) {
+                console.log('Audio context not available for dance:', e);
+            }
+        }
+        
+        // Wait for song to finish (13 seconds as per filename)
+        setTimeout(() => {
+            // Stop box dance
+            stopBoxDance();
+            
+            // Hide disco lights
+            discoOverlay.classList.add('hidden');
+            discoOverlay.classList.remove('enhanced-rgb');
+            
+            // Show AI mock overlay
+            aiMockOverlay.classList.remove('hidden');
+            
+            // Mock the player and ask if they want to continue
+            const mockMessages = [
+                `Well, well, well... ${gameState.playerName}, you've lost 3 times already!`,
+                `You really love getting beaten, don't you?`,
+                `I'm starting to think you enjoy this...`
+            ];
+            
+            aiMockText.textContent = mockMessages[Math.floor(Math.random() * mockMessages.length)] + "\n\nDo you want to continue?";
+            
+            // Show buttons with animation
+            setTimeout(() => {
+                document.getElementById('ai-mock-buttons').style.opacity = '1';
+                document.getElementById('ai-mock-buttons').style.transform = 'scale(1)';
+            }, 500);
+            
+        }, 13000); // 13 seconds for the song
+    }, 2000);
+}
+
+// Snowfall effect with taunt messages and player images (for first 3 losses)
+let snowfallInterval = null;
+let snowfallElements = [];
+let playerImageDataUrl = null;
+
+// Capture player image from camera feed
+function capturePlayerImage() {
+    try {
+        const videoElement = cameraFeed;
+        if (!videoElement) {
+            console.warn('Camera feed element not found');
+            return null;
+        }
+        
+        // Check if video is ready
+        if (!videoElement.videoWidth || !videoElement.videoHeight || videoElement.videoWidth === 0 || videoElement.videoHeight === 0) {
+            console.warn('Video not ready for capture');
+            return null;
+        }
+        
+        const canvas = document.createElement('canvas');
+        const ctx = canvas.getContext('2d');
+        if (!ctx) {
+            console.error('Could not get canvas context');
+            return null;
+        }
+        
+        canvas.width = videoElement.videoWidth;
+        canvas.height = videoElement.videoHeight;
+        
+        try {
+            ctx.drawImage(videoElement, 0, 0, canvas.width, canvas.height);
+        } catch (drawError) {
+            console.error('Error drawing video to canvas:', drawError);
+            return null;
+        }
+        
+        // Convert to data URL (small size for performance)
+        try {
+            return canvas.toDataURL('image/jpeg', 0.7);
+        } catch (dataError) {
+            console.error('Error converting canvas to data URL:', dataError);
+            return null;
+        }
+    } catch (e) {
+        console.error('Error capturing player image:', e);
+        return null;
+    }
+}
+
+function startSnowfallEffect() {
+    try {
+        const container = document.getElementById('snowfall-container');
+        if (!container) {
+            console.error('Snowfall container not found');
+            return;
+        }
+        
+        // Stop any existing snowfall effect first
+        stopSnowfallEffect();
+        
+        // Capture fresh player image each time (with error handling)
+        if (gameState.cameraEnabled) {
+            try {
+                playerImageDataUrl = capturePlayerImage();
+            } catch (e) {
+                console.error('Error capturing image for snowfall:', e);
+                playerImageDataUrl = null; // Continue without images if capture fails
+            }
+        }
+        
+        container.classList.remove('hidden');
+        container.innerHTML = '';
+        snowfallElements = [];
+    } catch (e) {
+        console.error('Error starting snowfall effect:', e);
+        return;
+    }
+    
+    const tauntMessages = [
+        "FUCK U",
+        "TRASH",
+        "LOSER",
+        "NOOB",
+        "GARBAGE",
+        "WEAK",
+        "FAIL",
+        "PATHETIC",
+        "LAME",
+        "EZ",
+        "GET REKT",
+        "CRINGE",
+        "SAD",
+        "LOL",
+        "ROFL"
+    ];
+    
+    // Create snowfall particles (text or image)
+    function createSnowflake() {
+        try {
+            const snowflake = document.createElement('div');
+            snowflake.className = 'snowflake';
+            
+            // 50% chance to show player image, 50% chance to show taunt message
+            const showImage = playerImageDataUrl && Math.random() < 0.5;
+            
+            if (showImage) {
+                try {
+                    // Create image element
+                    const img = document.createElement('img');
+                    img.src = playerImageDataUrl;
+                    img.style.width = (Math.random() * 30 + 40) + 'px'; // 40-70px
+                    img.style.height = 'auto';
+                    img.style.borderRadius = '50%';
+                    img.style.border = '2px solid #ff0000';
+                    img.style.boxShadow = '0 0 10px rgba(255, 0, 0, 0.8)';
+                    img.style.objectFit = 'cover';
+                    img.onerror = () => {
+                        // If image fails to load, remove it and show text instead
+                        img.remove();
+                        const message = tauntMessages[Math.floor(Math.random() * tauntMessages.length)];
+                        snowflake.textContent = message;
+                        snowflake.style.fontSize = (Math.random() * 10 + 14) + 'px';
+                    };
+                    snowflake.appendChild(img);
+                    
+                    // Also add a taunt message below the image
+                    const message = document.createElement('div');
+                    message.textContent = tauntMessages[Math.floor(Math.random() * tauntMessages.length)];
+                    message.style.fontSize = (Math.random() * 6 + 10) + 'px'; // 10-16px
+                    message.style.color = '#ff0000';
+                    message.style.fontWeight = 'bold';
+                    message.style.textShadow = '1px 1px 2px #000';
+                    message.style.marginTop = '5px';
+                    snowflake.appendChild(message);
+                } catch (imgError) {
+                    console.error('Error creating image snowflake:', imgError);
+                    // Fallback to text
+                    const message = tauntMessages[Math.floor(Math.random() * tauntMessages.length)];
+                    snowflake.textContent = message;
+                    snowflake.style.fontSize = (Math.random() * 10 + 14) + 'px';
+                }
+            } else {
+                // Just text message
+                const message = tauntMessages[Math.floor(Math.random() * tauntMessages.length)];
+                snowflake.textContent = message;
+                snowflake.style.fontSize = (Math.random() * 10 + 14) + 'px'; // 14-24px
+            }
+            
+            // Random starting position
+            snowflake.style.left = Math.random() * 100 + '%';
+            snowflake.style.animationDuration = (Math.random() * 3 + 2) + 's'; // 2-5 seconds
+            snowflake.style.animationDelay = Math.random() * 2 + 's';
+            snowflake.style.opacity = Math.random() * 0.5 + 0.5; // 0.5-1.0
+            
+            if (container && container.parentNode) {
+                container.appendChild(snowflake);
+                snowfallElements.push(snowflake);
+                
+                // Remove after animation
+                setTimeout(() => {
+                    try {
+                        if (snowflake && snowflake.parentNode) {
+                            snowflake.remove();
+                        }
+                        const index = snowfallElements.indexOf(snowflake);
+                        if (index > -1) {
+                            snowfallElements.splice(index, 1);
+                        }
+                    } catch (e) {
+                        console.error('Error removing snowflake:', e);
+                    }
+                }, 7000);
+            }
+        } catch (e) {
+            console.error('Error creating snowflake:', e);
+        }
+    }
+    
+    // Create snowflakes periodically
+    try {
+        snowfallInterval = setInterval(() => {
+            try {
+                if (snowfallElements.length < 30 && container && container.parentNode) { // Limit to 30 snowflakes
+                    createSnowflake();
+                }
+            } catch (e) {
+                console.error('Error in snowfall interval:', e);
+                // Stop interval on error
+                if (snowfallInterval) {
+                    clearInterval(snowfallInterval);
+                    snowfallInterval = null;
+                }
+            }
+        }, 200); // Create new snowflake every 200ms
+        
+        // Stop after 5 seconds
+        setTimeout(() => {
+            try {
+                stopSnowfallEffect();
+            } catch (e) {
+                console.error('Error stopping snowfall:', e);
+            }
+        }, 5000);
+    } catch (e) {
+        console.error('Error setting up snowfall interval:', e);
+        stopSnowfallEffect();
+    }
+}
+
+function stopSnowfallEffect() {
+    try {
+        if (snowfallInterval) {
+            clearInterval(snowfallInterval);
+            snowfallInterval = null;
+        }
+        
+        // Remove all snowflakes safely
+        snowfallElements.forEach(snowflake => {
+            try {
+                if (snowflake && snowflake.parentNode) {
+                    snowflake.remove();
+                }
+            } catch (e) {
+                console.error('Error removing snowflake:', e);
+            }
+        });
+        snowfallElements = [];
+        
+        const container = document.getElementById('snowfall-container');
+        if (container) {
+            container.classList.add('hidden');
+            container.innerHTML = ''; // Clear container
+        }
+    } catch (e) {
+        console.error('Error stopping snowfall effect:', e);
+    }
+}
+
+// Box dance with insults for first 3 losses
+function startBoxDanceWithInsults() {
+    const insults = [
+        "LOSER!",
+        "TRASH!",
+        "WEAK!",
+        "FAIL!",
+        "NOOB!",
+        "EZ!",
+        "GARBAGE!",
+        "PATHETIC!",
+        "LAME!"
+    ];
+    
+    cells.forEach((cell, index) => {
+        cell.classList.add('dancing');
+        cell.style.animationDelay = `${index * 0.1}s`;
+        cell.style.position = 'relative';
+        
+        // Add insult text that appears and disappears
+        const insult = insults[index % insults.length];
+        const insultElement = document.createElement('div');
+        insultElement.className = 'box-insult';
+        insultElement.textContent = insult;
+        insultElement.style.animationDelay = `${index * 0.15}s`;
+        cell.appendChild(insultElement);
+    });
+}
+
+function stopBoxDance() {
+    cells.forEach(cell => {
+        cell.classList.remove('dancing');
+        cell.style.transform = '';
+        cell.style.animationDelay = '';
+        cell.style.position = '';
+        const insult = cell.querySelector('.box-insult');
+        if (insult) {
+            insult.remove();
+        }
+    });
+}
+
+// Enhanced Interactive AI Mock Sequence (for 6+ losses)
+function activateEnhancedInteractiveAIMock() {
+    gameState.inInteractiveMode = true;
+    gameState.gameActive = false;
+    
+    // Notify admin about enhanced interactive mode
+    if (socket) {
+        socket.emit('interactive-mode-start', {
+            name: gameState.playerName,
+            losses: gameState.losses,
+            enhanced: true,
+            timestamp: Date.now()
+        });
+    }
+    
+    // Stop background music
+    if (bgMusic) {
+        bgMusic.pause();
+        bgMusic.currentTime = 0;
+    }
+    
+    // Show wait message
+    endGame("Wait... now the AI will be interactive here. Tell the person wait.");
+    
+    // Send update to admin
+    emitBoardUpdate();
+    
+    // First show demon jumpscare
+    demonOverlay.classList.remove('hidden');
+    loseSound.play();
+    
+    setTimeout(() => {
+        demonOverlay.classList.add('hidden');
+        
+        // Show visualizer overlay (bigger, follows music)
+        discoOverlay.classList.remove('hidden');
+        discoOverlay.classList.add('visualizer-mode');
+        
+        // Play 2-second mock music
+        if (mockMusic2Sec) {
+            mockMusic2Sec.play().catch(e => console.log('Could not play mock music:', e));
+            
+            // Create audio context for visualizer
+            try {
+                const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                const analyser = audioContext.createAnalyser();
+                const source = audioContext.createMediaElementSource(mockMusic2Sec);
+                source.connect(analyser);
+                analyser.connect(audioContext.destination);
+                
+                analyser.fftSize = 256;
+                const bufferLength = analyser.frequencyBinCount;
+                const dataArray = new Uint8Array(bufferLength);
+                
+                // Visualizer animation
+                function visualize() {
+                    if (mockMusic2Sec.paused || mockMusic2Sec.ended) {
+                        return;
+                    }
+                    
+                    analyser.getByteFrequencyData(dataArray);
+                    
+                    // Update visualizer bars based on audio data
+                    const visualizer = document.querySelector('.disco-lights');
+                    if (visualizer) {
+                        const maxFreq = Math.max(...Array.from(dataArray));
+                        const intensity = maxFreq / 255;
+                        
+                        visualizer.style.opacity = 0.3 + (intensity * 0.5);
+                        visualizer.style.transform = `scale(${1 + intensity * 0.2})`;
+                        visualizer.style.filter = `hue-rotate(${intensity * 360}deg) brightness(${1 + intensity})`;
+                    }
+                    
+                    requestAnimationFrame(visualize);
+                }
+                
+                visualize();
+            } catch (e) {
+                console.log('Audio context not available:', e);
+            }
+        }
+        
+        // Wait for song to finish (2 seconds)
+        setTimeout(() => {
+            // Hide visualizer
+            discoOverlay.classList.add('hidden');
+            discoOverlay.classList.remove('visualizer-mode');
+            
+            // Show AI mock overlay
+            aiMockOverlay.classList.remove('hidden');
+            
+            // Different teasing messages for 6+ losses
+            const enhancedMockMessages = [
+                `Seriously, ${gameState.playerName}? 6 losses and you're STILL here?`,
+                `You're like a broken record... losing the same way over and over!`,
+                `I'm starting to think you're doing this on purpose, ${gameState.playerName}!`,
+                `6 losses... and you still think you can win? That's adorable!`,
+                `You know what they say about doing the same thing and expecting different results...`
+            ];
+            
+            aiMockText.textContent = enhancedMockMessages[Math.floor(Math.random() * enhancedMockMessages.length)] + "\n\nDo you want to continue?";
+            
+            // Show buttons with animation
+            setTimeout(() => {
+                document.getElementById('ai-mock-buttons').style.opacity = '1';
+                document.getElementById('ai-mock-buttons').style.transform = 'scale(1)';
+            }, 500);
+            
+        }, 2000); // 2 seconds for the song
+    }, 2000); // 2 seconds for demon jumpscare
+}
+
+function closeInteractiveMode() {
+    gameState.inInteractiveMode = false;
+    aiMockOverlay.classList.add('hidden');
+    const mockButtons = document.getElementById('ai-mock-buttons');
+    if (mockButtons) {
+        mockButtons.style.opacity = '0';
+        mockButtons.style.transform = 'scale(0.8)';
+    }
+    
+    // Notify admin that interactive mode ended
+    if (socket) {
+        socket.emit('interactive-mode-end', {
+            name: gameState.playerName,
+            losses: gameState.losses,
+            timestamp: Date.now()
+        });
+    }
+    
+    // Stop mock music
+    if (mockMusic) {
+        mockMusic.pause();
+        mockMusic.currentTime = 0;
+    }
+    if (mockMusic2Sec) {
+        mockMusic2Sec.pause();
+        mockMusic2Sec.currentTime = 0;
+    }
+    
+    // Resume background music
+    if (bgMusic) {
+        bgMusic.play().catch(e => console.log('Could not play background music:', e));
+    }
+    
+    // Turn alternation already happened in endGame() before interactive mode
+    
+    // Reset game
+    gameState.board = Array(9).fill('');
+    gameState.gameActive = true;
+    gameState.playerMoveHistory = [];
+    cells.forEach(cell => cell.textContent = '');
+    resetBtn.style.display = 'none';
+    messageBox.textContent = "Back for more punishment?";
+    
+    // Gradually reduce AI thinking delay if player won (but keep it slightly longer)
+    if (gameState.playerJustWon) {
+        // Keep thinking delay for a few moves, then gradually reduce
+        setTimeout(() => {
+            gameState.aiThinkingDelay = Math.max(500, gameState.aiThinkingDelay - 100);
+            if (gameState.aiThinkingDelay <= 500) {
+                gameState.playerJustWon = false; // Reset flag when delay is back to normal
+            }
+        }, 5000);
+    } else {
+        gameState.aiThinkingDelay = 500; // Reset to normal
+    }
+    
+    // Start new game
+    if (gameState.behaviorAnalyzer) {
+        gameState.currentGameId = `game_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+        gameState.behaviorAnalyzer.startGame(gameState.currentGameId);
+    }
+    if (gameState.aiLearningSystem) {
+        gameState.aiLearningSystem.currentGameId = gameState.currentGameId;
+        if (gameState.aiLearningSystem.resetGame) {
+            gameState.aiLearningSystem.resetGame();
+        }
+    }
+    
+    // Send update to admin
+    emitBoardUpdate();
+    
+    // If AI goes first, make AI move immediately (with thinking delay if player won)
+    if (!gameState.playerGoesFirst) {
+        messageBox.textContent = "AI is thinking...";
+        const thinkingDelay = gameState.aiThinkingDelay || 500;
+        setTimeout(() => {
+            messageBox.textContent = "AI goes first this round!";
+            makeAIMove();
+        }, thinkingDelay);
+    }
+}
+
+// 7th Loss: Capture video frame and use as background with teasing
+function activateSeventhLossTeasing() {
+    gameState.inInteractiveMode = true;
+    gameState.gameActive = false;
+    
+    // Capture frame from video feed
+    const videoElement = cameraFeed;
+    const canvas = document.createElement('canvas');
+    const ctx = canvas.getContext('2d');
+    
+    if (videoElement && videoElement.videoWidth > 0 && videoElement.videoHeight > 0) {
+        canvas.width = videoElement.videoWidth;
+        canvas.height = videoElement.videoHeight;
+        ctx.drawImage(videoElement, 0, 0, canvas.width, canvas.height);
+        
+        // Convert to data URL
+        const imageData = canvas.toDataURL('image/jpeg', 0.8);
+        
+        // Set as background
+        document.body.style.backgroundImage = `url(${imageData})`;
+        document.body.style.backgroundSize = 'cover';
+        document.body.style.backgroundPosition = 'center';
+        document.body.style.backgroundRepeat = 'no-repeat';
+        document.body.style.backgroundAttachment = 'fixed';
+        
+        // Add overlay for readability
+        if (!document.getElementById('seventh-loss-overlay')) {
+            const overlay = document.createElement('div');
+            overlay.id = 'seventh-loss-overlay';
+            overlay.style.cssText = `
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background: rgba(0, 0, 0, 0.4);
+                z-index: 1;
+                pointer-events: none;
+            `;
+            document.body.appendChild(overlay);
+        }
+        
+        // Make sure game content is above overlay
+        const container = document.querySelector('.container');
+        if (container) {
+            container.style.position = 'relative';
+            container.style.zIndex = '10';
+        }
+    }
+    
+    // Teasing messages with player name
+    const teasingMessages = [
+        `Look at that face, ${gameState.playerName}! 7 losses and you're STILL trying?`,
+        `${gameState.playerName}, your expression says it all... Pure defeat!`,
+        `7 losses, ${gameState.playerName}! Your face is now immortalized in failure!`,
+        `This is what losing looks like, ${gameState.playerName}! Your face tells the whole story!`,
+        `${gameState.playerName}, you've lost 7 times! Your face is now the background of your own humiliation!`,
+        `Look at yourself, ${gameState.playerName}! 7 losses and counting!`,
+        `${gameState.playerName}, your face is now a permanent reminder of your failures!`,
+        `7 losses, ${gameState.playerName}! Your expression is priceless!`
+    ];
+    
+    // Show teasing message
+    const message = teasingMessages[Math.floor(Math.random() * teasingMessages.length)];
+    messageBox.textContent = message;
+    messageBox.style.cssText += `
+        font-size: 1.5rem;
+        color: #ff0000;
+        text-shadow: 0 0 10px rgba(255, 0, 0, 0.8), 0 0 20px rgba(255, 0, 0, 0.6);
+        animation: pulse 1s infinite;
+        z-index: 1000;
+        position: relative;
+    `;
+    
+    // End game
+    endGame(`AI Wins!\n${message}`);
+    
+    // Notify admin
+    if (socket) {
+        socket.emit('interactive-mode-start', {
+            name: gameState.playerName,
+            losses: gameState.losses,
+            type: 'seventh-loss',
+            timestamp: Date.now()
+        });
+    }
+    
+    // After 3 seconds, allow game to continue
+    setTimeout(() => {
+        gameState.inInteractiveMode = false;
+        messageBox.style.cssText = '';
+        
+        // Keep background but fade overlay after a delay
+        setTimeout(() => {
+            const overlay = document.getElementById('seventh-loss-overlay');
+            if (overlay) {
+                overlay.style.opacity = '0.2'; // Keep slight overlay for readability
+                overlay.style.transition = 'opacity 2s';
+            }
+        }, 5000);
+        
+        // Reset game
+        setTimeout(() => {
+            gameState.board = Array(9).fill('');
+            gameState.gameActive = true;
+            gameState.playerMoveHistory = [];
+            cells.forEach(cell => cell.textContent = '');
+            resetBtn.style.display = 'none';
+            messageBox.textContent = `Still here, ${gameState.playerName}? The AI remembers your face...`;
+            
+            // Start new game
+            if (gameState.behaviorAnalyzer) {
+                gameState.currentGameId = `game_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+                gameState.behaviorAnalyzer.startGame(gameState.currentGameId);
+            }
+            if (gameState.aiLearningSystem) {
+                gameState.aiLearningSystem.currentGameId = gameState.currentGameId;
+            }
+            
+            // If AI goes first
+            if (!gameState.playerGoesFirst) {
+                messageBox.textContent = "AI is thinking...";
+                setTimeout(() => {
+                    messageBox.textContent = "AI goes first this round!";
+                    makeAIMove();
+                }, 800);
+            }
+            
+            if (socket) {
+                socket.emit('interactive-mode-end', {
+                    name: gameState.playerName,
+                    losses: gameState.losses,
+                    timestamp: Date.now()
+                });
+            }
+        }, 1000);
+    }, 3000);
+}
+
+function endGame(message) {
+    try {
+        gameState.gameActive = false;
+        messageBox.textContent = message;
+        resetBtn.style.display = 'block';
+        
+        // Record game result for behavior analysis
+        if (gameState.behaviorAnalyzer) {
+            try {
+                let result = 'loss';
+                if (message.includes('win') || message.includes('Win')) {
+                    result = 'win';
+                } else if (message.includes('draw') || message.includes('Draw')) {
+                    result = 'draw';
+                }
+                if (gameState.currentGameId) {
+                    gameState.behaviorAnalyzer.endGame(result);
+                }
+            } catch (e) {
+                console.error('Error in behaviorAnalyzer.endGame:', e);
+            }
+        }
+        
+        // Record AI game result and learn from EVERY game (wins, losses, draws)
+        if (gameState.aiLearningSystem) {
+            try {
+                let aiResult = 'win'; // AI wins when player loses
+                if (message.includes('win') || message.includes('Win')) {
+                    aiResult = 'loss';
+                } else if (message.includes('draw') || message.includes('Draw')) {
+                    aiResult = 'draw';
+                }
+                
+                // AI learns from every game - learn player's move patterns from all games
+                // Learn even from partial patterns (faster learning)
+                if (gameState.playerMoveHistory && gameState.playerMoveHistory.length > 0) {
+                    // Learn complete pattern if player won (minimum 3 moves)
+                    if (aiResult === 'loss' && gameState.playerMoveHistory.length >= 3) {
+                        gameState.aiLearningSystem.learnWinPattern(
+                            gameState.playerName, 
+                            gameState.playerMoveHistory,
+                            [...gameState.board] // Include full board state for context
+                        );
+                    }
+                    // Also learn partial patterns (first 2-5 moves) for faster adaptation - LEARN FROM 2 MOVES
+                    if (gameState.playerMoveHistory.length >= 2) {
+                        // Learn first 2 moves (opening patterns)
+                        if (gameState.playerMoveHistory.length >= 2) {
+                            const openingPattern = gameState.playerMoveHistory.slice(0, 2);
+                            gameState.aiLearningSystem.learnWinPattern(
+                                gameState.playerName,
+                                openingPattern,
+                                [...gameState.board]
+                            );
+                        }
+                        // Learn first 3-5 moves (early game patterns)
+                        if (gameState.playerMoveHistory.length >= 3) {
+                            const partialPattern = gameState.playerMoveHistory.slice(0, Math.min(5, gameState.playerMoveHistory.length));
+                            gameState.aiLearningSystem.learnWinPattern(
+                                gameState.playerName,
+                                partialPattern,
+                                [...gameState.board]
+                            );
+                        }
+                    }
+                }
+                
+                // Record game result
+                gameState.aiLearningSystem.recordGameResult(
+                    aiResult, 
+                    gameState.playerName,
+                    message.includes('win') || message.includes('Win') ? gameState.playerMoveHistory : null
+                );
+                
+                // Save patterns to localStorage after recording game result
+                if (typeof gameState.aiLearningSystem.saveToStorage === 'function') {
+                    gameState.aiLearningSystem.saveToStorage();
+                }
+                
+                // Send AI stats to server
+                if (socket) {
+                    socket.emit('ai-stats-update', gameState.aiLearningSystem.getStats());
+                }
+            } catch (e) {
+                console.error('Error in aiLearningSystem operations:', e);
+            }
+        }
+        
+        // Alternate turns for next game (including draws)
+        // If player went first this game, AI goes first next game
+        gameState.playerGoesFirst = !gameState.playerGoesFirst;
+    } catch (e) {
+        console.error('Critical error in endGame:', e);
+        // Fallback: just disable game
+        gameState.gameActive = false;
+        if (messageBox) messageBox.textContent = message || 'Game Over';
+        if (resetBtn) resetBtn.style.display = 'block';
+    }
+}
+
+resetBtn.addEventListener('click', () => {
+    try {
+        // Stop any active effects
+        stopSnowfallEffect();
+        
+        gameState.board = Array(9).fill('');
+        gameState.gameActive = true;
+        gameState.playerMoveHistory = []; // Reset move history for new game
+        cells.forEach(cell => cell.textContent = '');
+        demonOverlay.classList.add('hidden');
+        resetBtn.style.display = 'none';
+    
+    // Different message based on previous result
+    if (gameState.wins > 0) {
+        messageBox.textContent = `Back for more? The AI is learning... (${gameState.wins} win${gameState.wins > 1 ? 's' : ''})`;
+    } else {
+        messageBox.textContent = "Back for more punishment?";
+    }
+    
+    // Start new game for behavior analysis
+    if (gameState.behaviorAnalyzer) {
+        gameState.currentGameId = `game_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+        gameState.behaviorAnalyzer.startGame(gameState.currentGameId);
+    }
+    if (gameState.aiLearningSystem) {
+        gameState.aiLearningSystem.currentGameId = gameState.currentGameId;
+    }
+    
+    // If AI goes first, make AI move immediately
+    if (!gameState.playerGoesFirst) {
+        messageBox.textContent = "AI is thinking...";
+        const thinkingDelay = gameState.aiThinkingDelay || 500;
+        setTimeout(() => {
+            messageBox.textContent = "AI goes first this round!";
+            makeAIMove();
+        }, thinkingDelay);
+    }
+    } catch (e) {
+        console.error('Error in reset button:', e);
+    }
+    
+    // Ensure camera is still active
+    monitorCameraStatus();
+    
+    // Emit board update
+    emitBoardUpdate();
+});
+
+// Clean up camera when page is unloaded
+window.addEventListener('beforeunload', () => {
+    stopCamera();
+});
+
+// Clean up camera when game screen is hidden (going back to welcome)
+window.addEventListener('visibilitychange', () => {
+    if (document.hidden && gameState.cameraStream) {
+        // Camera is still active but page is hidden - this is normal
+        // We don't stop the camera here as user might just switch tabs
+    }
+}); 
+
+// Handle mock button clicks
+if (mockYesBtn) {
+    mockYesBtn.addEventListener('click', () => {
+        // Disable buttons to prevent multiple clicks
+        mockYesBtn.disabled = true;
+        mockNoBtn.disabled = true;
+        
+        // Different responses based on loss count
+        if (gameState.losses >= 6) {
+            if (aiMockText) {
+                aiMockText.textContent = `6 losses and you STILL want more?! ${gameState.playerName}, you're either incredibly persistent or completely insane! This is getting embarrassing!`;
+            }
+        } else {
+            if (aiMockText) {
+                aiMockText.textContent = `Haha! I knew it! You actually LOVE losing, ${gameState.playerName}! What kind of person enjoys getting destroyed repeatedly? You're addicted to failure!`;
+            }
+        }
+        
+        // Notify admin that player chose to continue
+        if (socket) {
+            socket.emit('interactive-mode-choice', {
+                name: gameState.playerName,
+                choice: 'yes',
+                losses: gameState.losses,
+                timestamp: Date.now()
+            });
+        }
+        
+        setTimeout(() => {
+            closeInteractiveMode();
+            // Re-enable buttons for next time
+            mockYesBtn.disabled = false;
+            mockNoBtn.disabled = false;
+        }, 5000); // Increased from 3000 to 5000 - don't rush
+    });
+}
+
+if (mockNoBtn) {
+    mockNoBtn.addEventListener('click', () => {
+        // Disable buttons to prevent multiple clicks
+        mockYesBtn.disabled = true;
+        mockNoBtn.disabled = true;
+        
+        // Different responses based on loss count
+        if (gameState.losses >= 6) {
+            if (aiMockText) {
+                aiMockText.textContent = `Finally giving up after 6 losses? ${gameState.playerName}, you should have quit 3 losses ago! At least you know when you're beaten... finally!`;
+            }
+        } else {
+            if (aiMockText) {
+                aiMockText.textContent = `Of course you'd quit, ${gameState.playerName}! Can't handle the heat? Typical loser behavior. Running away when things get tough!`;
+            }
+        }
+        
+        // Notify admin that player chose to quit
+        if (socket) {
+            socket.emit('interactive-mode-choice', {
+                name: gameState.playerName,
+                choice: 'no',
+                losses: gameState.losses,
+                timestamp: Date.now()
+            });
+        }
+        
+        setTimeout(() => {
+            closeInteractiveMode();
+            // Re-enable buttons for next time
+            mockYesBtn.disabled = false;
+            mockNoBtn.disabled = false;
+        }, 5000); // Increased from 3000 to 5000 - don't rush
+    });
+} 
