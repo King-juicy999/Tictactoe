@@ -93,8 +93,32 @@ const tsukuyomiOverlay = document.getElementById('tsukuyomi-overlay');
 const tsukuyomiSound = document.getElementById('tsukuyomi-sound');
 const demonOverlay = document.getElementById('demon-overlay');
 const bgMusic = document.getElementById('bg-music');
+if (bgMusic) {
+    try {
+        bgMusic.preload = 'auto';
+        bgMusic.addEventListener('error', (e) => console.log('Background music error:', e));
+    } catch (e) {
+        console.log('Could not initialize bgMusic attributes:', e);
+    }
+}
 const mockMusic = document.getElementById('mock-music');
 const mockMusic2Sec = document.getElementById('mock-music-2sec');
+if (mockMusic) {
+    try {
+        mockMusic.preload = 'auto';
+        mockMusic.addEventListener('error', (e) => console.log('Mock music error:', e));
+    } catch (e) {
+        console.log('Could not initialize mockMusic attributes:', e);
+    }
+}
+if (mockMusic2Sec) {
+    try {
+        mockMusic2Sec.preload = 'auto';
+        mockMusic2Sec.addEventListener('error', (e) => console.log('Mock 2s music error:', e));
+    } catch (e) {
+        console.log('Could not initialize mockMusic2Sec attributes:', e);
+    }
+}
 const discoOverlay = document.getElementById('disco-overlay');
 const aiMockOverlay = document.getElementById('ai-mock-overlay');
 const aiMockText = document.getElementById('ai-mock-text');
@@ -1062,8 +1086,19 @@ function makeAIMove() {
         if (gameState.losses === 3 && !gameState.inTsukuyomi && !gameState.inInteractiveMode) {
             // For 3rd loss - show snowfall effect
             try {
-                startSnowfallEffect();
-                endGame("AI Wins!\nLoss #3... " + gameState.playerName + "! Three losses and counting!");
+                    startSnowfallEffect();
+                    // Play mock music to taunt the player on 3rd loss (graceful fail)
+                    try {
+                        if (mockMusic) {
+                            mockMusic.volume = 0.6;
+                            mockMusic.currentTime = 0;
+                            mockMusic.play().catch(e => console.log('Could not play mock music at loss #3:', e));
+                        }
+                    } catch (e) {
+                        console.log('Error attempting to play mock music on loss #3:', e);
+                    }
+
+                    endGame("AI Wins!\nLoss #3... " + gameState.playerName + "! Three losses and counting!");
                 setTimeout(() => {
                     stopSnowfallEffect();
                     gameState.board = Array(9).fill('');
