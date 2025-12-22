@@ -88,6 +88,39 @@
         </div>
     </div>
 
+    <!-- Mode selection (AI or Player) shown after entering name and enabling camera -->
+    <div id="mode-select" class="overlay hidden">
+        <div class="mode-container">
+            <h2>Choose Mode</h2>
+            <div class="mode-buttons">
+                <button id="mode-ai" class="mode-btn">Play vs AI</button>
+                <button id="mode-player" class="mode-btn">Play vs Player</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Lobby screen for player-vs-player matchmaking -->
+    <div id="lobby-screen" class="overlay hidden">
+        <div class="lobby-container">
+            <h2>Lobby - Online Players</h2>
+            <div id="players-list" class="players-list"></div>
+            <div class="lobby-actions">
+                <button id="leave-lobby" class="secondary">Back</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Invite prompt overlay -->
+    <div id="invite-overlay" class="overlay hidden">
+        <div class="invite-box">
+            <div id="invite-text">Player X wants to play with you</div>
+            <div class="invite-actions">
+                <button id="invite-accept">Accept</button>
+                <button id="invite-decline">Decline</button>
+            </div>
+        </div>
+    </div>
+
     <audio id="click-sound" src="button.mp3"></audio>
     <audio id="win-sound" src="evil laugh.wav"></audio>
     <audio id="lose-sound" src="scream.wav"></audio>

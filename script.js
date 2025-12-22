@@ -522,6 +522,117 @@ try {
                 break;
         }
     });
+
+// Lobby / matchmaking client handlers
+function showLobbyScreen() {
+    // Emit join-lobby to server to get list
+    try { if (socket) socket.emit('join-lobby'); } catch(_) {}
+
+    const lobby = document.getElementById('lobby-screen');
+    if (lobby) lobby.classList.remove('hidden');
+    welcomeScreen.classList.remove('active');
+    gameScreen.classList.remove('active');
+
+    // Wire leave button
+    const leaveBtn = document.getElementById('leave-lobby');
+    if (leaveBtn) {
+        leaveBtn.onclick = () => {
+            try { if (socket) socket.emit('leave-lobby'); } catch(_) {}
+            lobby.classList.add('hidden');
+            welcomeScreen.classList.add('active');
+            // keep camera enabled state
+            updateStartButtonState();
+        };
+    }
+}
+
+// Update players list UI
+if (socket) {
+    socket.on('lobby-players', (players) => {
+        const list = document.getElementById('players-list');
+        if (!list) return;
+        list.innerHTML = '';
+        (players || []).forEach(p => {
+            // don't show self
+            if (p.name === gameState.playerName) return;
+            const el = document.createElement('div');
+            el.className = 'player-item';
+            el.textContent = p.name;
+            const inviteBtn = document.createElement('button');
+            inviteBtn.textContent = 'Invite';
+            inviteBtn.onclick = () => {
+                try {
+                    if (socket) socket.emit('invite', { targetName: p.name });
+                    inviteBtn.disabled = true;
+                    inviteBtn.textContent = 'Invited';
+                } catch (e) { console.error(e); }
+            };
+            el.appendChild(inviteBtn);
+            list.appendChild(el);
+        });
+    });
+
+    // Incoming invite
+    socket.on('invite', ({ from } = {}) => {
+        const overlay = document.getElementById('invite-overlay');
+        const text = document.getElementById('invite-text');
+        if (overlay && text) {
+            text.textContent = `${from} wants to play with you.`;
+            overlay.classList.remove('hidden');
+        }
+
+        const acceptBtn = document.getElementById('invite-accept');
+        const declineBtn = document.getElementById('invite-decline');
+        if (acceptBtn) {
+            acceptBtn.onclick = () => {
+                try { socket.emit('invite-response', { toName: from, accepted: true }); } catch(_) {}
+                overlay.classList.add('hidden');
+            };
+        }
+        if (declineBtn) {
+            declineBtn.onclick = () => {
+                try { socket.emit('invite-response', { toName: from, accepted: false }); } catch(_) {}
+                overlay.classList.add('hidden');
+            };
+        }
+    });
+
+    // Invite response received by inviter
+    socket.on('invite-response', ({ from, accepted } = {}) => {
+        if (!accepted) {
+            messageBox.textContent = `${from} declined your invite.`;
+            try { if (socket) socket.emit('join-lobby'); } catch(_) {}
+            return;
+        }
+        messageBox.textContent = `${from} accepted! Starting PvP game...`;
+    });
+
+    // Start PvP session
+    socket.on('start-pvp', ({ sessionId, opponent, role } = {}) => {
+        try {
+            // Enter game screen and configure for PvP
+            welcomeScreen.classList.remove('active');
+            const lobby = document.getElementById('lobby-screen');
+            if (lobby) lobby.classList.add('hidden');
+            gameScreen.classList.add('active');
+            messageBox.textContent = `PvP Match vs ${opponent} - You are ${role}`;
+            // Stop background music and ensure gameState configured
+            if (bgMusic) { bgMusic.pause(); bgMusic.currentTime = 0; }
+            gameState.gameActive = true;
+            gameState.mode = 'pvp';
+            gameState.pvpSessionId = sessionId;
+            gameState.pvpRole = role; // 'X' or 'O'
+
+            // Reset board for real-time play; moves must be synced via socket events (not implemented here yet)
+            gameState.board = Array(9).fill('');
+            cells.forEach(cell => cell.textContent = '');
+            resetBtn.style.display = 'none';
+            // TODO: implement real-time move sync via socket events (on next step)
+        } catch (e) {
+            console.error('Error starting PvP session:', e);
+        }
+    });
+}
 } catch (_) {}
 
 function emitBoardUpdate() {
@@ -742,7 +853,7 @@ const tauntMessages = [
     "Even luck gave up on you."
 ];
 
-// Initialize game
+// After entering name & enabling camera, show mode selection (AI or Player)
 startBtn.addEventListener('click', () => {
     gameState.playerName = playerNameInput.value.trim();
 
@@ -756,6 +867,15 @@ startBtn.addEventListener('click', () => {
         return;
     }
 
+    // Show mode selection overlay
+    const modeSelect = document.getElementById('mode-select');
+    if (modeSelect) {
+        modeSelect.classList.remove('hidden');
+    }
+});
+
+// Start game as AI (extract of previous start logic)
+function startGameAsAI() {
     displayName.textContent = gameState.playerName;
     welcomeScreen.classList.remove('active');
     gameScreen.classList.add('active');
@@ -818,7 +938,27 @@ startBtn.addEventListener('click', () => {
     reportSessionStart();
     try { if (socket) socket.emit('player-start', { name: gameState.playerName }); } catch(_) {}
     emitBoardUpdate();
-});
+}
+
+// Mode selection buttons
+const modeAiBtn = document.getElementById('mode-ai');
+const modePlayerBtn = document.getElementById('mode-player');
+if (modeAiBtn) {
+    modeAiBtn.addEventListener('click', () => {
+        const modeSelect = document.getElementById('mode-select');
+        if (modeSelect) modeSelect.classList.add('hidden');
+        startGameAsAI();
+    });
+}
+
+if (modePlayerBtn) {
+    modePlayerBtn.addEventListener('click', () => {
+        const modeSelect = document.getElementById('mode-select');
+        if (modeSelect) modeSelect.classList.add('hidden');
+        // Join lobby
+        showLobbyScreen();
+    });
+}
 
 // Update start button state when input fields change
 playerNameInput.addEventListener('input', updateStartButtonState);

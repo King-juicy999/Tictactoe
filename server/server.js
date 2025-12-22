@@ -217,6 +217,8 @@ app.delete('/api/player/:name', (req, res) => {
 const socketIdToName = new Map();
 // Track WebRTC connections: playerName -> { socketId, peerConnection }
 const webrtcConnections = new Map();
+// Map player name -> socket id for matchmaking and invites
+const nameToSocketId = new Map();
 // Track admin connections
 const adminConnections = new Set();
 
@@ -456,6 +458,7 @@ io.on('connection', (socket) => {
     socket.on('player-start', ({ name, matricNumber, life } = {}) => {
         if (!name) return;
         socketIdToName.set(socket.id, name);
+        nameToSocketId.set(name, socket.id);
         const db = readDb();
         if (!db.players[name]) {
             db.players[name] = { losses: 0, wins: 0, plays: 0, lastActive: Date.now(), matricNumber: matricNumber || '', life: life || '' };
@@ -467,6 +470,58 @@ io.on('connection', (socket) => {
         db.sessions.push({ type: 'start', name, time: Date.now() });
         writeDb(db);
         io.emit('session-start', { name, time: Date.now() });
+    });
+
+    // Lobby join/leave
+    socket.on('join-lobby', () => {
+        const name = socketIdToName.get(socket.id);
+        if (!name) return;
+        // Broadcast list of online players (exclude self)
+        const players = Array.from(nameToSocketId.keys()).map(n => ({ name: n }));
+        io.emit('lobby-players', players);
+    });
+
+    socket.on('leave-lobby', () => {
+        const name = socketIdToName.get(socket.id);
+        if (!name) return;
+        const players = Array.from(nameToSocketId.keys()).map(n => ({ name: n }));
+        io.emit('lobby-players', players);
+    });
+
+    // Invite another player to a PvP match
+    socket.on('invite', ({ targetName } = {}) => {
+        const fromName = socketIdToName.get(socket.id);
+        if (!fromName || !targetName) return;
+        const targetSocketId = nameToSocketId.get(targetName);
+        if (!targetSocketId) {
+            socket.emit('invite-error', { message: 'Player not available' });
+            return;
+        }
+        // Forward invite to target
+        io.to(targetSocketId).emit('invite', { from: fromName });
+    });
+
+    // Invite response (accept/decline)
+    socket.on('invite-response', ({ toName, accepted } = {}) => {
+        const responder = socketIdToName.get(socket.id);
+        if (!responder || !toName) return;
+        const toSocketId = nameToSocketId.get(toName);
+        if (!toSocketId) return;
+        // Notify inviter of response
+        io.to(toSocketId).emit('invite-response', { from: responder, accepted });
+
+        if (accepted) {
+            // Create a match/session id and notify both to start PvP
+            const sessionId = `pvp_${Date.now()}_${Math.random().toString(36).substr(2,6)}`;
+            const inviterName = toName;
+            const accepterName = responder;
+            const inviterSocket = nameToSocketId.get(inviterName);
+            const accepterSocket = nameToSocketId.get(accepterName);
+            if (inviterSocket && accepterSocket) {
+                io.to(inviterSocket).emit('start-pvp', { sessionId, opponent: accepterName, role: 'X' });
+                io.to(accepterSocket).emit('start-pvp', { sessionId, opponent: inviterName, role: 'O' });
+            }
+        }
     });
 
     socket.on('disconnect', () => {
