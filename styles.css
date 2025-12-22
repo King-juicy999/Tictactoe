@@ -965,3 +965,113 @@ button:disabled:hover {
         gap: 1rem;
     }
 } 
+
+/* Mobile-specific tweaks for smaller phones */
+@media (max-width: 420px) {
+    .container {
+        padding: 12px;
+    }
+
+    .title {
+        font-size: 2rem;
+        margin-bottom: 1rem;
+    }
+
+    .game-board {
+        max-width: 260px;
+        gap: 8px;
+    }
+
+    .cell {
+        font-size: 1.8rem;
+        border-radius: 12px;
+    }
+
+    .form-container {
+        max-width: 100%;
+        padding: 0 8px;
+    }
+
+    input {
+        padding: 0.8rem;
+        font-size: 1rem;
+    }
+
+    button {
+        padding: 0.9rem 1.6rem;
+        font-size: 1.2rem;
+    }
+
+    .camera-preview {
+        max-width: 160px;
+    }
+
+    #camera-feed {
+        height: 120px;
+    }
+
+    .sharingan {
+        width: 240px;
+        height: 240px;
+    }
+
+    .countdown {
+        font-size: 2.5rem;
+        top: 72%;
+    }
+
+    .mode-container,
+    .lobby-container {
+        max-width: 90%;
+        padding: 1.5rem;
+    }
+}
+
+@media (max-width: 360px) {
+    .title {
+        font-size: 1.6rem;
+    }
+
+    .game-board {
+        max-width: 220px;
+        gap: 6px;
+    }
+
+    .cell {
+        font-size: 1.6rem;
+    }
+
+    button {
+        padding: 0.8rem 1.2rem;
+        font-size: 1rem;
+    }
+
+    input {
+        padding: 0.6rem;
+        font-size: 0.95rem;
+    }
+
+    .camera-preview {
+        max-width: 140px;
+    }
+
+    #camera-feed {
+        height: 100px;
+    }
+
+    .sharingan {
+        width: 180px;
+        height: 180px;
+    }
+
+    .countdown {
+        font-size: 2rem;
+        top: 78%;
+    }
+
+    .lyrics-display {
+        font-size: 1.8rem;
+        white-space: normal;
+        padding: 0 10px;
+    }
+}
