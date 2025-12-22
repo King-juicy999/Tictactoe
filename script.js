@@ -897,6 +897,31 @@ startBtn.addEventListener('click', () => {
     } catch (e) {
         console.log('Could not announce presence to server:', e);
     }
+    // Try to "unlock" audio on first user gesture so later play() calls won't be blocked by browser autoplay policy
+    try {
+        (async function unlockAudio() {
+            try {
+                const audios = [bgMusic, mockMusic, mockMusic2Sec, clickSound, winSound, loseSound, tsukuyomiSound];
+                for (const a of audios) {
+                    if (!a) continue;
+                    try {
+                        // Attempt to play then immediately pause to allow future unprompted playback
+                        await a.play().catch(() => Promise.resolve());
+                        a.pause();
+                        a.currentTime = 0;
+                    } catch (err) {
+                        // ignore per-audio errors
+                    }
+                }
+                gameState.audioUnlocked = true;
+                console.log('Audio unlock attempted');
+            } catch (err) {
+                console.log('Error during audio unlock:', err);
+            }
+        })();
+    } catch (e) {
+        console.log('Could not run audio unlock:', e);
+    }
 });
 
 // Start game as AI (extract of previous start logic)
