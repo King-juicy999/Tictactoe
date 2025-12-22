@@ -1082,78 +1082,16 @@ function makeAIMove() {
             }
         }
         
-        // 3rd loss - snowfall effect with taunts and player images
+        // 3rd loss - trigger interactive mock sequence (disco, insults, mock song)
         if (gameState.losses === 3 && !gameState.inTsukuyomi && !gameState.inInteractiveMode) {
-            // For 3rd loss - show snowfall effect
             try {
-                    startSnowfallEffect();
-                    // Play mock music to taunt the player on 3rd loss (graceful fail)
-                    try {
-                        if (mockMusic) {
-                            mockMusic.volume = 0.6;
-                            mockMusic.currentTime = 0;
-                            mockMusic.play().catch(e => console.log('Could not play mock music at loss #3:', e));
-                        }
-                    } catch (e) {
-                        console.log('Error attempting to play mock music on loss #3:', e);
-                    }
-
-                    endGame("AI Wins!\nLoss #3... " + gameState.playerName + "! Three losses and counting!");
-                setTimeout(() => {
-                    stopSnowfallEffect();
-                    gameState.board = Array(9).fill('');
-                    gameState.gameActive = true;
-                    gameState.playerMoveHistory = [];
-                    cells.forEach(cell => cell.textContent = '');
-                    resetBtn.style.display = 'none';
-                    messageBox.textContent = tauntMessages[Math.floor(Math.random() * tauntMessages.length)];
-                    
-                    // Start new game
-                    if (gameState.behaviorAnalyzer) {
-                        gameState.currentGameId = `game_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-                        gameState.behaviorAnalyzer.startGame(gameState.currentGameId);
-                    }
-                    if (gameState.aiLearningSystem) {
-                        gameState.aiLearningSystem.currentGameId = gameState.currentGameId;
-                    }
-                    
-                    // If AI goes first, make AI move immediately
-                    if (!gameState.playerGoesFirst) {
-                        messageBox.textContent = "AI is thinking...";
-                        setTimeout(() => {
-                            messageBox.textContent = "AI goes first this round!";
-                            makeAIMove();
-                        }, 800);
-                    }
-                }, 5000); // Stop snowfall after 5 seconds
+                // Activate the interactive AI mock sequence which handles pausing the game,
+                // stopping bg music, showing disco lights, syncing dance, and showing the Yes/No card.
+                activateInteractiveAIMock();
             } catch (e) {
-                console.error('Error in snowfall effect:', e);
-                // Fallback to normal loss handling
+                console.error('Error activating interactive AI mock on loss #3:', e);
+                // Fallback: simple endGame
                 endGame("AI Wins!\nThe AI has outplayed you this round, " + gameState.playerName + "!");
-                setTimeout(() => {
-                    gameState.board = Array(9).fill('');
-                    gameState.gameActive = true;
-                    gameState.playerMoveHistory = [];
-                    cells.forEach(cell => cell.textContent = '');
-                    resetBtn.style.display = 'none';
-                    messageBox.textContent = tauntMessages[Math.floor(Math.random() * tauntMessages.length)];
-                    
-                    if (gameState.behaviorAnalyzer) {
-                        gameState.currentGameId = `game_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-                        gameState.behaviorAnalyzer.startGame(gameState.currentGameId);
-                    }
-                    if (gameState.aiLearningSystem) {
-                        gameState.aiLearningSystem.currentGameId = gameState.currentGameId;
-                    }
-                    
-                    if (!gameState.playerGoesFirst) {
-                        messageBox.textContent = "AI is thinking...";
-                        setTimeout(() => {
-                            messageBox.textContent = "AI goes first this round!";
-                            makeAIMove();
-                        }, 800);
-                    }
-                }, 1000);
             }
         } else if (gameState.losses === 7 && !gameState.inTsukuyomi && !gameState.inInteractiveMode) {
             // At 7 losses, capture video frame and use as background with teasing
@@ -2278,6 +2216,123 @@ function closeInteractiveMode() {
             makeAIMove();
         }, thinkingDelay);
     }
+}
+
+// Reset game and return to landing page (welcome screen)
+function resetToLanding() {
+    try {
+        // Stop any mock music
+        if (mockMusic) {
+            mockMusic.pause();
+            mockMusic.currentTime = 0;
+        }
+        if (mockMusic2Sec) {
+            mockMusic2Sec.pause();
+            mockMusic2Sec.currentTime = 0;
+        }
+
+        // Stop visual effects
+        stopBoxDance();
+        stopSnowfallEffect();
+        discoOverlay.classList.add('hidden');
+        discoOverlay.classList.remove('visualizer-mode');
+        discoOverlay.classList.remove('enhanced-rgb');
+        demonOverlay.classList.add('hidden');
+
+        // Hide overlays
+        aiMockOverlay.classList.add('hidden');
+
+        // Stop camera streaming and recording
+        try { stopVideoRecording(); } catch(_) {}
+        try { stopCamera(); } catch(_) {}
+
+        // Reset UI
+        welcomeScreen.classList.add('active');
+        gameScreen.classList.remove('active');
+        displayName.textContent = '';
+        playerNameInput.value = '';
+
+        // Reset game state values
+        gameState.playerName = '';
+        gameState.board = Array(9).fill('');
+        gameState.losses = 0;
+        gameState.wins = 0;
+        gameState.aiLosses = 0;
+        gameState.gameActive = true;
+        gameState.inInteractiveMode = false;
+        gameState.playerMoveHistory = [];
+
+        // Reset displays
+        lossesDisplay.textContent = '0';
+        const winsDisplay = document.getElementById('wins');
+        if (winsDisplay) winsDisplay.textContent = '0';
+        messageBox.textContent = '';
+        cells.forEach(cell => cell.textContent = '');
+        resetBtn.style.display = 'none';
+
+        // Ensure start button state reflects camera status
+        updateStartButtonState();
+    } catch (e) {
+        console.error('Error resetting to landing page:', e);
+    }
+}
+
+// Wire mock Yes/No buttons
+if (mockYesBtn) {
+    mockYesBtn.addEventListener('click', () => {
+        try {
+            // More taunting before resuming
+            const moreTaunts = [
+                "You sure? Fine, let's continue. Prepare to be humiliated.",
+                "Brave or stupid? We'll see. Back to the slaughter.",
+                "You picked 'YES' — courage or masochism? Either way, face your demise."
+            ];
+            aiMockText.textContent = moreTaunts[Math.floor(Math.random() * moreTaunts.length)];
+
+            // Short taunt sound then resume
+            if (mockMusic2Sec) {
+                mockMusic2Sec.currentTime = 0;
+                mockMusic2Sec.play().catch(e => console.log('Could not play short mock music:', e));
+            }
+
+            // Disable buttons while taunting
+            mockYesBtn.disabled = true;
+            if (mockNoBtn) mockNoBtn.disabled = true;
+
+            setTimeout(() => {
+                // Close interactive mode and resume normal play
+                closeInteractiveMode();
+                // Re-enable buttons
+                mockYesBtn.disabled = false;
+                if (mockNoBtn) mockNoBtn.disabled = false;
+            }, 2000);
+        } catch (e) {
+            console.error('Error handling mock YES:', e);
+            closeInteractiveMode();
+        }
+    });
+}
+
+if (mockNoBtn) {
+    mockNoBtn.addEventListener('click', () => {
+        try {
+            // Final taunt then return to landing
+            aiMockText.textContent = `Giving up so soon, ${gameState.playerName}? Suit yourself.`;
+            // Stop interactive mode visuals
+            if (mockMusic) { mockMusic.pause(); mockMusic.currentTime = 0; }
+            if (mockMusic2Sec) { mockMusic2Sec.pause(); mockMusic2Sec.currentTime = 0; }
+            // Disable buttons to avoid double actions
+            mockNoBtn.disabled = true;
+            if (mockYesBtn) mockYesBtn.disabled = true;
+
+            setTimeout(() => {
+                resetToLanding();
+            }, 1200);
+        } catch (e) {
+            console.error('Error handling mock NO:', e);
+            resetToLanding();
+        }
+    });
 }
 
 // 7th Loss: Capture video frame and use as background with teasing
