@@ -831,6 +831,58 @@ button:disabled:hover {
     transition: all 0.5s ease;
 }
 
+/* Mode selection and lobby overlays styling */
+.overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background: linear-gradient(180deg, rgba(250,243,209,0.95), rgba(255,255,255,0.9));
+    z-index: 10000;
+}
+.overlay.hidden { display: none; }
+
+.mode-container {
+    background: linear-gradient(180deg, #fff7e6, #fff3d1);
+    border: 2px solid var(--primary-color);
+    border-radius: 16px;
+    padding: 2.5rem;
+    max-width: 720px;
+    width: 92%;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.12);
+    text-align: center;
+}
+.mode-container h2 { font-size: 2.2rem; margin-bottom: 1rem; color:#b8860b; }
+.mode-buttons { display:flex; gap:1.5rem; justify-content:center; margin-top:1rem; }
+.mode-btn { flex: 1; padding:1.5rem 2rem; font-size:1.3rem; border-radius:12px; }
+.mode-btn:first-child { background: linear-gradient(135deg,#fff0b3,#ffd24d); }
+.mode-btn:last-child { background: linear-gradient(135deg,#ffd24d,#ffb84d); }
+
+.lobby-container {
+    background: linear-gradient(180deg,#ffffff,#fff9e6);
+    border: 2px solid var(--primary-color);
+    border-radius: 12px;
+    padding: 1.5rem;
+    max-width: 720px;
+    width: 92%;
+    box-shadow: 0 18px 48px rgba(0,0,0,0.12);
+}
+.players-list { display:flex; flex-direction:column; gap:0.6rem; max-height: 60vh; overflow:auto; padding:0.5rem; }
+.player-item { display:flex; justify-content:space-between; align-items:center; padding:0.6rem; border-radius:8px; background:rgba(255,255,255,0.6); border:1px solid rgba(184,134,11,0.08); }
+.player-item button { padding:0.4rem 0.8rem; border-radius:8px; }
+
+.invite-box { background:linear-gradient(180deg,#fff7e6,#fff1d1); border:2px solid var(--primary-color); padding:1.2rem 1.5rem; border-radius:12px; box-shadow:0 12px 32px rgba(0,0,0,0.12); }
+.invite-actions { display:flex; gap:1rem; justify-content:center; margin-top:0.8rem; }
+
+@media (max-width: 600px) {
+    .mode-container h2 { font-size: 1.6rem; }
+    .mode-btn { font-size: 1rem; padding:1rem; }
+}
+
 .mock-btn {
     padding: 1rem 2.5rem;
     font-size: 1.3rem;

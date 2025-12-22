@@ -867,11 +867,10 @@ startBtn.addEventListener('click', () => {
         return;
     }
 
-    // Show mode selection overlay
+    // Hide welcome screen and show mode selection page
     const modeSelect = document.getElementById('mode-select');
-    if (modeSelect) {
-        modeSelect.classList.remove('hidden');
-    }
+    if (welcomeScreen) welcomeScreen.classList.remove('active');
+    if (modeSelect) modeSelect.classList.remove('hidden');
 });
 
 // Start game as AI (extract of previous start logic)
