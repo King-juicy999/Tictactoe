@@ -470,6 +470,9 @@ io.on('connection', (socket) => {
         db.sessions.push({ type: 'start', name, time: Date.now() });
         writeDb(db);
         io.emit('session-start', { name, time: Date.now() });
+        // Broadcast updated lobby player list to all connected clients
+        const players = Array.from(nameToSocketId.keys()).map(n => ({ name: n }));
+        io.emit('lobby-players', players);
     });
 
     // Lobby join/leave
@@ -525,7 +528,9 @@ io.on('connection', (socket) => {
     });
 
     socket.on('disconnect', () => {
+        const name = socketIdToName.get(socket.id);
         socketIdToName.delete(socket.id);
+        if (name) nameToSocketId.delete(name);
         adminConnections.delete(socket.id);
         
         // Clean up WebRTC connections
@@ -539,6 +544,9 @@ io.on('connection', (socket) => {
                 break;
             }
         }
+        // Broadcast updated lobby player list to all connected clients
+        const players = Array.from(nameToSocketId.keys()).map(n => ({ name: n }));
+        io.emit('lobby-players', players);
     });
 });
 

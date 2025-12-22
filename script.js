@@ -871,6 +871,12 @@ startBtn.addEventListener('click', () => {
     const modeSelect = document.getElementById('mode-select');
     if (welcomeScreen) welcomeScreen.classList.remove('active');
     if (modeSelect) modeSelect.classList.remove('hidden');
+    // Announce presence to server so other players see us in lobby immediately
+    try {
+        if (socket) socket.emit('player-start', { name: gameState.playerName });
+    } catch (e) {
+        console.log('Could not announce presence to server:', e);
+    }
 });
 
 // Start game as AI (extract of previous start logic)
