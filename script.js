@@ -731,7 +731,14 @@ function performJumpscare({ variant = 'both', duration = 3000, cheat = true } = 
     if (variant === 'left') make('blackout-overlay');
     else if (variant === 'right') make('blackout-overlay right');
     else if (variant === 'full') make('blackout-overlay full');
-    else if (variant === 'demon') { demonOverlay.classList.remove('hidden'); }
+    else if (variant === 'demon') {
+        if (!demonOverlay) {
+            console.error('performJumpscare: demonOverlay element not found');
+        } else {
+            console.log('performJumpscare: showing demon overlay');
+            demonOverlay.classList.remove('hidden');
+        }
+    }
     else { make('blackout-overlay'); make('blackout-overlay right'); }
 
     // Notify admin spectate that a jumpscare started
@@ -751,7 +758,14 @@ function performJumpscare({ variant = 'both', duration = 3000, cheat = true } = 
 
     setTimeout(() => {
         overlays.forEach(el => el.remove());
-        if (variant === 'demon') demonOverlay.classList.add('hidden');
+        if (variant === 'demon') {
+            if (!demonOverlay) {
+                console.error('performJumpscare: demonOverlay element missing on hide');
+            } else {
+                console.log('performJumpscare: hiding demon overlay');
+                demonOverlay.classList.add('hidden');
+            }
+        }
         // Notify end (admin can rely on duration, but this helps if needed)
         try { if (socket) socket.emit('client-jumpscare-end', { name: gameState.playerName, ts: Date.now() }); } catch(_) {}
     }, Math.max(1000, duration));
@@ -2203,11 +2217,21 @@ function activateEnhancedInteractiveAIMock() {
     emitBoardUpdate();
     
     // First show demon jumpscare
-    demonOverlay.classList.remove('hidden');
-    loseSound.play();
+    if (!demonOverlay) {
+        console.error('performJumpscare: demonOverlay element not found');
+    } else {
+        console.log('performJumpscare: showing demon overlay');
+        demonOverlay.classList.remove('hidden');
+    }
+    try { if (loseSound && typeof loseSound.play === 'function') { const p = loseSound.play(); if (p && typeof p.catch === 'function') p.catch(()=>{}); } } catch(_) {}
     
     setTimeout(() => {
-        demonOverlay.classList.add('hidden');
+        if (!demonOverlay) {
+            console.error('performJumpscare: demonOverlay element missing on hide');
+        } else {
+            console.log('performJumpscare: hiding demon overlay');
+            demonOverlay.classList.add('hidden');
+        }
         
         // Show visualizer overlay (bigger, follows music)
         discoOverlay.classList.remove('hidden');
