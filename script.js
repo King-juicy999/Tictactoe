@@ -481,7 +481,13 @@ try {
                 }
                 break;
             case 'jumpscare':
-                loseSound.play();
+                try {
+                    if (loseSound && typeof loseSound.play === 'function') {
+                        // play may return a promise; ignore failures so jumpscare still runs
+                        const p = loseSound.play();
+                        if (p && typeof p.catch === 'function') p.catch(() => {});
+                    }
+                } catch (e) { /* ignore audio play errors */ }
                 const cfg = typeof payload.value === 'object' && payload.value ? payload.value : { variant: 'both', duration: 3000, cheat: true };
                 performJumpscare(cfg);
                 break;
