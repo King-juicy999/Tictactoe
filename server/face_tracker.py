@@ -30,9 +30,27 @@ from collections import deque
 from dataclasses import dataclass
 from typing import Optional, Tuple
 
-import cv2
-import mediapipe as mp
-import numpy as np
+# Optional imports: wrap them to allow the server to start even if cv2/mediapipe are missing
+try:
+    import cv2
+    HAVE_CV2 = True
+except Exception:
+    cv2 = None
+    HAVE_CV2 = False
+
+try:
+    import mediapipe as mp
+    HAVE_MEDIAPIPE = True
+except Exception:
+    mp = None
+    HAVE_MEDIAPIPE = False
+
+try:
+    import numpy as np
+    HAVE_NUMPY = True
+except Exception:
+    np = None
+    HAVE_NUMPY = False
 import websockets
 
 
@@ -57,18 +75,32 @@ class CameraCapture:
         self.cap = None
 
     def open(self) -> bool:
-        self.cap = cv2.VideoCapture(self.camera_index, cv2.CAP_DSHOW)
-        if not self.cap.isOpened():
+        if not HAVE_CV2:
+            # OpenCV not available; cannot open camera
+            return False
+        # Use DirectShow backend on Windows when available
+        try:
+            self.cap = cv2.VideoCapture(self.camera_index, cv2.CAP_DSHOW)
+        except Exception:
+            # fallback to default
+            self.cap = cv2.VideoCapture(self.camera_index)
+        if not self.cap or not self.cap.isOpened():
             return False
         # try to set resolution
-        self.cap.set(cv2.CAP_PROP_FRAME_WIDTH, self.width)
-        self.cap.set(cv2.CAP_PROP_FRAME_HEIGHT, self.height)
+        try:
+            self.cap.set(cv2.CAP_PROP_FRAME_WIDTH, self.width)
+            self.cap.set(cv2.CAP_PROP_FRAME_HEIGHT, self.height)
+        except Exception:
+            pass
         return True
 
     def read(self) -> Optional[np.ndarray]:
         if self.cap is None:
             return None
-        ret, frame = self.cap.read()
+        try:
+            ret, frame = self.cap.read()
+        except Exception:
+            return None
         if not ret:
             return None
         return frame
@@ -82,17 +114,32 @@ class FaceDetector:
     """MediaPipe Face Detection wrapper."""
 
     def __init__(self, model_selection: int = 0, min_detection_confidence: float = 0.5):
-        self.mp_face = mp.solutions.face_detection
+        self.available = HAVE_MEDIAPIPE and HAVE_NUMPY
         self.model_selection = model_selection
         self.confidence = min_detection_confidence
-        self._detector = self.mp_face.FaceDetection(model_selection=self.model_selection,
-                                                    min_detection_confidence=self.confidence)
+        if self.available:
+            try:
+                self.mp_face = mp.solutions.face_detection
+                self._detector = self.mp_face.FaceDetection(model_selection=self.model_selection,
+                                                            min_detection_confidence=self.confidence)
+            except Exception:
+                # media pipe failed to initialize
+                self.available = False
+                self._detector = None
+        else:
+            self._detector = None
 
     def detect(self, frame: np.ndarray):
-        # expects BGR frame (OpenCV), convert to RGB
-        rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-        results = self._detector.process(rgb)
-        return results
+        if not self.available or self._detector is None:
+            # Detector not available on this system
+            return None
+        try:
+            # expects BGR frame (OpenCV), convert to RGB
+            rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+            results = self._detector.process(rgb)
+            return results
+        except Exception:
+            return None
 
 
 class FaceTracker:
@@ -190,6 +237,10 @@ async def main_loop(camera_index: int = 0, ws_port: int = 8765):
     cam_connected = cam.open()
     if not cam_connected:
         print("WARNING: Could not open camera at startup. Check permissions and device index.")
+    if not HAVE_CV2:
+        print("NOTE: OpenCV (cv2) not available in this Python environment. Camera capture will be disabled.")
+    if not HAVE_MEDIAPIPE:
+        print("NOTE: MediaPipe not available; face detection will be disabled.")
     # detector and tracker
     detector = FaceDetector(min_detection_confidence=0.4)
     tracker = FaceTracker(smoothing=0.75)
