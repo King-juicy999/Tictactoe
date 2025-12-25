@@ -24,7 +24,6 @@ Run: python face_tracker.py
 """
 
 import asyncio
-import base64
 import json
 import time
 from collections import deque
@@ -161,58 +160,18 @@ class FaceTracker:
 
 
 class FaceServer:
-    """WebSocket server broadcasting face data to connected clients.
-
-    Accepts simple JSON commands from clients to control the tracker:
-      {"cmd": "pause"}
-      {"cmd": "resume"}
-      {"cmd": "slow_on"}
-      {"cmd": "slow_off"}
-      {"cmd": "frames_on"}
-      {"cmd": "frames_off"}
-      {"cmd": "log_on"}
-      {"cmd": "log_off"}
-    """
+    """WebSocket server broadcasting face data to connected clients."""
 
     def __init__(self, host: str = "0.0.0.0", port: int = 8765):
         self.host = host
         self.port = port
         self.clients = set()
-        # control flags - toggled by admin clients
-        self.pause = False
-        self.slow_motion = False
-        self.send_frames = False
-        self.logging = False
-        self.log_path = "face_log.jsonl"
 
     async def _handler(self, websocket, path):
         self.clients.add(websocket)
         try:
-            async for message in websocket:
-                # accept simple JSON commands
-                try:
-                    cmd = json.loads(message)
-                except Exception:
-                    # ignore non-json keepalives
-                    continue
-                c = cmd.get("cmd")
-                if c == "pause":
-                    self.pause = True
-                elif c == "resume":
-                    self.pause = False
-                elif c == "slow_on":
-                    self.slow_motion = True
-                elif c == "slow_off":
-                    self.slow_motion = False
-                elif c == "frames_on":
-                    self.send_frames = True
-                elif c == "frames_off":
-                    self.send_frames = False
-                elif c == "log_on":
-                    self.logging = True
-                elif c == "log_off":
-                    self.logging = False
-                # any other commands ignored for now
+            async for _ in websocket:  # simple echo-style keepalive if client sends
+                pass
         finally:
             self.clients.remove(websocket)
 
@@ -228,44 +187,84 @@ class FaceServer:
 
 async def main_loop(camera_index: int = 0, ws_port: int = 8765):
     cam = CameraCapture(camera_index=camera_index)
-    if not cam.open():
-        print("ERROR: Could not open camera. Check permissions and device index.")
-        # still start server to allow clients to connect and see errors
+    cam_connected = cam.open()
+    if not cam_connected:
+        print("WARNING: Could not open camera at startup. Check permissions and device index.")
+    # detector and tracker
     detector = FaceDetector(min_detection_confidence=0.4)
     tracker = FaceTracker(smoothing=0.75)
     server = FaceServer(port=ws_port)
 
-    ws_server = server.start()
-    asyncio.ensure_future(ws_server)
-
+    # Start the websocket server and ensure it's running for the lifetime of this loop.
+    ws_server = await websockets.serve(server._handler, server.host, server.port)
     print(f"FaceTracker: WebSocket server running on ws://{server.host}:{server.port}")
 
+    # Broadcast initial camera status
     try:
-        # FPS measurement
-        frame_times = deque(maxlen=30)
+        await server.broadcast({"type": "camera_status", "connected": bool(cam_connected), "timestamp": time.time()})
+    except Exception:
+        # ignore if no clients
+        pass
+
+    prev_cam_connected = bool(cam_connected)
+
+    try:
         while True:
-            start = time.time()
+            # Check camera availability
+            cam_ok = cam.cap is not None and cam.cap.isOpened()
+            if not cam_ok:
+                # camera is not available/connected
+                if prev_cam_connected:
+                    prev_cam_connected = False
+                    try:
+                        await server.broadcast({"type": "camera_status", "connected": False, "timestamp": time.time()})
+                    except Exception:
+                        pass
+                data = {"status": "camera_error", "timestamp": time.time()}
+                try:
+                    await server.broadcast(data)
+                except Exception:
+                    pass
+                await asyncio.sleep(0.2)
+                continue
+
             frame = cam.read()
             if frame is None:
-                # camera read failed or not opened
-                data = {"status": "camera_error", "timestamp": time.time()}
-                await server.broadcast(data)
+                # read failed although camera open
+                if prev_cam_connected:
+                    prev_cam_connected = False
+                    try:
+                        await server.broadcast({"type": "camera_status", "connected": False, "timestamp": time.time()})
+                    except Exception:
+                        pass
+                try:
+                    await server.broadcast({"status": "camera_error", "timestamp": time.time()})
+                except Exception:
+                    pass
                 await asyncio.sleep(0.1)
                 continue
 
-            # If paused, skip detection but still send camera_error or no_face states
-            results = None
-            if not server.pause:
+            # If we reach here and camera was previously disconnected, broadcast connected
+            if not prev_cam_connected:
+                prev_cam_connected = True
+                try:
+                    await server.broadcast({"type": "camera_status", "connected": True, "timestamp": time.time()})
+                except Exception:
+                    pass
+
+            try:
                 results = detector.detect(frame)
-
-            picked = tracker.pick_closest(results, frame.shape) if results is not None else None
+            except Exception as e:
+                # Detector error (e.g., MediaPipe crash), broadcast error and continue
+                err_msg = {"status": "detector_error", "error": str(e), "timestamp": time.time()}
+                try:
+                    await server.broadcast(err_msg)
+                except Exception:
+                    pass
+                await asyncio.sleep(0.2)
+                continue
+            picked = tracker.pick_closest(results, frame.shape)
             smoothed = tracker.smooth(picked)
-
-            # compute FPS
-            frame_times.append(time.time())
-            fps = 0.0
-            if len(frame_times) >= 2:
-                fps = len(frame_times) / (frame_times[-1] - frame_times[0] + 1e-6)
 
             out = {
                 "center_x": smoothed.center_x,
@@ -275,59 +274,27 @@ async def main_loop(camera_index: int = 0, ws_port: int = 8765):
                 "confidence": smoothed.confidence,
                 "timestamp": smoothed.timestamp,
                 "status": smoothed.status,
-                "fps": fps,
             }
 
-            # logging
-            if server.logging:
-                try:
-                    with open(server.log_path, "a", encoding="utf-8") as f:
-                        f.write(json.dumps(out) + "\n")
-                except Exception:
-                    pass
+            try:
+                await server.broadcast(out)
+            except Exception:
+                # ignore client send errors
+                pass
 
-            # if frames requested, create an annotated JPEG and include as base64
-            if server.send_frames:
-                try:
-                    vis = frame.copy()
-                    ih, iw = vis.shape[:2]
-                    if smoothed and smoothed.status == "ok":
-                        # draw bounding box and center
-                        cx = int(smoothed.center_x * iw)
-                        cy = int(smoothed.center_y * ih)
-                        w = int(smoothed.width * iw)
-                        h = int(smoothed.height * ih)
-                        x1 = max(0, cx - w // 2)
-                        y1 = max(0, cy - h // 2)
-                        x2 = min(iw - 1, cx + w // 2)
-                        y2 = min(ih - 1, cy + h // 2)
-                        cv2.rectangle(vis, (x1, y1), (x2, y2), (0, 255, 0), 2)
-                        cv2.circle(vis, (cx, cy), 4, (0, 0, 255), -1)
-                        cv2.putText(vis, f"conf:{smoothed.confidence:.2f}", (x1, y1 - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 1)
-                    # overlay status
-                    cv2.putText(vis, f"status:{smoothed.status}", (10, 20), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (200, 200, 200), 2)
-                    # encode to JPEG
-                    ok, jpg = cv2.imencode('.jpg', vis, [int(cv2.IMWRITE_JPEG_QUALITY), 60])
-                    if ok:
-                        b64 = base64.b64encode(jpg.tobytes()).decode('ascii')
-                        out["frame"] = b64
-                except Exception:
-                    # if frame encoding fails, skip frame
-                    pass
-
-            await server.broadcast(out)
-
-            # slow motion support
-            if server.slow_motion:
-                await asyncio.sleep(0.15)
-            else:
-                # small delay to yield to event loop and limit CPU usage
-                await asyncio.sleep(0.01)
+            # small delay to yield to event loop and limit CPU usage
+            await asyncio.sleep(0.01)
 
     except asyncio.CancelledError:
         pass
     finally:
         cam.release()
+        # shut down websocket server gracefully
+        try:
+            ws_server.close()
+            await ws_server.wait_closed()
+        except Exception:
+            pass
 
 
 if __name__ == "__main__":
