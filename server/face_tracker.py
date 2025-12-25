@@ -1,0 +1,249 @@
+"""
+Face Tracker Backend
+
+This script captures camera frames, detects faces using MediaPipe Face Detection,
+smooths the detected face coordinates, and broadcasts face data via a WebSocket
+server so a game engine can consume it in real-time.
+
+Outputs (JSON):
+ - center_x: float (normalized 0..1)
+ - center_y: float (normalized 0..1)
+ - width: float (normalized 0..1)
+ - height: float (normalized 0..1)
+ - confidence: float (0..1)
+ - timestamp: float (epoch seconds)
+ - status: "ok" | "no_face" | "camera_error"
+
+Major sections:
+ - Camera capture: `CameraCapture` class
+ - Detection: `FaceDetector` class (MediaPipe)
+ - Smoothing/tracking: `FaceTracker` class (EMA smoothing)
+ - WebSocket broadcasting: `FaceServer` class
+
+Run: python face_tracker.py
+"""
+
+import asyncio
+import json
+import time
+from collections import deque
+from dataclasses import dataclass
+from typing import Optional, Tuple
+
+import cv2
+import mediapipe as mp
+import numpy as np
+import websockets
+
+
+@dataclass
+class FaceData:
+    center_x: float
+    center_y: float
+    width: float
+    height: float
+    confidence: float
+    timestamp: float
+    status: str = "ok"
+
+
+class CameraCapture:
+    """Encapsulate camera access and frame capture."""
+
+    def __init__(self, camera_index: int = 0, width: int = 640, height: int = 480):
+        self.camera_index = camera_index
+        self.width = width
+        self.height = height
+        self.cap = None
+
+    def open(self) -> bool:
+        self.cap = cv2.VideoCapture(self.camera_index, cv2.CAP_DSHOW)
+        if not self.cap.isOpened():
+            return False
+        # try to set resolution
+        self.cap.set(cv2.CAP_PROP_FRAME_WIDTH, self.width)
+        self.cap.set(cv2.CAP_PROP_FRAME_HEIGHT, self.height)
+        return True
+
+    def read(self) -> Optional[np.ndarray]:
+        if self.cap is None:
+            return None
+        ret, frame = self.cap.read()
+        if not ret:
+            return None
+        return frame
+
+    def release(self):
+        if self.cap is not None:
+            self.cap.release()
+
+
+class FaceDetector:
+    """MediaPipe Face Detection wrapper."""
+
+    def __init__(self, model_selection: int = 0, min_detection_confidence: float = 0.5):
+        self.mp_face = mp.solutions.face_detection
+        self.model_selection = model_selection
+        self.confidence = min_detection_confidence
+        self._detector = self.mp_face.FaceDetection(model_selection=self.model_selection,
+                                                    min_detection_confidence=self.confidence)
+
+    def detect(self, frame: np.ndarray):
+        # expects BGR frame (OpenCV), convert to RGB
+        rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+        results = self._detector.process(rgb)
+        return results
+
+
+class FaceTracker:
+    """Selects a face (closest) and smooths coordinates with EMA."""
+
+    def __init__(self, smoothing=0.6):
+        self.smoothing = smoothing
+        self.ema = None  # stores last smoothed FaceData
+
+    def _bbox_to_facedata(self, bbox, image_shape, score) -> FaceData:
+        ih, iw = image_shape[:2]
+        # MediaPipe returns relative bbox center in normalized coords or relative bounding box
+        # We will compute center and size in normalized coordinates
+        x_min = bbox.xmin
+        y_min = bbox.ymin
+        w = bbox.width
+        h = bbox.height
+        cx = x_min + w / 2.0
+        cy = y_min + h / 2.0
+        return FaceData(center_x=float(cx), center_y=float(cy), width=float(w), height=float(h), confidence=float(score), timestamp=time.time())
+
+    def pick_closest(self, detections, image_shape) -> Optional[FaceData]:
+        if detections is None or not detections.detections:
+            return None
+        # choose detection with largest area (closest face)
+        best = None
+        best_area = -1
+        for det in detections.detections:
+            bbox = det.location_data.relative_bounding_box
+            area = bbox.width * bbox.height
+            if area > best_area:
+                best_area = area
+                best = (bbox, det.score[0] if det.score else 0.0)
+        if best is None:
+            return None
+        return self._bbox_to_facedata(best[0], image_shape, best[1])
+
+    def smooth(self, new: Optional[FaceData]) -> FaceData:
+        if new is None:
+            # If face lost, gradually decay confidence to 0
+            if self.ema is None:
+                return FaceData(0.5, 0.5, 0.0, 0.0, 0.0, time.time(), status="no_face")
+            # reduce confidence and keep position
+            ema = self.ema
+            ema.confidence *= 0.85
+            ema.timestamp = time.time()
+            if ema.confidence < 0.02:
+                ema.status = "no_face"
+            return ema
+
+        if self.ema is None:
+            self.ema = new
+            return new
+
+        # exponential moving average
+        a = self.smoothing
+        self.ema.center_x = a * self.ema.center_x + (1 - a) * new.center_x
+        self.ema.center_y = a * self.ema.center_y + (1 - a) * new.center_y
+        self.ema.width = a * self.ema.width + (1 - a) * new.width
+        self.ema.height = a * self.ema.height + (1 - a) * new.height
+        self.ema.confidence = max(self.ema.confidence, new.confidence)
+        self.ema.timestamp = new.timestamp
+        self.ema.status = "ok"
+        return self.ema
+
+
+class FaceServer:
+    """WebSocket server broadcasting face data to connected clients."""
+
+    def __init__(self, host: str = "0.0.0.0", port: int = 8765):
+        self.host = host
+        self.port = port
+        self.clients = set()
+
+    async def _handler(self, websocket, path):
+        self.clients.add(websocket)
+        try:
+            async for _ in websocket:  # simple echo-style keepalive if client sends
+                pass
+        finally:
+            self.clients.remove(websocket)
+
+    async def broadcast(self, data: dict):
+        if not self.clients:
+            return
+        msg = json.dumps(data)
+        await asyncio.gather(*(c.send(msg) for c in list(self.clients)))
+
+    def start(self):
+        return websockets.serve(self._handler, self.host, self.port)
+
+
+async def main_loop(camera_index: int = 0, ws_port: int = 8765):
+    cam = CameraCapture(camera_index=camera_index)
+    if not cam.open():
+        print("ERROR: Could not open camera. Check permissions and device index.")
+        # still start server to allow clients to connect and see errors
+    detector = FaceDetector(min_detection_confidence=0.4)
+    tracker = FaceTracker(smoothing=0.75)
+    server = FaceServer(port=ws_port)
+
+    ws_server = server.start()
+    asyncio.ensure_future(ws_server)
+
+    print(f"FaceTracker: WebSocket server running on ws://{server.host}:{server.port}")
+
+    try:
+        while True:
+            frame = cam.read()
+            if frame is None:
+                # camera read failed or not opened
+                data = {"status": "camera_error", "timestamp": time.time()}
+                await server.broadcast(data)
+                await asyncio.sleep(0.1)
+                continue
+
+            results = detector.detect(frame)
+            picked = tracker.pick_closest(results, frame.shape)
+            smoothed = tracker.smooth(picked)
+
+            out = {
+                "center_x": smoothed.center_x,
+                "center_y": smoothed.center_y,
+                "width": smoothed.width,
+                "height": smoothed.height,
+                "confidence": smoothed.confidence,
+                "timestamp": smoothed.timestamp,
+                "status": smoothed.status,
+            }
+
+            await server.broadcast(out)
+
+            # small delay to yield to event loop and limit CPU usage
+            await asyncio.sleep(0.01)
+
+    except asyncio.CancelledError:
+        pass
+    finally:
+        cam.release()
+
+
+if __name__ == "__main__":
+    import argparse
+
+    parser = argparse.ArgumentParser(description="Run face tracker and broadcast via WebSocket.")
+    parser.add_argument("--camera", type=int, default=0, help="Camera index (default 0)")
+    parser.add_argument("--port", type=int, default=8765, help="WebSocket port (default 8765)")
+    args = parser.parse_args()
+
+    loop = asyncio.get_event_loop()
+    try:
+        loop.run_until_complete(main_loop(camera_index=args.camera, ws_port=args.port))
+    except KeyboardInterrupt:
+        print("Shutting down")
