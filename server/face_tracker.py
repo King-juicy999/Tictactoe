@@ -52,6 +52,19 @@ except Exception:
     np = None
     HAVE_NUMPY = False
 import websockets
+import logging
+from logging.handlers import RotatingFileHandler
+
+# Setup simple file logger (rotating) for server-side logs
+logger = logging.getLogger('face_tracker')
+logger.setLevel(logging.INFO)
+try:
+    fh = RotatingFileHandler('face_tracker.log', maxBytes=5 * 1024 * 1024, backupCount=3)
+    fh.setFormatter(logging.Formatter('%(asctime)s %(levelname)s: %(message)s'))
+    logger.addHandler(fh)
+except Exception:
+    # if file handler cannot be created, fall back to no-op
+    pass
 
 
 @dataclass
@@ -322,6 +335,7 @@ async def main_loop(camera_index: int = 0, ws_port: int = 8765):
     # detector and tracker
     detector = FaceDetector(min_detection_confidence=0.4)
     tracker = FaceTracker(smoothing=0.75)
+    mesh_analyzer = FaceMeshAnalyzer()
     server = FaceServer(port=ws_port)
 
     # Start the websocket server and ensure it's running for the lifetime of this loop.
@@ -333,8 +347,7 @@ async def main_loop(camera_index: int = 0, ws_port: int = 8765):
         await server.broadcast({"type": "camera_status", "connected": bool(cam_connected), "timestamp": time.time()})
     except Exception:
         # ignore if no clients
-        mesh_analyzer = FaceMeshAnalyzer()
-        pass
+        logger.info('No clients to receive initial camera_status')
 
     prev_cam_connected = bool(cam_connected)
 
@@ -406,25 +419,26 @@ async def main_loop(camera_index: int = 0, ws_port: int = 8765):
                 "status": smoothed.status,
             }
 
+            # If face mesh available, compute facial-expression metrics and include them
+            try:
+                if mesh_analyzer and mesh_analyzer.available:
+                    expr = mesh_analyzer.analyze(frame)
+                    if expr is not None:
+                        out['expressions'] = expr
+            except Exception as e:
+                logger.warning(f'FaceMesh analysis error: {e}')
+
             try:
                 await server.broadcast(out)
             except Exception:
                 # ignore client send errors
-                pass
+                logger.debug('Failed to send data to clients')
 
             # small delay to yield to event loop and limit CPU usage
             await asyncio.sleep(0.01)
 
     except asyncio.CancelledError:
-                # If face mesh available, compute facial-expression metrics and include them
-                try:
-                    if mesh_analyzer and mesh_analyzer.available:
-                        expr = mesh_analyzer.analyze(frame)
-                        if expr is not None:
-                            out['expressions'] = expr
-                except Exception:
-                    # ignore mesh errors
-                    pass
+        logger.info('Main loop cancelled')
         pass
     finally:
         cam.release()
