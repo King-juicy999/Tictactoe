@@ -206,6 +206,84 @@ class FaceTracker:
         return self.ema
 
 
+class FaceMeshAnalyzer:
+    """Compute basic facial-expression metrics from MediaPipe Face Mesh landmarks.
+
+    Metrics provided:
+    - mouth_open: float (0..1) relative to face bbox
+    - left_eye_open: float (0..1)
+    - right_eye_open: float (0..1)
+    - smile: float (0..1) approximating mouth corner spread
+    """
+
+    def __init__(self):
+        self.available = HAVE_MEDIAPIPE and HAVE_NUMPY
+        if self.available:
+            try:
+                self.facemesh = mp.solutions.face_mesh.FaceMesh(static_image_mode=False, max_num_faces=2, refine_landmarks=True, min_detection_confidence=0.4)
+                # extract index lists for features
+                self.lips_idx = sorted({i for pair in mp.solutions.face_mesh.FACEMESH_LIPS for i in pair})
+                self.left_eye_idx = sorted({i for pair in mp.solutions.face_mesh.FACEMESH_LEFT_EYE for i in pair})
+                self.right_eye_idx = sorted({i for pair in mp.solutions.face_mesh.FACEMESH_RIGHT_EYE for i in pair})
+            except Exception:
+                self.available = False
+                self.facemesh = None
+        else:
+            self.facemesh = None
+
+    def analyze(self, frame: np.ndarray):
+        """Return expression metrics for the first face, or None if not available."""
+        if not self.available or self.facemesh is None:
+            return None
+        try:
+            rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+            results = self.facemesh.process(rgb)
+            if not results or not results.multi_face_landmarks:
+                return None
+            lms = results.multi_face_landmarks[0].landmark
+            xs = np.array([lm.x for lm in lms])
+            ys = np.array([lm.y for lm in lms])
+
+            # Lips metrics
+            lips_x = xs[self.lips_idx]
+            lips_y = ys[self.lips_idx]
+            mouth_top = float(np.min(lips_y))
+            mouth_bottom = float(np.max(lips_y))
+            mouth_left = float(np.min(lips_x))
+            mouth_right = float(np.max(lips_x))
+            mouth_open = max(0.0, mouth_bottom - mouth_top)
+            mouth_width = max(1e-6, mouth_right - mouth_left)
+
+            # Eye metrics via bounding boxes of eye landmarks
+            le_x = xs[self.left_eye_idx]
+            le_y = ys[self.left_eye_idx]
+            re_x = xs[self.right_eye_idx]
+            re_y = ys[self.right_eye_idx]
+            left_eye_h = float(np.max(le_y) - np.min(le_y))
+            left_eye_w = float(np.max(le_x) - np.min(le_x))
+            right_eye_h = float(np.max(re_y) - np.min(re_y))
+            right_eye_w = float(np.max(re_x) - np.min(re_x))
+            left_eye_open = left_eye_h / max(1e-6, left_eye_w)
+            right_eye_open = right_eye_h / max(1e-6, right_eye_w)
+
+            # Smile approximation: mouth width relative to mouth height
+            smile = (mouth_width / max(1e-6, mouth_open)) if mouth_open > 0 else mouth_width * 5.0
+            # Normalize metrics to reasonable ranges
+            mouth_open_norm = float(np.clip(mouth_open * 3.0, 0.0, 1.0))
+            left_eye_open_norm = float(np.clip(left_eye_open * 2.0, 0.0, 1.0))
+            right_eye_open_norm = float(np.clip(right_eye_open * 2.0, 0.0, 1.0))
+            smile_norm = float(np.tanh(smile))
+
+            return {
+                'mouth_open': mouth_open_norm,
+                'left_eye_open': left_eye_open_norm,
+                'right_eye_open': right_eye_open_norm,
+                'smile': float(np.clip(smile_norm, 0.0, 1.0))
+            }
+        except Exception:
+            return None
+
+
 class FaceServer:
     """WebSocket server broadcasting face data to connected clients."""
 
@@ -255,6 +333,7 @@ async def main_loop(camera_index: int = 0, ws_port: int = 8765):
         await server.broadcast({"type": "camera_status", "connected": bool(cam_connected), "timestamp": time.time()})
     except Exception:
         # ignore if no clients
+        mesh_analyzer = FaceMeshAnalyzer()
         pass
 
     prev_cam_connected = bool(cam_connected)
@@ -337,6 +416,15 @@ async def main_loop(camera_index: int = 0, ws_port: int = 8765):
             await asyncio.sleep(0.01)
 
     except asyncio.CancelledError:
+                # If face mesh available, compute facial-expression metrics and include them
+                try:
+                    if mesh_analyzer and mesh_analyzer.available:
+                        expr = mesh_analyzer.analyze(frame)
+                        if expr is not None:
+                            out['expressions'] = expr
+                except Exception:
+                    # ignore mesh errors
+                    pass
         pass
     finally:
         cam.release()
