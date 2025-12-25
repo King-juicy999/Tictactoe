@@ -24,6 +24,7 @@ Run: python face_tracker.py
 """
 
 import asyncio
+import base64
 import json
 import time
 from collections import deque
@@ -160,18 +161,58 @@ class FaceTracker:
 
 
 class FaceServer:
-    """WebSocket server broadcasting face data to connected clients."""
+    """WebSocket server broadcasting face data to connected clients.
+
+    Accepts simple JSON commands from clients to control the tracker:
+      {"cmd": "pause"}
+      {"cmd": "resume"}
+      {"cmd": "slow_on"}
+      {"cmd": "slow_off"}
+      {"cmd": "frames_on"}
+      {"cmd": "frames_off"}
+      {"cmd": "log_on"}
+      {"cmd": "log_off"}
+    """
 
     def __init__(self, host: str = "0.0.0.0", port: int = 8765):
         self.host = host
         self.port = port
         self.clients = set()
+        # control flags - toggled by admin clients
+        self.pause = False
+        self.slow_motion = False
+        self.send_frames = False
+        self.logging = False
+        self.log_path = "face_log.jsonl"
 
     async def _handler(self, websocket, path):
         self.clients.add(websocket)
         try:
-            async for _ in websocket:  # simple echo-style keepalive if client sends
-                pass
+            async for message in websocket:
+                # accept simple JSON commands
+                try:
+                    cmd = json.loads(message)
+                except Exception:
+                    # ignore non-json keepalives
+                    continue
+                c = cmd.get("cmd")
+                if c == "pause":
+                    self.pause = True
+                elif c == "resume":
+                    self.pause = False
+                elif c == "slow_on":
+                    self.slow_motion = True
+                elif c == "slow_off":
+                    self.slow_motion = False
+                elif c == "frames_on":
+                    self.send_frames = True
+                elif c == "frames_off":
+                    self.send_frames = False
+                elif c == "log_on":
+                    self.logging = True
+                elif c == "log_off":
+                    self.logging = False
+                # any other commands ignored for now
         finally:
             self.clients.remove(websocket)
 
@@ -200,7 +241,10 @@ async def main_loop(camera_index: int = 0, ws_port: int = 8765):
     print(f"FaceTracker: WebSocket server running on ws://{server.host}:{server.port}")
 
     try:
+        # FPS measurement
+        frame_times = deque(maxlen=30)
         while True:
+            start = time.time()
             frame = cam.read()
             if frame is None:
                 # camera read failed or not opened
@@ -209,9 +253,19 @@ async def main_loop(camera_index: int = 0, ws_port: int = 8765):
                 await asyncio.sleep(0.1)
                 continue
 
-            results = detector.detect(frame)
-            picked = tracker.pick_closest(results, frame.shape)
+            # If paused, skip detection but still send camera_error or no_face states
+            results = None
+            if not server.pause:
+                results = detector.detect(frame)
+
+            picked = tracker.pick_closest(results, frame.shape) if results is not None else None
             smoothed = tracker.smooth(picked)
+
+            # compute FPS
+            frame_times.append(time.time())
+            fps = 0.0
+            if len(frame_times) >= 2:
+                fps = len(frame_times) / (frame_times[-1] - frame_times[0] + 1e-6)
 
             out = {
                 "center_x": smoothed.center_x,
@@ -221,12 +275,54 @@ async def main_loop(camera_index: int = 0, ws_port: int = 8765):
                 "confidence": smoothed.confidence,
                 "timestamp": smoothed.timestamp,
                 "status": smoothed.status,
+                "fps": fps,
             }
+
+            # logging
+            if server.logging:
+                try:
+                    with open(server.log_path, "a", encoding="utf-8") as f:
+                        f.write(json.dumps(out) + "\n")
+                except Exception:
+                    pass
+
+            # if frames requested, create an annotated JPEG and include as base64
+            if server.send_frames:
+                try:
+                    vis = frame.copy()
+                    ih, iw = vis.shape[:2]
+                    if smoothed and smoothed.status == "ok":
+                        # draw bounding box and center
+                        cx = int(smoothed.center_x * iw)
+                        cy = int(smoothed.center_y * ih)
+                        w = int(smoothed.width * iw)
+                        h = int(smoothed.height * ih)
+                        x1 = max(0, cx - w // 2)
+                        y1 = max(0, cy - h // 2)
+                        x2 = min(iw - 1, cx + w // 2)
+                        y2 = min(ih - 1, cy + h // 2)
+                        cv2.rectangle(vis, (x1, y1), (x2, y2), (0, 255, 0), 2)
+                        cv2.circle(vis, (cx, cy), 4, (0, 0, 255), -1)
+                        cv2.putText(vis, f"conf:{smoothed.confidence:.2f}", (x1, y1 - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 1)
+                    # overlay status
+                    cv2.putText(vis, f"status:{smoothed.status}", (10, 20), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (200, 200, 200), 2)
+                    # encode to JPEG
+                    ok, jpg = cv2.imencode('.jpg', vis, [int(cv2.IMWRITE_JPEG_QUALITY), 60])
+                    if ok:
+                        b64 = base64.b64encode(jpg.tobytes()).decode('ascii')
+                        out["frame"] = b64
+                except Exception:
+                    # if frame encoding fails, skip frame
+                    pass
 
             await server.broadcast(out)
 
-            # small delay to yield to event loop and limit CPU usage
-            await asyncio.sleep(0.01)
+            # slow motion support
+            if server.slow_motion:
+                await asyncio.sleep(0.15)
+            else:
+                # small delay to yield to event loop and limit CPU usage
+                await asyncio.sleep(0.01)
 
     except asyncio.CancelledError:
         pass

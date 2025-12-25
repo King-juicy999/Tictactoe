@@ -1,0 +1,121 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>Face Tracking Admin Dashboard</title>
+  <style>
+    body { font-family: Arial, sans-serif; background:#111; color:#eee; }
+    #container { display:flex; gap:16px; padding:12px; }
+    #videoPanel { position: relative; }
+    canvas { background:#000; border:1px solid #333; }
+    #controls { display:flex; flex-direction:column; gap:8px; }
+    button { padding:8px 12px; }
+    #data { margin-top:8px; font-family: monospace; font-size:14px; }
+  </style>
+</head>
+<body>
+  <h2>Face Tracking Admin Dashboard</h2>
+  <div id="container">
+    <div id="videoPanel">
+      <canvas id="canvas" width="640" height="480"></canvas>
+      <div id="overlay" style="position:relative"></div>
+      <div id="data"></div>
+    </div>
+    <div id="controls">
+      <button id="btnToggleFrames">Enable Frames</button>
+      <button id="btnTogglePause">Pause Tracking</button>
+      <button id="btnSlow">Enable Slow Motion</button>
+      <button id="btnLog">Start Logging</button>
+      <label><input type="checkbox" id="chkBBox" checked> Draw Bounding Box</label>
+      <div style="margin-top:12px; background:#222; padding:8px; border-radius:4px;">
+        <div>Status:</div>
+        <div id="statusText">connecting...</div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Connect to face_tracker WebSocket (must be running)
+    const WS_URL = (location.hostname === 'localhost') ? 'ws://localhost:8765' : `ws://${location.hostname}:8765`;
+    const ws = new WebSocket(WS_URL);
+    const canvas = document.getElementById('canvas');
+    const ctx = canvas.getContext('2d');
+    const dataBox = document.getElementById('data');
+    const statusText = document.getElementById('statusText');
+    const chkBBox = document.getElementById('chkBBox');
+
+    let framesEnabled = false;
+    let paused = false;
+    let slow = false;
+    let logging = false;
+
+    function sendCmd(cmd) { ws.send(JSON.stringify({cmd})); }
+
+    ws.onopen = () => { statusText.innerText = 'connected'; };
+    ws.onclose = () => { statusText.innerText = 'disconnected'; };
+    ws.onerror = (e) => { statusText.innerText = 'error'; };
+
+    ws.onmessage = (ev) => {
+      try {
+        const msg = JSON.parse(ev.data);
+        // draw frame if included
+        if (msg.frame) {
+          const img = new Image();
+          img.onload = () => {
+            // draw to canvas
+            ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+            // draw client-side overlays if requested
+            if (chkBBox.checked && msg.status === 'ok') {
+              const cx = msg.center_x * canvas.width;
+              const cy = msg.center_y * canvas.height;
+              const w = msg.width * canvas.width;
+              const h = msg.height * canvas.height;
+              const x1 = cx - w/2;
+              const y1 = cy - h/2;
+              ctx.strokeStyle = 'lime'; ctx.lineWidth = 2;
+              ctx.strokeRect(x1, y1, w, h);
+              ctx.fillStyle = 'red'; ctx.beginPath(); ctx.arc(cx, cy, 4, 0, 2*Math.PI); ctx.fill();
+            }
+          };
+          img.src = 'data:image/jpeg;base64,' + msg.frame;
+        } else {
+          // if no frame, clear canvas
+          ctx.fillStyle = '#000'; ctx.fillRect(0,0,canvas.width,canvas.height);
+        }
+
+        // update data panel
+        const lines = [];
+        lines.push(`status: ${msg.status||'N/A'}`);
+        lines.push(`center_x: ${msg.center_x?.toFixed(3) || 'N/A'}`);
+        lines.push(`center_y: ${msg.center_y?.toFixed(3) || 'N/A'}`);
+        lines.push(`width: ${msg.width?.toFixed(3) || 'N/A'}`);
+        lines.push(`height: ${msg.height?.toFixed(3) || 'N/A'}`);
+        lines.push(`confidence: ${msg.confidence?.toFixed(3) || 'N/A'}`);
+        lines.push(`fps: ${msg.fps?.toFixed(1) || 'N/A'}`);
+        dataBox.innerText = lines.join('\n');
+      } catch (e) { console.error(e); }
+    };
+
+    document.getElementById('btnToggleFrames').onclick = () => {
+      framesEnabled = !framesEnabled;
+      sendCmd(framesEnabled ? 'frames_on' : 'frames_off');
+      document.getElementById('btnToggleFrames').innerText = framesEnabled ? 'Disable Frames' : 'Enable Frames';
+    };
+    document.getElementById('btnTogglePause').onclick = () => {
+      paused = !paused;
+      sendCmd(paused ? 'pause' : 'resume');
+      document.getElementById('btnTogglePause').innerText = paused ? 'Resume Tracking' : 'Pause Tracking';
+    };
+    document.getElementById('btnSlow').onclick = () => {
+      slow = !slow;
+      sendCmd(slow ? 'slow_on' : 'slow_off');
+      document.getElementById('btnSlow').innerText = slow ? 'Disable Slow Motion' : 'Enable Slow Motion';
+    };
+    document.getElementById('btnLog').onclick = () => {
+      logging = !logging;
+      sendCmd(logging ? 'log_on' : 'log_off');
+      document.getElementById('btnLog').innerText = logging ? 'Stop Logging' : 'Start Logging';
+    };
+  </script>
+</body>
+</html>
