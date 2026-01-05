@@ -2655,6 +2655,9 @@ function resetToLanding() {
         // Stop camera streaming and recording
         try { stopVideoRecording(); } catch(_) {}
         try { stopCamera(); } catch(_) {}
+        
+        // Stop camera status updates
+        stopCameraStatusUpdates();
 
         // Reset UI
         welcomeScreen.classList.add('active');
