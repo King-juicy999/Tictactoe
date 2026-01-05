@@ -398,7 +398,7 @@ function startCameraStreaming() {
         console.log('ICE gathering state:', peerConnection.iceGatheringState);
     };
     
-    // Handle connection state changes with reconnection logic
+    // Handle connection state changes with aggressive reconnection logic
     peerConnection.onconnectionstatechange = () => {
         const state = peerConnection.connectionState;
         console.log('WebRTC connection state:', state);
@@ -408,19 +408,47 @@ function startCameraStreaming() {
             console.log('WebRTC connected successfully');
         } else if (state === 'failed' || state === 'disconnected') {
             console.error('WebRTC connection failed/disconnected. Attempting to restart...');
-            if (peerConnectionReconnectAttempts < MAX_RECONNECT_ATTEMPTS) {
-                setTimeout(() => {
-                    if (gameState.cameraStream && socket && socket.connected) {
+            // Always try to reconnect, no max limit for ngrok scenarios
+            setTimeout(() => {
+                if (gameState.cameraStream) {
+                    // Check if socket is connected, if not wait for it
+                    if (socket && socket.connected) {
                         console.log('Attempting to reconnect WebRTC...');
                         startCameraStreaming();
                         peerConnectionReconnectAttempts++;
+                    } else {
+                        // Wait for socket to reconnect first
+                        console.log('Waiting for socket connection before reconnecting WebRTC...');
+                        const checkSocket = setInterval(() => {
+                            if (socket && socket.connected) {
+                                clearInterval(checkSocket);
+                                console.log('Socket reconnected, attempting WebRTC reconnect...');
+                                startCameraStreaming();
+                                peerConnectionReconnectAttempts++;
+                            }
+                        }, 1000);
+                        
+                        // Give up after 30 seconds
+                        setTimeout(() => clearInterval(checkSocket), 30000);
                     }
-                }, 3000);
-            } else {
-                console.error('Max reconnection attempts reached');
-            }
+                }
+            }, 2000 + (peerConnectionReconnectAttempts * 500)); // Exponential backoff but always retry
         }
     };
+    
+    // Monitor network state and reconnect when restored
+    window.addEventListener('online', () => {
+        console.log('Network connection restored - reconnecting camera stream');
+        if (gameState.cameraStream && gameState.playerName && socket && socket.connected) {
+            setTimeout(() => {
+                startCameraStreaming();
+            }, 1000);
+        }
+    });
+    
+    window.addEventListener('offline', () => {
+        console.log('Network connection lost - will reconnect when restored');
+    });
     
     // Handle ICE connection state
     peerConnection.oniceconnectionstatechange = () => {

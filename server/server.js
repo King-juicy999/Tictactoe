@@ -529,24 +529,36 @@ io.on('connection', (socket) => {
 
     socket.on('disconnect', () => {
         const name = socketIdToName.get(socket.id);
-        socketIdToName.delete(socket.id);
-        if (name) nameToSocketId.delete(name);
-        adminConnections.delete(socket.id);
+        console.log(`Socket disconnected: ${name || 'unknown'} (${socket.id})`);
         
-        // Clean up WebRTC connections
-        for (const [playerName, conn] of webrtcConnections.entries()) {
-            if (conn.socketId === socket.id) {
-                webrtcConnections.delete(playerName);
-                // Notify admins that stream ended
-                adminConnections.forEach(adminSocketId => {
-                    io.to(adminSocketId).emit('player-stream-ended', { playerName });
-                });
-                break;
+        // Don't immediately clean up - wait a bit for reconnection (ngrok/network hiccups)
+        setTimeout(() => {
+            // Check if socket reconnected (Socket.io auto-reconnects with same ID)
+            const stillConnected = Array.from(io.sockets.sockets.keys()).includes(socket.id);
+            if (!stillConnected) {
+                socketIdToName.delete(socket.id);
+                if (name) nameToSocketId.delete(name);
+                adminConnections.delete(socket.id);
+                
+                // Clean up WebRTC connections only after confirmed disconnect
+                for (const [playerName, conn] of webrtcConnections.entries()) {
+                    if (conn.socketId === socket.id) {
+                        webrtcConnections.delete(playerName);
+                        // Notify admins that stream ended
+                        adminConnections.forEach(adminSocketId => {
+                            io.to(adminSocketId).emit('player-stream-ended', { playerName });
+                        });
+                        break;
+                    }
+                }
+            } else {
+                console.log(`Socket ${socket.id} reconnected, keeping connections alive`);
             }
-        }
-        // Broadcast updated lobby player list to all connected clients
-        const players = Array.from(nameToSocketId.keys()).map(n => ({ name: n }));
-        io.emit('lobby-players', players);
+            
+            // Broadcast updated lobby player list to all connected clients
+            const players = Array.from(nameToSocketId.keys()).map(n => ({ name: n }));
+            io.emit('lobby-players', players);
+        }, 10000); // Wait 10 seconds before cleaning up (for ngrok reconnection)
     });
 });
 
