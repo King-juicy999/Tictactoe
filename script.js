@@ -190,7 +190,9 @@ const gameState = {
     playerJustWon: false, // Track if player won last game - AI will think longer
     aiThinkingDelay: 500, // Base AI thinking delay (increased after player wins)
     currentLevel: 1, // Current level (based on total games played)
-    totalGamesPlayed: 0 // Total games (wins + losses) for level calculation
+    totalGamesPlayed: 0, // Total games (wins + losses) for level calculation
+    level1Wins: 0, // Wins in current level (need 5 to graduate)
+    shieldedCells: [] // Array of cell indices that are shielded (AI cannot select)
 };
 
 /**
@@ -385,18 +387,22 @@ const PowerUpManager = {
         const messageBox = document.getElementById('message-box');
         
         if (messageBox) {
-            messageBox.textContent = 'Select a cell to protect with Shield Guard';
+            messageBox.textContent = 'Select the cell you want to shield';
             messageBox.classList.add('powerup-selection-mode');
         }
         
+        // Mark that we're in shield selection mode (prevents normal moves)
+        gameState.inShieldSelectionMode = true;
+        
         // Add selection mode to cells
         cells.forEach((cell, index) => {
-            if (!cell.textContent.trim()) {
+            if (!cell.textContent.trim() && !gameState.shieldedCells.includes(index)) {
                 cell.classList.add('powerup-selectable');
                 cell.dataset.powerupSelection = powerUpId;
                 
                 const clickHandler = (e) => {
                     e.stopPropagation();
+                    e.preventDefault();
                     const selectedPowerUp = cell.dataset.powerupSelection;
                     if (selectedPowerUp === powerUpId) {
                         // Remove selection mode
@@ -410,7 +416,10 @@ const PowerUpManager = {
                             messageBox.classList.remove('powerup-selection-mode');
                         }
                         
-                        // Activate on selected cell
+                        // Exit shield selection mode
+                        gameState.inShieldSelectionMode = false;
+                        
+                        // Activate on selected cell (does NOT count as a move)
                         this.activatePowerUpOnCell(powerUpId, index);
                     }
                 };
@@ -510,7 +519,7 @@ const PowerUpManager = {
         
         switch(powerUpId) {
             case 'shieldGuard':
-                this.createShieldGuard(cell);
+                this.createShieldGuard(cell, cellIndex);
                 break;
         }
     },
@@ -577,11 +586,16 @@ const PowerUpManager = {
     /**
      * Create Shield Guard effect on cell
      */
-    createShieldGuard(cell) {
+    createShieldGuard(cell, cellIndex) {
         // Remove any existing shield
         const existingShield = cell.querySelector('.powerup-shield');
         if (existingShield) {
             existingShield.remove();
+        }
+        
+        // Add to shielded cells list (prevents AI from selecting)
+        if (!gameState.shieldedCells.includes(cellIndex)) {
+            gameState.shieldedCells.push(cellIndex);
         }
         
         // Create shield overlay
@@ -590,12 +604,30 @@ const PowerUpManager = {
         shield.innerHTML = '🛡️';
         cell.appendChild(shield);
         cell.classList.add('powerup-shield-active');
+        cell.dataset.shielded = 'true';
         
-        // Remove after duration
-        setTimeout(() => {
-            shield.remove();
+        // Remove after 1 turn (when player makes their next move or AI moves)
+        // Duration is managed by game turn, not time-based
+    },
+    
+    /**
+     * Remove shield from cell (called after turn completes)
+     */
+    removeShieldFromCell(cellIndex) {
+        const cells = document.querySelectorAll('.cell');
+        const cell = cells[cellIndex];
+        
+        if (cell) {
+            const shield = cell.querySelector('.powerup-shield');
+            if (shield) {
+                shield.remove();
+            }
             cell.classList.remove('powerup-shield-active');
-        }, 5000);
+            delete cell.dataset.shielded;
+        }
+        
+        // Remove from shielded cells list
+        gameState.shieldedCells = gameState.shieldedCells.filter(idx => idx !== cellIndex);
     },
     
     /**
@@ -641,13 +673,10 @@ const PowerUpManager = {
                 });
                 break;
             case 'shieldGuard':
+                // Shield is removed by game turn logic, not here
+                // Just mark as inactive
                 if (effectData && effectData.cellIndex !== undefined) {
-                    const cell = cells[effectData.cellIndex];
-                    if (cell) {
-                        const shield = cell.querySelector('.powerup-shield');
-                        if (shield) shield.remove();
-                        cell.classList.remove('powerup-shield-active');
-                    }
+                    // Shield removal handled by removeShieldFromCell
                 }
                 break;
             case 'focusAura':
@@ -2125,9 +2154,93 @@ if (modeAiBtn) {
                 ]
             );
         } else {
-            startGameAsAI();
+            // Show game welcome screen before starting
+            showGameWelcomeScreen();
         }
     });
+}
+
+/**
+ * Show game welcome screen with Level 1 info and power-ups
+ */
+function showGameWelcomeScreen() {
+    const welcomeOverlay = document.getElementById('game-welcome-overlay');
+    if (!welcomeOverlay) {
+        // If overlay doesn't exist, start game directly
+        startGameAsAI();
+        return;
+    }
+    
+    // Update level progress
+    updateLevelProgress();
+    
+    // Show overlay
+    welcomeOverlay.classList.remove('hidden');
+    setTimeout(() => {
+        welcomeOverlay.classList.add('active');
+    }, 10);
+    
+    // Setup button handlers
+    const skipBtn = document.getElementById('game-welcome-skip');
+    const startBtn = document.getElementById('game-welcome-start');
+    
+    if (skipBtn) {
+        skipBtn.onclick = () => {
+            hideGameWelcomeScreen();
+            startGameAsAI();
+        };
+    }
+    
+    if (startBtn) {
+        startBtn.onclick = () => {
+            hideGameWelcomeScreen();
+            startGameAsAI();
+        };
+    }
+}
+
+/**
+ * Hide game welcome screen
+ */
+function hideGameWelcomeScreen() {
+    const welcomeOverlay = document.getElementById('game-welcome-overlay');
+    if (!welcomeOverlay) return;
+    
+    welcomeOverlay.classList.remove('active');
+    setTimeout(() => {
+        welcomeOverlay.classList.add('hidden');
+    }, 400);
+}
+
+/**
+ * Update level progress display
+ */
+function updateLevelProgress() {
+    const progressFill = document.getElementById('level-progress-fill');
+    const winsCount = document.getElementById('level-wins-count');
+    const progressDots = document.querySelectorAll('.progress-dot');
+    
+    const wins = gameState.level1Wins || 0;
+    const progress = Math.min((wins / 5) * 100, 100);
+    
+    if (progressFill) {
+        progressFill.style.width = progress + '%';
+    }
+    
+    if (winsCount) {
+        winsCount.textContent = wins;
+    }
+    
+    // Update progress dots
+    if (progressDots) {
+        progressDots.forEach((dot, index) => {
+            if (index < wins) {
+                dot.classList.add('completed');
+            } else {
+                dot.classList.remove('completed');
+            }
+        });
+    }
 }
 
 if (modePlayerBtn) {
@@ -2151,6 +2264,11 @@ function handleCellClick(cell) {
     try {
         if (!gameState.gameActive || gameState.inInteractiveMode) return; // Pause during interactive mode
         
+        // If in shield selection mode, don't process normal moves (shield selection handles it)
+        if (gameState.inShieldSelectionMode) {
+            return; // Shield selection handler will process this click
+        }
+        
         // Lock UI during player move to prevent double clicks and overlapping animations
         if (gameState.uiLocked) return;
         gameState.uiLocked = true;
@@ -2161,6 +2279,13 @@ function handleCellClick(cell) {
         gameState.uiLocked = false;
         gameState.uiLockingReason = null;
         return;
+    }
+    
+    // Remove shield from this cell if it was shielded (shield lasts 1 turn)
+    if (gameState.shieldedCells.includes(parseInt(index))) {
+        if (typeof PowerUpManager !== 'undefined') {
+            PowerUpManager.removeShieldFromCell(parseInt(index));
+        }
     }
 
     clickSound.play();
@@ -2301,6 +2426,7 @@ function handleCellClick(cell) {
         
         // Player wins - allow it and let AI learn from the pattern
         gameState.wins = (gameState.wins || 0) + 1;
+        gameState.level1Wins = (gameState.level1Wins || 0) + 1;
         playerWinCount++;
         gameState.playerJustWon = true; // Mark that player won - AI will think longer next game
         gameState.aiThinkingDelay = 1500; // Increase thinking delay to 1.5 seconds
@@ -2309,6 +2435,18 @@ function handleCellClick(cell) {
         const winsDisplay = document.getElementById('wins');
         if (winsDisplay) {
             winsDisplay.textContent = gameState.wins;
+        }
+        
+        // Update level progress
+        updateLevelProgress();
+        
+        // Check if level completed (5 wins)
+        if (gameState.level1Wins >= 5) {
+            // Level completed - show celebration message
+            const messageBox = document.getElementById('message-box');
+            if (messageBox) {
+                messageBox.textContent = `Congratulations! You've completed Level 1 with ${gameState.level1Wins} wins!`;
+            }
         }
         
         // Play win sound
@@ -2502,6 +2640,14 @@ function makeAIMove() {
     try {
         if (!gameState.gameActive || gameState.inInteractiveMode) return; // Don't make moves during interactive mode
 
+    // Remove shields after AI move (shield lasts 1 turn)
+    if (gameState.shieldedCells.length > 0 && typeof PowerUpManager !== 'undefined') {
+        gameState.shieldedCells.slice().forEach(cellIndex => {
+            PowerUpManager.removeShieldFromCell(cellIndex);
+        });
+        gameState.shieldedCells = [];
+    }
+
     let index;
     // If a subtle pending move was prepared during a blackout, use it if still valid
     if (gameState.pendingCheatMoveIndex !== null && gameState.board[gameState.pendingCheatMoveIndex] === '') {
@@ -2684,8 +2830,11 @@ function chooseHardAIMove() {
     const randomMoveChance = isLosing ? 0.01 : 0.03; // 1-3% random moves
     
     // CHAOS MODE: Very rare random move (only when winning comfortably)
+    // Exclude shielded cells
     if (!isLosing && Math.random() < randomMoveChance) {
-        const emptyCells = gameState.board.map((cell, i) => cell === '' ? i : null).filter(i => i !== null);
+        const emptyCells = gameState.board
+            .map((cell, i) => (cell === '' && !gameState.shieldedCells.includes(i)) ? i : null)
+            .filter(i => i !== null);
         if (emptyCells.length > 0) {
             const randomIndex = emptyCells[Math.floor(Math.random() * emptyCells.length)];
             console.log('AI CHAOS MODE: Random move selected (rare)');
@@ -2702,7 +2851,8 @@ function chooseHardAIMove() {
         
         if (patternCheck.shouldBlock && patternCheck.nextExpectedMove !== null) {
             const blockMove = patternCheck.nextExpectedMove;
-            if (gameState.board[blockMove] === '') {
+            // Check if cell is empty and not shielded
+            if (gameState.board[blockMove] === '' && !gameState.shieldedCells.includes(blockMove)) {
                 // 98% chance to block when losing, 95% when winning (AI learns and adapts!)
                 const blockChance = isLosing ? 0.98 : 0.95;
                 if (Math.random() < blockChance) {
@@ -2767,10 +2917,10 @@ function chooseHardAIMove() {
         });
     }
 
-    // 2) Block opponent immediate win (collect all blocking moves)
+    // 2) Block opponent immediate win (collect all blocking moves, exclude shielded cells)
     const blockMoves = [];
     for (let i = 0; i < 9; i++) {
-        if (gameState.board[i] === '') {
+        if (gameState.board[i] === '' && !gameState.shieldedCells.includes(i)) {
             gameState.board[i] = 'X';
             if (checkWin('X')) {
                 blockMoves.push(i);
@@ -2789,10 +2939,10 @@ function chooseHardAIMove() {
         });
     }
 
-    // 3) Create forks (collect all fork moves)
+    // 3) Create forks (collect all fork moves, exclude shielded cells)
     const forkMoves = [];
     for (let i = 0; i < 9; i++) {
-        if (gameState.board[i] === '') {
+        if (gameState.board[i] === '' && !gameState.shieldedCells.includes(i)) {
             gameState.board[i] = 'O';
             const threats = countImmediateThreatsFor('O');
             if (threats >= 2) {
@@ -2810,10 +2960,10 @@ function chooseHardAIMove() {
         });
     }
 
-    // 4) Block opponent's fork (collect all fork blocks)
+    // 4) Block opponent's fork (collect all fork blocks, exclude shielded cells)
     const forkBlockMoves = [];
     for (let i = 0; i < 9; i++) {
-        if (gameState.board[i] === '') {
+        if (gameState.board[i] === '' && !gameState.shieldedCells.includes(i)) {
             gameState.board[i] = 'X';
             const threats = countImmediateThreatsFor('X');
             if (threats >= 2) {
@@ -2831,13 +2981,13 @@ function chooseHardAIMove() {
         });
     }
 
-    // 5) Strategic positions (center, corners, sides) - collect all options
+    // 5) Strategic positions (center, corners, sides) - collect all options, exclude shielded cells
     const strategicMoves = [];
-    if (gameState.board[4] === '') {
+    if (gameState.board[4] === '' && !gameState.shieldedCells.includes(4)) {
         strategicMoves.push({ index: 4, priority: 600, type: 'center', reasoning: 'Taking center' });
     }
     
-    const corners = [0, 2, 6, 8].filter(i => gameState.board[i] === '');
+    const corners = [0, 2, 6, 8].filter(i => gameState.board[i] === '' && !gameState.shieldedCells.includes(i));
     if (corners.length > 0) {
     const oppCorner = getOppositeCornerIndex();
         if (oppCorner !== null && corners.includes(oppCorner)) {
@@ -2852,7 +3002,7 @@ function chooseHardAIMove() {
         }
     }
     
-    const sides = [1, 3, 5, 7].filter(i => gameState.board[i] === '');
+    const sides = [1, 3, 5, 7].filter(i => gameState.board[i] === '' && !gameState.shieldedCells.includes(i));
     if (sides.length > 0) {
         strategicMoves.push({ 
             index: sides[Math.floor(Math.random() * sides.length)], 
@@ -2865,7 +3015,10 @@ function chooseHardAIMove() {
     strategicMoves.forEach(move => moveOptions.push(move));
 
     // 6) Fallback: Get all valid minimax moves and ALWAYS pick the best one
-    const emptyIndices = gameState.board.map((cell, i) => cell === '' ? i : null).filter(i => i !== null);
+    // Exclude shielded cells (AI cannot select them)
+    const emptyIndices = gameState.board
+        .map((cell, i) => (cell === '' && !gameState.shieldedCells.includes(i)) ? i : null)
+        .filter(i => i !== null);
     if (emptyIndices.length > 0) {
         const minimaxScores = [];
         emptyIndices.forEach(idx => {
@@ -2889,9 +3042,15 @@ function chooseHardAIMove() {
 
     // Select move with weighted randomness - higher priority moves more likely, but not guaranteed
     if (moveOptions.length === 0) {
-        // Ultimate fallback - random empty cell
-        const empty = gameState.board.map((cell, i) => cell === '' ? i : null).filter(i => i !== null);
-        return empty[Math.floor(Math.random() * empty.length)];
+        // Ultimate fallback - random empty cell (exclude shielded)
+        const empty = gameState.board
+            .map((cell, i) => (cell === '' && !gameState.shieldedCells.includes(i)) ? i : null)
+            .filter(i => i !== null);
+        if (empty.length > 0) {
+            return empty[Math.floor(Math.random() * empty.length)];
+        }
+        // If all cells are shielded, return null (shouldn't happen, but safety)
+        return null;
     }
 
     // Sort by priority
@@ -2922,8 +3081,10 @@ function chooseHardAIMove() {
     return moveIndex;
     } catch (e) {
         console.error('Critical error in chooseHardAIMove:', e);
-        // Fallback to random move
-        const empty = gameState.board.map((cell, i) => cell === '' ? i : null).filter(i => i !== null);
+        // Fallback to random move (exclude shielded cells)
+        const empty = gameState.board
+            .map((cell, i) => (cell === '' && !gameState.shieldedCells.includes(i)) ? i : null)
+            .filter(i => i !== null);
         if (empty.length > 0) {
             return empty[Math.floor(Math.random() * empty.length)];
         }

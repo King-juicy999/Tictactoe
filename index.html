@@ -131,6 +131,89 @@
                 <div class="sarah-narrative-actions" id="sarah-narrative-actions"></div>
             </div>
         </div>
+        
+        <!-- Game Welcome Screen (Level 1 & Power-ups Explanation) -->
+        <div id="game-welcome-overlay" class="game-welcome-overlay hidden">
+            <div class="game-welcome-container">
+                <h1 class="game-welcome-header">Welcome, Player!</h1>
+                <p class="game-welcome-subtext">Here's how the game works.</p>
+                
+                <div class="level-info-section">
+                    <h3 class="level-info-title">Level 1 System</h3>
+                    <p class="level-info-text">Win 5 rounds to proceed to the next level</p>
+                    <div class="level-progress-container">
+                        <div class="level-progress-visual">
+                            <div class="level-progress-dots" id="level-progress-dots">
+                                <span class="progress-dot" data-round="1">○</span>
+                                <span class="progress-dot" data-round="2">○</span>
+                                <span class="progress-dot" data-round="3">○</span>
+                                <span class="progress-dot" data-round="4">○</span>
+                                <span class="progress-dot" data-round="5">○</span>
+                            </div>
+                            <div class="level-progress-bar">
+                                <div class="level-progress-fill" id="level-progress-fill" style="width: 0%"></div>
+                            </div>
+                        </div>
+                        <div class="level-progress-text">
+                            <span id="level-wins-count">0</span> / 5 wins
+                            <span class="level-progress-tooltip" title="Win this round to progress">ℹ️</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="powerups-showcase-section">
+                    <h3 class="powerups-showcase-title">Your Starter Power-Ups</h3>
+                    <div class="powerups-showcase-grid">
+                        <div class="powerup-showcase-item" data-powerup="hintPulse">
+                            <div class="powerup-showcase-icon-wrapper">
+                                <div class="powerup-showcase-icon">💡</div>
+                            </div>
+                            <div class="powerup-showcase-name">Hint Pulse</div>
+                            <div class="powerup-showcase-tooltip">
+                                <div class="tooltip-content">
+                                    <div class="tooltip-title">Hint Pulse</div>
+                                    <div class="tooltip-desc">Shows suggested move for 2s</div>
+                                    <div class="tooltip-duration">Duration: 2 seconds</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="powerup-showcase-item" data-powerup="shieldGuard">
+                            <div class="powerup-showcase-icon-wrapper">
+                                <div class="powerup-showcase-icon">🛡️</div>
+                            </div>
+                            <div class="powerup-showcase-name">Shield Guard</div>
+                            <div class="powerup-showcase-tooltip">
+                                <div class="tooltip-content">
+                                    <div class="tooltip-title">Shield Guard</div>
+                                    <div class="tooltip-desc">Protect a cell for 1 turn</div>
+                                    <div class="tooltip-duration">Duration: Until next turn</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="powerup-showcase-item" data-powerup="focusAura">
+                            <div class="powerup-showcase-icon-wrapper">
+                                <div class="powerup-showcase-icon">🌀</div>
+                            </div>
+                            <div class="powerup-showcase-name">Focus Aura</div>
+                            <div class="powerup-showcase-tooltip">
+                                <div class="tooltip-content">
+                                    <div class="tooltip-title">Focus Aura</div>
+                                    <div class="tooltip-desc">PvP only (placeholder in PvE)</div>
+                                    <div class="tooltip-duration">Duration: 1-2 seconds</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="game-welcome-actions">
+                    <button id="game-welcome-start" class="game-welcome-btn primary">
+                        <span class="btn-text">Start Game</span>
+                        <span class="btn-glow"></span>
+                    </button>
+                </div>
+            </div>
+        </div>
     </div>
 
     <!-- Mode selection (AI or Player) shown after entering name and enabling camera -->
