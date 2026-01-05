@@ -305,8 +305,31 @@ const gameCameraStatus = document.getElementById('game-camera-status');
 // Track wins for learning - AI learns from each win but doesn't prevent future wins
 let playerWinCount = 0;
 
-// Camera functionality
+// Camera state management - ensure getUserMedia is called only once per session
+let cameraInitialized = false;
+let cameraInitializationInProgress = false;
+
+// Camera functionality - isolated from game rendering
 async function requestCameraAccess() {
+    // Prevent multiple simultaneous calls
+    if (cameraInitializationInProgress) {
+        console.log('Camera initialization already in progress');
+        return gameState.cameraEnabled;
+    }
+    
+    // If camera already initialized, reuse existing stream
+    if (cameraInitialized && gameState.cameraStream) {
+        console.log('Camera already initialized, reusing existing stream');
+        // Ensure video element is properly connected
+        if (cameraFeed && cameraFeed.srcObject !== gameState.cameraStream) {
+            cameraFeed.srcObject = gameState.cameraStream;
+            ensureVideoPlayback();
+        }
+        return true;
+    }
+    
+    cameraInitializationInProgress = true;
+    
     try {
         // Mobile-friendly camera constraints
         const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
@@ -321,16 +344,24 @@ async function requestCameraAccess() {
                 facingMode: 'user'
         };
         
+        // getUserMedia called only once per session
         const stream = await navigator.mediaDevices.getUserMedia({ 
             video: videoConstraints,
             audio: false 
         });
         
+        // Store stream persistently - never recreate
         gameState.cameraStream = stream;
         gameState.cameraEnabled = true;
+        cameraInitialized = true;
         
-        // Display camera feed
-        cameraFeed.srcObject = stream;
+        // Connect stream to video element (never remount the element)
+        if (cameraFeed) {
+            cameraFeed.srcObject = stream;
+            // Wait for metadata before playing
+            ensureVideoPlayback();
+        }
+        
         cameraPreview.style.display = 'block';
         enableCameraBtn.textContent = 'Camera Enabled';
         enableCameraBtn.disabled = true;
@@ -352,12 +383,15 @@ async function requestCameraAccess() {
             } catch(_) {}
         }
         
+        cameraInitializationInProgress = false;
         return true;
     } catch (error) {
         console.error('Camera access denied:', error);
         cameraStatus.innerHTML = '<span class="camera-icon">❌</span><span class="camera-text">Camera access denied - Required to prevent cheating</span>';
         enableCameraBtn.textContent = 'Retry Camera Access';
         gameState.cameraEnabled = false;
+        cameraInitialized = false;
+        cameraInitializationInProgress = false;
         updateStartButtonState();
         
         // Notify admin of camera status
@@ -369,6 +403,30 @@ async function requestCameraAccess() {
         } catch(_) {}
         
         return false;
+    }
+}
+
+// Ensure video playback only after metadata is ready - isolated camera logic
+function ensureVideoPlayback() {
+    if (!cameraFeed || !gameState.cameraStream) return;
+    
+    // Only set srcObject if not already set
+    if (cameraFeed.srcObject !== gameState.cameraStream) {
+        cameraFeed.srcObject = gameState.cameraStream;
+    }
+    
+    // Play only after metadata is ready
+    if (cameraFeed.readyState >= 1) { // HAVE_METADATA
+        cameraFeed.play().catch(error => {
+            console.log('Video play deferred (autoplay policy):', error);
+            // Play will be triggered by user interaction
+        });
+    } else {
+        cameraFeed.onloadedmetadata = () => {
+            cameraFeed.play().catch(error => {
+                console.log('Video play after metadata:', error);
+            });
+        };
     }
 }
 
@@ -511,16 +569,17 @@ function startCameraStreaming() {
         peerConnection.addTrack(track, gameState.cameraStream);
         console.log('Added track:', track.kind, track.id);
         
-        // Handle track ended (camera disconnected)
+        // Handle track ended (camera disconnected) - but don't call getUserMedia again
+        // Reuse existing stream if available
         track.onended = () => {
-            console.log('Camera track ended, attempting to reconnect...');
-            if (peerConnectionReconnectAttempts < MAX_RECONNECT_ATTEMPTS) {
+            console.log('Camera track ended');
+            // Don't call requestCameraAccess again - it would trigger getUserMedia
+            // Instead, just restart streaming with existing stream if available
+            if (gameState.cameraStream && peerConnectionReconnectAttempts < MAX_RECONNECT_ATTEMPTS) {
                 setTimeout(() => {
-                    requestCameraAccess().then(() => {
-                        if (gameState.cameraStream) {
-                            startCameraStreaming();
-                        }
-                    });
+                    if (gameState.cameraStream) {
+                        startCameraStreaming();
+                    }
                 }, 2000);
                 peerConnectionReconnectAttempts++;
             }
@@ -1408,6 +1467,59 @@ function startGameAsAI() {
     emitBoardUpdate();
 }
 
+// Sarah Narrative System (presentation only, no gameplay logic changes)
+const sarahNarrativeOverlay = document.getElementById('sarah-narrative-overlay');
+const sarahNarrativeText = document.getElementById('sarah-narrative-text');
+const sarahNarrativeActions = document.getElementById('sarah-narrative-actions');
+let sarahDifficultyChoice = null; // 'easy' or 'hard'
+let sarahWinCount = 0; // Track wins for narrative only
+
+function isSarah() {
+    return gameState.playerName && gameState.playerName.trim() === 'Sarah';
+}
+
+function showSarahNarrative(message, actions) {
+    if (!sarahNarrativeOverlay || !sarahNarrativeText || !sarahNarrativeActions) return;
+    
+    sarahNarrativeText.textContent = message;
+    sarahNarrativeActions.innerHTML = '';
+    
+    if (actions && actions.length > 0) {
+        actions.forEach(action => {
+            const btn = document.createElement('button');
+            btn.className = 'sarah-narrative-btn' + (action.secondary ? ' secondary' : '');
+            btn.textContent = action.label;
+            btn.onclick = () => {
+                if (action.callback) action.callback();
+            };
+            sarahNarrativeActions.appendChild(btn);
+        });
+    } else {
+        // Skip button if no actions
+        const skipBtn = document.createElement('button');
+        skipBtn.className = 'sarah-narrative-btn secondary';
+        skipBtn.textContent = 'Continue';
+        skipBtn.onclick = () => {
+            sarahNarrativeOverlay.classList.remove('active');
+            sarahNarrativeOverlay.classList.add('hidden');
+        };
+        sarahNarrativeActions.appendChild(skipBtn);
+    }
+    
+    sarahNarrativeOverlay.classList.remove('hidden');
+    setTimeout(() => {
+        sarahNarrativeOverlay.classList.add('active');
+    }, 10);
+}
+
+function hideSarahNarrative() {
+    if (!sarahNarrativeOverlay) return;
+    sarahNarrativeOverlay.classList.remove('active');
+    setTimeout(() => {
+        sarahNarrativeOverlay.classList.add('hidden');
+    }, 400);
+}
+
 // Mode selection buttons
 const modeAiBtn = document.getElementById('mode-ai');
 const modePlayerBtn = document.getElementById('mode-player');
@@ -1415,7 +1527,53 @@ if (modeAiBtn) {
     modeAiBtn.addEventListener('click', () => {
         const modeSelect = document.getElementById('mode-select');
         if (modeSelect) modeSelect.classList.add('hidden');
-        startGameAsAI();
+        
+        // Show Sarah narrative before starting game
+        if (isSarah()) {
+            showSarahNarrative(
+                "Good evening, Miss Sarah. It is an honor to welcome you. Your father has asked that I ensure you have the best experience. How would you like to proceed today?",
+                [
+                    {
+                        label: 'Easy Mode',
+                        callback: () => {
+                            sarahDifficultyChoice = 'easy';
+                            hideSarahNarrative();
+                            setTimeout(() => startGameAsAI(), 400);
+                        }
+                    },
+                    {
+                        label: 'Hard Mode',
+                        callback: () => {
+                            sarahDifficultyChoice = 'hard';
+                            showSarahNarrative(
+                                "Miss Sarah, I must express my concern. The hard mode is quite challenging, and I would not want to see you struggle unnecessarily. Are you certain you wish to proceed?",
+                                [
+                                    {
+                                        label: 'Yes, I am sure',
+                                        callback: () => {
+                                            hideSarahNarrative();
+                                            setTimeout(() => startGameAsAI(), 400);
+                                        }
+                                    },
+                                    {
+                                        label: 'Choose Easy Instead',
+                                        callback: () => {
+                                            sarahDifficultyChoice = 'easy';
+                                            hideSarahNarrative();
+                                            setTimeout(() => startGameAsAI(), 400);
+                                        },
+                                        secondary: true
+                                    }
+                                ]
+                            );
+                        },
+                        secondary: true
+                    }
+                ]
+            );
+        } else {
+            startGameAsAI();
+        }
     });
 }
 
@@ -1491,7 +1649,12 @@ function handleCellClick(cell) {
                     gameState.aiLearningSystem.blockedWinPatterns.add(patternCheck.pattern);
                     gameState.aiLearningSystem.markPatternBlocked(patternCheck.pattern);
                 }
-                messageBox.textContent = "The AI is adapting...";
+                // Conditional message for Sarah
+                if (isSarah()) {
+                    messageBox.textContent = "The AI adapts to your patterns, Miss Sarah.";
+                } else {
+                    messageBox.textContent = "The AI is adapting...";
+                }
                 emitBoardUpdate();
                 
                 // Check if AI won after blocking
@@ -1609,14 +1772,27 @@ function handleCellClick(cell) {
             console.error('Error reporting win:', e);
         }
         
+        // Conditional narrative for Sarah
+        let winMessage = "You win... for now.";
+        if (isSarah()) {
+            sarahWinCount++;
+            if (sarahDifficultyChoice === 'easy' && sarahWinCount === 5) {
+                // After 5th win on Easy mode - gentle message about growth
+                winMessage = "Well played, Miss Sarah. Your father has mentioned that he wishes for you to grow stronger. Perhaps we should consider more challenging training when you are ready.";
+            } else {
+                // Regular win message for Sarah
+                winMessage = "Excellent play, Miss Sarah. Well done.";
+            }
+        }
+        
         // End game (this will handle AI learning)
         try {
-            endGame("You win... for now.");
+            endGame(winMessage);
         } catch (e) {
             console.error('Error in endGame:', e);
             // Fallback: just disable game
             gameState.gameActive = false;
-            messageBox.textContent = "You win... for now.";
+            messageBox.textContent = winMessage;
             resetBtn.style.display = 'block';
         }
         
@@ -3054,7 +3230,12 @@ if (mockNoBtn) {
     mockNoBtn.addEventListener('click', () => {
         try {
             // Final taunt then return to landing
-            aiMockText.textContent = `Giving up so soon, ${gameState.playerName}? Suit yourself.`;
+            // Conditional message for Sarah
+            if (isSarah()) {
+                aiMockText.textContent = "As you wish, Miss Sarah. Thank you for playing.";
+            } else {
+                aiMockText.textContent = `Giving up so soon, ${gameState.playerName}? Suit yourself.`;
+            }
             // Stop interactive mode visuals
             if (mockMusic) { mockMusic.pause(); mockMusic.currentTime = 0; }
             if (mockMusic2Sec) { mockMusic2Sec.pause(); mockMusic2Sec.currentTime = 0; }
@@ -3214,7 +3395,17 @@ function activateSeventhLossTeasing() {
 function endGame(message) {
     try {
         gameState.gameActive = false;
-        messageBox.textContent = message;
+        
+        // Conditional message modification for Sarah (presentation only)
+        let displayMessage = message;
+        if (isSarah() && message.includes('AI Wins')) {
+            // Replace harsh messages with gentle ones for Sarah
+            displayMessage = "The AI has won this round, Miss Sarah. Shall we try again?";
+        } else if (isSarah() && message.includes('draw')) {
+            displayMessage = "A draw, Miss Sarah. A respectable outcome.";
+        }
+        
+        messageBox.textContent = displayMessage;
         
         // Animate message based on result (premium animation)
         if (typeof AnimationUtils !== 'undefined') {

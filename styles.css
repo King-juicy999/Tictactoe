@@ -2204,6 +2204,115 @@ button:disabled:hover {
     }
 }
 
+/* Sarah Narrative Overlay */
+.sarah-narrative-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.75);
+    backdrop-filter: blur(4px);
+    z-index: 10000;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    opacity: 0;
+    transition: opacity 0.4s ease;
+    pointer-events: none;
+}
+
+.sarah-narrative-overlay.active {
+    opacity: 1;
+    pointer-events: all;
+}
+
+.sarah-narrative-overlay.hidden {
+    display: none;
+}
+
+.sarah-narrative-container {
+    background: linear-gradient(135deg, rgba(250, 250, 250, 0.98) 0%, rgba(245, 245, 245, 0.98) 100%);
+    border: 2px solid rgba(150, 150, 150, 0.3);
+    border-radius: 20px;
+    padding: 2.5rem;
+    max-width: 600px;
+    width: 90%;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    text-align: center;
+}
+
+.sarah-narrative-message {
+    font-size: 1.3rem;
+    line-height: 1.8;
+    color: #2b2b2b;
+    margin-bottom: 2rem;
+    font-weight: 300;
+}
+
+.sarah-narrative-actions {
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+.sarah-narrative-btn {
+    padding: 0.875rem 2rem;
+    font-size: 1.1rem;
+    background: #4a90e2;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-family: inherit;
+    transition: all 0.2s ease;
+    box-shadow: 0 4px 12px rgba(74, 144, 226, 0.3);
+}
+
+.sarah-narrative-btn:hover {
+    background: #357abd;
+    transform: translateY(-1px);
+    box-shadow: 0 6px 16px rgba(74, 144, 226, 0.4);
+}
+
+.sarah-narrative-btn:active {
+    transform: translateY(0);
+}
+
+.sarah-narrative-btn.secondary {
+    background: #95a5a6;
+    box-shadow: 0 4px 12px rgba(149, 165, 166, 0.3);
+}
+
+.sarah-narrative-btn.secondary:hover {
+    background: #7f8c8d;
+    box-shadow: 0 6px 16px rgba(149, 165, 166, 0.4);
+}
+
+@media (max-width: 600px) {
+    .sarah-narrative-container {
+        padding: 2rem 1.5rem;
+    }
+    
+    .sarah-narrative-message {
+        font-size: 1.1rem;
+        margin-bottom: 1.5rem;
+    }
+    
+    .sarah-narrative-btn {
+        padding: 0.75rem 1.5rem;
+        font-size: 1rem;
+        width: 100%;
+        max-width: 280px;
+    }
+    
+    .sarah-narrative-actions {
+        flex-direction: column;
+        align-items: center;
+    }
+}
+
 @media (max-width: 360px) {
     .theme-selection-container {
         padding: 1.25rem;
