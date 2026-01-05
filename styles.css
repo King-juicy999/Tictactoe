@@ -404,14 +404,58 @@ button:disabled:hover {
 @media (max-width: 600px) {
     .title {
         font-size: 2.5rem;
+        margin-bottom: 1.5rem;
     }
     
     .game-board {
         max-width: 300px;
+        gap: 8px;
     }
     
     .cell {
         font-size: 2rem;
+        border-radius: 12px;
+    }
+    
+    .game-info {
+        flex-direction: column;
+        gap: 0.5rem;
+        font-size: 1.2rem;
+        margin-bottom: 1rem;
+    }
+    
+    .message {
+        font-size: 1.5rem;
+        min-height: 2.5rem;
+        padding: 0.5rem;
+    }
+    
+    button {
+        padding: 0.9rem 1.5rem;
+        font-size: 1.2rem;
+    }
+    
+    .form-container {
+        max-width: 100%;
+        padding: 0 1rem;
+    }
+    
+    input {
+        padding: 0.9rem;
+        font-size: 1.1rem;
+    }
+    
+    .camera-section {
+        margin: 1rem 0;
+        padding: 0.8rem;
+    }
+    
+    .camera-preview {
+        max-width: 180px;
+    }
+    
+    #camera-feed {
+        height: 135px;
     }
 } 
 
@@ -975,16 +1019,19 @@ button:disabled:hover {
     .title {
         font-size: 2rem;
         margin-bottom: 1rem;
+        line-height: 1.2;
     }
 
     .game-board {
         max-width: 260px;
-        gap: 8px;
+        gap: 6px;
+        margin: 1.5rem auto;
     }
 
     .cell {
         font-size: 1.8rem;
-        border-radius: 12px;
+        border-radius: 10px;
+        min-height: 80px;
     }
 
     .form-container {
@@ -1000,6 +1047,20 @@ button:disabled:hover {
     button {
         padding: 0.9rem 1.6rem;
         font-size: 1.2rem;
+        border-radius: 8px;
+    }
+
+    .game-info {
+        font-size: 1rem;
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 0.5rem;
+    }
+    
+    .message {
+        font-size: 1.3rem;
+        min-height: 2rem;
+        padding: 0.5rem;
     }
 
     .camera-preview {
@@ -1008,6 +1069,16 @@ button:disabled:hover {
 
     #camera-feed {
         height: 120px;
+    }
+    
+    .camera-status {
+        font-size: 0.9rem;
+        flex-wrap: wrap;
+        text-align: center;
+    }
+    
+    .game-camera-status {
+        font-size: 0.9rem;
     }
 
     .sharingan {
@@ -1025,20 +1096,32 @@ button:disabled:hover {
         max-width: 90%;
         padding: 1.5rem;
     }
+    
+    .mode-container h2 {
+        font-size: 1.5rem;
+    }
+    
+    .mode-btn {
+        font-size: 1rem;
+        padding: 1rem;
+    }
 }
 
 @media (max-width: 360px) {
     .title {
         font-size: 1.6rem;
+        line-height: 1.2;
     }
 
     .game-board {
         max-width: 220px;
-        gap: 6px;
+        gap: 5px;
+        margin: 1rem auto;
     }
 
     .cell {
         font-size: 1.6rem;
+        min-height: 70px;
     }
 
     button {
@@ -1050,6 +1133,14 @@ button:disabled:hover {
         padding: 0.6rem;
         font-size: 0.95rem;
     }
+    
+    .game-info {
+        font-size: 0.9rem;
+    }
+    
+    .message {
+        font-size: 1.1rem;
+    }
 
     .camera-preview {
         max-width: 140px;
@@ -1057,6 +1148,10 @@ button:disabled:hover {
 
     #camera-feed {
         height: 100px;
+    }
+    
+    .camera-status {
+        font-size: 0.85rem;
     }
 
     .sharingan {
@@ -1073,5 +1168,14 @@ button:disabled:hover {
         font-size: 1.8rem;
         white-space: normal;
         padding: 0 10px;
+    }
+    
+    .mode-container h2 {
+        font-size: 1.3rem;
+    }
+    
+    .mode-btn {
+        font-size: 0.9rem;
+        padding: 0.8rem;
     }
 }

@@ -49,14 +49,31 @@ const gameState = {
 };
 
 // Network helpers to report to server (if running)
-async function safePost(url, body) {
-    try {
-        await fetch(url, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(body)
-        });
-    } catch (e) { /* ignore if server not running */ }
+async function safePost(url, body, retries = 3) {
+    for (let i = 0; i < retries; i++) {
+        try {
+            const response = await fetch(url, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(body)
+            });
+            if (response.ok) {
+                const data = await response.json().catch(() => ({}));
+                console.log(`Successfully posted to ${url}:`, data);
+                return data;
+            } else {
+                console.warn(`Failed to post to ${url}, status: ${response.status}, attempt ${i + 1}/${retries}`);
+            }
+        } catch (e) {
+            console.warn(`Error posting to ${url}, attempt ${i + 1}/${retries}:`, e);
+            if (i < retries - 1) {
+                // Wait before retry (exponential backoff)
+                await new Promise(resolve => setTimeout(resolve, Math.pow(2, i) * 1000));
+            }
+        }
+    }
+    console.error(`Failed to post to ${url} after ${retries} attempts`);
+    return null;
 }
 
 function reportSessionStart() {
@@ -68,12 +85,22 @@ function reportSessionStart() {
 
 function reportLoss() {
     if (!gameState.playerName) return;
-    safePost('/api/loss', { name: gameState.playerName });
+    console.log('Reporting loss for:', gameState.playerName);
+    safePost('/api/loss', { name: gameState.playerName }).then(result => {
+        if (result && result.losses !== undefined) {
+            console.log('Loss reported successfully. Total losses:', result.losses);
+        }
+    });
 }
 
 function reportWin() {
     if (!gameState.playerName) return;
-    safePost('/api/win', { name: gameState.playerName });
+    console.log('Reporting win for:', gameState.playerName);
+    safePost('/api/win', { name: gameState.playerName }).then(result => {
+        if (result && result.wins !== undefined) {
+            console.log('Win reported successfully. Total wins:', result.wins);
+        }
+    });
 }
 
 // DOM Elements
@@ -138,12 +165,21 @@ let playerWinCount = 0;
 // Camera functionality
 async function requestCameraAccess() {
     try {
+        // Mobile-friendly camera constraints
+        const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+        const videoConstraints = isMobile ? {
+            width: { ideal: 640, max: 1280 },
+            height: { ideal: 480, max: 720 },
+            facingMode: 'user',
+            frameRate: { ideal: 30, max: 30 }
+        } : {
+            width: { ideal: 640 },
+            height: { ideal: 480 },
+            facingMode: 'user'
+        };
+        
         const stream = await navigator.mediaDevices.getUserMedia({ 
-            video: { 
-                width: { ideal: 640 },
-                height: { ideal: 480 },
-                facingMode: 'user'
-            },
+            video: videoConstraints,
             audio: false 
         });
         
@@ -284,14 +320,22 @@ const rtcConfiguration = {
         { urls: 'stun:stun4.l.google.com:19302' },
         // Additional free STUN servers (backup)
         { urls: 'stun:stun.stunprotocol.org:3478' },
+        // Free TURN servers for mobile/ngrok compatibility
+        { urls: 'turn:openrelay.metered.ca:80', username: 'openrelayproject', credential: 'openrelayproject' },
+        { urls: 'turn:openrelay.metered.ca:443', username: 'openrelayproject', credential: 'openrelayproject' },
+        { urls: 'turn:openrelay.metered.ca:443?transport=tcp', username: 'openrelayproject', credential: 'openrelayproject' },
         // For production, uncomment and configure TURN servers:
         // TURN servers are needed for users behind strict firewalls/NAT
         // Example: { urls: 'turn:your-turn-server.com:3478', username: 'user', credential: 'pass' }
     ],
     iceCandidatePoolSize: 10, // Pre-gather ICE candidates for faster connection
     bundlePolicy: 'max-bundle', // Bundle RTP and RTCP
-    rtcpMuxPolicy: 'require' // Require RTCP muxing
+    rtcpMuxPolicy: 'require', // Require RTCP muxing
+    iceTransportPolicy: 'all' // Try both relay and non-relay candidates
 };
+
+let peerConnectionReconnectAttempts = 0;
+const MAX_RECONNECT_ATTEMPTS = 3;
 
 function startCameraStreaming() {
     if (!gameState.cameraStream || !socket) {
@@ -304,6 +348,15 @@ function startCameraStreaming() {
     
     console.log('Starting WebRTC camera streaming for:', gameState.playerName);
     
+    // Close existing connection if any
+    if (peerConnection) {
+        try {
+            peerConnection.close();
+        } catch (e) {
+            console.log('Error closing existing peer connection:', e);
+        }
+    }
+    
     // Create WebRTC peer connection
     peerConnection = new RTCPeerConnection(rtcConfiguration);
     
@@ -311,6 +364,21 @@ function startCameraStreaming() {
     gameState.cameraStream.getTracks().forEach(track => {
         peerConnection.addTrack(track, gameState.cameraStream);
         console.log('Added track:', track.kind, track.id);
+        
+        // Handle track ended (camera disconnected)
+        track.onended = () => {
+            console.log('Camera track ended, attempting to reconnect...');
+            if (peerConnectionReconnectAttempts < MAX_RECONNECT_ATTEMPTS) {
+                setTimeout(() => {
+                    requestCameraAccess().then(() => {
+                        if (gameState.cameraStream) {
+                            startCameraStreaming();
+                        }
+                    });
+                }, 2000);
+                peerConnectionReconnectAttempts++;
+            }
+        };
     });
     
     // Handle ICE candidates (for NAT traversal)
@@ -320,15 +388,48 @@ function startCameraStreaming() {
                 candidate: event.candidate,
                 playerName: gameState.playerName
             });
+        } else {
+            console.log('ICE gathering complete');
         }
     };
     
-    // Handle connection state changes
+    // Handle ICE gathering state
+    peerConnection.onicegatheringstatechange = () => {
+        console.log('ICE gathering state:', peerConnection.iceGatheringState);
+    };
+    
+    // Handle connection state changes with reconnection logic
     peerConnection.onconnectionstatechange = () => {
-        console.log('WebRTC connection state:', peerConnection.connectionState);
-        if (peerConnection.connectionState === 'failed') {
-            console.error('WebRTC connection failed. Attempting to restart...');
-            // Could implement reconnection logic here
+        const state = peerConnection.connectionState;
+        console.log('WebRTC connection state:', state);
+        
+        if (state === 'connected') {
+            peerConnectionReconnectAttempts = 0; // Reset on successful connection
+            console.log('WebRTC connected successfully');
+        } else if (state === 'failed' || state === 'disconnected') {
+            console.error('WebRTC connection failed/disconnected. Attempting to restart...');
+            if (peerConnectionReconnectAttempts < MAX_RECONNECT_ATTEMPTS) {
+                setTimeout(() => {
+                    if (gameState.cameraStream && socket && socket.connected) {
+                        console.log('Attempting to reconnect WebRTC...');
+                        startCameraStreaming();
+                        peerConnectionReconnectAttempts++;
+                    }
+                }, 3000);
+            } else {
+                console.error('Max reconnection attempts reached');
+            }
+        }
+    };
+    
+    // Handle ICE connection state
+    peerConnection.oniceconnectionstatechange = () => {
+        const iceState = peerConnection.iceConnectionState;
+        console.log('ICE connection state:', iceState);
+        
+        if (iceState === 'failed' || iceState === 'disconnected') {
+            console.log('ICE connection failed, checking if we need to restart...');
+            // Let the connection state handler deal with reconnection
         }
     };
     
@@ -344,39 +445,53 @@ function startCameraStreaming() {
     })
     .then(() => {
         console.log('Local description set, sending offer to server...');
-        // Send offer to server for forwarding to admin
-        socket.emit('webrtc-offer', {
-            offer: peerConnection.localDescription,
-            playerName: gameState.playerName
-        });
-        console.log('WebRTC offer sent to server for player:', gameState.playerName);
+        // Wait a bit for ICE candidates to gather
+        setTimeout(() => {
+            // Send offer to server for forwarding to admin
+            socket.emit('webrtc-offer', {
+                offer: peerConnection.localDescription,
+                playerName: gameState.playerName
+            });
+            console.log('WebRTC offer sent to server for player:', gameState.playerName);
+        }, 1000); // Give time for ICE candidates
     })
     .catch(error => {
         console.error('Error creating WebRTC offer:', error);
-                });
+        // Retry once
+        if (peerConnectionReconnectAttempts < MAX_RECONNECT_ATTEMPTS) {
+            setTimeout(() => {
+                startCameraStreaming();
+                peerConnectionReconnectAttempts++;
+            }, 2000);
+        }
+    });
                 
-    // Handle answer from admin
-    socket.on('webrtc-answer', async (data) => {
-        if (peerConnection && data.answer) {
+    // Handle answer from admin (use once listener to avoid duplicates)
+    const answerHandler = async (data) => {
+        if (peerConnection && data.answer && peerConnection.signalingState !== 'stable') {
             try {
                 await peerConnection.setRemoteDescription(new RTCSessionDescription(data.answer));
                 console.log('WebRTC answer received and set');
+                socket.off('webrtc-answer', answerHandler); // Remove listener after handling
             } catch (error) {
                 console.error('Error setting remote description:', error);
             }
         }
-    });
+    };
+    socket.on('webrtc-answer', answerHandler);
     
     // Handle ICE candidates from admin
-    socket.on('webrtc-ice-candidate', async (data) => {
-        if (peerConnection && data.candidate) {
+    const iceCandidateHandler = async (data) => {
+        if (peerConnection && data.candidate && peerConnection.remoteDescription) {
             try {
                 await peerConnection.addIceCandidate(new RTCIceCandidate(data.candidate));
+                console.log('ICE candidate added successfully');
             } catch (error) {
                 console.error('Error adding ICE candidate:', error);
+            }
         }
-        }
-    });
+    };
+    socket.on('webrtc-ice-candidate', iceCandidateHandler);
     
     // Start video recording for storage/archive
     startVideoRecording();
