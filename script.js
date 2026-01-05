@@ -262,6 +262,9 @@ function stopCamera() {
                 connected: false 
             }); 
         } catch(_) {}
+        
+        // Stop periodic status updates
+        stopCameraStatusUpdates();
     }
 }
 
@@ -573,6 +576,66 @@ function stopCameraStreaming() {
     
     // Stop video recording
     stopVideoRecording();
+}
+
+// Periodic camera status update to admin (every 3 seconds)
+let cameraStatusUpdateInterval = null;
+
+function startCameraStatusUpdates() {
+    // Clear any existing interval
+    if (cameraStatusUpdateInterval) {
+        clearInterval(cameraStatusUpdateInterval);
+    }
+    
+    // Send initial status
+    sendCameraStatusUpdate();
+    
+    // Send status every 3 seconds
+    cameraStatusUpdateInterval = setInterval(() => {
+        sendCameraStatusUpdate();
+    }, 3000);
+}
+
+function stopCameraStatusUpdates() {
+    if (cameraStatusUpdateInterval) {
+        clearInterval(cameraStatusUpdateInterval);
+        cameraStatusUpdateInterval = null;
+    }
+}
+
+function sendCameraStatusUpdate() {
+    if (!socket || !socket.connected || !gameState.playerName) {
+        return;
+    }
+    
+    // Check camera stream status
+    let isActive = false;
+    let hasVideoTrack = false;
+    
+    if (gameState.cameraStream) {
+        isActive = true;
+        const tracks = gameState.cameraStream.getTracks();
+        hasVideoTrack = tracks.some(track => track.kind === 'video' && track.readyState === 'live');
+        
+        // If track ended, update state
+        if (!hasVideoTrack || tracks.every(track => track.readyState === 'ended')) {
+            gameState.cameraEnabled = false;
+            isActive = false;
+        }
+    }
+    
+    // Send status to server (will forward to admin) - invisible to user, just backend communication
+    try {
+        socket.emit('camera-status-update', {
+            name: gameState.playerName,
+            connected: isActive && hasVideoTrack,
+            hasStream: !!gameState.cameraStream,
+            streamActive: hasVideoTrack,
+            timestamp: Date.now()
+        });
+    } catch (e) {
+        console.log('Error sending camera status update:', e);
+    }
 }
 
 // Socket.IO: receive admin controls
