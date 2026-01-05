@@ -1996,15 +1996,64 @@ button:disabled:hover {
     transform: scale(0.98);
 }
 
+/* Selection indicator - high contrast, works in all modes */
 .theme-preview-card.selected {
-    border-color: var(--primary-color);
-    box-shadow: 0 0 0 2px var(--win-glow), 0 4px 12px var(--shadow);
-    transform: none;
+    /* Strong border with high contrast (dark for visibility on light, light for visibility on dark) */
+    border: 3px solid #2563eb;
+    outline: 2px solid rgba(37, 99, 235, 0.3);
+    outline-offset: 2px;
+    
+    /* Elevated shadow for depth */
+    box-shadow: 
+        0 0 0 1px rgba(0, 0, 0, 0.1),
+        0 8px 24px rgba(0, 0, 0, 0.15),
+        0 4px 12px rgba(37, 99, 235, 0.2);
+    
+    /* Slight elevation on desktop */
+    transform: translateY(-2px);
+}
+
+/* Checkmark icon - always visible when selected */
+.theme-checkmark {
+    position: absolute;
+    top: 0.75rem;
+    right: 0.75rem;
+    width: 28px;
+    height: 28px;
+    opacity: 0;
+    transform: scale(0);
+    transition: opacity 0.2s ease, transform 0.2s ease;
+    pointer-events: none;
+    z-index: 10;
+    color: #2563eb; /* High contrast blue - works on light and dark backgrounds */
+    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2));
+}
+
+.theme-preview-card.selected .theme-checkmark {
+    opacity: 1;
+    transform: scale(1);
+}
+
+/* Mobile adjustments for checkmark */
+@media (max-width: 600px) {
+    .theme-checkmark {
+        width: 24px;
+        height: 24px;
+        top: 0.5rem;
+        right: 0.5rem;
+    }
+    
+    .theme-preview-card.selected {
+        border-width: 2.5px;
+        outline-width: 1.5px;
+        outline-offset: 1.5px;
+        transform: translateY(-1px);
+    }
 }
 
 @media (min-width: 768px) {
     .theme-preview-card.selected {
-        transform: scale(1.01);
+        transform: translateY(-2px) scale(1.005);
     }
 }
 
