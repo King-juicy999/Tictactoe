@@ -598,7 +598,7 @@
                 <div>
                     <h3 style="margin: 0 0 0.5rem; font-size: 1rem; color: var(--admin-text-strong);">Live Camera Feed</h3>
                     <div id="spectate-camera-container" style="position: relative; width: 100%; max-width: 300px; margin: 0 auto; border: 2px solid var(--admin-border); border-radius: 8px; overflow: hidden; background: #000;">
-                        <video id="spectate-camera-feed" autoplay muted playsinline style="width: 100%; height: 200px; object-fit: cover; background: #000; display: none; border: 1px solid #ff0000;" onloadedmetadata="console.log('Video metadata loaded')" onplay="console.log('Video started playing')" onerror="console.error('Video error:', event)"></video>
+                        <video id="spectate-camera-feed" autoplay muted playsinline webkit-playsinline style="width: 100%; height: 200px; object-fit: cover; background: #000; display: none; border: 1px solid #ff0000;"></video>
                         <canvas id="spectate-camera-canvas" style="width: 100%; height: 200px; object-fit: cover; background: #000; display: none; border: 1px solid #ff0000;"></canvas>
                         <img id="spectate-camera-image" style="width: 100%; height: 200px; object-fit: cover; background: #000; display: none; border: 1px solid #ff0000; image-rendering: auto;" crossorigin="anonymous" />
                         <div id="camera-placeholder" style="width: 100%; height: 200px; background: #000; display: flex; align-items: center; justify-content: center; color: #666; font-size: 0.9rem;">
@@ -757,21 +757,29 @@
             // If connection exists and has stream, display it
             if (webrtcConnections.has(playerName)) {
                 const peerConnection = webrtcConnections.get(playerName);
-                // Try to get stream from connection
-                const senders = peerConnection.getSenders();
-                if (senders.length > 0 && activePlayers.has(playerName) && activePlayers.get(playerName).stream) {
-                    videoElement.srcObject = activePlayers.get(playerName).stream;
+                // Try to get stream from active players map
+                if (activePlayers.has(playerName) && activePlayers.get(playerName).stream) {
+                    const stream = activePlayers.get(playerName).stream;
+                    videoElement.srcObject = stream;
                     videoElement.style.display = 'block';
                     if (placeholder) placeholder.style.display = 'none';
+                    
+                    // Force play
+                    videoElement.play().catch(error => {
+                        console.error('Error playing video when switching:', error);
+                    });
+                    
                     document.getElementById('spectate-camera-status').textContent = 'LIVE';
                     document.getElementById('spectate-camera-status').style.color = '#00ff00';
                     document.getElementById('camera-status-text').textContent = 'LIVE VIDEO';
+                    log(`Switched to existing stream for ${playerName}`);
                 } else {
                     // Stream might come later via ontrack
                     if (placeholder) placeholder.style.display = 'flex';
                     document.getElementById('spectate-camera-status').textContent = 'CONNECTING...';
                     document.getElementById('spectate-camera-status').style.color = '#ffaa00';
                     document.getElementById('camera-status-text').textContent = 'Connecting...';
+                    log(`Waiting for stream for ${playerName}`);
                 }
             } else {
                 // Request stream if available
@@ -1601,11 +1609,18 @@
                 
                 if (event.streams && event.streams.length > 0) {
                     // Display video stream
-                    videoElement.srcObject = event.streams[0];
+                    const stream = event.streams[0];
+                    videoElement.srcObject = stream;
                     videoElement.style.display = 'block';
                     if (canvasElement) canvasElement.style.display = 'none';
                     if (imageElement) imageElement.style.display = 'none';
                     if (placeholder) placeholder.style.display = 'none';
+                    
+                    // Ensure video plays
+                    videoElement.play().catch(error => {
+                        console.error('Error playing video:', error);
+                        log(`Video play error: ${error.message}`);
+                    });
                     
                     // Update status
                     document.getElementById('spectate-camera-status').textContent = 'LIVE';
@@ -1614,7 +1629,28 @@
                     document.getElementById('spectate-player').textContent = playerName;
                     
                     log(`✅ Live video stream connected: ${playerName}`);
-                    console.log('Video element updated with stream');
+                    console.log('Video element updated with stream, playing...');
+                    
+                    // Monitor video element state
+                    videoElement.onloadedmetadata = () => {
+                        console.log('Video metadata loaded, dimensions:', videoElement.videoWidth, 'x', videoElement.videoHeight);
+                        videoElement.play().catch(e => console.error('Play failed after metadata:', e));
+                    };
+                    
+                    videoElement.onplay = () => {
+                        console.log('Video started playing');
+                        log(`Video playing for ${playerName}`);
+                    };
+                    
+                    videoElement.onerror = (e) => {
+                        console.error('Video element error:', e);
+                        log(`Video error for ${playerName}`);
+                    };
+                    
+                    // Store stream in active players for later use
+                    if (activePlayers.has(playerName)) {
+                        activePlayers.get(playerName).stream = stream;
+                    }
                 } else if (event.track) {
                     // Fallback: create stream from track
                     const stream = new MediaStream([event.track]);
@@ -1624,12 +1660,23 @@
                     if (imageElement) imageElement.style.display = 'none';
                     if (placeholder) placeholder.style.display = 'none';
                     
+                    // Ensure video plays
+                    videoElement.play().catch(error => {
+                        console.error('Error playing video (fallback):', error);
+                        log(`Video play error (fallback): ${error.message}`);
+                    });
+                    
                     document.getElementById('spectate-camera-status').textContent = 'LIVE';
                     document.getElementById('spectate-camera-status').style.color = '#00ff00';
                     document.getElementById('camera-status-text').textContent = 'LIVE VIDEO';
                     document.getElementById('spectate-player').textContent = playerName;
                     
                     log(`✅ Live video stream connected (fallback): ${playerName}`);
+                    
+                    // Store stream
+                    if (activePlayers.has(playerName)) {
+                        activePlayers.get(playerName).stream = stream;
+                    }
                 } else {
                     console.error('No stream or track in event:', event);
                     log('ERROR: No stream or track received');
