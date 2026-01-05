@@ -628,7 +628,13 @@
     <script>
         const playersBody = document.getElementById('players-body');
         const liveLog = document.getElementById('live-log');
-        const socket = io();
+        const socket = io({
+            reconnection: true,
+            reconnectionDelay: 1000,
+            reconnectionDelayMax: 5000,
+            reconnectionAttempts: Infinity, // Keep trying to reconnect forever (for ngrok)
+            timeout: 20000
+        });
         
         // Verify socket connection
         socket.on('connect', () => {
