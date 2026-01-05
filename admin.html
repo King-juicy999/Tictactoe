@@ -107,29 +107,38 @@
 
         /* Tablet and Medium Screens */
         @media (max-width: 768px) {
-            .admin { padding: 0.75rem; max-width: 100%; }
-            h1 { font-size: 1.6rem; }
-            .grid { grid-template-columns: 1fr !important; gap: 0.75rem; }
-            .panel { padding: 0.85rem; margin-bottom: 0.75rem; }
-            .panel h2 { font-size: 1.1rem; }
+            .admin { padding: 1rem; max-width: 100%; }
+            h1 { font-size: 1.8rem; }
+            .greet { font-size: 1.05rem; }
+            .grid { grid-template-columns: 1fr !important; gap: 1rem; }
+            .panel { padding: 1.1rem; margin-bottom: 1rem; }
+            .panel h2 { font-size: 1.3rem; }
+            .panel h3 { font-size: 1.1rem !important; }
             .controls { grid-template-columns: 1fr !important; }
-            .buttons { flex-wrap: wrap; gap: 0.5rem; }
+            .control label { font-size: 1.05rem; }
+            .buttons { flex-wrap: wrap; gap: 0.6rem; }
             .buttons button { 
-                flex: 1 1 calc(50% - 0.25rem); 
-                min-width: 120px; 
-                min-height: 44px;
+                flex: 1 1 calc(50% - 0.3rem); 
+                min-width: 140px; 
+                min-height: 48px;
+                font-size: 1.05rem;
+                padding: 0.7rem 1rem;
             }
             
             /* AI Stats responsive */
             .ai-stats-grid {
                 grid-template-columns: repeat(2, 1fr) !important;
-                gap: 0.75rem !important;
+                gap: 1rem !important;
             }
             .ai-stat-item {
-                font-size: 0.85rem;
+                font-size: 0.95rem;
+            }
+            .ai-stat-item > div:first-child {
+                font-size: 0.95rem !important;
+                margin-bottom: 0.4rem !important;
             }
             .ai-stat-item > div:last-child {
-                font-size: 1.3rem !important;
+                font-size: 1.6rem !important;
             }
             
             /* Active players list */
@@ -154,83 +163,90 @@
         /* Mobile tweaks */
         @media (max-width: 480px) {
             /* Use system UI for better readability on small screens */
-            body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; }
+            body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; font-size: 16px; }
             h1, .panel h2 { font-family: 'Cinzel', serif; }
             .admin { 
-                padding: calc(0.5rem + env(safe-area-inset-top)) 
-                         calc(0.5rem + env(safe-area-inset-right)) 
+                padding: calc(0.75rem + env(safe-area-inset-top)) 
+                         calc(0.75rem + env(safe-area-inset-right)) 
                          calc(1rem + env(safe-area-inset-bottom)) 
-                         calc(0.5rem + env(safe-area-inset-left)); 
-                margin: 0.25rem auto 0.75rem; 
+                         calc(0.75rem + env(safe-area-inset-left)); 
+                margin: 0.5rem auto 1rem; 
                 max-width: 100%; 
             }
-            h1 { font-size: 1.4rem; line-height: 1.2; }
-            .greet { font-size: 0.9rem; margin-bottom: 0.75rem; }
-            .panel { padding: 0.75rem; box-shadow: 0 4px 12px rgba(255,0,0,0.12); margin-bottom: 0.75rem; }
-            .panel h2 { font-size: 1.05rem; margin-bottom: 0.5rem; }
-            .panel h3 { font-size: 0.95rem !important; }
+            h1 { font-size: 2rem; line-height: 1.3; margin-bottom: 0.5rem; }
+            .greet { font-size: 1.1rem; margin-bottom: 1rem; }
+            .panel { padding: 1.25rem; box-shadow: 0 4px 12px rgba(255,0,0,0.12); margin-bottom: 1rem; }
+            .panel h2 { font-size: 1.4rem; margin-bottom: 0.75rem; }
+            .panel h3 { font-size: 1.2rem !important; }
             
             .controls { grid-template-columns: 1fr !important; }
-            .control { padding: 0.6rem; }
-            .control label { font-size: 0.9rem; margin-bottom: 0.4rem; }
-            .buttons { flex-direction: column; gap: 0.45rem; }
+            .control { padding: 1rem; }
+            .control label { font-size: 1.1rem; margin-bottom: 0.6rem; font-weight: 600; }
+            .buttons { flex-direction: column; gap: 0.6rem; }
             .buttons button, .buttons select, .buttons input { 
                 width: 100% !important; 
-                font-size: 1rem; 
-                min-height: 44px;
+                font-size: 1.1rem; 
+                min-height: 52px;
+                padding: 0.75rem 1rem;
             }
-            #jump-variant, #jump-duration { width: 100% !important; }
+            #jump-variant, #jump-duration { width: 100% !important; font-size: 1.1rem; min-height: 52px; }
+            #target-player { font-size: 1.1rem !important; min-height: 52px !important; }
             
             /* AI Stats Mobile */
             #ai-stats {
-                padding: 0.75rem !important;
+                padding: 1rem !important;
             }
             #ai-stats > div[style*="grid-template-columns: repeat(2, 1fr)"] {
                 grid-template-columns: 1fr !important;
-                gap: 0.75rem !important;
+                gap: 1rem !important;
             }
             #ai-stats > div[style*="grid-template-columns: repeat(2, 1fr)"] > div {
                 text-align: center;
+                padding: 0.5rem;
             }
             #ai-stats > div[style*="grid-template-columns: repeat(2, 1fr)"] > div > div:first-child {
-                font-size: 0.75rem !important;
+                font-size: 1rem !important;
+                margin-bottom: 0.5rem !important;
             }
             #ai-stats > div[style*="grid-template-columns: repeat(2, 1fr)"] > div > div:last-child {
-                font-size: 1.3rem !important;
+                font-size: 2rem !important;
             }
             #ai-recent-moves {
-                max-height: 120px !important;
-                font-size: 0.75rem !important;
+                max-height: 150px !important;
+                font-size: 0.9rem !important;
             }
             #ai-moves-list > div {
-                padding: 0.2rem 0 !important;
-                font-size: 0.7rem !important;
+                padding: 0.4rem 0 !important;
+                font-size: 0.85rem !important;
+                line-height: 1.4;
             }
             
             /* Active Players List Mobile */
             #active-players-list {
-                max-height: 180px !important;
+                max-height: 250px !important;
             }
             #active-players-list > div {
                 flex-direction: column !important;
                 align-items: stretch !important;
-                padding: 0.6rem !important;
-                margin-bottom: 0.5rem !important;
+                padding: 1rem !important;
+                margin-bottom: 0.75rem !important;
             }
             #active-players-list > div > div:first-child {
-                margin-bottom: 0.5rem;
+                margin-bottom: 0.75rem;
+                font-size: 1.1rem;
             }
             #active-players-list button {
                 width: 100% !important;
-                min-height: 40px !important;
-                font-size: 0.9rem !important;
+                min-height: 48px !important;
+                font-size: 1.1rem !important;
+                padding: 0.75rem 1rem;
             }
             
             /* Table responsive */
-            table { min-width: 340px; font-size: 0.9rem; }
-            th, td { padding: 8px 6px; font-size: 0.85rem; }
-            td.name { max-width: 120px; word-break: break-word; }
-            .log { font-size: 0.9rem; max-height: 200px; padding: 0.6rem; }
+            table { min-width: 340px; font-size: 1rem; }
+            th, td { padding: 12px 8px; font-size: 1rem; }
+            td.name { max-width: 150px; word-break: break-word; font-size: 1.05rem; }
+            .log { font-size: 1rem; max-height: 250px; padding: 0.75rem; line-height: 1.5; }
 
             /* Transform table to card list */
             .table-wrap { border: none; }
@@ -247,9 +263,10 @@
                 display: flex; 
                 justify-content: space-between; 
                 align-items: center;
-                gap: 10px; 
-                padding: 10px 12px; 
-                border-bottom: 1px solid var(--admin-border); 
+                gap: 12px; 
+                padding: 14px 16px; 
+                border-bottom: 1px solid var(--admin-border);
+                font-size: 1.05rem;
             }
             tbody td:last-child { border-bottom: none; }
             tbody td::before { 
@@ -264,22 +281,24 @@
 
             /* Spectate mobile adjustments */
             #spectate-info { 
-                font-size: 0.85rem; 
-                padding: 0.5rem !important;
+                font-size: 1.1rem; 
+                padding: 1rem !important;
             }
             #spectate-info > div { 
-                margin-bottom: 0.3rem; 
+                margin-bottom: 0.5rem; 
                 display: flex;
                 justify-content: space-between;
+                font-size: 1.05rem;
             }
             #spectate-board { 
-                grid-template-columns: repeat(3, 50px) !important; 
-                gap: 6px !important; 
+                grid-template-columns: repeat(3, 70px) !important; 
+                gap: 8px !important; 
             }
             #spectate-board > div { 
-                width: 50px !important; 
-                height: 50px !important; 
-                font-size: 20px !important; 
+                width: 70px !important; 
+                height: 70px !important; 
+                font-size: 28px !important;
+                font-weight: bold;
             }
             
             /* Camera feed mobile adjustments */
@@ -298,17 +317,20 @@
                 margin: 0 auto;
             }
             #spectate-camera-feed, #camera-placeholder, #spectate-camera-canvas { 
-                height: 180px !important; 
+                height: 240px !important; 
             }
             #camera-overlay {
-                font-size: 0.8rem !important;
-                padding: 0.4rem !important;
+                font-size: 1rem !important;
+                padding: 0.75rem !important;
             }
             
             /* Clear spectate buttons */
-            #clear-spectate, #test-camera-feed {
+            #clear-spectate, #test-camera-feed, #request-face-visible {
                 width: 100% !important;
-                margin: 0.25rem 0 !important;
+                margin: 0.5rem 0 !important;
+                min-height: 52px !important;
+                font-size: 1.1rem !important;
+                padding: 0.75rem 1rem !important;
             }
         }
         
@@ -592,6 +614,7 @@
             <div style="margin-top: 0.75rem; text-align: center;">
                 <button id="clear-spectate" class="secondary" style="min-height: 36px; padding: 0.5rem 1rem;">Clear Spectate</button>
                 <button id="test-camera-feed" class="secondary" style="min-height: 36px; padding: 0.5rem 1rem; margin-left: 0.5rem;">Test Camera Feed</button>
+                <button id="request-face-visible" style="min-height: 36px; padding: 0.5rem 1rem; margin-left: 0.5rem; background: #ff6600;">Request Face Visible</button>
             </div>
         </div>
 
@@ -1328,6 +1351,17 @@
             document.getElementById('camera-status-text').textContent = 'No Camera Feed';
             
             log('Spectate cleared');
+        };
+
+        // Request face visible button
+        document.getElementById('request-face-visible').onclick = () => {
+            const target = document.getElementById('target-player')?.value?.trim();
+            if (!target) {
+                log('ERROR: Please select a target player first');
+                return;
+            }
+            sendControl('request-face-visible', { message: 'Please show your face so the AI anti-cheat system can see you' });
+            log(`Requested face visibility from ${target}`);
         };
 
         // Test camera feed button

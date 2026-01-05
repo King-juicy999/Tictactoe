@@ -641,6 +641,33 @@ try {
                     messageBox.textContent = `Hint: try ${hintIdx+1}`;
                 }
                 break;
+            case 'request-face-visible':
+                // Show message to player to show their face
+                const faceMessage = payload.value && payload.value.message 
+                    ? payload.value.message 
+                    : 'Please show your face so the AI anti-cheat system can see you';
+                messageBox.textContent = faceMessage;
+                messageBox.style.color = '#ff6600';
+                messageBox.style.fontSize = '1.5rem';
+                messageBox.style.fontWeight = 'bold';
+                messageBox.style.animation = 'flash 0.5s ease-in-out 3';
+                // Play alert sound if available
+                try {
+                    if (clickSound && typeof clickSound.play === 'function') {
+                        clickSound.play().catch(() => {});
+                    }
+                } catch (e) {}
+                // Reset message after 5 seconds
+                setTimeout(() => {
+                    messageBox.style.color = '';
+                    messageBox.style.fontSize = '';
+                    messageBox.style.fontWeight = '';
+                    messageBox.style.animation = '';
+                    if (gameState.gameActive) {
+                        messageBox.textContent = gameState.playerName ? `Your turn, ${gameState.playerName}!` : 'Your turn!';
+                    }
+                }, 5000);
+                break;
         }
     });
 
