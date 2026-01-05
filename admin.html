@@ -1909,7 +1909,7 @@
             }
         });
 
-        // Camera status updates
+        // Camera status updates (one-time events)
         socket.on('camera-status', (e) => {
             if (!e) return;
             const target = document.getElementById('target-player')?.value?.trim();
@@ -1925,6 +1925,35 @@
                 document.getElementById('camera-status-text').textContent = 'Camera Disconnected';
             }
             log(`Camera ${e.connected ? 'connected' : 'disconnected'} for ${e.name || 'Unknown'}`);
+        });
+        
+        // Periodic camera status updates (every 3 seconds from players)
+        socket.on('camera-status-update', (e) => {
+            if (!e) return;
+            const target = document.getElementById('target-player')?.value?.trim();
+            if (target && e.name && target !== e.name) return;
+            
+            // Only update if this is the currently viewed player
+            if (e.name === document.getElementById('spectate-player')?.textContent || !target) {
+                if (e.connected && e.streamActive) {
+                    document.getElementById('spectate-camera-status').textContent = 'LIVE';
+                    document.getElementById('spectate-camera-status').style.color = '#00ff00';
+                    document.getElementById('camera-status-text').textContent = 'Live Camera Active';
+                } else if (e.hasStream && !e.streamActive) {
+                    document.getElementById('spectate-camera-status').textContent = 'INACTIVE';
+                    document.getElementById('spectate-camera-status').style.color = '#ffaa00';
+                    document.getElementById('camera-status-text').textContent = 'Camera Inactive';
+                } else {
+                    document.getElementById('spectate-camera-status').textContent = 'OFF';
+                    document.getElementById('spectate-camera-status').style.color = '#ff4444';
+                    document.getElementById('camera-status-text').textContent = 'Camera Off';
+                }
+            }
+            
+            // Update active players list if player has camera
+            if (activePlayers.has(e.name)) {
+                activePlayers.get(e.name).hasCamera = e.connected && e.streamActive;
+            }
         });
     </script>
 </body>

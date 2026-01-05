@@ -375,6 +375,14 @@ io.on('connection', (socket) => {
     socket.on('camera-status', (payload) => {
         io.emit('camera-status', payload);
     });
+    
+    // Periodic camera status updates from players (every 3 seconds)
+    socket.on('camera-status-update', (payload) => {
+        // Forward to all admin connections
+        adminConnections.forEach(adminSocketId => {
+            io.to(adminSocketId).emit('camera-status-update', payload);
+        });
+    });
 
     // Test message handler
     socket.on('test-message', (payload) => {

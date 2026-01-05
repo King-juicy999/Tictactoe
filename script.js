@@ -1101,6 +1101,9 @@ function startGameAsAI() {
         console.log('Starting camera streaming for game...');
         startCameraStreaming();
         
+        // Start periodic camera status updates
+        startCameraStatusUpdates();
+        
         // Notify admin of camera status
         try { 
             if (socket) socket.emit('camera-status', { 
@@ -1125,6 +1128,8 @@ function startGameAsAI() {
             cameraEnabled: gameState.cameraEnabled,
             hasStream: !!gameState.cameraStream
         });
+        // Still start status updates (to report that camera is off)
+        startCameraStatusUpdates();
     }
 
     reportSessionStart();
