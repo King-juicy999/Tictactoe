@@ -1439,9 +1439,18 @@ cells.forEach(cell => {
 function handleCellClick(cell) {
     try {
         if (!gameState.gameActive || gameState.inInteractiveMode) return; // Pause during interactive mode
+        
+        // Lock UI during player move to prevent double clicks and overlapping animations
+        if (gameState.uiLocked) return;
+        gameState.uiLocked = true;
+        gameState.uiLockingReason = 'player-move';
     
     const index = cell.dataset.index;
-    if (gameState.board[index] !== '') return;
+    if (gameState.board[index] !== '') {
+        gameState.uiLocked = false;
+        gameState.uiLockingReason = null;
+        return;
+    }
 
     clickSound.play();
     gameState.board[index] = 'X';
@@ -1642,13 +1651,28 @@ function handleCellClick(cell) {
     // AI thinking delay - longer if player just won
     const thinkingDelay = gameState.aiThinkingDelay || 500;
     messageBox.textContent = "AI is thinking...";
+    
+    // Lock UI during player move animation (150ms for cell animation)
+    gameState.uiLocked = true;
+    const cellAnimationDuration = 180; // Match CSS animation duration
+    
+    // Wait for cell animation to complete, then AI thinking delay
     setTimeout(() => {
-        makeAIMove();
-        // Reset thinking delay after move (but keep it slightly longer if player won)
-        if (gameState.playerJustWon) {
-            gameState.aiThinkingDelay = 800; // Keep it at 800ms for a few moves
-        }
-    }, thinkingDelay);
+        gameState.uiLocked = false;
+        
+        // Now trigger AI move after thinking delay
+        setTimeout(() => {
+            // Lock UI again before AI move
+            gameState.uiLocked = true;
+            makeAIMove();
+            
+            // Reset thinking delay after move (but keep it slightly longer if player won)
+            if (gameState.playerJustWon) {
+                gameState.aiThinkingDelay = 800; // Keep it at 800ms for a few moves
+            }
+        }, thinkingDelay);
+    }, cellAnimationDuration);
+    
     emitBoardUpdate();
     } catch (e) {
         console.error('Critical error in handleCellClick:', e);
@@ -1744,6 +1768,13 @@ function makeAIMove() {
     
     clickSound.play();
     emitBoardUpdate();
+    
+    // Unlock UI after AI move animation completes (180ms)
+    const aiMoveAnimationDuration = 180;
+    setTimeout(() => {
+        gameState.uiLocked = false;
+        gameState.uiLockingReason = null;
+    }, aiMoveAnimationDuration);
 
     if (checkWin('O')) {
         // AI wins - record it properly

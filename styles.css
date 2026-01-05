@@ -1882,7 +1882,7 @@ button:disabled:hover {
     animation: aiGlow 4s ease-in-out infinite;
 }
 
-/* Theme Selection Enhanced UX */
+/* Theme Selection Enhanced UX - Responsive & Clean */
 .theme-selection-overlay {
     position: fixed;
     top: 0;
@@ -1892,12 +1892,15 @@ button:disabled:hover {
     background: rgba(0, 0, 0, 0.7);
     backdrop-filter: blur(8px);
     display: flex;
-    align-items: center;
+    align-items: flex-start;
     justify-content: center;
     z-index: 9999;
     opacity: 0;
     transition: opacity 0.4s ease;
     pointer-events: none;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    padding: 1rem;
 }
 
 .theme-selection-overlay.active {
@@ -1908,93 +1911,129 @@ button:disabled:hover {
 .theme-selection-container {
     background: var(--cell-bg);
     border: 2px solid var(--cell-border);
-    border-radius: 24px;
-    padding: 3rem;
-    max-width: 700px;
-    width: 90%;
+    border-radius: 20px;
+    padding: 2rem;
+    max-width: 600px;
+    width: 100%;
     box-shadow: 0 20px 60px var(--shadow);
-    transform: scale(0.9);
-    transition: transform 0.4s ease;
+    transform: scale(0.95);
+    transition: transform 0.3s ease, opacity 0.3s ease;
+    margin: 2rem auto;
+    min-height: auto;
+    max-height: calc(100vh - 4rem);
+    display: flex;
+    flex-direction: column;
 }
 
 .theme-selection-overlay.active .theme-selection-container {
     transform: scale(1);
+    opacity: 1;
 }
 
 .theme-selection-title {
-    font-size: 2.5rem;
+    font-size: 2rem;
     color: var(--text-primary);
     margin-bottom: 0.5rem;
     text-align: center;
     font-weight: 300;
+    line-height: 1.2;
 }
 
 .theme-selection-subtitle {
-    font-size: 1.1rem;
+    font-size: 1rem;
     color: var(--text-secondary);
-    margin-bottom: 2.5rem;
+    margin-bottom: 1.5rem;
     text-align: center;
     font-weight: 300;
+    line-height: 1.4;
 }
 
 .theme-preview-grid {
     display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 1.5rem;
-    margin-bottom: 2rem;
+    grid-template-columns: 1fr;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+    flex: 1;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    padding-right: 0.5rem;
 }
 
-@media (max-width: 600px) {
+/* Desktop: 2 columns */
+@media (min-width: 768px) {
     .theme-preview-grid {
-        grid-template-columns: 1fr;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 1.25rem;
     }
 }
 
 .theme-preview-card {
     position: relative;
-    padding: 2rem;
+    padding: 1.5rem;
     border: 2px solid var(--cell-border);
-    border-radius: 16px;
+    border-radius: 12px;
     cursor: pointer;
-    transition: all 0.3s ease;
+    transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
     background: var(--bg-primary);
     overflow: hidden;
+    min-height: 120px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    -webkit-tap-highlight-color: transparent;
 }
 
-.theme-preview-card:hover {
-    transform: translateY(-4px);
-    box-shadow: 0 8px 24px var(--shadow);
+/* Desktop hover only */
+@media (hover: hover) and (pointer: fine) {
+    .theme-preview-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px var(--shadow);
+    }
+}
+
+/* Mobile tap feedback */
+.theme-preview-card:active {
+    transform: scale(0.98);
 }
 
 .theme-preview-card.selected {
     border-color: var(--primary-color);
-    box-shadow: 0 0 0 3px var(--win-glow), 0 8px 24px var(--shadow);
-    transform: scale(1.02);
+    box-shadow: 0 0 0 2px var(--win-glow), 0 4px 12px var(--shadow);
+    transform: none;
+}
+
+@media (min-width: 768px) {
+    .theme-preview-card.selected {
+        transform: scale(1.01);
+    }
 }
 
 .theme-preview-name {
-    font-size: 1.5rem;
+    font-size: 1.25rem;
     color: var(--text-primary);
-    margin-bottom: 1rem;
+    margin-bottom: 0.75rem;
     font-weight: 600;
+    text-align: center;
 }
 
 .theme-preview-sample {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
-    gap: 0.5rem;
-    margin-bottom: 1rem;
+    gap: 0.4rem;
+    margin: 0 auto;
+    max-width: 120px;
 }
 
 .theme-preview-cell {
     aspect-ratio: 1;
     border: 1px solid currentColor;
-    border-radius: 8px;
+    border-radius: 6px;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 1.2rem;
+    font-size: 0.9rem;
     background: var(--cell-bg);
+    min-height: 32px;
 }
 
 /* Theme preview card colors */
@@ -2041,25 +2080,94 @@ button:disabled:hover {
 
 .theme-confirm-btn {
     width: 100%;
-    padding: 1rem 2rem;
-    font-size: 1.2rem;
+    padding: 0.875rem 1.5rem;
+    font-size: 1.1rem;
     background: var(--primary-color);
     color: var(--text-primary);
     border: 2px solid var(--cell-border);
-    border-radius: 12px;
+    border-radius: 10px;
     cursor: pointer;
     font-family: inherit;
-    transition: all 0.3s ease;
-    box-shadow: 0 4px 16px var(--shadow);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    box-shadow: 0 4px 12px var(--shadow);
+    margin-top: auto;
+    -webkit-tap-highlight-color: transparent;
 }
 
-.theme-confirm-btn:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 6px 20px var(--shadow);
+@media (hover: hover) and (pointer: fine) {
+    .theme-confirm-btn:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 6px 16px var(--shadow);
+    }
 }
 
 .theme-confirm-btn:active {
     transform: translateY(0) scale(0.98);
+}
+
+/* Mobile optimizations */
+@media (max-width: 600px) {
+    .theme-selection-overlay {
+        padding: 0.5rem;
+        align-items: flex-start;
+    }
+    
+    .theme-selection-container {
+        padding: 1.5rem;
+        margin: 1rem auto;
+        max-height: calc(100vh - 2rem);
+        border-radius: 16px;
+    }
+    
+    .theme-selection-title {
+        font-size: 1.75rem;
+        margin-bottom: 0.25rem;
+    }
+    
+    .theme-selection-subtitle {
+        font-size: 0.9rem;
+        margin-bottom: 1.25rem;
+    }
+    
+    .theme-preview-card {
+        padding: 1.25rem;
+        min-height: 100px;
+    }
+    
+    .theme-preview-name {
+        font-size: 1.1rem;
+        margin-bottom: 0.5rem;
+    }
+    
+    .theme-preview-sample {
+        max-width: 100px;
+        gap: 0.3rem;
+    }
+    
+    .theme-preview-cell {
+        font-size: 0.8rem;
+        min-height: 28px;
+    }
+    
+    .theme-confirm-btn {
+        padding: 0.75rem 1.25rem;
+        font-size: 1rem;
+    }
+}
+
+@media (max-width: 360px) {
+    .theme-selection-container {
+        padding: 1.25rem;
+    }
+    
+    .theme-selection-title {
+        font-size: 1.5rem;
+    }
+    
+    .theme-preview-card {
+        padding: 1rem;
+        min-height: 90px;
+    }
 }
 
 /* Board dimming effect for win */

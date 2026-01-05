@@ -216,24 +216,39 @@ const AnimationUtils = {
     
     /**
      * Animate board reset (cells clear with fade)
+     * Optimized to use requestAnimationFrame for better performance
      */
     animateBoardReset(cells) {
-        cells.forEach((cell, index) => {
-            if (cell.textContent) {
+        const cellsToClear = cells.filter(cell => cell.textContent);
+        if (cellsToClear.length === 0) return;
+        
+        // Use requestAnimationFrame for smoother animation
+        let clearedCount = 0;
+        const clearNext = () => {
+            if (clearedCount < cellsToClear.length) {
+                const cell = cellsToClear[clearedCount];
+                cell.style.transition = 'opacity 0.2s ease-out, transform 0.2s ease-out';
+                cell.style.opacity = '0';
+                cell.style.transform = 'scale(0.9)';
+                
                 setTimeout(() => {
-                    cell.style.transition = 'opacity 0.2s ease-out, transform 0.2s ease-out';
-                    cell.style.opacity = '0';
-                    cell.style.transform = 'scale(0.9)';
-                    
-                    setTimeout(() => {
-                        cell.style.opacity = '';
-                        cell.style.transform = '';
-                        cell.textContent = '';
-                        cell.classList.remove('cell-animated', 'winning-cell');
-                    }, 200);
-                }, index * 30); // Staggered animation
+                    cell.style.opacity = '';
+                    cell.style.transform = '';
+                    cell.textContent = '';
+                    cell.removeAttribute('data-mark');
+                    cell.classList.remove('cell-animated', 'winning-cell');
+                }, 200);
+                
+                clearedCount++;
+                if (clearedCount < cellsToClear.length) {
+                    requestAnimationFrame(() => {
+                        setTimeout(clearNext, 30);
+                    });
+                }
             }
-        });
+        };
+        
+        requestAnimationFrame(clearNext);
     },
     
     /**
