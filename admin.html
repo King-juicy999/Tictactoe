@@ -105,13 +105,6 @@
             outline-offset: 2px;
         }
 
-        /* Spectate grid responsive */
-        @media (max-width: 768px) {
-            #spectate-players-grid {
-                grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)) !important;
-            }
-        }
-        
         /* Tablet and Medium Screens */
         @media (max-width: 768px) {
             .admin { padding: 1rem; max-width: 100%; }
@@ -286,26 +279,6 @@
             td[data-col="Actions"] { flex-direction: column; align-items: stretch; }
             td[data-col="Actions"] button { width: 100%; margin-top: 0.25rem; }
 
-            /* Spectate grid mobile adjustments */
-            #spectate-players-grid {
-                grid-template-columns: 1fr !important;
-                gap: 1rem !important;
-            }
-            
-            .player-spectate-card {
-                padding: 1rem !important;
-            }
-            
-            .player-spectate-card h3 {
-                font-size: 1.2rem !important;
-            }
-            
-            .player-spectate-card > div:first-child button {
-                min-height: 40px !important;
-                font-size: 1rem !important;
-                padding: 0.5rem 1rem !important;
-            }
-            
             /* Spectate mobile adjustments */
             #spectate-info { 
                 font-size: 1.1rem; 
@@ -597,25 +570,6 @@
             </div>
         </div>
 
-        <!-- SPECTATE SECTION - Moved to top for easy access -->
-        <div class="panel" style="margin-top: 1rem; order: -1;">
-            <h2 style="font-size: 1.5rem; margin-bottom: 1rem;">👁️ Spectate Players</h2>
-            
-            <!-- Active Players Grid for Spectating -->
-            <div id="spectate-players-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 1rem; margin-bottom: 1rem;">
-                <!-- Player cards will be inserted here dynamically -->
-                <div style="padding: 1rem; color: var(--admin-text); text-align: center; grid-column: 1 / -1;">
-                    No active players to spectate
-                </div>
-            </div>
-            
-            <!-- Spectate Controls -->
-            <div style="display: flex; gap: 0.5rem; flex-wrap: wrap; margin-top: 1rem;">
-                <button id="request-face-visible" style="flex: 1; min-width: 150px; min-height: 42px; padding: 0.6rem 1rem; background: #ff6600;">Request Face Visible</button>
-                <button id="test-camera-feed" class="secondary" style="flex: 1; min-width: 150px; min-height: 42px; padding: 0.6rem 1rem;">Test Camera Feed</button>
-            </div>
-        </div>
-
         <div class="panel" style="margin-top: 1rem;">
             <h2>Active Players & Streams</h2>
             
@@ -624,6 +578,43 @@
                 <div style="padding: 0.5rem; color: var(--admin-text); font-size: 0.9rem; text-align: center;">
                     No active players
                 </div>
+            </div>
+            
+            <h2>Spectate</h2>
+            <div id="spectate-info" style="margin-bottom: 0.75rem; padding: 0.5rem; background: rgba(255,0,0,0.1); border-radius: 6px; border: 1px solid var(--admin-border);">
+                <div><strong>Player:</strong> <span id="spectate-player">None</span></div>
+                <div><strong>Status:</strong> <span id="spectate-status">Waiting...</span></div>
+                <div><strong>Wins:</strong> <span id="spectate-wins">0</span></div>
+                <div><strong>Losses:</strong> <span id="spectate-losses">0</span></div>
+                <div><strong>Jumpscare:</strong> <span id="spectate-jump">None</span></div>
+                <div><strong>Camera:</strong> <span id="spectate-camera-status">Not Connected</span></div>
+            </div>
+            
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 0.75rem;">
+                <div>
+                    <h3 style="margin: 0 0 0.5rem; font-size: 1rem; color: var(--admin-text-strong);">Game Board</h3>
+            <div id="spectate-board" style="display:grid;grid-template-columns:repeat(3,60px);gap:8px;align-items:center;justify-content:flex-start;margin:0 auto;width:fit-content;"></div>
+                </div>
+                <div>
+                    <h3 style="margin: 0 0 0.5rem; font-size: 1rem; color: var(--admin-text-strong);">Live Camera Feed</h3>
+                    <div id="spectate-camera-container" style="position: relative; width: 100%; max-width: 300px; margin: 0 auto; border: 2px solid var(--admin-border); border-radius: 8px; overflow: hidden; background: #000;">
+                        <video id="spectate-camera-feed" autoplay muted playsinline style="width: 100%; height: 200px; object-fit: cover; background: #000; display: none; border: 1px solid #ff0000;" onloadedmetadata="console.log('Video metadata loaded')" onplay="console.log('Video started playing')" onerror="console.error('Video error:', event)"></video>
+                        <canvas id="spectate-camera-canvas" style="width: 100%; height: 200px; object-fit: cover; background: #000; display: none; border: 1px solid #ff0000;"></canvas>
+                        <img id="spectate-camera-image" style="width: 100%; height: 200px; object-fit: cover; background: #000; display: none; border: 1px solid #ff0000; image-rendering: auto;" crossorigin="anonymous" />
+                        <div id="camera-placeholder" style="width: 100%; height: 200px; background: #000; display: flex; align-items: center; justify-content: center; color: #666; font-size: 0.9rem;">
+                            No Camera Feed
+                        </div>
+                        <div id="camera-overlay" style="position: absolute; bottom: 0; left: 0; right: 0; background: rgba(0,0,0,0.7); color: white; padding: 0.5rem; text-align: center; font-size: 0.9rem;">
+                            <span id="camera-status-text">No Camera Feed</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div style="margin-top: 0.75rem; text-align: center;">
+                <button id="clear-spectate" class="secondary" style="min-height: 36px; padding: 0.5rem 1rem;">Clear Spectate</button>
+                <button id="test-camera-feed" class="secondary" style="min-height: 36px; padding: 0.5rem 1rem; margin-left: 0.5rem;">Test Camera Feed</button>
+                <button id="request-face-visible" style="min-height: 36px; padding: 0.5rem 1rem; margin-left: 0.5rem; background: #ff6600;">Request Face Visible</button>
             </div>
         </div>
 
@@ -648,175 +639,18 @@
             socket.emit('admin-register');
             console.log('Admin registered for WebRTC');
             log('Admin registered for WebRTC streaming');
-            
-            // If there was a previously viewing player stored, restore it
-            const savedViewingPlayer = sessionStorage.getItem('viewingPlayer');
-            if (savedViewingPlayer) {
-                setTimeout(() => {
-                    viewPlayerStream(savedViewingPlayer);
-                }, 1000); // Wait a bit for streams to be available
-            }
         });
-        
-        // Track viewed players (can view multiple)
-        const viewedPlayers = new Set();
-        const playerStreams = new Map(); // playerName -> { stream, board, stats }
         
         // Confirm admin registration and update active players list
         socket.on('active-streams', (streams) => {
             console.log('Active player streams received:', streams);
             updateActivePlayersList(streams);
-            updateSpectateGrid(streams);
-            
-            // Reconnect to previously viewed players after refresh
-            const savedViewedPlayers = sessionStorage.getItem('viewedPlayers');
-            if (savedViewedPlayers) {
-                try {
-                    const players = JSON.parse(savedViewedPlayers);
-                    players.forEach(playerName => {
-                        if (streams.find(s => s.playerName === playerName)) {
-                            setTimeout(() => {
-                                viewPlayerStream(playerName);
-                            }, 500);
-                        }
-                    });
-                } catch (e) {
-                    console.error('Error loading saved viewed players:', e);
-                }
-            }
-            
             if (streams.length > 0) {
                 log(`Active streams available: ${streams.map(s => s.playerName).join(', ')}`);
             } else {
                 log('No active streams available');
             }
         });
-        
-        // Update spectate grid with all active players
-        function updateSpectateGrid(streams) {
-            const gridContainer = document.getElementById('spectate-players-grid');
-            if (!gridContainer) return;
-            
-            if (streams.length === 0) {
-                gridContainer.innerHTML = '<div style="padding: 1rem; color: var(--admin-text); text-align: center; grid-column: 1 / -1;">No active players to spectate</div>';
-                return;
-            }
-            
-            gridContainer.innerHTML = streams.map(stream => {
-                const playerData = playerStreams.get(stream.playerName) || {};
-                const isViewing = viewedPlayers.has(stream.playerName);
-                const hasConnection = webrtcConnections.has(stream.playerName);
-                
-                return `
-                    <div class="player-spectate-card" data-player="${encodeURIComponent(stream.playerName)}" style="
-                        background: rgba(255,0,0,0.05);
-                        border: 2px solid ${isViewing ? '#ff0000' : 'var(--admin-border)'};
-                        border-radius: 10px;
-                        padding: 1rem;
-                        position: relative;
-                    ">
-                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
-                            <h3 style="margin: 0; font-size: 1.1rem; color: var(--admin-text-strong); word-break: break-word;">
-                                ${stream.playerName}
-                            </h3>
-                            <button 
-                                class="secondary" 
-                                onclick="toggleViewPlayer('${encodeURIComponent(stream.playerName)}')"
-                                style="min-height: 32px; padding: 0.4rem 0.8rem; font-size: 0.85rem;"
-                            >
-                                ${isViewing ? 'Stop View' : 'View'}
-                            </button>
-                        </div>
-                        
-                        <!-- Camera Feed -->
-                        <div style="position: relative; width: 100%; height: 180px; border: 1px solid var(--admin-border); border-radius: 8px; overflow: hidden; background: #000; margin-bottom: 0.75rem;">
-                            <video 
-                                id="spectate-video-${encodeURIComponent(stream.playerName)}" 
-                                autoplay 
-                                muted 
-                                playsinline 
-                                style="width: 100%; height: 100%; object-fit: cover; display: none;"
-                            ></video>
-                            <canvas 
-                                id="spectate-canvas-${encodeURIComponent(stream.playerName)}" 
-                                style="width: 100%; height: 100%; object-fit: cover; display: none;"
-                            ></canvas>
-                            <img 
-                                id="spectate-image-${encodeURIComponent(stream.playerName)}" 
-                                style="width: 100%; height: 100%; object-fit: cover; display: none;"
-                                crossorigin="anonymous"
-                            />
-                            <div id="spectate-placeholder-${encodeURIComponent(stream.playerName)}" style="
-                                width: 100%; 
-                                height: 100%; 
-                                background: #000; 
-                                display: flex; 
-                                align-items: center; 
-                                justify-content: center; 
-                                color: #666; 
-                                font-size: 0.9rem;
-                            ">
-                                ${hasConnection ? 'Connecting...' : 'No Camera'}
-                            </div>
-                            <div style="position: absolute; bottom: 0; left: 0; right: 0; background: rgba(0,0,0,0.7); color: white; padding: 0.4rem; text-align: center; font-size: 0.8rem;">
-                                <span id="spectate-status-${encodeURIComponent(stream.playerName)}">${hasConnection ? 'Connecting' : 'Offline'}</span>
-                            </div>
-                        </div>
-                        
-                        <!-- Game Board -->
-                        <div style="margin-bottom: 0.75rem;">
-                            <div id="spectate-board-${encodeURIComponent(stream.playerName)}" style="
-                                display: grid;
-                                grid-template-columns: repeat(3, 1fr);
-                                gap: 4px;
-                                background: #333;
-                                padding: 4px;
-                                border-radius: 6px;
-                            "></div>
-                        </div>
-                        
-                        <!-- Player Stats -->
-                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem; font-size: 0.85rem;">
-                            <div>
-                                <span style="color: #00ff00;">Wins:</span> 
-                                <span id="spectate-wins-${encodeURIComponent(stream.playerName)}">0</span>
-                            </div>
-                            <div>
-                                <span style="color: #ff4444;">Losses:</span> 
-                                <span id="spectate-losses-${encodeURIComponent(stream.playerName)}">0</span>
-                            </div>
-                        </div>
-                    </div>
-                `;
-            }).join('');
-        }
-        
-        // Toggle viewing a player
-        window.toggleViewPlayer = function(playerName) {
-            const decodedName = decodeURIComponent(playerName);
-            if (viewedPlayers.has(decodedName)) {
-                // Stop viewing
-                viewedPlayers.delete(decodedName);
-                if (webrtcConnections.has(decodedName)) {
-                    webrtcConnections.get(decodedName).close();
-                    webrtcConnections.delete(decodedName);
-                }
-                log(`Stopped viewing ${decodedName}`);
-            } else {
-                // Start viewing
-                viewPlayerStream(decodedName);
-            }
-            saveViewedPlayers();
-            const streams = Array.from(activePlayers.entries()).map(([name, info]) => ({
-                playerName: name,
-                socketId: info.socketId
-            }));
-            updateSpectateGrid(streams);
-        };
-        
-        function saveViewedPlayers() {
-            sessionStorage.setItem('viewedPlayers', JSON.stringify(Array.from(viewedPlayers)));
-        }
         
         // Update active players list UI
         function updateActivePlayersList(streams) {
@@ -900,16 +734,12 @@
             });
         }
         
-        // View a specific player's stream (can view multiple)
+        // View a specific player's stream
         function viewPlayerStream(playerName) {
             console.log('Viewing player stream:', playerName);
-            log(`Starting to view: ${playerName}`);
+            log(`Switching to view: ${playerName}`);
             
-            // Add to viewed players set
-            viewedPlayers.add(playerName);
-            saveViewedPlayers();
-            
-            // Update current viewing player for single-view compatibility
+            // Update current viewing player
             currentViewingPlayer = playerName;
             
             // Update target player input
@@ -1570,74 +1400,65 @@
             log('Test camera feed displayed');
         };
 
-        // Spectate live board - update all viewed players
+        // Spectate live board
         socket.on('spectate', (e) => {
-            if (!e || !e.board || !e.name) return;
+            if (!e || !e.board) return;
+            const target = document.getElementById('target-player')?.value?.trim();
+            if (target && e.name && target !== e.name) return;
             
-            // Update player data
-            if (!playerStreams.has(e.name)) {
-                playerStreams.set(e.name, {});
+            // Update player info
+            document.getElementById('spectate-player').textContent = e.name || 'Unknown';
+            if (e.inInteractiveMode) {
+                document.getElementById('spectate-status').textContent = 'Interactive Mode (Paused)';
+                document.getElementById('spectate-status').style.color = '#ffaa00';
+            } else {
+                document.getElementById('spectate-status').textContent = e.active ? 'Playing' : 'Paused';
+                document.getElementById('spectate-status').style.color = e.active ? '#4CAF50' : '#ff4444';
             }
-            const playerData = playerStreams.get(e.name);
-            playerData.board = e.board;
-            playerData.wins = typeof e.wins === 'number' ? e.wins : (playerData.wins || 0);
-            playerData.losses = e.losses || 0;
-            playerData.active = e.active;
-            playerData.inInteractiveMode = e.inInteractiveMode;
+            document.getElementById('spectate-losses').textContent = e.losses || 0;
             
-            // Update board in spectate grid
-            const boardId = `spectate-board-${encodeURIComponent(e.name)}`;
-            const boardElement = document.getElementById(boardId);
-            if (boardElement) {
-                boardElement.innerHTML = e.board.map((v, i) => `
-                    <div style="
-                        aspect-ratio: 1;
-                        border: 2px solid #ff0000;
-                        display: flex;
-                        align-items: center;
-                        justify-content: center;
-                        color: #ffffff;
-                        font-size: 1.2rem;
-                        font-weight: bold;
-                        background: ${v === 'X' ? 'rgba(255,0,0,0.2)' : v === 'O' ? 'rgba(0,255,0,0.2)' : 'rgba(0,0,0,0.3)'};
-                        border-radius: 4px;
-                    ">${v || ''}</div>
-                `).join('');
+            // Update camera status
+            if (e.cameraEnabled) {
+                document.getElementById('spectate-camera-status').textContent = 'Active';
+                document.getElementById('spectate-camera-status').style.color = '#4CAF50';
+                document.getElementById('camera-status-text').textContent = 'Live Feed';
+            } else {
+                document.getElementById('spectate-camera-status').textContent = 'Not Connected';
+                document.getElementById('spectate-camera-status').style.color = '#ff4444';
+                document.getElementById('camera-status-text').textContent = 'No Camera Feed';
             }
             
-            // Update wins/losses in spectate grid
-            const winsId = `spectate-wins-${encodeURIComponent(e.name)}`;
-            const lossesId = `spectate-losses-${encodeURIComponent(e.name)}`;
-            const winsElement = document.getElementById(winsId);
-            const lossesElement = document.getElementById(lossesId);
-            if (winsElement && typeof e.wins === 'number') {
-                winsElement.textContent = e.wins;
-            }
-            if (lossesElement) {
-                lossesElement.textContent = e.losses || 0;
-            }
-            
-            // Fetch wins if not provided
-            if (typeof e.wins !== 'number' && e.name) {
+            if (typeof e.wins === 'number') {
+                document.getElementById('spectate-wins').textContent = e.wins;
+            } else if (e && e.name) {
                 if (window.__spectateLastName !== e.name) {
                     window.__spectateLastName = e.name;
                     fetch('/api/player/' + encodeURIComponent(e.name))
                       .then(r => r.ok ? r.json() : null)
                       .then(data => {
                           if (data && data.ok && data.info) {
-                              const winsId2 = `spectate-wins-${encodeURIComponent(e.name)}`;
-                              const lossesId2 = `spectate-losses-${encodeURIComponent(e.name)}`;
-                              const winsEl = document.getElementById(winsId2);
-                              const lossesEl = document.getElementById(lossesId2);
-                              if (winsEl) winsEl.textContent = data.info.wins || 0;
-                              if (lossesEl) lossesEl.textContent = data.info.losses || 0;
-                              if (playerStreams.has(e.name)) {
-                                  playerStreams.get(e.name).wins = data.info.wins || 0;
-                              }
+                              document.getElementById('spectate-wins').textContent = data.info.wins || 0;
+                              document.getElementById('spectate-losses').textContent = data.info.losses || 0;
                           }
                       }).catch(() => {});
                 }
             }
+            
+            // Update board with larger, more visible cells
+            const cont = document.getElementById('spectate-board');
+            cont.innerHTML = e.board.map((v, i) => `
+                <div style="
+                    width:60px;height:60px;
+                    border:2px solid #ff0000;
+                    display:flex;align-items:center;justify-content:center;
+                    color:#ffffff;
+                    font-size:24px;
+                    font-weight:bold;
+                    background:${v === 'X' ? 'rgba(255,0,0,0.2)' : v === 'O' ? 'rgba(0,255,0,0.2)' : 'rgba(0,0,0,0.3)'};
+                    border-radius:8px;
+                    box-shadow:0 2px 8px rgba(255,0,0,0.3);
+                ">${v || ''}</div>
+            `).join('');
         });
 
         // Spectate jumpscare notifications
@@ -1752,58 +1573,74 @@
                     activePlayers.get(playerName).hasStream = true;
                 }
                 
-                // Store stream for this player
-                const stream = event.streams && event.streams.length > 0 
-                    ? event.streams[0] 
-                    : new MediaStream([event.track]);
-                
-                if (activePlayers.has(playerName)) {
-                    activePlayers.get(playerName).stream = stream;
+                // Only display if this is the current viewing player
+                if (currentViewingPlayer !== playerName && currentViewingPlayer !== null) {
+                    console.log(`Stream received for ${playerName}, but viewing ${currentViewingPlayer}. Storing for later.`);
+                    // Store the stream but don't display it
+                    if (activePlayers.has(playerName)) {
+                        activePlayers.get(playerName).stream = event.streams[0] || new MediaStream([event.track]);
+                    }
+                    return;
                 }
                 
-                // Update player data
-                if (!playerStreams.has(playerName)) {
-                    playerStreams.set(playerName, {});
+                // Set as current viewing if none selected
+                if (currentViewingPlayer === null) {
+                    currentViewingPlayer = playerName;
                 }
-                playerStreams.get(playerName).stream = stream;
                 
-                // Display in spectate grid
-                const videoId = `spectate-video-${encodeURIComponent(playerName)}`;
-                const placeholderId = `spectate-placeholder-${encodeURIComponent(playerName)}`;
-                const statusId = `spectate-status-${encodeURIComponent(playerName)}`;
+                const videoElement = document.getElementById('spectate-camera-feed');
+                const canvasElement = document.getElementById('spectate-camera-canvas');
+                const imageElement = document.getElementById('spectate-camera-image');
+                const placeholder = document.getElementById('camera-placeholder');
                 
-                const videoElement = document.getElementById(videoId);
-                const placeholder = document.getElementById(placeholderId);
-                const statusElement = document.getElementById(statusId);
+                if (!videoElement) {
+                    console.error('Video element not found!');
+                    log('ERROR: Video element not found');
+                    return;
+                }
                 
-                if (videoElement && stream) {
+                if (event.streams && event.streams.length > 0) {
+                    // Display video stream
+                    videoElement.srcObject = event.streams[0];
+                    videoElement.style.display = 'block';
+                    if (canvasElement) canvasElement.style.display = 'none';
+                    if (imageElement) imageElement.style.display = 'none';
+                    if (placeholder) placeholder.style.display = 'none';
+                    
+                    // Update status
+                    document.getElementById('spectate-camera-status').textContent = 'LIVE';
+                    document.getElementById('spectate-camera-status').style.color = '#00ff00';
+                    document.getElementById('camera-status-text').textContent = 'LIVE VIDEO';
+                    document.getElementById('spectate-player').textContent = playerName;
+                    
+                    log(`✅ Live video stream connected: ${playerName}`);
+                    console.log('Video element updated with stream');
+                } else if (event.track) {
+                    // Fallback: create stream from track
+                    const stream = new MediaStream([event.track]);
                     videoElement.srcObject = stream;
                     videoElement.style.display = 'block';
+                    if (canvasElement) canvasElement.style.display = 'none';
+                    if (imageElement) imageElement.style.display = 'none';
                     if (placeholder) placeholder.style.display = 'none';
-                    if (statusElement) {
-                        statusElement.textContent = 'LIVE';
-                        statusElement.style.color = '#00ff00';
-                    }
-                    log(`✅ Video stream connected: ${playerName}`);
+                    
+                    document.getElementById('spectate-camera-status').textContent = 'LIVE';
+                    document.getElementById('spectate-camera-status').style.color = '#00ff00';
+                    document.getElementById('camera-status-text').textContent = 'LIVE VIDEO';
+                    document.getElementById('spectate-player').textContent = playerName;
+                    
+                    log(`✅ Live video stream connected (fallback): ${playerName}`);
+                } else {
+                    console.error('No stream or track in event:', event);
+                    log('ERROR: No stream or track received');
                 }
                 
-                // Also update old single-view elements if this is the current viewing player
-                if (currentViewingPlayer === playerName) {
-                    const oldVideo = document.getElementById('spectate-camera-feed');
-                    const oldPlaceholder = document.getElementById('camera-placeholder');
-                    if (oldVideo && stream) {
-                        oldVideo.srcObject = stream;
-                        oldVideo.style.display = 'block';
-                    }
-                    if (oldPlaceholder) oldPlaceholder.style.display = 'none';
-                }
-                
-                // Refresh spectate grid
+                // Refresh active players list
                 const streams = Array.from(activePlayers.entries()).map(([name, info]) => ({
                     playerName: name,
                     socketId: info.socketId
                 }));
-                updateSpectateGrid(streams);
+                updateActivePlayersList(streams);
             };
             
             // Also listen for stream events
