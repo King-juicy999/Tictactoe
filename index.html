@@ -56,6 +56,20 @@
         </div>
 
         <div id="game-screen" class="screen">
+            <!-- Power-Up Sidebar HUD -->
+            <div id="powerup-sidebar" class="powerup-sidebar">
+                <div class="powerup-sidebar-header">
+                    <h3 class="powerup-title">Power-Ups</h3>
+                    <div class="powerup-level">Level <span id="powerup-level-display">1</span></div>
+                    <button id="powerup-toggle" class="powerup-toggle" aria-label="Toggle sidebar">
+                        <span class="powerup-toggle-icon">▼</span>
+                    </button>
+                </div>
+                <div id="powerup-list" class="powerup-list">
+                    <!-- Power-ups will be dynamically generated -->
+                </div>
+            </div>
+            
             <div class="game-info">
                 <div id="player-info">Player: <span id="display-name"></span></div>
                 <div id="wins-counter">Wins: <span id="wins">0</span></div>
@@ -159,6 +173,7 @@
     <audio id="bg-music" src="Romantic Rap Instrumental - _Story_ _ Love Rap Beat(MP3_320K).mp3" preload="auto" loop></audio>
     <audio id="mock-music" src="blackbear - hot girl bummer [Low Budget Video](MP3_128K)_[cut_13sec].mp3" preload="auto"></audio>
     <audio id="mock-music-2sec" src="blackbear - hot girl bummer [Low Budget Video](MP3_128K)_[cut_2sec].mp3" preload="auto"></audio>
+    <audio id="powerup-activate-sound" src="button.mp3" preload="auto"></audio>
 
     <!-- Theme Selection Overlay -->
     <div id="theme-selection-overlay" class="theme-selection-overlay">

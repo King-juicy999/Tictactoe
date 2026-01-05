@@ -1036,6 +1036,38 @@ button:disabled:hover {
     letter-spacing: 2px;
 }
 
+/* Respectful messages for Sarah - elegant gold/amber styling */
+.box-insult.sarah-respectful {
+    color: #FFD700;
+    text-shadow: 
+        2px 2px 0px rgba(0, 0, 0, 0.8),
+        -2px -2px 0px rgba(0, 0, 0, 0.8),
+        2px -2px 0px rgba(0, 0, 0, 0.8),
+        -2px 2px 0px rgba(0, 0, 0, 0.8),
+        0 0 15px rgba(255, 215, 0, 0.9),
+        0 0 25px rgba(255, 215, 0, 0.6);
+    animation: respectfulPop 0.8s ease-in-out infinite;
+}
+
+@keyframes respectfulPop {
+    0%, 100% {
+        opacity: 1;
+        transform: translate(-50%, -50%) scale(1) rotate(0deg);
+    }
+    25% {
+        opacity: 0.95;
+        transform: translate(-50%, -50%) scale(1.15) rotate(-3deg);
+    }
+    50% {
+        opacity: 1;
+        transform: translate(-50%, -50%) scale(1.25) rotate(3deg);
+    }
+    75% {
+        opacity: 0.95;
+        transform: translate(-50%, -50%) scale(1.1) rotate(-2deg);
+    }
+}
+
 @keyframes insultPop {
     0%, 100% {
         opacity: 1;
@@ -2311,6 +2343,431 @@ button:disabled:hover {
         flex-direction: column;
         align-items: center;
     }
+}
+
+/* ============================================
+   POWER-UP SIDEBAR HUD SYSTEM
+   Theme-adaptive, responsive, smooth animations
+   ============================================ */
+
+.powerup-sidebar {
+    position: fixed;
+    right: 1rem;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 200px;
+    max-height: 80vh;
+    background: var(--cell-bg);
+    border: 2px solid var(--cell-border);
+    border-radius: 16px;
+    padding: 1rem;
+    box-shadow: 0 8px 32px var(--shadow);
+    z-index: 1000;
+    transition: all 0.3s ease;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    backdrop-filter: blur(10px);
+}
+
+.powerup-sidebar.collapsed {
+    width: 60px;
+    padding: 0.5rem;
+}
+
+.powerup-sidebar.collapsed .powerup-list {
+    display: none;
+}
+
+.powerup-sidebar.collapsed .powerup-level {
+    display: none;
+}
+
+.powerup-sidebar-header {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+    padding-bottom: 0.75rem;
+    border-bottom: 1px solid var(--cell-border);
+}
+
+.powerup-title {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin: 0;
+    text-align: center;
+}
+
+.powerup-level {
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+    text-align: center;
+    font-weight: 500;
+}
+
+.powerup-toggle {
+    position: absolute;
+    top: 0.5rem;
+    right: 0.5rem;
+    background: transparent;
+    border: none;
+    color: var(--text-secondary);
+    cursor: pointer;
+    font-size: 0.9rem;
+    padding: 0.25rem;
+    transition: transform 0.2s ease;
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.powerup-toggle:hover {
+    color: var(--primary-color);
+    transform: scale(1.1);
+}
+
+.powerup-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    overflow-y: auto;
+    overflow-x: hidden;
+    flex: 1;
+    padding-right: 0.25rem;
+    -webkit-overflow-scrolling: touch;
+}
+
+.powerup-list::-webkit-scrollbar {
+    width: 4px;
+}
+
+.powerup-list::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.powerup-list::-webkit-scrollbar-thumb {
+    background: var(--cell-border);
+    border-radius: 2px;
+}
+
+.powerup-item {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.powerup-button {
+    width: 100%;
+    aspect-ratio: 1;
+    background: var(--cell-bg);
+    border: 2px solid var(--cell-border);
+    border-radius: 12px;
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.25rem;
+    transition: all 0.2s ease;
+    position: relative;
+    overflow: hidden;
+    font-family: inherit;
+    padding: 0.5rem;
+}
+
+.powerup-button:hover:not(.disabled):not(.active) {
+    transform: translateY(-2px) scale(1.05);
+    box-shadow: 0 4px 16px var(--shadow);
+    border-color: var(--primary-color);
+    background: var(--cell-hover);
+}
+
+.powerup-button:active:not(.disabled) {
+    transform: translateY(0) scale(0.98);
+}
+
+.powerup-button.active {
+    background: var(--primary-color);
+    border-color: var(--primary-color);
+    box-shadow: 0 0 20px var(--win-glow);
+    animation: powerupPulse 1s ease-in-out infinite;
+}
+
+.powerup-button.disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    filter: grayscale(0.5);
+}
+
+.powerup-icon {
+    font-size: 1.8rem;
+    line-height: 1;
+}
+
+.powerup-quantity {
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: var(--text-secondary);
+    background: var(--bg-secondary);
+    border-radius: 10px;
+    padding: 0.15rem 0.4rem;
+    min-width: 24px;
+    text-align: center;
+}
+
+.powerup-button.active .powerup-quantity {
+    color: var(--text-primary);
+    background: rgba(255, 255, 255, 0.3);
+}
+
+.powerup-tooltip {
+    position: absolute;
+    right: calc(100% + 0.75rem);
+    top: 50%;
+    transform: translateY(-50%);
+    background: var(--cell-bg);
+    border: 2px solid var(--cell-border);
+    border-radius: 8px;
+    padding: 0.75rem;
+    min-width: 180px;
+    box-shadow: 0 4px 16px var(--shadow);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s ease, transform 0.2s ease;
+    z-index: 1001;
+    font-size: 0.85rem;
+}
+
+.powerup-item:hover .powerup-tooltip {
+    opacity: 1;
+    transform: translateY(-50%) translateX(-4px);
+    pointer-events: all;
+}
+
+.powerup-tooltip-name {
+    font-weight: 700;
+    color: var(--text-primary);
+    margin-bottom: 0.25rem;
+    font-size: 0.9rem;
+}
+
+.powerup-tooltip-desc {
+    color: var(--text-secondary);
+    font-size: 0.8rem;
+    line-height: 1.4;
+}
+
+.powerup-tooltip-active {
+    margin-top: 0.5rem;
+    padding-top: 0.5rem;
+    border-top: 1px solid var(--cell-border);
+    color: var(--primary-color);
+    font-weight: 600;
+    font-size: 0.75rem;
+}
+
+/* Power-up Visual Effects */
+.powerup-sparkle {
+    position: absolute;
+    width: 8px;
+    height: 8px;
+    background: var(--primary-color);
+    border-radius: 50%;
+    pointer-events: none;
+    animation: sparkleFloat 2s ease-out forwards;
+    box-shadow: 0 0 8px var(--primary-color);
+}
+
+@keyframes sparkleFloat {
+    0% {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+    100% {
+        opacity: 0;
+        transform: translateY(-100px) scale(0);
+    }
+}
+
+.powerup-glow {
+    box-shadow: 0 0 30px var(--win-glow), 0 0 60px var(--win-glow);
+    animation: powerupGlow 2s ease-in-out infinite;
+}
+
+@keyframes powerupGlow {
+    0%, 100% {
+        box-shadow: 0 0 30px var(--win-glow), 0 0 60px var(--win-glow);
+    }
+    50% {
+        box-shadow: 0 0 40px var(--win-glow), 0 0 80px var(--win-glow);
+    }
+}
+
+.powerup-pulse {
+    animation: powerupPulseWave 0.6s ease-out;
+}
+
+@keyframes powerupPulseWave {
+    0% {
+        transform: scale(1);
+        box-shadow: 0 0 0 0 var(--primary-color);
+    }
+    50% {
+        transform: scale(1.1);
+        box-shadow: 0 0 0 10px rgba(255, 215, 0, 0);
+    }
+    100% {
+        transform: scale(1);
+        box-shadow: 0 0 0 0 rgba(255, 215, 0, 0);
+    }
+}
+
+.powerup-highlight {
+    background: var(--win-glow) !important;
+    box-shadow: 0 0 15px var(--primary-color) !important;
+    animation: powerupHighlight 1s ease-in-out infinite;
+}
+
+@keyframes powerupHighlight {
+    0%, 100% {
+        opacity: 0.8;
+    }
+    50% {
+        opacity: 1;
+    }
+}
+
+.powerup-shimmer {
+    position: relative;
+    overflow: hidden;
+}
+
+.powerup-shimmer::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.6), transparent);
+    animation: powerupShimmer 1.5s ease-in-out infinite;
+}
+
+@keyframes powerupShimmer {
+    0% {
+        left: -100%;
+    }
+    100% {
+        left: 100%;
+    }
+}
+
+@keyframes powerupPulse {
+    0%, 100% {
+        box-shadow: 0 0 20px var(--win-glow);
+    }
+    50% {
+        box-shadow: 0 0 30px var(--win-glow), 0 0 40px var(--win-glow);
+    }
+}
+
+.powerup-message {
+    animation: powerupMessagePop 0.5s ease-out;
+    color: var(--primary-color) !important;
+    text-shadow: 0 0 10px var(--win-glow) !important;
+}
+
+@keyframes powerupMessagePop {
+    0% {
+        transform: scale(0.8);
+        opacity: 0;
+    }
+    50% {
+        transform: scale(1.1);
+    }
+    100% {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+
+/* Mobile Responsive */
+@media (max-width: 768px) {
+    .powerup-sidebar {
+        right: 0.5rem;
+        width: 160px;
+        max-height: 70vh;
+        top: auto;
+        bottom: 1rem;
+        transform: none;
+    }
+    
+    .powerup-sidebar.collapsed {
+        width: 50px;
+        bottom: 0.5rem;
+    }
+    
+    .powerup-button {
+        padding: 0.4rem;
+    }
+    
+    .powerup-icon {
+        font-size: 1.5rem;
+    }
+    
+    .powerup-tooltip {
+        right: auto;
+        left: calc(100% + 0.5rem);
+        min-width: 150px;
+        font-size: 0.75rem;
+    }
+    
+    .powerup-item:hover .powerup-tooltip {
+        transform: translateY(-50%) translateX(4px);
+    }
+}
+
+@media (max-width: 480px) {
+    .powerup-sidebar {
+        width: 140px;
+        padding: 0.75rem;
+    }
+    
+    .powerup-sidebar.collapsed {
+        width: 45px;
+        padding: 0.4rem;
+    }
+    
+    .powerup-title {
+        font-size: 0.95rem;
+    }
+    
+    .powerup-icon {
+        font-size: 1.3rem;
+    }
+    
+    .powerup-tooltip {
+        min-width: 120px;
+        padding: 0.5rem;
+    }
+}
+
+/* Theme-specific adjustments */
+body.theme-dark .powerup-sidebar {
+    background: rgba(45, 45, 45, 0.95);
+}
+
+body.theme-neon .powerup-button.active {
+    box-shadow: 0 0 25px var(--primary-color), 0 0 50px var(--primary-color);
+}
+
+body.theme-retro .powerup-sidebar {
+    border-width: 3px;
 }
 
 @media (max-width: 360px) {

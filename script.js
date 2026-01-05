@@ -188,7 +188,344 @@ const gameState = {
     inInteractiveMode: false, // Track if in AI mock interactive mode
     playerGoesFirst: true, // Track who goes first - alternates each game
     playerJustWon: false, // Track if player won last game - AI will think longer
-    aiThinkingDelay: 500 // Base AI thinking delay (increased after player wins)
+    aiThinkingDelay: 500, // Base AI thinking delay (increased after player wins)
+    currentLevel: 1, // Current level (based on total games played)
+    totalGamesPlayed: 0 // Total games (wins + losses) for level calculation
+};
+
+/**
+ * Power-Up Manager System
+ * Front-end only - visual effects, no AI logic changes
+ */
+const PowerUpManager = {
+    powerUps: {
+        sparkle: {
+            id: 'sparkle',
+            name: 'Sparkle Effect',
+            icon: '✨',
+            description: 'Adds a beautiful sparkle animation to the board',
+            duration: 3000, // 3 seconds
+            cooldown: 0
+        },
+        glow: {
+            id: 'glow',
+            name: 'Board Glow',
+            icon: '💫',
+            description: 'Makes the board glow with energy',
+            duration: 4000, // 4 seconds
+            cooldown: 0
+        },
+        pulse: {
+            id: 'pulse',
+            name: 'Pulse Wave',
+            icon: '🌊',
+            description: 'Creates a pulse wave across all cells',
+            duration: 2000, // 2 seconds
+            cooldown: 0
+        },
+        highlight: {
+            id: 'highlight',
+            name: 'Cell Highlight',
+            icon: '⭐',
+            description: 'Highlights all empty cells with a golden glow',
+            duration: 3000, // 3 seconds
+            cooldown: 0
+        },
+        shimmer: {
+            id: 'shimmer',
+            name: 'Shimmer Effect',
+            icon: '✨',
+            description: 'Adds a shimmering effect to your marks',
+            duration: 3500, // 3.5 seconds
+            cooldown: 0
+        }
+    },
+    
+    currentLevel: 1,
+    quantities: {}, // Track quantities per power-up
+    activeEffects: {}, // Track currently active effects
+    
+    /**
+     * Initialize power-up system
+     */
+    init() {
+        this.currentLevel = gameState.currentLevel || 1;
+        this.resetPowerUpsForLevel();
+        this.renderSidebar();
+        this.setupEventListeners();
+    },
+    
+    /**
+     * Reset power-ups for new level (1 free power-up per level)
+     */
+    resetPowerUpsForLevel() {
+        Object.keys(this.powerUps).forEach(powerUpId => {
+            this.quantities[powerUpId] = 1; // 1 free power-up per level
+        });
+        this.activeEffects = {};
+    },
+    
+    /**
+     * Update level based on total games played
+     */
+    updateLevel() {
+        const newLevel = Math.floor((gameState.totalGamesPlayed || 0) / 1) + 1; // New level every game
+        if (newLevel !== this.currentLevel) {
+            this.currentLevel = newLevel;
+            gameState.currentLevel = newLevel;
+            this.resetPowerUpsForLevel();
+            this.renderSidebar();
+        }
+    },
+    
+    /**
+     * Render power-up sidebar
+     */
+    renderSidebar() {
+        const sidebar = document.getElementById('powerup-sidebar');
+        const list = document.getElementById('powerup-list');
+        const levelDisplay = document.getElementById('powerup-level-display');
+        
+        if (!sidebar || !list) return;
+        
+        // Update level display
+        if (levelDisplay) {
+            levelDisplay.textContent = this.currentLevel;
+        }
+        
+        // Clear existing power-ups
+        list.innerHTML = '';
+        
+        // Create power-up items
+        Object.values(this.powerUps).forEach(powerUp => {
+            const item = document.createElement('div');
+            item.className = 'powerup-item';
+            item.dataset.powerupId = powerUp.id;
+            
+            const quantity = this.quantities[powerUp.id] || 0;
+            const isActive = this.activeEffects[powerUp.id] ? true : false;
+            const isDisabled = quantity === 0 || isActive;
+            
+            item.innerHTML = `
+                <button class="powerup-button ${isDisabled ? 'disabled' : ''} ${isActive ? 'active' : ''}" 
+                        data-powerup-id="${powerUp.id}"
+                        ${isDisabled ? 'disabled' : ''}
+                        aria-label="${powerUp.name}">
+                    <span class="powerup-icon">${powerUp.icon}</span>
+                    <span class="powerup-quantity">${quantity}</span>
+                </button>
+                <div class="powerup-tooltip">
+                    <div class="powerup-tooltip-name">${powerUp.name}</div>
+                    <div class="powerup-tooltip-desc">${powerUp.description}</div>
+                    ${isActive ? '<div class="powerup-tooltip-active">Active</div>' : ''}
+                </div>
+            `;
+            
+            list.appendChild(item);
+        });
+        
+        // Attach click handlers
+        list.querySelectorAll('.powerup-button').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const powerUpId = btn.dataset.powerupId;
+                if (powerUpId) {
+                    this.activatePowerUp(powerUpId);
+                }
+            });
+        });
+    },
+    
+    /**
+     * Activate a power-up (visual effects only)
+     */
+    activatePowerUp(powerUpId) {
+        const powerUp = this.powerUps[powerUpId];
+        if (!powerUp) return;
+        
+        const quantity = this.quantities[powerUpId] || 0;
+        if (quantity === 0) return;
+        
+        // Check if already active
+        if (this.activeEffects[powerUpId]) return;
+        
+        // Decrease quantity
+        this.quantities[powerUpId] = Math.max(0, quantity - 1);
+        
+        // Mark as active
+        this.activeEffects[powerUpId] = true;
+        
+        // Play audio cue
+        const audio = document.getElementById('powerup-activate-sound');
+        if (audio) {
+            audio.currentTime = 0;
+            audio.volume = 0.3; // Subtle volume
+            audio.play().catch(() => {}); // Ignore autoplay errors
+        }
+        
+        // Apply visual effect
+        this.applyVisualEffect(powerUpId);
+        
+        // Update sidebar
+        this.renderSidebar();
+        
+        // Show activation message
+        this.showActivationMessage(powerUp);
+        
+        // Deactivate after duration
+        setTimeout(() => {
+            this.deactivatePowerUp(powerUpId);
+        }, powerUp.duration);
+    },
+    
+    /**
+     * Apply visual effect for power-up
+     */
+    applyVisualEffect(powerUpId) {
+        const board = document.querySelector('.game-board');
+        const cells = document.querySelectorAll('.cell');
+        
+        if (!board) return;
+        
+        switch(powerUpId) {
+            case 'sparkle':
+                this.createSparkleEffect(board);
+                break;
+            case 'glow':
+                board.classList.add('powerup-glow');
+                break;
+            case 'pulse':
+                this.createPulseWave(cells);
+                break;
+            case 'highlight':
+                this.highlightEmptyCells(cells);
+                break;
+            case 'shimmer':
+                this.createShimmerEffect(cells);
+                break;
+        }
+    },
+    
+    /**
+     * Deactivate power-up effect
+     */
+    deactivatePowerUp(powerUpId) {
+        if (!this.activeEffects[powerUpId]) return;
+        
+        delete this.activeEffects[powerUpId];
+        
+        const board = document.querySelector('.game-board');
+        const cells = document.querySelectorAll('.cell');
+        
+        // Remove visual effects
+        board.classList.remove('powerup-glow');
+        cells.forEach(cell => {
+            cell.classList.remove('powerup-highlight', 'powerup-shimmer');
+        });
+        
+        // Update sidebar
+        this.renderSidebar();
+    },
+    
+    /**
+     * Create sparkle effect
+     */
+    createSparkleEffect(container) {
+        for (let i = 0; i < 20; i++) {
+            const sparkle = document.createElement('div');
+            sparkle.className = 'powerup-sparkle';
+            sparkle.style.left = Math.random() * 100 + '%';
+            sparkle.style.top = Math.random() * 100 + '%';
+            sparkle.style.animationDelay = Math.random() * 0.5 + 's';
+            container.appendChild(sparkle);
+            
+            setTimeout(() => sparkle.remove(), 2000);
+        }
+    },
+    
+    /**
+     * Create pulse wave effect
+     */
+    createPulseWave(cells) {
+        cells.forEach((cell, index) => {
+            setTimeout(() => {
+                cell.classList.add('powerup-pulse');
+                setTimeout(() => {
+                    cell.classList.remove('powerup-pulse');
+                }, 600);
+            }, index * 50);
+        });
+    },
+    
+    /**
+     * Highlight empty cells
+     */
+    highlightEmptyCells(cells) {
+        cells.forEach(cell => {
+            if (!cell.textContent.trim()) {
+                cell.classList.add('powerup-highlight');
+            }
+        });
+        
+        setTimeout(() => {
+            cells.forEach(cell => {
+                cell.classList.remove('powerup-highlight');
+            });
+        }, 3000);
+    },
+    
+    /**
+     * Create shimmer effect on player marks
+     */
+    createShimmerEffect(cells) {
+        cells.forEach(cell => {
+            if (cell.textContent.trim() === 'X') {
+                cell.classList.add('powerup-shimmer');
+            }
+        });
+        
+        setTimeout(() => {
+            cells.forEach(cell => {
+                cell.classList.remove('powerup-shimmer');
+            });
+        }, 3500);
+    },
+    
+    /**
+     * Show activation message
+     */
+    showActivationMessage(powerUp) {
+        const messageBox = document.getElementById('message-box');
+        if (messageBox) {
+            const originalText = messageBox.textContent;
+            messageBox.textContent = `${powerUp.icon} ${powerUp.name} activated!`;
+            messageBox.classList.add('powerup-message');
+            
+            setTimeout(() => {
+                messageBox.classList.remove('powerup-message');
+                if (gameState.gameActive) {
+                    messageBox.textContent = originalText;
+                }
+            }, 2000);
+        }
+    },
+    
+    /**
+     * Setup sidebar toggle
+     */
+    setupEventListeners() {
+        const toggle = document.getElementById('powerup-toggle');
+        const sidebar = document.getElementById('powerup-sidebar');
+        
+        if (toggle && sidebar) {
+            toggle.addEventListener('click', () => {
+                sidebar.classList.toggle('collapsed');
+                const icon = toggle.querySelector('.powerup-toggle-icon');
+                if (icon) {
+                    icon.textContent = sidebar.classList.contains('collapsed') ? '▲' : '▼';
+                }
+            });
+        }
+    }
 };
 
 // Network helpers to report to server (if running)
@@ -1410,6 +1747,11 @@ function startGameAsAI() {
         bgMusic.play().catch(e => console.log('Could not play background music:', e));
     }
     
+    // Initialize Power-Up Manager
+    if (typeof PowerUpManager !== 'undefined') {
+        PowerUpManager.init();
+    }
+    
     // Initialize behavior analyzer
     if (typeof BehaviorAnalyzer !== 'undefined') {
         gameState.behaviorAnalyzer = new BehaviorAnalyzer(gameState.playerName);
@@ -1528,17 +1870,27 @@ if (modeAiBtn) {
         const modeSelect = document.getElementById('mode-select');
         if (modeSelect) modeSelect.classList.add('hidden');
         
-        // Show Sarah narrative before starting game
+        // Show Sarah narrative before starting game - enhanced immersive welcome
         if (isSarah()) {
             showSarahNarrative(
-                "Good evening, Miss Sarah. It is an honor to welcome you. Your father has asked that I ensure you have the best experience. How would you like to proceed today?",
+                "Good evening, Miss Sarah. It is an honor and privilege to welcome the master's daughter. Your father has entrusted me with ensuring you have the finest experience. I am here to support your growth and celebrate your achievements. How would you like to proceed today?",
                 [
                     {
                         label: 'Easy Mode',
                         callback: () => {
                             sarahDifficultyChoice = 'easy';
-                            hideSarahNarrative();
-                            setTimeout(() => startGameAsAI(), 400);
+                            showSarahNarrative(
+                                "An excellent choice, Miss Sarah. Easy mode will allow you to build confidence and enjoy the game. I shall provide gentle guidance and encouragement throughout. Shall we begin?",
+                                [
+                                    {
+                                        label: 'Begin',
+                                        callback: () => {
+                                            hideSarahNarrative();
+                                            setTimeout(() => startGameAsAI(), 400);
+                                        }
+                                    }
+                                ]
+                            );
                         }
                     },
                     {
@@ -1546,21 +1898,41 @@ if (modeAiBtn) {
                         callback: () => {
                             sarahDifficultyChoice = 'hard';
                             showSarahNarrative(
-                                "Miss Sarah, I must express my concern. The hard mode is quite challenging, and I would not want to see you struggle unnecessarily. Are you certain you wish to proceed?",
+                                "Miss Sarah, I must express my concern with the utmost respect. The hard mode presents significant challenges, and while I have every confidence in your abilities, I would not wish to see you face unnecessary difficulty. However, if you are determined to test your skills, I shall be here to support you with calm encouragement and respectful guidance. Are you certain you wish to proceed?",
                                 [
                                     {
                                         label: 'Yes, I am sure',
                                         callback: () => {
-                                            hideSarahNarrative();
-                                            setTimeout(() => startGameAsAI(), 400);
+                                            showSarahNarrative(
+                                                "Very well, Miss Sarah. I admire your determination. I shall be here to provide encouragement and support, even when the challenges become difficult. Let us begin your training.",
+                                                [
+                                                    {
+                                                        label: 'Begin',
+                                                        callback: () => {
+                                                            hideSarahNarrative();
+                                                            setTimeout(() => startGameAsAI(), 400);
+                                                        }
+                                                    }
+                                                ]
+                                            );
                                         }
                                     },
                                     {
                                         label: 'Choose Easy Instead',
                                         callback: () => {
                                             sarahDifficultyChoice = 'easy';
-                                            hideSarahNarrative();
-                                            setTimeout(() => startGameAsAI(), 400);
+                                            showSarahNarrative(
+                                                "A wise decision, Miss Sarah. Easy mode will provide a more comfortable experience. Shall we begin?",
+                                                [
+                                                    {
+                                                        label: 'Begin',
+                                                        callback: () => {
+                                                            hideSarahNarrative();
+                                                            setTimeout(() => startGameAsAI(), 400);
+                                                        }
+                                                    }
+                                                ]
+                                            );
                                         },
                                         secondary: true
                                     }
@@ -1777,16 +2149,39 @@ function handleCellClick(cell) {
             console.error('Error reporting win:', e);
         }
         
-        // Conditional narrative for Sarah
+        // Conditional narrative for Sarah - enhanced butler feedback
         let winMessage = "You win... for now.";
         if (isSarah()) {
             sarahWinCount++;
             if (sarahDifficultyChoice === 'easy' && sarahWinCount === 5) {
                 // After 5th win on Easy mode - gentle message about growth
-                winMessage = "Well played, Miss Sarah. Your father has mentioned that he wishes for you to grow stronger. Perhaps we should consider more challenging training when you are ready.";
+                winMessage = "Magnificent, Miss Sarah! Your fifth victory demonstrates remarkable progress. Your father has mentioned that he wishes for you to grow stronger. Perhaps we should consider more challenging training when you are ready. I am proud of your dedication.";
+            } else if (sarahWinCount === 1) {
+                winMessage = "Excellent play, Miss Sarah! Your first victory is well-earned. I am pleased to see your skills developing.";
+            } else if (sarahWinCount === 3) {
+                winMessage = "Outstanding, Miss Sarah! Three victories now. Your consistency is admirable, and I can see your understanding of the game deepening.";
             } else {
-                // Regular win message for Sarah
-                winMessage = "Excellent play, Miss Sarah. Well done.";
+                // Regular win message for Sarah with variety
+                const sarahWinMessages = [
+                    "Excellent play, Miss Sarah. Well done.",
+                    "Splendid victory, Miss Sarah. Your strategy was impressive.",
+                    "Well executed, Miss Sarah. I am proud of your performance.",
+                    "Brilliant move, Miss Sarah. You continue to improve.",
+                    "Superb play, Miss Sarah. Your skills are developing beautifully."
+                ];
+                winMessage = sarahWinMessages[Math.floor(Math.random() * sarahWinMessages.length)];
+            }
+            
+            // Add subtle visual feedback for Sarah wins
+            if (typeof AnimationUtils !== 'undefined') {
+                const messageElement = document.getElementById('message-box');
+                if (messageElement) {
+                    messageElement.style.transition = 'all 0.5s ease';
+                    messageElement.style.boxShadow = '0 0 20px rgba(255, 215, 0, 0.6)';
+                    setTimeout(() => {
+                        messageElement.style.boxShadow = '';
+                    }, 2000);
+                }
             }
         }
         
@@ -1973,8 +2368,8 @@ function makeAIMove() {
         }
         
         // 3rd loss - trigger interactive mock sequence (disco, insults, mock song)
-        // Skip harsh mocking for Sarah
-        if (gameState.losses === 3 && !gameState.inTsukuyomi && !gameState.inInteractiveMode && !isSarah()) {
+        // Now works for all players including Sarah (with respectful messages for Sarah)
+        if (gameState.losses === 3 && !gameState.inTsukuyomi && !gameState.inInteractiveMode) {
             try {
                 // Activate the interactive AI mock sequence which handles pausing the game,
                 // stopping bg music, showing disco lights, syncing dance, and showing the Yes/No card.
@@ -1982,7 +2377,11 @@ function makeAIMove() {
             } catch (e) {
                 console.error('Error activating interactive AI mock on loss #3:', e);
                 // Fallback: simple endGame
-                endGame("AI Wins!\nThe AI has outplayed you this round, " + gameState.playerName + "!");
+                if (isSarah()) {
+                    endGame("The AI has won this round, Miss Sarah. Shall we try again?");
+                } else {
+                    endGame("AI Wins!\nThe AI has outplayed you this round, " + gameState.playerName + "!");
+                }
             }
         } else if (gameState.losses === 7 && !gameState.inTsukuyomi && !gameState.inInteractiveMode && !isSarah()) {
             // At 7 losses, capture video frame and use as background with teasing
@@ -1990,15 +2389,49 @@ function makeAIMove() {
         } else if (gameState.losses % 6 === 0 && !gameState.inTsukuyomi && !gameState.inInteractiveMode && !isSarah()) {
             // At 6 losses, trigger enhanced interactive sequence with demon jumpscare
             activateEnhancedInteractiveAIMock();
-        } else if (gameState.losses > 3 && gameState.losses % 3 === 0 && !gameState.inInteractiveMode && !isSarah()) {
+        } else if (gameState.losses > 3 && gameState.losses % 3 === 0 && !gameState.inInteractiveMode) {
             // At every 3 losses after the 3rd (6, 9, 12, etc.), trigger interactive AI mock sequence
-            // 6+ losses - use enhanced version with demon jumpscare
-            activateEnhancedInteractiveAIMock();
+            // 6+ losses - use enhanced version with demon jumpscare (skip demon for Sarah)
+            if (isSarah()) {
+                // For Sarah, use respectful version without demon jumpscare
+                activateInteractiveAIMock();
+            } else {
+                activateEnhancedInteractiveAIMock();
+            }
         } else {
             // For quick losses, still record but continue game
-            // Conditional message for Sarah
+            // Conditional message for Sarah - enhanced butler feedback
             if (isSarah()) {
-                endGame("The AI has won this round, Miss Sarah. Shall we try again?");
+                // Different messages based on difficulty and loss count
+                let sarahLossMessage = "The AI has won this round, Miss Sarah. Shall we try again?";
+                if (sarahDifficultyChoice === 'hard') {
+                    const hardLossMessages = [
+                        "The AI has won this round, Miss Sarah. Hard mode presents significant challenges, but I believe in your ability to overcome them. Would you like to continue?",
+                        "Miss Sarah, the AI has claimed this round. Do not be discouraged - every loss is a learning opportunity. Shall we continue?",
+                        "The AI has won, Miss Sarah. I apologize if this feels frustrating. Your persistence is admirable. Would you like to try again?"
+                    ];
+                    sarahLossMessage = hardLossMessages[Math.floor(Math.random() * hardLossMessages.length)];
+                } else {
+                    const easyLossMessages = [
+                        "The AI has won this round, Miss Sarah. No need to worry - practice makes perfect. Shall we try again?",
+                        "Miss Sarah, the AI has won this round. You are learning with each game. Would you like to continue?",
+                        "The AI has won, Miss Sarah. Your effort is what matters most. Shall we continue practicing?"
+                    ];
+                    sarahLossMessage = easyLossMessages[Math.floor(Math.random() * easyLossMessages.length)];
+                }
+                endGame(sarahLossMessage);
+                
+                // Add subtle visual feedback for Sarah losses
+                if (typeof AnimationUtils !== 'undefined') {
+                    const messageElement = document.getElementById('message-box');
+                    if (messageElement) {
+                        messageElement.style.transition = 'all 0.5s ease';
+                        messageElement.style.opacity = '0.9';
+                        setTimeout(() => {
+                            messageElement.style.opacity = '';
+                        }, 1500);
+                    }
+                }
             } else {
                 endGame("AI Wins!\nThe AI has outplayed you this round, " + gameState.playerName + "!");
             }
@@ -2519,13 +2952,6 @@ function checkWinTsukuyomi(player) {
 
 // Interactive AI Mock Sequence
 function activateInteractiveAIMock() {
-    // Skip harsh mocking for Sarah
-    if (isSarah()) {
-        // Just end game normally for Sarah
-        endGame("The AI has won this round, Miss Sarah. Shall we try again?");
-        return;
-    }
-    
     gameState.inInteractiveMode = true;
     gameState.gameActive = false;
     
@@ -2544,8 +2970,12 @@ function activateInteractiveAIMock() {
         bgMusic.currentTime = 0;
     }
     
-    // Show wait message
-    endGame("Wait... now the AI will be interactive here. Tell the person wait.");
+    // Show wait message - different for Sarah
+    if (isSarah()) {
+        endGame("Miss Sarah, allow me a moment to prepare something special...");
+    } else {
+        endGame("Wait... now the AI will be interactive here. Tell the person wait.");
+    }
     
     // Send update to admin
     emitBoardUpdate();
@@ -2555,8 +2985,12 @@ function activateInteractiveAIMock() {
         discoOverlay.classList.remove('hidden');
         discoOverlay.classList.add('enhanced-rgb');
         
-        // Make game boxes dance with insults
-        startBoxDanceWithInsults();
+        // Make game boxes dance - with respectful messages for Sarah
+        if (isSarah()) {
+            startBoxDanceWithRespectfulMessages();
+        } else {
+            startBoxDanceWithInsults();
+        }
         
         // Play mock music
         if (mockMusic) {
@@ -2627,17 +3061,22 @@ function activateInteractiveAIMock() {
             // Show AI mock overlay
             aiMockOverlay.classList.remove('hidden');
             
-            // Mock the player and ask if they want to continue
-            const mockMessages = [
-                `Well, well, well... ${gameState.playerName}, you've lost 3 times already!`,
-                `You really love getting beaten, don't you?`,
-                `I'm starting to think you enjoy this...`
-            ];
-            
-            // Skip harsh mocking for Sarah (shouldn't reach here due to early return, but safety check)
+            // Different messages for Sarah vs other players
             if (isSarah()) {
-                aiMockText.textContent = "Miss Sarah, you've had some losses. Would you like to continue?";
+                // Respectful butler messages for Sarah
+                const sarahRespectfulMessages = [
+                    "Miss Sarah, you've experienced three losses. I understand this can be frustrating. Would you like to continue practicing?",
+                    "The master's daughter, you've faced some challenges. Shall we continue with your training?",
+                    "Miss Sarah, three losses in a row. I believe in your ability to improve. Would you like to try again?"
+                ];
+                aiMockText.textContent = sarahRespectfulMessages[Math.floor(Math.random() * sarahRespectfulMessages.length)] + "\n\nWould you like to continue?";
             } else {
+                // Regular taunt messages for other players
+                const mockMessages = [
+                    `Well, well, well... ${gameState.playerName}, you've lost 3 times already!`,
+                    `You really love getting beaten, don't you?`,
+                    `I'm starting to think you enjoy this...`
+                ];
                 aiMockText.textContent = mockMessages[Math.floor(Math.random() * mockMessages.length)] + "\n\nDo you want to continue?";
             }
             
@@ -2919,6 +3358,35 @@ function startBoxDanceWithInsults() {
     });
 }
 
+// Box dance with respectful messages for Sarah
+function startBoxDanceWithRespectfulMessages() {
+    const respectfulMessages = [
+        "PRACTICE",
+        "GROWTH",
+        "LEARNING",
+        "PROGRESS",
+        "EFFORT",
+        "DEDICATION",
+        "IMPROVEMENT",
+        "PERSISTENCE",
+        "STRENGTH"
+    ];
+    
+    cells.forEach((cell, index) => {
+        cell.classList.add('dancing');
+        cell.style.animationDelay = `${index * 0.1}s`;
+        cell.style.position = 'relative';
+        
+        // Add respectful message text that appears and disappears
+        const message = respectfulMessages[index % respectfulMessages.length];
+        const messageElement = document.createElement('div');
+        messageElement.className = 'box-insult sarah-respectful';
+        messageElement.textContent = message;
+        messageElement.style.animationDelay = `${index * 0.15}s`;
+        cell.appendChild(messageElement);
+    });
+}
+
 function stopBoxDance() {
     cells.forEach(cell => {
         cell.classList.remove('dancing');
@@ -2934,10 +3402,10 @@ function stopBoxDance() {
 
 // Enhanced Interactive AI Mock Sequence (for 6+ losses)
 function activateEnhancedInteractiveAIMock() {
-    // Skip harsh mocking for Sarah
+    // For Sarah, use respectful version without demon jumpscare
     if (isSarah()) {
-        // Just end game normally for Sarah
-        endGame("The AI has won this round, Miss Sarah. Shall we try again?");
+        // Use the regular interactive mock but with respectful messages
+        activateInteractiveAIMock();
         return;
     }
     
@@ -3536,6 +4004,12 @@ function endGame(message) {
         // Alternate turns for next game (including draws)
         // If player went first this game, AI goes first next game
         gameState.playerGoesFirst = !gameState.playerGoesFirst;
+        
+        // Update level tracking for power-ups (visual only, no AI logic)
+        gameState.totalGamesPlayed = (gameState.wins || 0) + (gameState.losses || 0);
+        if (typeof PowerUpManager !== 'undefined') {
+            PowerUpManager.updateLevel();
+        }
     } catch (e) {
         console.error('Critical error in endGame:', e);
         // Fallback: just disable game
@@ -3621,10 +4095,15 @@ if (mockYesBtn) {
         mockYesBtn.disabled = true;
         mockNoBtn.disabled = true;
         
-        // Different responses based on loss count - skip harsh taunts for Sarah
+        // Different responses based on loss count - respectful encouragement for Sarah
         if (isSarah()) {
             if (aiMockText) {
-                aiMockText.textContent = "As you wish, Miss Sarah. Let us continue.";
+                const sarahContinueMessages = [
+                    "As you wish, Miss Sarah. Your determination is admirable. Let us continue with your training.",
+                    "Excellent, Miss Sarah. I am pleased by your persistence. Shall we proceed?",
+                    "Very well, Miss Sarah. Your commitment to improvement is inspiring. Let us continue."
+                ];
+                aiMockText.textContent = sarahContinueMessages[Math.floor(Math.random() * sarahContinueMessages.length)];
             }
         } else {
             if (gameState.losses >= 6) {
@@ -3663,14 +4142,25 @@ if (mockNoBtn) {
         mockYesBtn.disabled = true;
         mockNoBtn.disabled = true;
         
-        // Different responses based on loss count
-        if (gameState.losses >= 6) {
+        // Different responses based on loss count - respectful for Sarah
+        if (isSarah()) {
             if (aiMockText) {
-                aiMockText.textContent = `Finally giving up after 6 losses? ${gameState.playerName}, you should have quit 3 losses ago! At least you know when you're beaten... finally!`;
+                const sarahQuitMessages = [
+                    "I understand, Miss Sarah. Sometimes it is wise to take a break. You may return whenever you are ready. I shall be here to assist you.",
+                    "As you wish, Miss Sarah. There is no shame in pausing. Your well-being is my priority. Please return when you feel ready to continue.",
+                    "Very well, Miss Sarah. I respect your decision. Take your time, and know that I am here whenever you wish to resume your training."
+                ];
+                aiMockText.textContent = sarahQuitMessages[Math.floor(Math.random() * sarahQuitMessages.length)];
             }
         } else {
-            if (aiMockText) {
-                aiMockText.textContent = `Of course you'd quit, ${gameState.playerName}! Can't handle the heat? Typical loser behavior. Running away when things get tough!`;
+            if (gameState.losses >= 6) {
+                if (aiMockText) {
+                    aiMockText.textContent = `Finally giving up after 6 losses? ${gameState.playerName}, you should have quit 3 losses ago! At least you know when you're beaten... finally!`;
+                }
+            } else {
+                if (aiMockText) {
+                    aiMockText.textContent = `Of course you'd quit, ${gameState.playerName}! Can't handle the heat? Typical loser behavior. Running away when things get tough!`;
+                }
             }
         }
         
