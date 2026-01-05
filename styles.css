@@ -402,60 +402,91 @@ button:disabled:hover {
 }
 
 @media (max-width: 600px) {
+    body {
+        font-size: 18px;
+    }
+    
     .title {
-        font-size: 2.5rem;
-        margin-bottom: 1.5rem;
+        font-size: 3rem;
+        margin-bottom: 2rem;
+        line-height: 1.2;
     }
     
     .game-board {
-        max-width: 300px;
-        gap: 8px;
+        max-width: 360px;
+        gap: 10px;
     }
     
     .cell {
-        font-size: 2rem;
-        border-radius: 12px;
+        font-size: 2.8rem;
+        border-radius: 14px;
+        min-height: 110px;
     }
     
     .game-info {
         flex-direction: column;
-        gap: 0.5rem;
-        font-size: 1.2rem;
-        margin-bottom: 1rem;
+        gap: 0.75rem;
+        font-size: 1.4rem;
+        margin-bottom: 1.5rem;
+        padding: 0.75rem;
     }
     
     .message {
-        font-size: 1.5rem;
-        min-height: 2.5rem;
-        padding: 0.5rem;
+        font-size: 1.8rem;
+        min-height: 3rem;
+        padding: 1rem;
+        line-height: 1.4;
     }
     
     button {
-        padding: 0.9rem 1.5rem;
-        font-size: 1.2rem;
+        padding: 1.2rem 2rem;
+        font-size: 1.4rem;
+        min-height: 56px;
     }
     
     .form-container {
         max-width: 100%;
-        padding: 0 1rem;
+        padding: 0 1.5rem;
+        gap: 1.5rem;
     }
     
     input {
-        padding: 0.9rem;
-        font-size: 1.1rem;
+        padding: 1.2rem;
+        font-size: 1.3rem;
+        min-height: 56px;
     }
     
     .camera-section {
-        margin: 1rem 0;
-        padding: 0.8rem;
+        margin: 1.5rem 0;
+        padding: 1.2rem;
+    }
+    
+    .camera-status {
+        font-size: 1.1rem;
+        margin-bottom: 1rem;
+    }
+    
+    .camera-btn {
+        padding: 1rem 1.5rem;
+        font-size: 1.2rem;
+        min-height: 52px;
     }
     
     .camera-preview {
-        max-width: 180px;
+        max-width: 240px;
     }
     
     #camera-feed {
-        height: 135px;
+        height: 180px;
+    }
+    
+    .camera-status-indicator {
+        padding: 0.75rem;
+        font-size: 1rem;
+    }
+    
+    .game-camera-status {
+        font-size: 1.2rem;
     }
 } 
 
@@ -1012,73 +1043,187 @@ button:disabled:hover {
 
 /* Mobile-specific tweaks for smaller phones */
 @media (max-width: 420px) {
+    body {
+        font-size: 16px;
+    }
+    
     .container {
-        padding: 12px;
+        padding: 1rem;
     }
 
     .title {
-        font-size: 2rem;
-        margin-bottom: 1rem;
+        font-size: 2.5rem;
+        margin-bottom: 1.5rem;
         line-height: 1.2;
     }
 
     .game-board {
-        max-width: 260px;
+        max-width: 320px;
+        gap: 8px;
+        margin: 2rem auto;
+    }
+
+    .cell {
+        font-size: 2.4rem;
+        border-radius: 12px;
+        min-height: 100px;
+    }
+
+    .form-container {
+        max-width: 100%;
+        padding: 0 1rem;
+        gap: 1.25rem;
+    }
+
+    input {
+        padding: 1rem;
+        font-size: 1.2rem;
+        min-height: 52px;
+    }
+
+    button {
+        padding: 1rem 1.8rem;
+        font-size: 1.3rem;
+        border-radius: 10px;
+        min-height: 52px;
+    }
+
+    .game-info {
+        font-size: 1.2rem;
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 0.75rem;
+        padding: 1rem;
+    }
+    
+    .message {
+        font-size: 1.6rem;
+        min-height: 2.5rem;
+        padding: 0.75rem;
+        line-height: 1.4;
+    }
+
+    .camera-section {
+        padding: 1rem;
+    }
+    
+    .camera-status {
+        font-size: 1rem;
+        flex-wrap: wrap;
+        text-align: center;
+        margin-bottom: 1rem;
+    }
+    
+    .camera-btn {
+        padding: 1rem 1.5rem;
+        font-size: 1.1rem;
+        min-height: 50px;
+    }
+
+    .camera-preview {
+        max-width: 200px;
+    }
+
+    #camera-feed {
+        height: 150px;
+    }
+    
+    .game-camera-status {
+        font-size: 1.1rem;
+    }
+
+    .sharingan {
+        width: 280px;
+        height: 280px;
+    }
+
+    .countdown {
+        font-size: 3rem;
+        top: 72%;
+    }
+
+    .mode-container,
+    .lobby-container {
+        max-width: 92%;
+        padding: 2rem;
+    }
+    
+    .mode-container h2 {
+        font-size: 1.8rem;
+        margin-bottom: 1.5rem;
+    }
+    
+    .mode-btn {
+        font-size: 1.2rem;
+        padding: 1.2rem;
+        min-height: 56px;
+    }
+}
+
+@media (max-width: 360px) {
+    body {
+        font-size: 15px;
+    }
+    
+    .title {
+        font-size: 2rem;
+        line-height: 1.2;
+    }
+
+    .game-board {
+        max-width: 280px;
         gap: 6px;
         margin: 1.5rem auto;
     }
 
     .cell {
-        font-size: 1.8rem;
-        border-radius: 10px;
-        min-height: 80px;
-    }
-
-    .form-container {
-        max-width: 100%;
-        padding: 0 8px;
-    }
-
-    input {
-        padding: 0.8rem;
-        font-size: 1rem;
+        font-size: 2rem;
+        min-height: 90px;
     }
 
     button {
-        padding: 0.9rem 1.6rem;
+        padding: 0.95rem 1.5rem;
         font-size: 1.2rem;
-        border-radius: 8px;
+        min-height: 50px;
     }
 
+    input {
+        padding: 0.9rem;
+        font-size: 1.1rem;
+        min-height: 50px;
+    }
+    
     .game-info {
-        font-size: 1rem;
-        flex-wrap: wrap;
-        justify-content: center;
-        gap: 0.5rem;
+        font-size: 1.1rem;
+        gap: 0.6rem;
     }
     
     .message {
-        font-size: 1.3rem;
-        min-height: 2rem;
-        padding: 0.5rem;
+        font-size: 1.4rem;
+        min-height: 2.5rem;
+        padding: 0.75rem;
     }
 
-    .camera-preview {
-        max-width: 160px;
-    }
-
-    #camera-feed {
-        height: 120px;
+    .camera-section {
+        padding: 0.9rem;
     }
     
     .camera-status {
-        font-size: 0.9rem;
-        flex-wrap: wrap;
-        text-align: center;
+        font-size: 0.95rem;
     }
     
-    .game-camera-status {
-        font-size: 0.9rem;
+    .camera-btn {
+        font-size: 1rem;
+        padding: 0.9rem 1.3rem;
+        min-height: 48px;
+    }
+
+    .camera-preview {
+        max-width: 180px;
+    }
+
+    #camera-feed {
+        height: 135px;
     }
 
     .sharingan {
@@ -1088,94 +1233,26 @@ button:disabled:hover {
 
     .countdown {
         font-size: 2.5rem;
-        top: 72%;
-    }
-
-    .mode-container,
-    .lobby-container {
-        max-width: 90%;
-        padding: 1.5rem;
-    }
-    
-    .mode-container h2 {
-        font-size: 1.5rem;
-    }
-    
-    .mode-btn {
-        font-size: 1rem;
-        padding: 1rem;
-    }
-}
-
-@media (max-width: 360px) {
-    .title {
-        font-size: 1.6rem;
-        line-height: 1.2;
-    }
-
-    .game-board {
-        max-width: 220px;
-        gap: 5px;
-        margin: 1rem auto;
-    }
-
-    .cell {
-        font-size: 1.6rem;
-        min-height: 70px;
-    }
-
-    button {
-        padding: 0.8rem 1.2rem;
-        font-size: 1rem;
-    }
-
-    input {
-        padding: 0.6rem;
-        font-size: 0.95rem;
-    }
-    
-    .game-info {
-        font-size: 0.9rem;
-    }
-    
-    .message {
-        font-size: 1.1rem;
-    }
-
-    .camera-preview {
-        max-width: 140px;
-    }
-
-    #camera-feed {
-        height: 100px;
-    }
-    
-    .camera-status {
-        font-size: 0.85rem;
-    }
-
-    .sharingan {
-        width: 180px;
-        height: 180px;
-    }
-
-    .countdown {
-        font-size: 2rem;
-        top: 78%;
+        top: 75%;
     }
 
     .lyrics-display {
-        font-size: 1.8rem;
+        font-size: 2rem;
         white-space: normal;
-        padding: 0 10px;
+        padding: 0 15px;
     }
     
     .mode-container h2 {
-        font-size: 1.3rem;
+        font-size: 1.6rem;
     }
     
     .mode-btn {
-        font-size: 0.9rem;
-        padding: 0.8rem;
+        font-size: 1.1rem;
+        padding: 1rem;
+        min-height: 52px;
+    }
+    
+    .lobby-container h2 {
+        font-size: 1.6rem;
     }
 }
