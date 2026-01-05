@@ -1680,7 +1680,12 @@ function handleCellClick(cell) {
                             socket.emit('ai-stats-update', gameState.aiLearningSystem.getStats());
                         }
                     }
-                    endGame("AI Wins!\nThe AI blocked your pattern!");
+                    // Conditional message for Sarah
+                    if (isSarah()) {
+                        endGame("The AI has blocked your pattern, Miss Sarah. Shall we continue?");
+                    } else {
+                        endGame("AI Wins!\nThe AI blocked your pattern!");
+                    }
                     emitBoardUpdate();
                     return;
                 }
@@ -3019,7 +3024,12 @@ function activateEnhancedInteractiveAIMock() {
                 `You know what they say about doing the same thing and expecting different results...`
             ];
             
-            aiMockText.textContent = enhancedMockMessages[Math.floor(Math.random() * enhancedMockMessages.length)] + "\n\nDo you want to continue?";
+            // Skip harsh mocking for Sarah
+            if (isSarah()) {
+                aiMockText.textContent = "Miss Sarah, you've had several losses. Would you like to continue, or take a break?";
+            } else {
+                aiMockText.textContent = enhancedMockMessages[Math.floor(Math.random() * enhancedMockMessages.length)] + "\n\nDo you want to continue?";
+            }
             
             // Show buttons with animation
             setTimeout(() => {
