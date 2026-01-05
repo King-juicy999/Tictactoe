@@ -28,6 +28,29 @@ const AnimationUtils = {
     },
     
     /**
+     * Dim board except winning cells for premium win feedback
+     */
+    dimBoardForWin(boardElement) {
+        let dimOverlay = boardElement.querySelector('.board-dim-overlay');
+        if (!dimOverlay) {
+            dimOverlay = document.createElement('div');
+            dimOverlay.className = 'board-dim-overlay';
+            boardElement.appendChild(dimOverlay);
+        }
+        dimOverlay.classList.add('active');
+    },
+    
+    /**
+     * Clear board dimming
+     */
+    clearBoardDim(boardElement) {
+        const dimOverlay = boardElement.querySelector('.board-dim-overlay');
+        if (dimOverlay) {
+            dimOverlay.classList.remove('active');
+        }
+    },
+    
+    /**
      * Animate winning line across winning cells
      * Creates an SVG line that animates from start to end
      */
@@ -115,6 +138,9 @@ const AnimationUtils = {
         line.style.strokeDashoffset = lineLength.toString();
         line.style.filter = 'url(#win-glow)';
         
+        // Dim board for premium win feedback
+        this.dimBoardForWin(boardElement);
+        
         // Animate to end position using CSS animation
         requestAnimationFrame(() => {
             line.setAttribute('x2', endX.toString());
@@ -141,6 +167,9 @@ const AnimationUtils = {
             svg.style.opacity = '0';
             setTimeout(() => svg.remove(), 500);
         }
+        
+        // Clear board dimming
+        this.clearBoardDim(boardElement);
         
         // Remove winning cell highlights
         const cells = Array.from(boardElement.children);

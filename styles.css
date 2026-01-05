@@ -28,6 +28,31 @@
     box-sizing: border-box;
 }
 
+/* Reduced motion support - respect user preferences */
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
+    }
+    
+    .ai-orb,
+    .ai-glow {
+        animation: none !important;
+    }
+    
+    .pre-welcome-text,
+    .pre-welcome-title,
+    .pre-welcome-continue {
+        animation: none !important;
+        opacity: 1 !important;
+        transform: none !important;
+    }
+}
+
 body {
     font-family: 'Cinzel', serif;
     background: linear-gradient(180deg, var(--bg-primary) 0%, var(--bg-secondary) 100%);
@@ -1632,5 +1657,496 @@ button:disabled:hover {
     .theme-option {
         padding: 0.65rem 0.9rem;
         font-size: 0.95rem;
+    }
+}
+
+/* ============================================
+   PRE-GAME WELCOME OVERLAY
+   ============================================ */
+.pre-welcome-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: var(--bg-primary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10000;
+    opacity: 0;
+    animation: welcomeFadeIn 0.8s ease-out forwards;
+    transition: opacity 0.6s ease-out;
+}
+
+.pre-welcome-overlay.hiding {
+    opacity: 0;
+    pointer-events: none;
+}
+
+@keyframes welcomeFadeIn {
+    0% {
+        opacity: 0;
+    }
+    100% {
+        opacity: 1;
+    }
+}
+
+.pre-welcome-content {
+    text-align: center;
+    max-width: 600px;
+    padding: 2rem;
+    position: relative;
+}
+
+/* Visual AI Presence - Decorative Only */
+.ai-presence {
+    position: relative;
+    width: 120px;
+    height: 120px;
+    margin: 0 auto 3rem;
+}
+
+.ai-orb {
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    background: radial-gradient(circle at 30% 30%, var(--primary-color), transparent);
+    border: 2px solid var(--cell-border);
+    position: relative;
+    animation: aiBreath 4s ease-in-out infinite;
+    box-shadow: 0 0 40px var(--win-glow);
+}
+
+.ai-glow {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 140%;
+    height: 140%;
+    border-radius: 50%;
+    background: radial-gradient(circle, var(--win-glow), transparent 70%);
+    opacity: 0.6;
+    animation: aiGlow 3s ease-in-out infinite;
+    pointer-events: none;
+}
+
+@keyframes aiBreath {
+    0%, 100% {
+        transform: scale(1);
+        opacity: 0.9;
+    }
+    50% {
+        transform: scale(1.05);
+        opacity: 1;
+    }
+}
+
+@keyframes aiGlow {
+    0%, 100% {
+        opacity: 0.4;
+        transform: translate(-50%, -50%) scale(1);
+    }
+    50% {
+        opacity: 0.7;
+        transform: translate(-50%, -50%) scale(1.1);
+    }
+}
+
+.pre-welcome-title {
+    font-size: 3.5rem;
+    color: var(--text-primary);
+    margin-bottom: 2rem;
+    font-weight: 300;
+    letter-spacing: 2px;
+    opacity: 0;
+    animation: fadeInUp 0.6s ease-out 0.2s forwards;
+}
+
+.pre-welcome-messages {
+    margin-bottom: 3rem;
+}
+
+.pre-welcome-text {
+    font-size: 1.3rem;
+    color: var(--text-secondary);
+    margin-bottom: 1rem;
+    line-height: 1.8;
+    opacity: 0;
+    font-weight: 300;
+}
+
+.fade-in-delay-1 {
+    animation: fadeInUp 0.6s ease-out 0.4s forwards;
+}
+
+.fade-in-delay-2 {
+    animation: fadeInUp 0.6s ease-out 0.7s forwards;
+}
+
+.fade-in-delay-3 {
+    animation: fadeInUp 0.6s ease-out 1s forwards;
+}
+
+.fade-in-delay-4 {
+    animation: fadeInUp 0.6s ease-out 1.3s forwards;
+}
+
+@keyframes fadeInUp {
+    0% {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    100% {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.pre-welcome-continue {
+    padding: 1rem 3rem;
+    font-size: 1.2rem;
+    background: var(--primary-color);
+    color: var(--text-primary);
+    border: 2px solid var(--cell-border);
+    border-radius: 50px;
+    cursor: pointer;
+    font-family: inherit;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 16px var(--shadow);
+    opacity: 0;
+    position: relative;
+    overflow: hidden;
+}
+
+.pre-welcome-continue::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 0;
+    height: 0;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.3);
+    transform: translate(-50%, -50%);
+    transition: width 0.6s ease, height 0.6s ease;
+}
+
+.pre-welcome-continue:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px var(--shadow);
+}
+
+.pre-welcome-continue:active {
+    transform: translateY(0) scale(0.98);
+}
+
+.pre-welcome-continue:active::before {
+    width: 300px;
+    height: 300px;
+}
+
+/* AI Presence during gameplay (subtle, corner) */
+.ai-presence-gameplay {
+    position: fixed;
+    bottom: 2rem;
+    right: 2rem;
+    width: 60px;
+    height: 60px;
+    z-index: 100;
+    opacity: 0.3;
+    transition: opacity 0.3s ease;
+    pointer-events: none;
+}
+
+.ai-presence-gameplay.active {
+    opacity: 0.6;
+}
+
+.ai-presence-gameplay.hidden {
+    opacity: 0;
+    pointer-events: none;
+}
+
+.ai-presence-gameplay .ai-orb {
+    width: 100%;
+    height: 100%;
+    animation: aiBreath 5s ease-in-out infinite;
+}
+
+.ai-presence-gameplay .ai-glow {
+    width: 120%;
+    height: 120%;
+    animation: aiGlow 4s ease-in-out infinite;
+}
+
+/* Theme Selection Enhanced UX */
+.theme-selection-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.7);
+    backdrop-filter: blur(8px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+    opacity: 0;
+    transition: opacity 0.4s ease;
+    pointer-events: none;
+}
+
+.theme-selection-overlay.active {
+    opacity: 1;
+    pointer-events: all;
+}
+
+.theme-selection-container {
+    background: var(--cell-bg);
+    border: 2px solid var(--cell-border);
+    border-radius: 24px;
+    padding: 3rem;
+    max-width: 700px;
+    width: 90%;
+    box-shadow: 0 20px 60px var(--shadow);
+    transform: scale(0.9);
+    transition: transform 0.4s ease;
+}
+
+.theme-selection-overlay.active .theme-selection-container {
+    transform: scale(1);
+}
+
+.theme-selection-title {
+    font-size: 2.5rem;
+    color: var(--text-primary);
+    margin-bottom: 0.5rem;
+    text-align: center;
+    font-weight: 300;
+}
+
+.theme-selection-subtitle {
+    font-size: 1.1rem;
+    color: var(--text-secondary);
+    margin-bottom: 2.5rem;
+    text-align: center;
+    font-weight: 300;
+}
+
+.theme-preview-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+@media (max-width: 600px) {
+    .theme-preview-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+.theme-preview-card {
+    position: relative;
+    padding: 2rem;
+    border: 2px solid var(--cell-border);
+    border-radius: 16px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    background: var(--bg-primary);
+    overflow: hidden;
+}
+
+.theme-preview-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 24px var(--shadow);
+}
+
+.theme-preview-card.selected {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px var(--win-glow), 0 8px 24px var(--shadow);
+    transform: scale(1.02);
+}
+
+.theme-preview-name {
+    font-size: 1.5rem;
+    color: var(--text-primary);
+    margin-bottom: 1rem;
+    font-weight: 600;
+}
+
+.theme-preview-sample {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+}
+
+.theme-preview-cell {
+    aspect-ratio: 1;
+    border: 1px solid currentColor;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.2rem;
+    background: var(--cell-bg);
+}
+
+/* Theme preview card colors */
+.theme-preview-card[data-theme="light"] {
+    --preview-bg: #ffffff;
+    --preview-text: #2b2b2b;
+    --preview-border: #FFD700;
+    --preview-cell: rgba(255, 255, 255, 0.85);
+}
+
+.theme-preview-card[data-theme="dark"] {
+    --preview-bg: #1a1a1a;
+    --preview-text: #e0e0e0;
+    --preview-border: #4a4a4a;
+    --preview-cell: rgba(45, 45, 45, 0.8);
+}
+
+.theme-preview-card[data-theme="neon"] {
+    --preview-bg: #0a0a0f;
+    --preview-text: #e0f7ff;
+    --preview-border: #00ffff;
+    --preview-cell: rgba(21, 21, 32, 0.9);
+}
+
+.theme-preview-card[data-theme="retro"] {
+    --preview-bg: #1a1a2e;
+    --preview-text: #0f3460;
+    --preview-border: #e94560;
+    --preview-cell: rgba(26, 26, 46, 0.9);
+}
+
+.theme-preview-card {
+    background: var(--preview-bg, var(--bg-primary));
+}
+
+.theme-preview-card .theme-preview-name {
+    color: var(--preview-text, var(--text-primary));
+}
+
+.theme-preview-card .theme-preview-cell {
+    border-color: var(--preview-border, var(--cell-border));
+    background: var(--preview-cell, var(--cell-bg));
+}
+
+.theme-confirm-btn {
+    width: 100%;
+    padding: 1rem 2rem;
+    font-size: 1.2rem;
+    background: var(--primary-color);
+    color: var(--text-primary);
+    border: 2px solid var(--cell-border);
+    border-radius: 12px;
+    cursor: pointer;
+    font-family: inherit;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 16px var(--shadow);
+}
+
+.theme-confirm-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px var(--shadow);
+}
+
+.theme-confirm-btn:active {
+    transform: translateY(0) scale(0.98);
+}
+
+/* Board dimming effect for win */
+.game-board {
+    position: relative;
+}
+
+.board-dim-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.4);
+    border-radius: 16px;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.4s ease;
+    z-index: 5;
+}
+
+.board-dim-overlay.active {
+    opacity: 1;
+}
+
+/* Winning cells stay bright */
+.cell.winning-cell {
+    position: relative;
+    z-index: 10;
+}
+
+/* Enhanced button micro-interactions */
+button {
+    position: relative;
+    overflow: hidden;
+}
+
+button::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 0;
+    height: 0;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.2);
+    transform: translate(-50%, -50%);
+    transition: width 0.4s ease, height 0.4s ease;
+}
+
+button:active::after {
+    width: 300px;
+    height: 300px;
+}
+
+button:disabled::after {
+    display: none;
+}
+
+/* Mobile responsive welcome */
+@media (max-width: 600px) {
+    .pre-welcome-title {
+        font-size: 2.5rem;
+    }
+    
+    .pre-welcome-text {
+        font-size: 1.1rem;
+    }
+    
+    .ai-presence {
+        width: 80px;
+        height: 80px;
+        margin-bottom: 2rem;
+    }
+    
+    .theme-selection-container {
+        padding: 2rem;
+    }
+    
+    .theme-selection-title {
+        font-size: 2rem;
+    }
+    
+    .ai-presence-gameplay {
+        width: 50px;
+        height: 50px;
+        bottom: 1rem;
+        right: 1rem;
     }
 }

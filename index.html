@@ -8,6 +8,28 @@
     <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700;900&display=swap" rel="stylesheet">
 </head>
 <body>
+    <!-- Pre-Game Welcome Overlay -->
+    <div id="pre-welcome-overlay" class="pre-welcome-overlay">
+        <div class="pre-welcome-content">
+            <!-- Visual AI Presence -->
+            <div class="ai-presence">
+                <div class="ai-orb"></div>
+                <div class="ai-glow"></div>
+            </div>
+            
+            <h1 class="pre-welcome-title">Welcome</h1>
+            <div class="pre-welcome-messages">
+                <p class="pre-welcome-text fade-in-delay-1">This game adapts to how you play</p>
+                <p class="pre-welcome-text fade-in-delay-2">Choose a visual style to enjoy the experience</p>
+                <p class="pre-welcome-text fade-in-delay-3">More features are coming</p>
+            </div>
+            
+            <button id="continue-welcome-btn" class="pre-welcome-continue fade-in-delay-4">
+                Continue
+            </button>
+        </div>
+    </div>
+
     <div class="container">
         <div id="welcome-screen" class="screen active">
             <h1 class="title">😇Angelic Tic Tac Toe🤭</h1>
@@ -47,6 +69,7 @@
             <div id="message-box" class="message"></div>
             
             <div class="game-board">
+                <div class="board-dim-overlay"></div>
                 <div class="cell" data-index="0"></div>
                 <div class="cell" data-index="1"></div>
                 <div class="cell" data-index="2"></div>
@@ -129,7 +152,56 @@
     <audio id="mock-music" src="blackbear - hot girl bummer [Low Budget Video](MP3_128K)_[cut_13sec].mp3" preload="auto"></audio>
     <audio id="mock-music-2sec" src="blackbear - hot girl bummer [Low Budget Video](MP3_128K)_[cut_2sec].mp3" preload="auto"></audio>
 
-    <!-- Theme Switcher -->
+    <!-- Theme Selection Overlay -->
+    <div id="theme-selection-overlay" class="theme-selection-overlay">
+        <div class="theme-selection-container">
+            <h2 class="theme-selection-title">Choose Your Visual Style</h2>
+            <p class="theme-selection-subtitle">Select a theme to personalize your experience</p>
+            <div class="theme-preview-grid">
+                <div class="theme-preview-card" data-theme="light">
+                    <div class="theme-preview-name">Light</div>
+                    <div class="theme-preview-sample">
+                        <div class="theme-preview-cell">X</div>
+                        <div class="theme-preview-cell"></div>
+                        <div class="theme-preview-cell">O</div>
+                    </div>
+                </div>
+                <div class="theme-preview-card" data-theme="dark">
+                    <div class="theme-preview-name">Dark</div>
+                    <div class="theme-preview-sample">
+                        <div class="theme-preview-cell">X</div>
+                        <div class="theme-preview-cell"></div>
+                        <div class="theme-preview-cell">O</div>
+                    </div>
+                </div>
+                <div class="theme-preview-card" data-theme="neon">
+                    <div class="theme-preview-name">Neon</div>
+                    <div class="theme-preview-sample">
+                        <div class="theme-preview-cell">X</div>
+                        <div class="theme-preview-cell"></div>
+                        <div class="theme-preview-cell">O</div>
+                    </div>
+                </div>
+                <div class="theme-preview-card" data-theme="retro">
+                    <div class="theme-preview-name">Retro Arcade</div>
+                    <div class="theme-preview-sample">
+                        <div class="theme-preview-cell">X</div>
+                        <div class="theme-preview-cell"></div>
+                        <div class="theme-preview-cell">O</div>
+                    </div>
+                </div>
+            </div>
+            <button id="theme-confirm-btn" class="theme-confirm-btn">Continue</button>
+        </div>
+    </div>
+
+    <!-- AI Presence During Gameplay (Decorative) -->
+    <div id="ai-presence-gameplay" class="ai-presence-gameplay hidden">
+        <div class="ai-orb"></div>
+        <div class="ai-glow"></div>
+    </div>
+
+    <!-- Theme Switcher (Available during gameplay) -->
     <div id="theme-switcher" class="theme-switcher">
         <button id="theme-btn" class="theme-btn" title="Change Theme">
             <span class="theme-icon">🎨</span>

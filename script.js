@@ -1,12 +1,101 @@
 // Global error handler to prevent crashes
 
-// Initialize Theme Manager on page load
-if (typeof ThemeManager !== 'undefined') {
-    ThemeManager.loadTheme();
+// Initialize Theme Manager on page load (but don't auto-load theme - wait for user selection in welcome flow)
+// ThemeManager.loadTheme(); // Commented out - theme selection happens in welcome flow
+
+// Welcome Flow State
+let welcomeFlowState = {
+    preWelcomeShown: false,
+    themeSelected: false
+};
+
+// Pre-welcome overlay elements (will be set on DOMContentLoaded)
+let preWelcomeOverlay, continueWelcomeBtn, themeSelectionOverlay, themePreviewCards, themeConfirmBtn, aiPresenceGameplay;
+let selectedTheme = null;
+
+function updateThemePreviewSelection() {
+    if (themePreviewCards && selectedTheme) {
+        themePreviewCards.forEach(card => {
+            if (card.dataset.theme === selectedTheme) {
+                card.classList.add('selected');
+            } else {
+                card.classList.remove('selected');
+            }
+        });
+    }
 }
 
 // Theme Switcher UI
 document.addEventListener('DOMContentLoaded', () => {
+    // Get welcome flow elements
+    preWelcomeOverlay = document.getElementById('pre-welcome-overlay');
+    continueWelcomeBtn = document.getElementById('continue-welcome-btn');
+    themeSelectionOverlay = document.getElementById('theme-selection-overlay');
+    themePreviewCards = document.querySelectorAll('.theme-preview-card');
+    themeConfirmBtn = document.getElementById('theme-confirm-btn');
+    aiPresenceGameplay = document.getElementById('ai-presence-gameplay');
+    
+    // Initialize pre-welcome overlay
+    if (preWelcomeOverlay) {
+        setTimeout(() => {
+            if (preWelcomeOverlay) {
+                preWelcomeOverlay.style.display = 'flex';
+            }
+        }, 100);
+    }
+    
+    // Continue from pre-welcome to theme selection
+    if (continueWelcomeBtn) {
+        continueWelcomeBtn.addEventListener('click', () => {
+            if (preWelcomeOverlay) {
+                preWelcomeOverlay.classList.add('hiding');
+                setTimeout(() => {
+                    preWelcomeOverlay.style.display = 'none';
+                    // Show theme selection
+                    if (themeSelectionOverlay) {
+                        themeSelectionOverlay.classList.add('active');
+                        selectedTheme = (typeof ThemeManager !== 'undefined' && ThemeManager.getCurrentTheme()) ? ThemeManager.getCurrentTheme() : 'light';
+                        updateThemePreviewSelection();
+                    }
+                }, 600);
+            }
+        });
+    }
+    
+    // Theme preview card selection
+    if (themePreviewCards && themePreviewCards.length > 0) {
+        themePreviewCards.forEach(card => {
+            card.addEventListener('click', () => {
+                selectedTheme = card.dataset.theme;
+                updateThemePreviewSelection();
+            });
+        });
+    }
+    
+    // Confirm theme selection
+    if (themeConfirmBtn) {
+        themeConfirmBtn.addEventListener('click', () => {
+            if (selectedTheme && typeof ThemeManager !== 'undefined') {
+                ThemeManager.applyTheme(selectedTheme);
+                welcomeFlowState.themeSelected = true;
+                
+                // Hide theme selection overlay
+                if (themeSelectionOverlay) {
+                    themeSelectionOverlay.classList.remove('active');
+                }
+                
+                // Show AI presence during gameplay
+                if (aiPresenceGameplay) {
+                    setTimeout(() => {
+                        aiPresenceGameplay.classList.remove('hidden');
+                        aiPresenceGameplay.classList.add('active');
+                    }, 500);
+                }
+            }
+        });
+    }
+    
+    // Initialize theme switcher UI
     const themeBtn = document.getElementById('theme-btn');
     const themeMenu = document.getElementById('theme-menu');
     const themeOptions = document.querySelectorAll('.theme-option');
