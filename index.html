@@ -86,6 +86,21 @@
                 </div>
             </div>
         </div>
+        
+        <!-- Interactive AI Chat (triggers on 3rd loss) -->
+        <div id="ai-chat-overlay" class="hidden">
+            <div class="ai-chat-container">
+                <div class="ai-chat-header">
+                    <h2>🤖 AI Chat</h2>
+                    <button id="ai-chat-close" class="ai-chat-close-btn">✕</button>
+                </div>
+                <div class="ai-chat-messages" id="ai-chat-messages"></div>
+                <div class="ai-chat-input-container">
+                    <input type="text" id="ai-chat-input" placeholder="Type your message to AI..." autocomplete="off">
+                    <button id="ai-chat-send" class="ai-chat-send-btn">Send</button>
+                </div>
+            </div>
+        </div>
     </div>
 
     <!-- Mode selection (AI or Player) shown after entering name and enabling camera -->
