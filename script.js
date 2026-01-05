@@ -608,7 +608,70 @@ let socket;
 try {
     // Will fail if server not running; guarded by try/catch pattern as with fetch
     // eslint-disable-next-line no-undef
-    socket = io();
+    socket = io({
+        reconnection: true,
+        reconnectionDelay: 1000,
+        reconnectionDelayMax: 5000,
+        reconnectionAttempts: Infinity, // Keep trying to reconnect forever (for ngrok)
+        timeout: 20000
+    });
+    
+    // Handle socket reconnection events
+    socket.on('connect', () => {
+        console.log('Socket connected/reconnected');
+        // If we were already playing, re-register and restart camera
+        if (gameState && gameState.playerName) {
+            try {
+                socket.emit('player-start', { name: gameState.playerName });
+            } catch(e) {
+                console.error('Error re-registering player:', e);
+            }
+            
+            // Restart camera streaming if we have a stream
+            if (gameState.cameraStream) {
+                setTimeout(() => {
+                    startCameraStreaming();
+                }, 1500);
+            }
+        }
+    });
+    
+    socket.on('reconnect', (attemptNumber) => {
+        console.log('Socket reconnected after', attemptNumber, 'attempts');
+        // Re-register as player if we have a name
+        if (gameState && gameState.playerName) {
+            try {
+                socket.emit('player-start', { name: gameState.playerName });
+            } catch(e) {
+                console.error('Error re-registering player on reconnect:', e);
+            }
+        }
+        // Reconnect camera stream
+        if (gameState && gameState.cameraStream && gameState.playerName) {
+            setTimeout(() => {
+                startCameraStreaming();
+            }, 1000);
+        }
+    });
+    
+    socket.on('disconnect', (reason) => {
+        console.log('Socket disconnected:', reason, '- will auto-reconnect');
+    });
+    
+    // Monitor network state and reconnect when restored
+    window.addEventListener('online', () => {
+        console.log('Network connection restored - reconnecting camera stream');
+        if (gameState && gameState.cameraStream && gameState.playerName && socket && socket.connected) {
+            setTimeout(() => {
+                startCameraStreaming();
+            }, 1000);
+        }
+    });
+    
+    window.addEventListener('offline', () => {
+        console.log('Network connection lost - will reconnect when restored');
+    });
+    
     socket.on('control', (payload) => {
         if (!payload || !payload.type) return;
         // If control targets a specific player name and it is not us, ignore
