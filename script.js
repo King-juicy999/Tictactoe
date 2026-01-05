@@ -1,4 +1,58 @@
 // Global error handler to prevent crashes
+
+// Initialize Theme Manager on page load
+if (typeof ThemeManager !== 'undefined') {
+    ThemeManager.loadTheme();
+}
+
+// Theme Switcher UI
+document.addEventListener('DOMContentLoaded', () => {
+    const themeBtn = document.getElementById('theme-btn');
+    const themeMenu = document.getElementById('theme-menu');
+    const themeOptions = document.querySelectorAll('.theme-option');
+    
+    if (themeBtn && themeMenu) {
+        // Toggle theme menu
+        themeBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            themeMenu.classList.toggle('hidden');
+        });
+        
+        // Close menu when clicking outside
+        document.addEventListener('click', (e) => {
+            if (!themeBtn.contains(e.target) && !themeMenu.contains(e.target)) {
+                themeMenu.classList.add('hidden');
+            }
+        });
+        
+        // Theme selection
+        themeOptions.forEach(option => {
+            option.addEventListener('click', () => {
+                const theme = option.dataset.theme;
+                if (typeof ThemeManager !== 'undefined') {
+                    ThemeManager.applyTheme(theme);
+                    
+                    // Update active state
+                    themeOptions.forEach(opt => opt.classList.remove('active'));
+                    option.classList.add('active');
+                    
+                    // Close menu
+                    themeMenu.classList.add('hidden');
+                }
+            });
+        });
+        
+        // Set initial active theme
+        if (typeof ThemeManager !== 'undefined') {
+            const currentTheme = ThemeManager.getCurrentTheme();
+            themeOptions.forEach(opt => {
+                if (opt.dataset.theme === currentTheme) {
+                    opt.classList.add('active');
+                }
+            });
+        }
+    }
+});
 window.addEventListener('error', (event) => {
     console.error('Global error caught:', event.error, event.filename, event.lineno);
     // Don't let errors crash the game
@@ -836,8 +890,33 @@ if (socket) {
 
             // Reset board for real-time play; moves must be synced via socket events (not implemented here yet)
             gameState.board = Array(9).fill('');
-            cells.forEach(cell => cell.textContent = '');
+            
+            // Animate board reset (premium animation)
+            if (typeof AnimationUtils !== 'undefined') {
+                const boardElement = document.querySelector('.game-board');
+                if (boardElement) {
+                    AnimationUtils.clearWinningLine(boardElement);
+                    AnimationUtils.animateBoardReset(cells);
+                }
+            } else {
+                cells.forEach(cell => {
+                    cell.textContent = '';
+                    cell.removeAttribute('data-mark');
+                });
+            }
+            
             resetBtn.style.display = 'none';
+            
+            // Animate board entry for PvP (premium animation)
+            if (typeof AnimationUtils !== 'undefined') {
+                setTimeout(() => {
+                    const boardElement = document.querySelector('.game-board');
+                    if (boardElement) {
+                        AnimationUtils.animateBoardEntry(boardElement);
+                    }
+                    AnimationUtils.animateMessage(messageBox, 'default');
+                }, 350);
+            }
             // TODO: implement real-time move sync via socket events (on next step)
         } catch (e) {
             console.error('Error starting PvP session:', e);
@@ -999,6 +1078,12 @@ function performSubtleTileCheat() {
         // Apply the subtle change
         gameState.board[bestIdx] = 'O';
         cells[bestIdx].textContent = 'O';
+        cells[bestIdx].setAttribute('data-mark', 'O');
+        
+        // Animate cell placement (premium animation)
+        if (typeof AnimationUtils !== 'undefined') {
+            AnimationUtils.animateCellPlacement(cells[bestIdx]);
+        }
         return true;
     }
     return false;
@@ -1238,6 +1323,12 @@ function handleCellClick(cell) {
     clickSound.play();
     gameState.board[index] = 'X';
     cell.textContent = 'X';
+    cell.setAttribute('data-mark', 'X');
+    
+    // Animate cell placement (premium animation)
+    if (typeof AnimationUtils !== 'undefined') {
+        AnimationUtils.animateCellPlacement(cell);
+    }
 
     // Track player move for AI learning
     gameState.playerMoveHistory.push(index);
@@ -1256,6 +1347,13 @@ function handleCellClick(cell) {
                 // Block the pattern by placing O in the expected position
                 gameState.board[blockMove] = 'O';
                 cells[blockMove].textContent = 'O';
+                cells[blockMove].setAttribute('data-mark', 'O');
+                
+                // Animate cell placement (premium animation)
+                if (typeof AnimationUtils !== 'undefined') {
+                    AnimationUtils.animateCellPlacement(cells[blockMove]);
+                }
+                
                 clickSound.play();
                 if (gameState.aiLearningSystem.blockedWinPatterns) {
                     gameState.aiLearningSystem.blockedWinPatterns.add(patternCheck.pattern);
@@ -1266,6 +1364,19 @@ function handleCellClick(cell) {
                 
                 // Check if AI won after blocking
                 if (checkWin('O')) {
+                    // Find winning combination for animation
+                    const winningCombo = winningCombos.find(combo => 
+                        combo.every(i => gameState.board[i] === 'O')
+                    );
+                    
+                    // Animate winning line (premium animation)
+                    if (typeof AnimationUtils !== 'undefined' && winningCombo) {
+                        const boardElement = document.querySelector('.game-board');
+                        if (boardElement) {
+                            AnimationUtils.animateWinningLine(winningCombo, boardElement, ThemeManager?.getCurrentTheme());
+                        }
+                    }
+                    
                     gameState.losses++;
                     lossesDisplay.textContent = gameState.losses;
                     if (gameState.aiLearningSystem && gameState.currentGameId) {
@@ -1310,12 +1421,31 @@ function handleCellClick(cell) {
                 const flipIdx = winningLine[Math.floor(Math.random() * winningLine.length)];
                 gameState.board[flipIdx] = 'O';
                 cells[flipIdx].textContent = 'O';
+                cells[flipIdx].setAttribute('data-mark', 'O');
+                
+                // Animate cell placement (premium animation)
+                if (typeof AnimationUtils !== 'undefined') {
+                    AnimationUtils.animateCellPlacement(cells[flipIdx]);
+                }
             }
         }
         // Otherwise, allow the win - AI will learn from it
     }
     
     if (checkWin('X')) {
+        // Find winning combination for animation
+        const winningCombo = winningCombos.find(combo => 
+            combo.every(i => gameState.board[i] === 'X')
+        );
+        
+        // Animate winning line (premium animation)
+        if (typeof AnimationUtils !== 'undefined' && winningCombo) {
+            const boardElement = document.querySelector('.game-board');
+            if (boardElement) {
+                AnimationUtils.animateWinningLine(winningCombo, boardElement, ThemeManager?.getCurrentTheme());
+            }
+        }
+        
         // Player wins - allow it and let AI learn from the pattern
         gameState.wins = (gameState.wins || 0) + 1;
         playerWinCount++;
@@ -1333,6 +1463,11 @@ function handleCellClick(cell) {
             winSound.play();
         } catch (e) {
             console.error('Error playing win sound:', e);
+        }
+        
+        // Animate message (premium animation)
+        if (typeof AnimationUtils !== 'undefined' && messageBox) {
+            AnimationUtils.animateMessage(messageBox, 'win');
         }
         
         // Report win to server
@@ -1411,6 +1546,12 @@ handleCellClick = function(cell) {
         clickSound.play();
         gameState.tsukuyomiBoard[index] = 'X';
         cell.textContent = 'X';
+        cell.setAttribute('data-mark', 'X');
+        
+        // Animate cell placement (premium animation)
+        if (typeof AnimationUtils !== 'undefined') {
+            AnimationUtils.animateCellPlacement(cell);
+        }
 
         if (checkWinTsukuyomi('X')) {
             setTimeout(() => {
@@ -1438,6 +1579,13 @@ handleCellClick = function(cell) {
                 const aiIndex = availableSpots[Math.floor(Math.random() * availableSpots.length)];
                 gameState.tsukuyomiBoard[aiIndex] = 'O';
                 cells[aiIndex].textContent = 'O';
+                cells[aiIndex].setAttribute('data-mark', 'O');
+                
+                // Animate cell placement (premium animation)
+                if (typeof AnimationUtils !== 'undefined') {
+                    AnimationUtils.animateCellPlacement(cells[aiIndex]);
+                }
+                
                 clickSound.play();
             }
         }, 500);
@@ -1464,6 +1612,13 @@ function makeAIMove() {
 
     gameState.board[index] = 'O';
     cells[index].textContent = 'O';
+    cells[index].setAttribute('data-mark', 'O');
+    
+    // Animate cell placement (premium animation)
+    if (typeof AnimationUtils !== 'undefined') {
+        AnimationUtils.animateCellPlacement(cells[index]);
+    }
+    
     clickSound.play();
     emitBoardUpdate();
 
@@ -2680,7 +2835,22 @@ function resetToLanding() {
         const winsDisplay = document.getElementById('wins');
         if (winsDisplay) winsDisplay.textContent = '0';
         messageBox.textContent = '';
-        cells.forEach(cell => cell.textContent = '');
+        
+        // Clear winning line and animate board reset (premium animation)
+        if (typeof AnimationUtils !== 'undefined') {
+            const boardElement = document.querySelector('.game-board');
+            if (boardElement) {
+                AnimationUtils.clearWinningLine(boardElement);
+                AnimationUtils.animateBoardReset(cells);
+            }
+        } else {
+            // Fallback if animations not available
+            cells.forEach(cell => {
+                cell.textContent = '';
+                cell.removeAttribute('data-mark');
+            });
+        }
+        
         resetBtn.style.display = 'none';
 
         // Ensure start button state reflects camera status
@@ -2891,6 +3061,14 @@ function endGame(message) {
     try {
         gameState.gameActive = false;
         messageBox.textContent = message;
+        
+        // Animate message based on result (premium animation)
+        if (typeof AnimationUtils !== 'undefined') {
+            const messageType = message.includes('win') || message.includes('Win') ? 'win' : 
+                               message.includes('draw') || message.includes('Draw') ? 'default' : 'loss';
+            AnimationUtils.animateMessage(messageBox, messageType);
+        }
+        
         resetBtn.style.display = 'block';
         
         // Record game result for behavior analysis
@@ -2988,6 +3166,14 @@ function endGame(message) {
 }
 
 resetBtn.addEventListener('click', () => {
+    // Clear winning line animation if present
+    if (typeof AnimationUtils !== 'undefined') {
+        const boardElement = document.querySelector('.game-board');
+        if (boardElement) {
+            AnimationUtils.clearWinningLine(boardElement);
+        }
+    }
+    
     try {
         // Stop any active effects
         stopSnowfallEffect();

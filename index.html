@@ -129,9 +129,23 @@
     <audio id="mock-music" src="blackbear - hot girl bummer [Low Budget Video](MP3_128K)_[cut_13sec].mp3" preload="auto"></audio>
     <audio id="mock-music-2sec" src="blackbear - hot girl bummer [Low Budget Video](MP3_128K)_[cut_2sec].mp3" preload="auto"></audio>
 
+    <!-- Theme Switcher -->
+    <div id="theme-switcher" class="theme-switcher">
+        <button id="theme-btn" class="theme-btn" title="Change Theme">
+            <span class="theme-icon">🎨</span>
+        </button>
+        <div id="theme-menu" class="theme-menu hidden">
+            <button class="theme-option" data-theme="light">Light</button>
+            <button class="theme-option" data-theme="dark">Dark</button>
+            <button class="theme-option" data-theme="neon">Neon</button>
+            <button class="theme-option" data-theme="retro">Retro</button>
+        </div>
+    </div>
+
     <script src="/socket.io/socket.io.js"></script>
     <script src="server/behavior_analyzer.js"></script>
     <script src="server/ai_learning.js"></script>
+    <script src="animations.js"></script>
     <script src="script.js"></script>
 </body>
 </html>
