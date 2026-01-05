@@ -1973,7 +1973,8 @@ function makeAIMove() {
         }
         
         // 3rd loss - trigger interactive mock sequence (disco, insults, mock song)
-        if (gameState.losses === 3 && !gameState.inTsukuyomi && !gameState.inInteractiveMode) {
+        // Skip harsh mocking for Sarah
+        if (gameState.losses === 3 && !gameState.inTsukuyomi && !gameState.inInteractiveMode && !isSarah()) {
             try {
                 // Activate the interactive AI mock sequence which handles pausing the game,
                 // stopping bg music, showing disco lights, syncing dance, and showing the Yes/No card.
@@ -1983,19 +1984,24 @@ function makeAIMove() {
                 // Fallback: simple endGame
                 endGame("AI Wins!\nThe AI has outplayed you this round, " + gameState.playerName + "!");
             }
-        } else if (gameState.losses === 7 && !gameState.inTsukuyomi && !gameState.inInteractiveMode) {
+        } else if (gameState.losses === 7 && !gameState.inTsukuyomi && !gameState.inInteractiveMode && !isSarah()) {
             // At 7 losses, capture video frame and use as background with teasing
             activateSeventhLossTeasing();
-        } else if (gameState.losses % 6 === 0 && !gameState.inTsukuyomi && !gameState.inInteractiveMode) {
+        } else if (gameState.losses % 6 === 0 && !gameState.inTsukuyomi && !gameState.inInteractiveMode && !isSarah()) {
             // At 6 losses, trigger enhanced interactive sequence with demon jumpscare
             activateEnhancedInteractiveAIMock();
-        } else if (gameState.losses > 3 && gameState.losses % 3 === 0 && !gameState.inInteractiveMode) {
+        } else if (gameState.losses > 3 && gameState.losses % 3 === 0 && !gameState.inInteractiveMode && !isSarah()) {
             // At every 3 losses after the 3rd (6, 9, 12, etc.), trigger interactive AI mock sequence
             // 6+ losses - use enhanced version with demon jumpscare
             activateEnhancedInteractiveAIMock();
         } else {
             // For quick losses, still record but continue game
-            endGame("AI Wins!\nThe AI has outplayed you this round, " + gameState.playerName + "!");
+            // Conditional message for Sarah
+            if (isSarah()) {
+                endGame("The AI has won this round, Miss Sarah. Shall we try again?");
+            } else {
+                endGame("AI Wins!\nThe AI has outplayed you this round, " + gameState.playerName + "!");
+            }
             setTimeout(() => {
                 // Turn alternation already happened in endGame()
                 
@@ -2513,6 +2519,13 @@ function checkWinTsukuyomi(player) {
 
 // Interactive AI Mock Sequence
 function activateInteractiveAIMock() {
+    // Skip harsh mocking for Sarah
+    if (isSarah()) {
+        // Just end game normally for Sarah
+        endGame("The AI has won this round, Miss Sarah. Shall we try again?");
+        return;
+    }
+    
     gameState.inInteractiveMode = true;
     gameState.gameActive = false;
     
@@ -2621,7 +2634,12 @@ function activateInteractiveAIMock() {
                 `I'm starting to think you enjoy this...`
             ];
             
-            aiMockText.textContent = mockMessages[Math.floor(Math.random() * mockMessages.length)] + "\n\nDo you want to continue?";
+            // Skip harsh mocking for Sarah (shouldn't reach here due to early return, but safety check)
+            if (isSarah()) {
+                aiMockText.textContent = "Miss Sarah, you've had some losses. Would you like to continue?";
+            } else {
+                aiMockText.textContent = mockMessages[Math.floor(Math.random() * mockMessages.length)] + "\n\nDo you want to continue?";
+            }
             
             // Show buttons with animation
             setTimeout(() => {
@@ -2916,6 +2934,13 @@ function stopBoxDance() {
 
 // Enhanced Interactive AI Mock Sequence (for 6+ losses)
 function activateEnhancedInteractiveAIMock() {
+    // Skip harsh mocking for Sarah
+    if (isSarah()) {
+        // Just end game normally for Sarah
+        endGame("The AI has won this round, Miss Sarah. Shall we try again?");
+        return;
+    }
+    
     gameState.inInteractiveMode = true;
     gameState.gameActive = false;
     
@@ -3596,14 +3621,20 @@ if (mockYesBtn) {
         mockYesBtn.disabled = true;
         mockNoBtn.disabled = true;
         
-        // Different responses based on loss count
-        if (gameState.losses >= 6) {
+        // Different responses based on loss count - skip harsh taunts for Sarah
+        if (isSarah()) {
             if (aiMockText) {
-                aiMockText.textContent = `6 losses and you STILL want more?! ${gameState.playerName}, you're either incredibly persistent or completely insane! This is getting embarrassing!`;
+                aiMockText.textContent = "As you wish, Miss Sarah. Let us continue.";
             }
         } else {
-            if (aiMockText) {
-                aiMockText.textContent = `Haha! I knew it! You actually LOVE losing, ${gameState.playerName}! What kind of person enjoys getting destroyed repeatedly? You're addicted to failure!`;
+            if (gameState.losses >= 6) {
+                if (aiMockText) {
+                    aiMockText.textContent = `6 losses and you STILL want more?! ${gameState.playerName}, you're either incredibly persistent or completely insane! This is getting embarrassing!`;
+                }
+            } else {
+                if (aiMockText) {
+                    aiMockText.textContent = `Haha! I knew it! You actually LOVE losing, ${gameState.playerName}! What kind of person enjoys getting destroyed repeatedly? You're addicted to failure!`;
+                }
             }
         }
         
