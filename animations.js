@@ -7,6 +7,29 @@
 // Animation utility functions
 const AnimationUtils = {
     /**
+     * Dim board except winning cells for premium win feedback
+     */
+    dimBoardForWin(boardElement) {
+        let dimOverlay = boardElement.querySelector('.board-dim-overlay');
+        if (!dimOverlay) {
+            dimOverlay = document.createElement('div');
+            dimOverlay.className = 'board-dim-overlay';
+            boardElement.appendChild(dimOverlay);
+        }
+        dimOverlay.classList.add('active');
+    },
+    
+    /**
+     * Clear board dimming
+     */
+    clearBoardDim(boardElement) {
+        const dimOverlay = boardElement.querySelector('.board-dim-overlay');
+        if (dimOverlay) {
+            dimOverlay.classList.remove('active');
+        }
+    },
+    
+    /**
      * Animate cell placement (scale from 0.7 to 1.0 with fade in)
      * Triggered when a mark is placed in a cell
      */

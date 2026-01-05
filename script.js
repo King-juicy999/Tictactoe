@@ -1306,10 +1306,44 @@ startBtn.addEventListener('click', () => {
 // Start game as AI (extract of previous start logic)
 function startGameAsAI() {
     displayName.textContent = gameState.playerName;
-    welcomeScreen.classList.remove('active');
+    
+    // Hide welcome screen with smooth fade
+    if (welcomeScreen) {
+        welcomeScreen.style.opacity = '0';
+        welcomeScreen.style.transition = 'opacity 0.4s ease-out';
+        setTimeout(() => {
+            welcomeScreen.classList.remove('active');
+        }, 400);
+    }
+    
+    // Show game screen with smooth fade
+    gameScreen.style.opacity = '0';
     gameScreen.classList.add('active');
+    setTimeout(() => {
+        gameScreen.style.transition = 'opacity 0.4s ease-out';
+        gameScreen.style.opacity = '1';
+    }, 100);
 
     messageBox.textContent = "Foolish mortal, prepare to suffer!";
+    
+    // Animate board entry (premium animation)
+    if (typeof AnimationUtils !== 'undefined') {
+        setTimeout(() => {
+            const boardElement = document.querySelector('.game-board');
+            if (boardElement) {
+                AnimationUtils.animateBoardEntry(boardElement);
+            }
+            AnimationUtils.animateMessage(messageBox, 'default');
+        }, 200);
+    }
+    
+    // Fade out AI presence during active play (subtle presence only)
+    if (typeof aiPresenceGameplay !== 'undefined' && aiPresenceGameplay) {
+        setTimeout(() => {
+            aiPresenceGameplay.classList.remove('active');
+            aiPresenceGameplay.classList.add('hidden');
+        }, 1000);
+    }
     
     // Start background music
     if (bgMusic) {
