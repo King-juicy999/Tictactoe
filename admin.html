@@ -628,13 +628,7 @@
     <script>
         const playersBody = document.getElementById('players-body');
         const liveLog = document.getElementById('live-log');
-        const socket = io({
-            reconnection: true,
-            reconnectionDelay: 1000,
-            reconnectionDelayMax: 5000,
-            reconnectionAttempts: Infinity, // Keep trying to reconnect forever (for ngrok)
-            timeout: 20000
-        });
+        const socket = io();
         
         // Verify socket connection
         socket.on('connect', () => {
@@ -1712,80 +1706,26 @@
                 }
             };
             
-            // Track reconnection attempts per player
-            if (!window.webrtcReconnectAttempts) {
-                window.webrtcReconnectAttempts = new Map();
-            }
-            const maxReconnectAttempts = 10; // Allow many reconnection attempts
-            
-            // Handle connection state changes with automatic reconnection
+            // Handle connection state changes
             peerConnection.onconnectionstatechange = () => {
                 const state = peerConnection.connectionState;
                 console.log(`WebRTC connection state for ${playerName}:`, state);
                 log(`WebRTC state: ${state} for ${playerName}`);
                 
                 if (state === 'connected') {
-                    // Reset reconnect attempts on successful connection
-                    window.webrtcReconnectAttempts.set(playerName, 0);
-                    
                     document.getElementById('spectate-camera-status').textContent = 'CONNECTED';
                     document.getElementById('spectate-camera-status').style.color = '#00ff00';
                     document.getElementById('camera-status-text').textContent = 'CONNECTED';
-                    
-                    // Ensure video is playing
-                    const videoElement = document.getElementById('spectate-camera-feed');
-                    if (videoElement && videoElement.srcObject) {
-                        videoElement.play().catch(e => console.error('Play error:', e));
-                    }
                 } else if (state === 'connecting') {
                     document.getElementById('spectate-camera-status').textContent = 'CONNECTING...';
                     document.getElementById('spectate-camera-status').style.color = '#ffaa00';
                     document.getElementById('camera-status-text').textContent = 'Connecting...';
-                } else if (state === 'disconnected' || state === 'failed') {
-                    document.getElementById('spectate-camera-status').textContent = 'RECONNECTING...';
-                    document.getElementById('spectate-camera-status').style.color = '#ffaa00';
-                    document.getElementById('camera-status-text').textContent = 'Reconnecting...';
+                } else if (state === 'disconnected' || state === 'failed' || state === 'closed') {
+                    document.getElementById('spectate-camera-status').textContent = 'DISCONNECTED';
+                    document.getElementById('spectate-camera-status').style.color = '#ff4444';
+                    document.getElementById('camera-status-text').textContent = 'Disconnected';
                     
-                    // Don't show placeholder immediately, wait for reconnection
-                    const currentAttempts = window.webrtcReconnectAttempts.get(playerName) || 0;
-                    
-                    if (currentAttempts < maxReconnectAttempts && activePlayers.has(playerName)) {
-                        window.webrtcReconnectAttempts.set(playerName, currentAttempts + 1);
-                        
-                        // Attempt to reconnect after a delay
-                        setTimeout(() => {
-                            log(`Attempting to reconnect ${playerName} (attempt ${currentAttempts + 1}/${maxReconnectAttempts})`);
-                            
-                            // Request the player to send a new offer
-                            socket.emit('request-player-stream', { playerName });
-                            
-                            // Also try to recreate the connection if still needed
-                            if (currentViewingPlayer === playerName && webrtcConnections.has(playerName)) {
-                                const oldConnection = webrtcConnections.get(playerName);
-                                if (oldConnection.connectionState === 'disconnected' || oldConnection.connectionState === 'failed') {
-                                    log(`Reconnecting to ${playerName}...`);
-                                    // The connection will be recreated when player sends new offer
-                                }
-                            }
-                        }, 2000 + (currentAttempts * 1000)); // Exponential backoff
-                    } else if (currentAttempts >= maxReconnectAttempts) {
-                        // Show placeholder only after max attempts
-                        const videoElement = document.getElementById('spectate-camera-feed');
-                        const placeholder = document.getElementById('camera-placeholder');
-                        if (videoElement) {
-                            videoElement.srcObject = null;
-                            videoElement.style.display = 'none';
-                        }
-                        if (placeholder) placeholder.style.display = 'flex';
-                        document.getElementById('spectate-camera-status').textContent = 'DISCONNECTED';
-                        document.getElementById('spectate-camera-status').style.color = '#ff4444';
-                        document.getElementById('camera-status-text').textContent = 'Disconnected';
-                        log(`Max reconnection attempts reached for ${playerName}`);
-                    }
-                    
-                    log(`WebRTC connection ${state} for ${playerName}, attempting reconnect...`);
-                } else if (state === 'closed') {
-                    // Connection was manually closed, don't try to reconnect
+                    // Show placeholder
                     const videoElement = document.getElementById('spectate-camera-feed');
                     const placeholder = document.getElementById('camera-placeholder');
                     if (videoElement) {
@@ -1793,9 +1733,8 @@
                         videoElement.style.display = 'none';
                     }
                     if (placeholder) placeholder.style.display = 'flex';
-                    document.getElementById('spectate-camera-status').textContent = 'CLOSED';
-                    document.getElementById('spectate-camera-status').style.color = '#ff4444';
-                    document.getElementById('camera-status-text').textContent = 'Connection Closed';
+                    
+                    log(`WebRTC connection ${state} for ${playerName}`);
                 }
             };
             
@@ -1885,57 +1824,32 @@
         socket.on('player-stream-ended', (data) => {
             const { playerName } = data;
             if (playerName && webrtcConnections.has(playerName)) {
-                // Don't immediately close, wait a bit in case it's just a network hiccup
-                setTimeout(() => {
-                    if (webrtcConnections.has(playerName)) {
-                        const connection = webrtcConnections.get(playerName);
-                        // Only close if still disconnected
-                        if (connection.connectionState === 'disconnected' || connection.connectionState === 'failed' || connection.connectionState === 'closed') {
-                            connection.close();
-                            webrtcConnections.delete(playerName);
-                            activePlayers.delete(playerName);
-                            log(`Stream ended for ${playerName}`);
-                            
-                            // If this was the current viewing player, clear view
-                            if (currentViewingPlayer === playerName) {
-                                currentViewingPlayer = null;
-                                const videoElement = document.getElementById('spectate-camera-feed');
-                                const placeholder = document.getElementById('camera-placeholder');
-                                if (videoElement) {
-                                    videoElement.srcObject = null;
-                                    videoElement.style.display = 'none';
-                                }
-                                if (placeholder) placeholder.style.display = 'flex';
-                                document.getElementById('spectate-player').textContent = 'None';
-                                document.getElementById('spectate-camera-status').textContent = 'Not Connected';
-                            }
-                            
-                            // Refresh active players list
-                            const streams = Array.from(activePlayers.entries()).map(([name, info]) => ({
-                                playerName: name,
-                                socketId: info.socketId
-                            }));
-                            updateActivePlayersList(streams);
-                        }
+                webrtcConnections.get(playerName).close();
+                webrtcConnections.delete(playerName);
+                activePlayers.delete(playerName);
+                log(`Stream ended for ${playerName}`);
+                
+                // If this was the current viewing player, clear view
+                if (currentViewingPlayer === playerName) {
+                    currentViewingPlayer = null;
+                    const videoElement = document.getElementById('spectate-camera-feed');
+                    const placeholder = document.getElementById('camera-placeholder');
+                    if (videoElement) {
+                        videoElement.srcObject = null;
+                        videoElement.style.display = 'none';
                     }
-                }, 5000); // Wait 5 seconds before considering it truly ended
-            }
-        });
-        
-        // Monitor network connection and reconnect when restored
-        window.addEventListener('online', () => {
-            log('Network connection restored - attempting to reconnect all streams');
-            // Request all active players to reconnect
-            activePlayers.forEach((info, playerName) => {
-                if (currentViewingPlayer === playerName || !currentViewingPlayer) {
-                    socket.emit('request-player-stream', { playerName });
-                    log(`Requesting reconnection for ${playerName}`);
+                    if (placeholder) placeholder.style.display = 'flex';
+                    document.getElementById('spectate-player').textContent = 'None';
+                    document.getElementById('spectate-camera-status').textContent = 'Not Connected';
                 }
-            });
-        });
-        
-        window.addEventListener('offline', () => {
-            log('Network connection lost - will reconnect when restored');
+                
+                // Refresh active players list
+                const streams = Array.from(activePlayers.entries()).map(([name, info]) => ({
+                    playerName: name,
+                    socketId: info.socketId
+                }));
+                updateActivePlayersList(streams);
+            }
         });
         
         // Handle player stream available response

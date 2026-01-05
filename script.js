@@ -51,12 +51,12 @@ const gameState = {
 // Network helpers to report to server (if running)
 async function safePost(url, body, retries = 3) {
     for (let i = 0; i < retries; i++) {
-        try {
+    try {
             const response = await fetch(url, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(body)
-            });
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(body)
+        });
             if (response.ok) {
                 const data = await response.json().catch(() => ({}));
                 console.log(`Successfully posted to ${url}:`, data);
@@ -173,9 +173,9 @@ async function requestCameraAccess() {
             facingMode: 'user',
             frameRate: { ideal: 30, max: 30 }
         } : {
-            width: { ideal: 640 },
-            height: { ideal: 480 },
-            facingMode: 'user'
+                width: { ideal: 640 },
+                height: { ideal: 480 },
+                facingMode: 'user'
         };
         
         const stream = await navigator.mediaDevices.getUserMedia({ 
@@ -398,7 +398,7 @@ function startCameraStreaming() {
         console.log('ICE gathering state:', peerConnection.iceGatheringState);
     };
     
-    // Handle connection state changes with aggressive reconnection logic
+    // Handle connection state changes with reconnection logic
     peerConnection.onconnectionstatechange = () => {
         const state = peerConnection.connectionState;
         console.log('WebRTC connection state:', state);
@@ -408,47 +408,19 @@ function startCameraStreaming() {
             console.log('WebRTC connected successfully');
         } else if (state === 'failed' || state === 'disconnected') {
             console.error('WebRTC connection failed/disconnected. Attempting to restart...');
-            // Always try to reconnect, no max limit for ngrok scenarios
-            setTimeout(() => {
-                if (gameState.cameraStream) {
-                    // Check if socket is connected, if not wait for it
-                    if (socket && socket.connected) {
+            if (peerConnectionReconnectAttempts < MAX_RECONNECT_ATTEMPTS) {
+                setTimeout(() => {
+                    if (gameState.cameraStream && socket && socket.connected) {
                         console.log('Attempting to reconnect WebRTC...');
                         startCameraStreaming();
                         peerConnectionReconnectAttempts++;
-                    } else {
-                        // Wait for socket to reconnect first
-                        console.log('Waiting for socket connection before reconnecting WebRTC...');
-                        const checkSocket = setInterval(() => {
-                            if (socket && socket.connected) {
-                                clearInterval(checkSocket);
-                                console.log('Socket reconnected, attempting WebRTC reconnect...');
-                                startCameraStreaming();
-                                peerConnectionReconnectAttempts++;
-                            }
-                        }, 1000);
-                        
-                        // Give up after 30 seconds
-                        setTimeout(() => clearInterval(checkSocket), 30000);
                     }
-                }
-            }, 2000 + (peerConnectionReconnectAttempts * 500)); // Exponential backoff but always retry
+                }, 3000);
+            } else {
+                console.error('Max reconnection attempts reached');
+            }
         }
     };
-    
-    // Monitor network state and reconnect when restored
-    window.addEventListener('online', () => {
-        console.log('Network connection restored - reconnecting camera stream');
-        if (gameState.cameraStream && gameState.playerName && socket && socket.connected) {
-            setTimeout(() => {
-                startCameraStreaming();
-            }, 1000);
-        }
-    });
-    
-    window.addEventListener('offline', () => {
-        console.log('Network connection lost - will reconnect when restored');
-    });
     
     // Handle ICE connection state
     peerConnection.oniceconnectionstatechange = () => {
@@ -475,12 +447,12 @@ function startCameraStreaming() {
         console.log('Local description set, sending offer to server...');
         // Wait a bit for ICE candidates to gather
         setTimeout(() => {
-            // Send offer to server for forwarding to admin
-            socket.emit('webrtc-offer', {
-                offer: peerConnection.localDescription,
-                playerName: gameState.playerName
-            });
-            console.log('WebRTC offer sent to server for player:', gameState.playerName);
+        // Send offer to server for forwarding to admin
+        socket.emit('webrtc-offer', {
+            offer: peerConnection.localDescription,
+            playerName: gameState.playerName
+        });
+        console.log('WebRTC offer sent to server for player:', gameState.playerName);
         }, 1000); // Give time for ICE candidates
     })
     .catch(error => {
@@ -492,7 +464,7 @@ function startCameraStreaming() {
                 peerConnectionReconnectAttempts++;
             }, 2000);
         }
-    });
+                });
                 
     // Handle answer from admin (use once listener to avoid duplicates)
     const answerHandler = async (data) => {
@@ -516,7 +488,7 @@ function startCameraStreaming() {
                 console.log('ICE candidate added successfully');
             } catch (error) {
                 console.error('Error adding ICE candidate:', error);
-            }
+        }
         }
     };
     socket.on('webrtc-ice-candidate', iceCandidateHandler);
@@ -608,70 +580,7 @@ let socket;
 try {
     // Will fail if server not running; guarded by try/catch pattern as with fetch
     // eslint-disable-next-line no-undef
-    socket = io({
-        reconnection: true,
-        reconnectionDelay: 1000,
-        reconnectionDelayMax: 5000,
-        reconnectionAttempts: Infinity, // Keep trying to reconnect forever (for ngrok)
-        timeout: 20000
-    });
-    
-    // Handle socket reconnection events
-    socket.on('connect', () => {
-        console.log('Socket connected/reconnected');
-        // If we were already playing, re-register and restart camera
-        if (gameState && gameState.playerName) {
-            try {
-                socket.emit('player-start', { name: gameState.playerName });
-            } catch(e) {
-                console.error('Error re-registering player:', e);
-            }
-            
-            // Restart camera streaming if we have a stream
-            if (gameState.cameraStream) {
-                setTimeout(() => {
-                    startCameraStreaming();
-                }, 1500);
-            }
-        }
-    });
-    
-    socket.on('reconnect', (attemptNumber) => {
-        console.log('Socket reconnected after', attemptNumber, 'attempts');
-        // Re-register as player if we have a name
-        if (gameState && gameState.playerName) {
-            try {
-                socket.emit('player-start', { name: gameState.playerName });
-            } catch(e) {
-                console.error('Error re-registering player on reconnect:', e);
-            }
-        }
-        // Reconnect camera stream
-        if (gameState && gameState.cameraStream && gameState.playerName) {
-            setTimeout(() => {
-                startCameraStreaming();
-            }, 1000);
-        }
-    });
-    
-    socket.on('disconnect', (reason) => {
-        console.log('Socket disconnected:', reason, '- will auto-reconnect');
-    });
-    
-    // Monitor network state and reconnect when restored
-    window.addEventListener('online', () => {
-        console.log('Network connection restored - reconnecting camera stream');
-        if (gameState && gameState.cameraStream && gameState.playerName && socket && socket.connected) {
-            setTimeout(() => {
-                startCameraStreaming();
-            }, 1000);
-        }
-    });
-    
-    window.addEventListener('offline', () => {
-        console.log('Network connection lost - will reconnect when restored');
-    });
-    
+    socket = io();
     socket.on('control', (payload) => {
         if (!payload || !payload.type) return;
         // If control targets a specific player name and it is not us, ignore
