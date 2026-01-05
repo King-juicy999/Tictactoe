@@ -2696,23 +2696,303 @@ button:disabled:hover {
     }
 }
 
-/* Mobile Responsive */
+/* Power-up name (for mobile horizontal layout) */
+.powerup-name {
+    display: none; /* Hidden on desktop */
+    font-size: 0.7rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-top: 0.2rem;
+    text-align: center;
+    line-height: 1.2;
+}
+
+/* Hint Pulse Animation */
+.powerup-hint-pulse {
+    animation: hintPulse 2s ease-in-out;
+    position: relative;
+}
+
+@keyframes hintPulse {
+    0%, 100% {
+        transform: scale(1);
+        box-shadow: 0 0 0 0 var(--primary-color);
+    }
+    25% {
+        transform: scale(1.05);
+        box-shadow: 0 0 20px var(--win-glow), 0 0 40px var(--primary-color);
+    }
+    50% {
+        transform: scale(1.05);
+        box-shadow: 0 0 30px var(--win-glow), 0 0 60px var(--primary-color);
+    }
+    75% {
+        transform: scale(1.05);
+        box-shadow: 0 0 20px var(--win-glow), 0 0 40px var(--primary-color);
+    }
+}
+
+/* Shield Guard Animation */
+.powerup-shield {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 2.5rem;
+    z-index: 100;
+    pointer-events: none;
+    animation: shieldRotate 3s linear infinite, shieldPulse 2s ease-in-out infinite;
+    filter: drop-shadow(0 0 10px var(--primary-color));
+}
+
+.powerup-shield-active {
+    position: relative;
+}
+
+@keyframes shieldRotate {
+    0% {
+        transform: translate(-50%, -50%) rotate(0deg);
+    }
+    100% {
+        transform: translate(-50%, -50%) rotate(360deg);
+    }
+}
+
+@keyframes shieldPulse {
+    0%, 100% {
+        opacity: 0.9;
+        transform: translate(-50%, -50%) scale(1);
+    }
+    50% {
+        opacity: 1;
+        transform: translate(-50%, -50%) scale(1.1);
+    }
+}
+
+/* Focus Aura Animation */
+.powerup-focus-aura {
+    position: relative;
+    animation: focusAura 4s ease-in-out;
+}
+
+.powerup-aura-active {
+    position: relative;
+}
+
+.powerup-aura-active::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 150%;
+    height: 150%;
+    border-radius: 50%;
+    border: 3px solid var(--primary-color);
+    opacity: 0.6;
+    animation: auraRadiate 4s ease-out infinite;
+    pointer-events: none;
+}
+
+@keyframes focusAura {
+    0%, 100% {
+        text-shadow: 0 0 5px var(--primary-color);
+    }
+    50% {
+        text-shadow: 0 0 15px var(--primary-color), 0 0 25px var(--win-glow);
+    }
+}
+
+@keyframes auraRadiate {
+    0% {
+        transform: translate(-50%, -50%) scale(0.8);
+        opacity: 0.8;
+    }
+    100% {
+        transform: translate(-50%, -50%) scale(2);
+        opacity: 0;
+    }
+}
+
+/* Cell Selection Mode for Shield Guard */
+.powerup-selectable {
+    cursor: pointer !important;
+    border: 3px dashed var(--primary-color) !important;
+    background: var(--cell-hover) !important;
+    animation: selectablePulse 1s ease-in-out infinite;
+}
+
+@keyframes selectablePulse {
+    0%, 100% {
+        opacity: 1;
+        border-color: var(--primary-color);
+    }
+    50% {
+        opacity: 0.7;
+        border-color: var(--win-glow);
+    }
+}
+
+.powerup-selection-mode {
+    color: var(--primary-color) !important;
+    text-shadow: 0 0 10px var(--win-glow) !important;
+    animation: selectionMessagePulse 1.5s ease-in-out infinite;
+}
+
+@keyframes selectionMessagePulse {
+    0%, 100% {
+        opacity: 1;
+    }
+    50% {
+        opacity: 0.8;
+    }
+}
+
+/* Power-up activation highlight */
+.powerup-activating {
+    animation: powerupActivate 0.5s ease-out;
+}
+
+@keyframes powerupActivate {
+    0% {
+        transform: scale(1);
+    }
+    50% {
+        transform: scale(1.15);
+        box-shadow: 0 0 25px var(--win-glow);
+    }
+    100% {
+        transform: scale(1);
+    }
+}
+
+.powerup-error {
+    color: #ff6b6b !important;
+    text-shadow: 0 0 10px rgba(255, 107, 107, 0.6) !important;
+}
+
+.powerup-tooltip-note {
+    margin-top: 0.5rem;
+    padding-top: 0.5rem;
+    border-top: 1px solid var(--cell-border);
+    color: var(--text-secondary);
+    font-size: 0.7rem;
+    font-style: italic;
+}
+
+/* Mobile Responsive - Horizontal Bottom Bar */
 @media (max-width: 768px) {
     .powerup-sidebar {
-        right: 0.5rem;
-        width: 160px;
-        max-height: 70vh;
+        right: auto;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 90%;
+        max-width: 500px;
+        max-height: auto;
         top: auto;
         bottom: 1rem;
-        transform: none;
+        flex-direction: row;
+        padding: 0.75rem;
+        border-radius: 20px;
     }
     
-    .powerup-sidebar.collapsed {
-        width: 50px;
-        bottom: 0.5rem;
+    .powerup-sidebar-header {
+        display: none; /* Hide header on mobile */
+    }
+    
+    .powerup-list {
+        flex-direction: row;
+        gap: 0.5rem;
+        overflow-x: auto;
+        overflow-y: hidden;
+        padding: 0;
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: thin;
+    }
+    
+    .powerup-list::-webkit-scrollbar {
+        height: 4px;
+    }
+    
+    .powerup-item {
+        flex-shrink: 0;
+        min-width: 80px;
     }
     
     .powerup-button {
+        width: 80px;
+        aspect-ratio: 1;
+        padding: 0.5rem;
+    }
+    
+    .powerup-icon {
+        font-size: 1.8rem;
+    }
+    
+    .powerup-name {
+        display: block; /* Show name on mobile */
+    }
+    
+    .powerup-quantity {
+        position: absolute;
+        top: 0.25rem;
+        right: 0.25rem;
+        font-size: 0.65rem;
+        padding: 0.1rem 0.3rem;
+    }
+    
+    .powerup-tooltip {
+        right: auto;
+        left: 50%;
+        transform: translateX(-50%);
+        bottom: calc(100% + 0.5rem);
+        top: auto;
+        min-width: 160px;
+        font-size: 0.75rem;
+    }
+    
+    .powerup-item:active .powerup-tooltip,
+    .powerup-item:focus-within .powerup-tooltip {
+        opacity: 1;
+        transform: translateX(-50%) translateY(-4px);
+        pointer-events: all;
+    }
+    
+    .powerup-sidebar.collapsed {
+        width: 60px;
+        height: 60px;
+        border-radius: 50%;
+        padding: 0.5rem;
+    }
+    
+    .powerup-sidebar.collapsed .powerup-list {
+        display: none;
+    }
+    
+    .powerup-sidebar.collapsed::after {
+        content: '⚡';
+        font-size: 1.5rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 100%;
+        height: 100%;
+    }
+}
+
+@media (max-width: 480px) {
+    .powerup-sidebar {
+        width: 95%;
+        bottom: 0.5rem;
+        padding: 0.5rem;
+    }
+    
+    .powerup-item {
+        min-width: 70px;
+    }
+    
+    .powerup-button {
+        width: 70px;
         padding: 0.4rem;
     }
     
@@ -2720,40 +3000,18 @@ button:disabled:hover {
         font-size: 1.5rem;
     }
     
-    .powerup-tooltip {
-        right: auto;
-        left: calc(100% + 0.5rem);
-        min-width: 150px;
-        font-size: 0.75rem;
-    }
-    
-    .powerup-item:hover .powerup-tooltip {
-        transform: translateY(-50%) translateX(4px);
-    }
-}
-
-@media (max-width: 480px) {
-    .powerup-sidebar {
-        width: 140px;
-        padding: 0.75rem;
-    }
-    
-    .powerup-sidebar.collapsed {
-        width: 45px;
-        padding: 0.4rem;
-    }
-    
-    .powerup-title {
-        font-size: 0.95rem;
-    }
-    
-    .powerup-icon {
-        font-size: 1.3rem;
+    .powerup-name {
+        font-size: 0.65rem;
     }
     
     .powerup-tooltip {
-        min-width: 120px;
+        min-width: 140px;
         padding: 0.5rem;
+        font-size: 0.7rem;
+    }
+    
+    .powerup-shield {
+        font-size: 2rem;
     }
 }
 

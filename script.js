@@ -199,45 +199,33 @@ const gameState = {
  */
 const PowerUpManager = {
     powerUps: {
-        sparkle: {
-            id: 'sparkle',
-            name: 'Sparkle Effect',
-            icon: '✨',
-            description: 'Adds a beautiful sparkle animation to the board',
-            duration: 3000, // 3 seconds
-            cooldown: 0
-        },
-        glow: {
-            id: 'glow',
-            name: 'Board Glow',
-            icon: '💫',
-            description: 'Makes the board glow with energy',
-            duration: 4000, // 4 seconds
-            cooldown: 0
-        },
-        pulse: {
-            id: 'pulse',
-            name: 'Pulse Wave',
-            icon: '🌊',
-            description: 'Creates a pulse wave across all cells',
+        hintPulse: {
+            id: 'hintPulse',
+            name: 'Hint Pulse',
+            icon: '💡',
+            description: 'Reveals a suggested move with a glowing pulse',
             duration: 2000, // 2 seconds
-            cooldown: 0
+            audioType: 'chime',
+            requiresTarget: false
         },
-        highlight: {
-            id: 'highlight',
-            name: 'Cell Highlight',
-            icon: '⭐',
-            description: 'Highlights all empty cells with a golden glow',
-            duration: 3000, // 3 seconds
-            cooldown: 0
+        shieldGuard: {
+            id: 'shieldGuard',
+            name: 'Shield Guard',
+            icon: '🛡️',
+            description: 'Protects a cell with a rotating shield overlay',
+            duration: 5000, // 5 seconds
+            audioType: 'shield',
+            requiresTarget: true // Player selects cell
         },
-        shimmer: {
-            id: 'shimmer',
-            name: 'Shimmer Effect',
-            icon: '✨',
-            description: 'Adds a shimmering effect to your marks',
-            duration: 3500, // 3.5 seconds
-            cooldown: 0
+        focusAura: {
+            id: 'focusAura',
+            name: 'Focus Aura',
+            icon: '🌀',
+            description: 'PvP only - Radiating aura effect (visual only in PvE)',
+            duration: 4000, // 4 seconds
+            audioType: 'chime',
+            requiresTarget: false,
+            pvpOnly: true
         }
     },
     
@@ -305,18 +293,22 @@ const PowerUpManager = {
             const quantity = this.quantities[powerUp.id] || 0;
             const isActive = this.activeEffects[powerUp.id] ? true : false;
             const isDisabled = quantity === 0 || isActive;
+            const isPvpOnly = powerUp.pvpOnly && gameState.mode !== 'pvp';
             
+            // Add name for mobile horizontal layout
             item.innerHTML = `
                 <button class="powerup-button ${isDisabled ? 'disabled' : ''} ${isActive ? 'active' : ''}" 
                         data-powerup-id="${powerUp.id}"
                         ${isDisabled ? 'disabled' : ''}
                         aria-label="${powerUp.name}">
                     <span class="powerup-icon">${powerUp.icon}</span>
+                    <span class="powerup-name">${powerUp.name}</span>
                     <span class="powerup-quantity">${quantity}</span>
                 </button>
                 <div class="powerup-tooltip">
                     <div class="powerup-tooltip-name">${powerUp.name}</div>
                     <div class="powerup-tooltip-desc">${powerUp.description}</div>
+                    ${isPvpOnly ? '<div class="powerup-tooltip-note">PvP only</div>' : ''}
                     ${isActive ? '<div class="powerup-tooltip-active">Active</div>' : ''}
                 </div>
             `;
@@ -348,6 +340,18 @@ const PowerUpManager = {
         // Check if already active
         if (this.activeEffects[powerUpId]) return;
         
+        // Check PvP only restriction
+        if (powerUp.pvpOnly && gameState.mode !== 'pvp') {
+            this.showActivationMessage({...powerUp, name: 'Focus Aura (PvP only)'}, true);
+            return;
+        }
+        
+        // For Shield Guard, need cell selection
+        if (powerUp.requiresTarget) {
+            this.requestCellSelection(powerUpId);
+            return;
+        }
+        
         // Decrease quantity
         this.quantities[powerUpId] = Math.max(0, quantity - 1);
         
@@ -355,17 +359,13 @@ const PowerUpManager = {
         this.activeEffects[powerUpId] = true;
         
         // Play audio cue
-        const audio = document.getElementById('powerup-activate-sound');
-        if (audio) {
-            audio.currentTime = 0;
-            audio.volume = 0.3; // Subtle volume
-            audio.play().catch(() => {}); // Ignore autoplay errors
-        }
+        this.playPowerUpAudio(powerUp.audioType);
         
         // Apply visual effect
         this.applyVisualEffect(powerUpId);
         
-        // Update sidebar
+        // Update sidebar with activation highlight
+        this.highlightPowerUpButton(powerUpId);
         this.renderSidebar();
         
         // Show activation message
@@ -378,6 +378,109 @@ const PowerUpManager = {
     },
     
     /**
+     * Request cell selection for Shield Guard
+     */
+    requestCellSelection(powerUpId) {
+        const cells = document.querySelectorAll('.cell');
+        const messageBox = document.getElementById('message-box');
+        
+        if (messageBox) {
+            messageBox.textContent = 'Select a cell to protect with Shield Guard';
+            messageBox.classList.add('powerup-selection-mode');
+        }
+        
+        // Add selection mode to cells
+        cells.forEach((cell, index) => {
+            if (!cell.textContent.trim()) {
+                cell.classList.add('powerup-selectable');
+                cell.dataset.powerupSelection = powerUpId;
+                
+                const clickHandler = (e) => {
+                    e.stopPropagation();
+                    const selectedPowerUp = cell.dataset.powerupSelection;
+                    if (selectedPowerUp === powerUpId) {
+                        // Remove selection mode
+                        cells.forEach(c => {
+                            c.classList.remove('powerup-selectable');
+                            c.removeEventListener('click', clickHandler);
+                            delete c.dataset.powerupSelection;
+                        });
+                        
+                        if (messageBox) {
+                            messageBox.classList.remove('powerup-selection-mode');
+                        }
+                        
+                        // Activate on selected cell
+                        this.activatePowerUpOnCell(powerUpId, index);
+                    }
+                };
+                
+                cell.addEventListener('click', clickHandler, { once: true });
+            }
+        });
+    },
+    
+    /**
+     * Activate power-up on specific cell (for Shield Guard)
+     */
+    activatePowerUpOnCell(powerUpId, cellIndex) {
+        const powerUp = this.powerUps[powerUpId];
+        if (!powerUp) return;
+        
+        const quantity = this.quantities[powerUpId] || 0;
+        if (quantity === 0) return;
+        
+        // Decrease quantity
+        this.quantities[powerUpId] = Math.max(0, quantity - 1);
+        
+        // Mark as active with cell index
+        this.activeEffects[powerUpId] = { cellIndex: cellIndex };
+        
+        // Play audio
+        this.playPowerUpAudio(powerUp.audioType);
+        
+        // Apply visual effect on cell
+        this.applyVisualEffectOnCell(powerUpId, cellIndex);
+        
+        // Update sidebar
+        this.highlightPowerUpButton(powerUpId);
+        this.renderSidebar();
+        
+        // Show activation message
+        this.showActivationMessage(powerUp);
+        
+        // Deactivate after duration
+        setTimeout(() => {
+            this.deactivatePowerUp(powerUpId);
+        }, powerUp.duration);
+    },
+    
+    /**
+     * Play power-up audio cue
+     */
+    playPowerUpAudio(audioType) {
+        const audio = document.getElementById('powerup-activate-sound');
+        if (audio) {
+            audio.currentTime = 0;
+            audio.volume = audioType === 'shield' ? 0.25 : 0.3; // Subtle volume
+            audio.play().catch(() => {}); // Ignore autoplay errors
+        }
+    },
+    
+    /**
+     * Highlight power-up button on activation
+     */
+    highlightPowerUpButton(powerUpId) {
+        const button = document.querySelector(`[data-powerup-id="${powerUpId}"]`);
+        if (button) {
+            button.classList.add('powerup-activating');
+            setTimeout(() => {
+                button.classList.remove('powerup-activating');
+            }, 500);
+        }
+    },
+    
+    /**
      * Apply visual effect for power-up
      */
     applyVisualEffect(powerUpId) {
@@ -387,21 +490,135 @@ const PowerUpManager = {
         if (!board) return;
         
         switch(powerUpId) {
-            case 'sparkle':
-                this.createSparkleEffect(board);
+            case 'hintPulse':
+                this.createHintPulse(cells);
                 break;
-            case 'glow':
-                board.classList.add('powerup-glow');
+            case 'focusAura':
+                this.createFocusAura();
                 break;
-            case 'pulse':
-                this.createPulseWave(cells);
+        }
+    },
+    
+    /**
+     * Apply visual effect on specific cell
+     */
+    applyVisualEffectOnCell(powerUpId, cellIndex) {
+        const cells = document.querySelectorAll('.cell');
+        const cell = cells[cellIndex];
+        
+        if (!cell) return;
+        
+        switch(powerUpId) {
+            case 'shieldGuard':
+                this.createShieldGuard(cell);
                 break;
-            case 'highlight':
-                this.highlightEmptyCells(cells);
-                break;
-            case 'shimmer':
-                this.createShimmerEffect(cells);
-                break;
+        }
+    },
+    
+    /**
+     * Create Hint Pulse effect - shows suggested move
+     * Visual only - uses AI logic to suggest but doesn't modify game state
+     */
+    createHintPulse(cells) {
+        // Get AI's suggested move (visual only, doesn't affect AI logic)
+        let suggestedIndex = null;
+        try {
+            // Store original board state
+            const originalBoard = [...gameState.board];
+            const originalPlayerGoesFirst = gameState.playerGoesFirst;
+            
+            // Temporarily set AI as next player to get its move suggestion
+            // This is read-only for hint purposes
+            if (typeof chooseHardAIMove === 'function') {
+                // Call AI move function to get suggestion
+                // Note: chooseHardAIMove should not modify board, but we'll restore anyway
+                suggestedIndex = chooseHardAIMove();
+            }
+            
+            // Restore board state (safety check - should not be modified)
+            gameState.board = originalBoard;
+            gameState.playerGoesFirst = originalPlayerGoesFirst;
+            
+            // Validate suggestion is an empty cell
+            if (suggestedIndex !== null && suggestedIndex >= 0 && suggestedIndex < 9) {
+                if (gameState.board[suggestedIndex] !== '') {
+                    // Invalid suggestion, find first empty cell
+                    suggestedIndex = null;
+                }
+            } else {
+                suggestedIndex = null;
+            }
+        } catch (e) {
+            console.log('Could not get hint suggestion:', e);
+            suggestedIndex = null;
+        }
+        
+        // Fallback: find first empty cell if no valid suggestion
+        if (suggestedIndex === null) {
+            for (let i = 0; i < cells.length; i++) {
+                if (!cells[i].textContent.trim() && gameState.board[i] === '') {
+                    suggestedIndex = i;
+                    break;
+                }
+            }
+        }
+        
+        if (suggestedIndex !== null && cells[suggestedIndex]) {
+            const cell = cells[suggestedIndex];
+            cell.classList.add('powerup-hint-pulse');
+            
+            // Remove after animation
+            setTimeout(() => {
+                cell.classList.remove('powerup-hint-pulse');
+            }, 2000);
+        }
+    },
+    
+    /**
+     * Create Shield Guard effect on cell
+     */
+    createShieldGuard(cell) {
+        // Remove any existing shield
+        const existingShield = cell.querySelector('.powerup-shield');
+        if (existingShield) {
+            existingShield.remove();
+        }
+        
+        // Create shield overlay
+        const shield = document.createElement('div');
+        shield.className = 'powerup-shield';
+        shield.innerHTML = '🛡️';
+        cell.appendChild(shield);
+        cell.classList.add('powerup-shield-active');
+        
+        // Remove after duration
+        setTimeout(() => {
+            shield.remove();
+            cell.classList.remove('powerup-shield-active');
+        }, 5000);
+    },
+    
+    /**
+     * Create Focus Aura effect (visual only, PvP placeholder)
+     */
+    createFocusAura() {
+        // In PvE, just show visual aura from player info area
+        const playerInfo = document.getElementById('player-info');
+        if (playerInfo) {
+            playerInfo.classList.add('powerup-focus-aura');
+            
+            setTimeout(() => {
+                playerInfo.classList.remove('powerup-focus-aura');
+            }, 4000);
+        }
+        
+        // Also add aura to sidebar power-up button
+        const button = document.querySelector('[data-powerup-id="focusAura"]');
+        if (button) {
+            button.classList.add('powerup-aura-active');
+            setTimeout(() => {
+                button.classList.remove('powerup-aura-active');
+            }, 4000);
         }
     },
     
@@ -411,98 +628,62 @@ const PowerUpManager = {
     deactivatePowerUp(powerUpId) {
         if (!this.activeEffects[powerUpId]) return;
         
+        const effectData = this.activeEffects[powerUpId];
         delete this.activeEffects[powerUpId];
         
-        const board = document.querySelector('.game-board');
         const cells = document.querySelectorAll('.cell');
         
-        // Remove visual effects
-        board.classList.remove('powerup-glow');
-        cells.forEach(cell => {
-            cell.classList.remove('powerup-highlight', 'powerup-shimmer');
-        });
+        // Remove visual effects based on power-up type
+        switch(powerUpId) {
+            case 'hintPulse':
+                cells.forEach(cell => {
+                    cell.classList.remove('powerup-hint-pulse');
+                });
+                break;
+            case 'shieldGuard':
+                if (effectData && effectData.cellIndex !== undefined) {
+                    const cell = cells[effectData.cellIndex];
+                    if (cell) {
+                        const shield = cell.querySelector('.powerup-shield');
+                        if (shield) shield.remove();
+                        cell.classList.remove('powerup-shield-active');
+                    }
+                }
+                break;
+            case 'focusAura':
+                const playerInfo = document.getElementById('player-info');
+                if (playerInfo) {
+                    playerInfo.classList.remove('powerup-focus-aura');
+                }
+                const button = document.querySelector('[data-powerup-id="focusAura"]');
+                if (button) {
+                    button.classList.remove('powerup-aura-active');
+                }
+                break;
+        }
         
         // Update sidebar
         this.renderSidebar();
     },
     
     /**
-     * Create sparkle effect
-     */
-    createSparkleEffect(container) {
-        for (let i = 0; i < 20; i++) {
-            const sparkle = document.createElement('div');
-            sparkle.className = 'powerup-sparkle';
-            sparkle.style.left = Math.random() * 100 + '%';
-            sparkle.style.top = Math.random() * 100 + '%';
-            sparkle.style.animationDelay = Math.random() * 0.5 + 's';
-            container.appendChild(sparkle);
-            
-            setTimeout(() => sparkle.remove(), 2000);
-        }
-    },
-    
-    /**
-     * Create pulse wave effect
-     */
-    createPulseWave(cells) {
-        cells.forEach((cell, index) => {
-            setTimeout(() => {
-                cell.classList.add('powerup-pulse');
-                setTimeout(() => {
-                    cell.classList.remove('powerup-pulse');
-                }, 600);
-            }, index * 50);
-        });
-    },
-    
-    /**
-     * Highlight empty cells
-     */
-    highlightEmptyCells(cells) {
-        cells.forEach(cell => {
-            if (!cell.textContent.trim()) {
-                cell.classList.add('powerup-highlight');
-            }
-        });
-        
-        setTimeout(() => {
-            cells.forEach(cell => {
-                cell.classList.remove('powerup-highlight');
-            });
-        }, 3000);
-    },
-    
-    /**
-     * Create shimmer effect on player marks
-     */
-    createShimmerEffect(cells) {
-        cells.forEach(cell => {
-            if (cell.textContent.trim() === 'X') {
-                cell.classList.add('powerup-shimmer');
-            }
-        });
-        
-        setTimeout(() => {
-            cells.forEach(cell => {
-                cell.classList.remove('powerup-shimmer');
-            });
-        }, 3500);
-    },
-    
-    /**
      * Show activation message
      */
-    showActivationMessage(powerUp) {
+    showActivationMessage(powerUp, isError = false) {
         const messageBox = document.getElementById('message-box');
         if (messageBox) {
             const originalText = messageBox.textContent;
-            messageBox.textContent = `${powerUp.icon} ${powerUp.name} activated!`;
-            messageBox.classList.add('powerup-message');
+            if (isError) {
+                messageBox.textContent = `${powerUp.icon} ${powerUp.name} - PvP mode only`;
+                messageBox.classList.add('powerup-message', 'powerup-error');
+            } else {
+                messageBox.textContent = `${powerUp.icon} ${powerUp.name} activated!`;
+                messageBox.classList.add('powerup-message');
+            }
             
             setTimeout(() => {
-                messageBox.classList.remove('powerup-message');
-                if (gameState.gameActive) {
+                messageBox.classList.remove('powerup-message', 'powerup-error');
+                if (gameState.gameActive && !isError) {
                     messageBox.textContent = originalText;
                 }
             }, 2000);
