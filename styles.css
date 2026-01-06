@@ -2736,40 +2736,53 @@ button:disabled:hover {
     }
 }
 
-/* Shield Guard Animation */
+/* Shield Guard Animation - Premium, Soft, Minimal */
 .powerup-shield {
     position: absolute;
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
-    font-size: 2.5rem;
+    font-size: 2rem;
     z-index: 100;
     pointer-events: none;
-    animation: shieldRotate 3s linear infinite, shieldPulse 2s ease-in-out infinite;
-    filter: drop-shadow(0 0 10px var(--primary-color));
+    animation: shieldIdle 4s ease-in-out infinite;
+    filter: drop-shadow(0 0 8px rgba(0, 0, 0, 0.2));
+    opacity: 0.85;
 }
 
 .powerup-shield-active {
     position: relative;
 }
 
-@keyframes shieldRotate {
-    0% {
-        transform: translate(-50%, -50%) rotate(0deg);
-    }
-    100% {
-        transform: translate(-50%, -50%) rotate(360deg);
-    }
+/* Shielded cell visual - soft dimming and glass effect */
+.powerup-shield-active {
+    position: relative;
+    opacity: 0.7;
+    background: rgba(255, 255, 255, 0.1) !important;
+    backdrop-filter: blur(2px);
 }
 
-@keyframes shieldPulse {
+.powerup-shield-active::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.05) 100%);
+    border-radius: inherit;
+    z-index: 1;
+    pointer-events: none;
+}
+
+@keyframes shieldIdle {
     0%, 100% {
-        opacity: 0.9;
-        transform: translate(-50%, -50%) scale(1);
+        transform: translate(-50%, -50%) scale(1) rotate(0deg);
+        opacity: 0.85;
     }
     50% {
-        opacity: 1;
-        transform: translate(-50%, -50%) scale(1.1);
+        transform: translate(-50%, -50%) scale(1.05) rotate(5deg);
+        opacity: 0.95;
     }
 }
 
@@ -2834,6 +2847,84 @@ button:disabled:hover {
     50% {
         opacity: 0.7;
         border-color: var(--win-glow);
+    }
+}
+
+/* Shield Instruction Overlay */
+.shield-instruction-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(4px);
+    z-index: 5000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    pointer-events: none;
+}
+
+.shield-instruction-overlay.active {
+    opacity: 1;
+    pointer-events: all;
+}
+
+.shield-instruction-content {
+    background: var(--bg-primary);
+    border: 2px solid var(--primary-color);
+    border-radius: 16px;
+    padding: 2rem;
+    max-width: 400px;
+    width: 90%;
+    text-align: center;
+    box-shadow: 0 12px 40px var(--shadow);
+    transform: translateY(20px);
+    transition: transform 0.3s ease;
+}
+
+.shield-instruction-overlay.active .shield-instruction-content {
+    transform: translateY(0);
+}
+
+.shield-instruction-main {
+    font-size: 1.2rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 1rem;
+    line-height: 1.5;
+}
+
+.shield-instruction-tooltip {
+    margin-top: 1.5rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid var(--cell-border);
+    text-align: left;
+}
+
+.shield-instruction-tooltip p {
+    font-size: 0.95rem;
+    color: var(--text-secondary);
+    margin: 0.5rem 0;
+    line-height: 1.6;
+}
+
+/* Shield Confirmation Message */
+.shield-confirmation {
+    color: var(--primary-color) !important;
+    font-weight: 600 !important;
+    animation: shieldConfirmationPulse 0.5s ease;
+}
+
+@keyframes shieldConfirmationPulse {
+    0%, 100% {
+        transform: scale(1);
+    }
+    50% {
+        transform: scale(1.05);
     }
 }
 

@@ -214,8 +214,8 @@ const PowerUpManager = {
             id: 'shieldGuard',
             name: 'Shield Guard',
             icon: '🛡️',
-            description: 'Protects a cell until level ends (one-time use per level)',
-            duration: 0, // Persists until level ends (no timeout)
+            description: 'Locks one cell for the entire match. Neither you nor the AI can play there. Use wisely.',
+            duration: 0, // Persists for entire match (no timeout)
             audioType: 'shield',
             requiresTarget: true // Player selects cell
         },
@@ -252,14 +252,22 @@ const PowerUpManager = {
         Object.keys(this.powerUps).forEach(powerUpId => {
             this.quantities[powerUpId] = 1; // 1 free power-up per level
         });
-        this.activeEffects = {};
-        
-        // Clear all shields when level resets
+        // Note: activeEffects and shields are cleared when new game starts, not when level changes
+    },
+    
+    /**
+     * Clear all shields (called when new game starts)
+     */
+    clearAllShields() {
         if (gameState.shieldedCells && gameState.shieldedCells.length > 0) {
             gameState.shieldedCells.slice().forEach(cellIndex => {
                 this.removeShieldFromCell(cellIndex);
             });
             gameState.shieldedCells = [];
+        }
+        // Clear shield active effect
+        if (this.activeEffects.shieldGuard) {
+            delete this.activeEffects.shieldGuard;
         }
     },
     
@@ -397,10 +405,16 @@ const PowerUpManager = {
         const cells = document.querySelectorAll('.cell');
         const messageBox = document.getElementById('message-box');
         
+        // Check if first-time use for tooltip
+        const isFirstTime = localStorage.getItem('shieldFirstUse') !== 'true';
+        
         if (messageBox) {
-            messageBox.textContent = 'Select a cell to place the shield';
+            messageBox.textContent = 'Choose one cell to lock for this match.';
             messageBox.classList.add('powerup-selection-mode');
         }
+        
+        // Show instruction overlay
+        this.showShieldInstructionOverlay(isFirstTime);
         
         // Mark that we're in shield selection mode (prevents normal moves)
         gameState.inShieldSelectionMode = true;
@@ -427,8 +441,16 @@ const PowerUpManager = {
                             messageBox.classList.remove('powerup-selection-mode');
                         }
                         
+                        // Hide instruction overlay
+                        this.hideShieldInstructionOverlay();
+                        
                         // Exit shield selection mode
                         gameState.inShieldSelectionMode = false;
+                        
+                        // Mark first use
+                        if (isFirstTime) {
+                            localStorage.setItem('shieldFirstUse', 'true');
+                        }
                         
                         // Activate on selected cell (does NOT count as a move)
                         this.activatePowerUpOnCell(powerUpId, index);
@@ -438,6 +460,53 @@ const PowerUpManager = {
                 cell.addEventListener('click', clickHandler, { once: true });
             }
         });
+    },
+    
+    /**
+     * Show shield instruction overlay
+     */
+    showShieldInstructionOverlay(isFirstTime) {
+        // Remove existing overlay if any
+        const existing = document.getElementById('shield-instruction-overlay');
+        if (existing) existing.remove();
+        
+        const overlay = document.createElement('div');
+        overlay.id = 'shield-instruction-overlay';
+        overlay.className = 'shield-instruction-overlay';
+        
+        let content = '<div class="shield-instruction-content">';
+        content += '<p class="shield-instruction-main">Choose one cell to lock for this match.</p>';
+        
+        if (isFirstTime) {
+            content += '<div class="shield-instruction-tooltip">';
+            content += '<p>• This does not count as your move</p>';
+            content += '<p>• The cell becomes permanently locked</p>';
+            content += '<p>• Both you and the AI are blocked</p>';
+            content += '</div>';
+        }
+        
+        content += '</div>';
+        overlay.innerHTML = content;
+        
+        document.body.appendChild(overlay);
+        
+        // Animate in
+        setTimeout(() => {
+            overlay.classList.add('active');
+        }, 10);
+    },
+    
+    /**
+     * Hide shield instruction overlay
+     */
+    hideShieldInstructionOverlay() {
+        const overlay = document.getElementById('shield-instruction-overlay');
+        if (overlay) {
+            overlay.classList.remove('active');
+            setTimeout(() => {
+                overlay.remove();
+            }, 300);
+        }
     },
     
     /**
@@ -466,10 +535,20 @@ const PowerUpManager = {
         this.highlightPowerUpButton(powerUpId);
         this.renderSidebar();
         
-        // Show activation message
-        this.showActivationMessage(powerUp);
+        // Show confirmation message
+        const messageBox = document.getElementById('message-box');
+        if (messageBox && powerUpId === 'shieldGuard') {
+            messageBox.textContent = 'Cell locked. No one can play here this match.';
+            messageBox.classList.add('shield-confirmation');
+            setTimeout(() => {
+                messageBox.classList.remove('shield-confirmation');
+                messageBox.textContent = gameState.playerName ? `Your turn, ${gameState.playerName}!` : 'Your turn!';
+            }, 3000);
+        } else {
+            this.showActivationMessage(powerUp);
+        }
         
-        // Shield Guard persists until level ends (no timeout deactivation)
+        // Shield Guard persists for entire match (no timeout deactivation)
         if (powerUpId !== 'shieldGuard') {
             // Deactivate after duration (for other power-ups)
             setTimeout(() => {
@@ -2787,7 +2866,7 @@ function makeAIMove() {
     try {
         if (!gameState.gameActive || gameState.inInteractiveMode) return; // Don't make moves during interactive mode
 
-    // Shields remain active until level ends - do NOT remove after AI move
+    // Shields remain active for entire match - do NOT remove after AI move
 
     let index;
     // If a subtle pending move was prepared during a blackout, use it if still valid
@@ -3420,6 +3499,11 @@ function activateTsukuyomi() {
         messageBox.textContent = "Your mind is weak... Let me show you true power.";
         gameState.board = Array(9).fill('');
         gameState.tsukuyomiBoard = Array(9).fill('');
+        
+        // Clear shields when new game starts (shields persist for entire match, not level)
+        if (typeof PowerUpManager !== 'undefined') {
+            PowerUpManager.clearAllShields();
+        }
         cells.forEach(cell => cell.textContent = '');
         gameState.gameActive = true;
     }, 10000);
@@ -4071,6 +4155,11 @@ function closeInteractiveMode() {
         }, 5000);
     } else {
         gameState.aiThinkingDelay = 500; // Reset to normal
+    }
+    
+    // Clear shields when new game starts (shields persist for entire match, not level)
+    if (typeof PowerUpManager !== 'undefined') {
+        PowerUpManager.clearAllShields();
     }
     
     // Start new game
