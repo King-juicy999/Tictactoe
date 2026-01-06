@@ -24,7 +24,7 @@
                 <p class="pre-welcome-text fade-in-delay-3">More features are coming</p>
             </div>
             
-            <button id="continue-welcome-btn" class="pre-welcome-continue fade-in-delay-4">
+            <button id="continue-welcome-btn" class="pre-welcome-continue fade-in-delay-4" onclick="if(window.handleContinueClick){window.handleContinueClick(event);}else{console.log('Handler not ready, waiting...');setTimeout(function(){if(window.handleContinueClick)window.handleContinueClick(event);},100);}return false;">
                 Continue
             </button>
         </div>
