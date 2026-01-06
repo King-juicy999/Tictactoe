@@ -214,8 +214,8 @@ const PowerUpManager = {
             id: 'shieldGuard',
             name: 'Shield Guard',
             icon: '🛡️',
-            description: 'Protects a cell with a rotating shield overlay',
-            duration: 5000, // 5 seconds
+            description: 'Protects a cell until level ends (one-time use per level)',
+            duration: 0, // Persists until level ends (no timeout)
             audioType: 'shield',
             requiresTarget: true // Player selects cell
         },
@@ -253,6 +253,14 @@ const PowerUpManager = {
             this.quantities[powerUpId] = 1; // 1 free power-up per level
         });
         this.activeEffects = {};
+        
+        // Clear all shields when level resets
+        if (gameState.shieldedCells && gameState.shieldedCells.length > 0) {
+            gameState.shieldedCells.slice().forEach(cellIndex => {
+                this.removeShieldFromCell(cellIndex);
+            });
+            gameState.shieldedCells = [];
+        }
     },
     
     /**
@@ -387,7 +395,7 @@ const PowerUpManager = {
         const messageBox = document.getElementById('message-box');
         
         if (messageBox) {
-            messageBox.textContent = 'Select the cell you want to shield';
+            messageBox.textContent = 'Select a cell to place the shield';
             messageBox.classList.add('powerup-selection-mode');
         }
         
@@ -458,10 +466,13 @@ const PowerUpManager = {
         // Show activation message
         this.showActivationMessage(powerUp);
         
-        // Deactivate after duration
-        setTimeout(() => {
-            this.deactivatePowerUp(powerUpId);
-        }, powerUp.duration);
+        // Shield Guard persists until level ends (no timeout deactivation)
+        if (powerUpId !== 'shieldGuard') {
+            // Deactivate after duration (for other power-ups)
+            setTimeout(() => {
+                this.deactivatePowerUp(powerUpId);
+            }, powerUp.duration);
+        }
     },
     
     /**
@@ -2281,11 +2292,12 @@ function handleCellClick(cell) {
         return;
     }
     
-    // Remove shield from this cell if it was shielded (shield lasts 1 turn)
+    // Prevent player from clicking shielded cells (shielded cells are locked)
     if (gameState.shieldedCells.includes(parseInt(index))) {
-        if (typeof PowerUpManager !== 'undefined') {
-            PowerUpManager.removeShieldFromCell(parseInt(index));
-        }
+        gameState.uiLocked = false;
+        gameState.uiLockingReason = null;
+        messageBox.textContent = "This cell is shielded and cannot be played!";
+        return;
     }
 
     clickSound.play();
@@ -2640,13 +2652,7 @@ function makeAIMove() {
     try {
         if (!gameState.gameActive || gameState.inInteractiveMode) return; // Don't make moves during interactive mode
 
-    // Remove shields after AI move (shield lasts 1 turn)
-    if (gameState.shieldedCells.length > 0 && typeof PowerUpManager !== 'undefined') {
-        gameState.shieldedCells.slice().forEach(cellIndex => {
-            PowerUpManager.removeShieldFromCell(cellIndex);
-        });
-        gameState.shieldedCells = [];
-    }
+    // Shields remain active until level ends - do NOT remove after AI move
 
     let index;
     // If a subtle pending move was prepared during a blackout, use it if still valid
