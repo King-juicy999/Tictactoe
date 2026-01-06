@@ -3786,7 +3786,7 @@ button:disabled::after {
 }
 
 .powerup-guide-overlay.hidden {
-    display: none;
+    display: none !important;
 }
 
 /* Guide Container */

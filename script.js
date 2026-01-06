@@ -2274,19 +2274,23 @@ const totalGuidePages = 7;
 function showPowerUpGuide(isFirstPlay = false) {
     const guideOverlay = document.getElementById('powerup-guide-overlay');
     if (!guideOverlay) {
+        console.warn('Guide overlay not found, starting game directly');
         // If guide doesn't exist, start game directly
         startGameAsAI();
         return;
     }
     
+    // Ensure overlay is visible
+    guideOverlay.style.display = 'flex';
+    guideOverlay.classList.remove('hidden');
+    
     currentGuidePage = 1;
     updateGuidePage();
     
-    // Show overlay
-    guideOverlay.classList.remove('hidden');
+    // Show overlay with animation
     setTimeout(() => {
         guideOverlay.classList.add('active');
-    }, 10);
+    }, 50);
     
     // Animate level circles on page 2
     if (isFirstPlay) {
