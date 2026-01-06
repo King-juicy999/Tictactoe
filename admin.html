@@ -584,10 +584,25 @@
             <div id="spectate-info" style="margin-bottom: 0.75rem; padding: 0.5rem; background: rgba(255,0,0,0.1); border-radius: 6px; border: 1px solid var(--admin-border);">
                 <div><strong>Player:</strong> <span id="spectate-player">None</span></div>
                 <div><strong>Status:</strong> <span id="spectate-status">Waiting...</span></div>
+                <div><strong>Level:</strong> <span id="spectate-level">-</span></div>
+                <div><strong>Round Count:</strong> <span id="spectate-round-count">-</span></div>
+                <div><strong>AI Wins (Level):</strong> <span id="spectate-ai-wins">-</span></div>
+                <div><strong>Player Wins (Level):</strong> <span id="spectate-player-wins">-</span></div>
+                <div><strong>Tactical Claim:</strong> <span id="spectate-tactical-claim">-</span></div>
+                <div><strong>Theme:</strong> <span id="spectate-theme">-</span></div>
                 <div><strong>Wins:</strong> <span id="spectate-wins">0</span></div>
                 <div><strong>Losses:</strong> <span id="spectate-losses">0</span></div>
                 <div><strong>Jumpscare:</strong> <span id="spectate-jump">None</span></div>
                 <div><strong>Camera:</strong> <span id="spectate-camera-status">Not Connected</span></div>
+            </div>
+            
+            <!-- Admin Tactical Claim Override -->
+            <div style="margin-bottom: 0.75rem; padding: 0.75rem; background: rgba(0,255,0,0.1); border-radius: 6px; border: 1px solid rgba(0,255,0,0.3);">
+                <h3 style="margin: 0 0 0.5rem; font-size: 1rem; color: var(--admin-text-strong);">Admin Controls</h3>
+                <button id="admin-trigger-tactical-claim" style="min-height: 36px; padding: 0.5rem 1rem; background: #00ff00; color: #000; font-weight: bold;">
+                    Activate Tactical Claim
+                </button>
+                <div id="admin-tactical-claim-log" style="margin-top: 0.5rem; font-size: 0.85rem; color: var(--admin-text);"></div>
             </div>
             
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 0.75rem;">
@@ -618,6 +633,13 @@
             </div>
         </div>
 
+        <div class="panel" style="margin-top: 1rem;">
+            <h2>Power-Up Event Feed</h2>
+            <div id="powerup-event-feed" class="log" style="max-height: 200px; font-size: 0.85rem;">
+                <div style="text-align: center; color: #666; padding: 0.5rem;">No power-up events yet</div>
+            </div>
+        </div>
+        
         <div class="panel" style="margin-top: 1rem;">
             <h2>Live Feed</h2>
             <div id="live-log" class="log"></div>
@@ -1480,6 +1502,19 @@
                 document.getElementById('spectate-status').style.color = e.active ? '#4CAF50' : '#ff4444';
             }
             document.getElementById('spectate-losses').textContent = e.losses || 0;
+            
+            // Update level visibility (Admin Dashboard Enhancement)
+            if (e.currentLevel !== undefined) {
+                document.getElementById('spectate-level').textContent = e.currentLevel || 1;
+                document.getElementById('spectate-round-count').textContent = e.level1Wins || 0;
+                // Calculate AI wins for this level (total games - player wins)
+                const aiWinsForLevel = (e.totalGamesPlayed || 0) - (e.level1Wins || 0);
+                document.getElementById('spectate-ai-wins').textContent = aiWinsForLevel;
+                document.getElementById('spectate-player-wins').textContent = e.level1Wins || 0;
+                document.getElementById('spectate-tactical-claim').textContent = e.tacticalClaimUsed ? 'Used' : 'Available';
+                document.getElementById('spectate-tactical-claim').style.color = e.tacticalClaimUsed ? '#ff4444' : '#00ff00';
+                document.getElementById('spectate-theme').textContent = e.currentTheme || 'light';
+            }
             
             // Update camera status
             if (e.cameraEnabled) {

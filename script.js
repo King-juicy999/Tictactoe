@@ -45,21 +45,101 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     
     // Continue from pre-welcome to theme selection
+    // FIXED: Add safeguards, loading state, and error handling
     if (continueWelcomeBtn) {
-        continueWelcomeBtn.addEventListener('click', () => {
-            if (preWelcomeOverlay) {
+        let isProcessing = false; // Prevent multiple clicks
+        
+        continueWelcomeBtn.addEventListener('click', async (e) => {
+            // Prevent multiple clicks
+            if (isProcessing) {
+                console.log('Continue button already processing, ignoring click');
+                return;
+            }
+            
+            // Disable button and show loading state
+            isProcessing = true;
+            const originalText = continueWelcomeBtn.textContent;
+            continueWelcomeBtn.disabled = true;
+            continueWelcomeBtn.textContent = 'Loading...';
+            continueWelcomeBtn.style.opacity = '0.6';
+            continueWelcomeBtn.style.cursor = 'not-allowed';
+            
+            try {
+                // Ensure overlay exists
+                if (!preWelcomeOverlay) {
+                    throw new Error('Welcome overlay not found');
+                }
+                
+                // Wait for any pending animations/transitions
+                await new Promise(resolve => setTimeout(resolve, 50));
+                
+                // Hide pre-welcome overlay
                 preWelcomeOverlay.classList.add('hiding');
+                
+                // Wait for transition
+                await new Promise(resolve => setTimeout(resolve, 600));
+                
+                // Ensure overlay is hidden
+                preWelcomeOverlay.style.display = 'none';
+                
+                // Show theme selection
+                if (!themeSelectionOverlay) {
+                    throw new Error('Theme selection overlay not found');
+                }
+                
+                // Wait for theme selection to be ready
+                await new Promise(resolve => setTimeout(resolve, 50));
+                
+                themeSelectionOverlay.classList.add('active');
+                selectedTheme = (typeof ThemeManager !== 'undefined' && ThemeManager.getCurrentTheme()) ? ThemeManager.getCurrentTheme() : 'light';
+                updateThemePreviewSelection();
+                
+                // Success - reset button state
+                isProcessing = false;
+                continueWelcomeBtn.disabled = false;
+                continueWelcomeBtn.textContent = originalText;
+                continueWelcomeBtn.style.opacity = '1';
+                continueWelcomeBtn.style.cursor = 'pointer';
+                
+            } catch (error) {
+                console.error('Error in Continue button handler:', error);
+                
+                // Show user-friendly error
+                const messageBox = document.getElementById('message-box');
+                if (messageBox) {
+                    messageBox.textContent = 'An error occurred. Please refresh the page and try again.';
+                    messageBox.style.color = '#ff4d4d';
+                }
+                
+                // Reset button state
+                isProcessing = false;
+                continueWelcomeBtn.disabled = false;
+                continueWelcomeBtn.textContent = originalText;
+                continueWelcomeBtn.style.opacity = '1';
+                continueWelcomeBtn.style.cursor = 'pointer';
+                
+                // Allow retry after showing error
                 setTimeout(() => {
-                    preWelcomeOverlay.style.display = 'none';
-                    // Show theme selection
-                    if (themeSelectionOverlay) {
-                        themeSelectionOverlay.classList.add('active');
-                        selectedTheme = (typeof ThemeManager !== 'undefined' && ThemeManager.getCurrentTheme()) ? ThemeManager.getCurrentTheme() : 'light';
-                        updateThemePreviewSelection();
+                    if (messageBox) {
+                        messageBox.textContent = '';
+                        messageBox.style.color = '';
                     }
-                }, 600);
+                }, 5000);
             }
         });
+    } else {
+        console.error('Continue button not found on page load');
+        // Fallback: try to find it again after a delay
+        setTimeout(() => {
+            const btn = document.getElementById('continue-welcome-btn');
+            if (btn) {
+                console.log('Continue button found on retry, setting up handler');
+                continueWelcomeBtn = btn;
+                // Re-run the setup (will be handled by the code above on next check)
+            } else {
+                console.error('Continue button still not found after retry');
+            }
+        }, 1000);
     }
     
     // Theme preview card selection
@@ -1493,6 +1573,31 @@ try {
     // Will fail if server not running; guarded by try/catch pattern as with fetch
     // eslint-disable-next-line no-undef
     socket = io();
+    
+    // Listen for admin Tactical Claim trigger
+    socket.on('admin-trigger-tactical-claim', (data) => {
+        if (data && data.playerName === gameState.playerName) {
+            // Only activate if conditions are met
+            if (gameState.currentLevel === 1 && !gameState.tacticalClaimUsed && gameState.gameActive) {
+                activateTacticalClaim();
+                socket.emit('admin-tactical-claim-result', {
+                    success: true,
+                    playerName: gameState.playerName
+                });
+            } else {
+                let reason = 'Unknown error';
+                if (gameState.currentLevel !== 1) reason = 'Not in Level 1';
+                else if (gameState.tacticalClaimUsed) reason = 'Already used';
+                else if (!gameState.gameActive) reason = 'Game not active';
+                
+                socket.emit('admin-tactical-claim-result', {
+                    success: false,
+                    playerName: gameState.playerName,
+                    reason: reason
+                });
+            }
+        }
+    });
     socket.on('control', (payload) => {
         if (!payload || !payload.type) return;
         // If control targets a specific player name and it is not us, ignore
@@ -1734,7 +1839,28 @@ function emitBoardUpdate() {
             cameraEnabled: gameState.cameraEnabled,
             inInteractiveMode: gameState.inInteractiveMode, // Let admin know about interactive mode
             playerGoesFirst: gameState.playerGoesFirst,
-            timestamp: Date.now()
+            timestamp: Date.now(),
+            // Admin observability data
+            currentLevel: gameState.currentLevel || 1,
+            level1Wins: gameState.level1Wins || 0,
+            totalGamesPlayed: gameState.totalGamesPlayed || 0,
+            tacticalClaimUsed: gameState.tacticalClaimUsed || false,
+            currentTheme: typeof ThemeManager !== 'undefined' ? ThemeManager.getCurrentTheme() : 'light'
+        });
+        // Also emit to 'spectate' for backward compatibility
+        socket.emit('spectate', {
+            name: gameState.playerName,
+            board: [...gameState.board],
+            active: gameState.gameActive && !gameState.inInteractiveMode,
+            wins: (gameState.wins || 0),
+            losses: gameState.losses,
+            cameraEnabled: gameState.cameraEnabled,
+            inInteractiveMode: gameState.inInteractiveMode,
+            currentLevel: gameState.currentLevel || 1,
+            level1Wins: gameState.level1Wins || 0,
+            totalGamesPlayed: gameState.totalGamesPlayed || 0,
+            tacticalClaimUsed: gameState.tacticalClaimUsed || false,
+            currentTheme: typeof ThemeManager !== 'undefined' ? ThemeManager.getCurrentTheme() : 'light'
         });
     } catch(_) {}
 }
@@ -2535,6 +2661,16 @@ function activateTacticalClaim() {
     });
     
     gameState.tacticalClaimUsed = true;
+    
+    // Emit power-up event for admin dashboard
+    if (socket) {
+        socket.emit('powerup-event', {
+            message: `AI activated Tactical Claim`,
+            type: 'info',
+            playerName: gameState.playerName,
+            powerUp: 'tacticalClaim'
+        });
+    }
     
     // Play cinematic animation
     playTacticalClaimAnimation(selectedCell);
