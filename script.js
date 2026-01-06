@@ -2663,12 +2663,21 @@ function shouldActivateTacticalClaim() {
     
     // Must not be turn 1 or turn 2 (must be mid-game)
     const totalMoves = gameState.board.filter(cell => cell !== '').length;
-    if (totalMoves < 2) return false; // Not turn 1 or 2
+    if (totalMoves < 2) return false; // Not turn 1 or turn 2
     
-    // Must not target a cell that would immediately guarantee a win
-    // (We'll check this when selecting the cell)
+    // LAST RESORT: Activate if player is one win away from finishing Level 1
+    // This adds strategic pressure when player is close to level completion
+    const playerWinsInLevel = gameState.level1Wins || 0;
+    const isLastResort = playerWinsInLevel >= 4; // Player needs 5 wins, so 4 means one away
     
-    return true;
+    // If last resort, activate with higher probability (80% chance)
+    if (isLastResort) {
+        return Math.random() < 0.80;
+    }
+    
+    // Normal activation: Random trigger within eligible turns (30% chance mid-game)
+    // This adds unpredictability and prevents AI from being too predictable
+    return Math.random() < 0.30; // 30% chance for normal activation
 }
 
 /**
