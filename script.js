@@ -381,10 +381,13 @@ const PowerUpManager = {
         // Show activation message
         this.showActivationMessage(powerUp);
         
-        // Deactivate after duration
-        setTimeout(() => {
-            this.deactivatePowerUp(powerUpId);
-        }, powerUp.duration);
+        // Shield Guard persists until level ends (no timeout deactivation)
+        if (powerUpId !== 'shieldGuard') {
+            // Deactivate after duration (for other power-ups)
+            setTimeout(() => {
+                this.deactivatePowerUp(powerUpId);
+            }, powerUp.duration);
+        }
     },
     
     /**
