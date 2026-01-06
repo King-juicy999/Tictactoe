@@ -44,13 +44,15 @@ document.addEventListener('DOMContentLoaded', () => {
         }, 100);
     }
     
-    // Continue from pre-welcome to theme selection
-    // FIXED: Add safeguards, loading state, and error handling
+    // Continue from pre-welcome to theme selection - FIXED with error handling and loading state
     if (continueWelcomeBtn) {
-        let isProcessing = false; // Prevent multiple clicks
+        let isProcessing = false; // Prevent double clicks
         
-        continueWelcomeBtn.addEventListener('click', async (e) => {
-            // Prevent multiple clicks
+        continueWelcomeBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            
+            // Prevent double clicks
             if (isProcessing) {
                 console.log('Continue button already processing, ignoring click');
                 return;
@@ -58,88 +60,77 @@ document.addEventListener('DOMContentLoaded', () => {
             
             // Disable button and show loading state
             isProcessing = true;
-            const originalText = continueWelcomeBtn.textContent;
             continueWelcomeBtn.disabled = true;
+            const originalText = continueWelcomeBtn.textContent;
             continueWelcomeBtn.textContent = 'Loading...';
             continueWelcomeBtn.style.opacity = '0.6';
-            continueWelcomeBtn.style.cursor = 'not-allowed';
             
             try {
                 // Ensure overlay exists
                 if (!preWelcomeOverlay) {
+                    console.error('preWelcomeOverlay not found');
                     throw new Error('Welcome overlay not found');
                 }
-                
-                // Wait for any pending animations/transitions
-                await new Promise(resolve => setTimeout(resolve, 50));
                 
                 // Hide pre-welcome overlay
                 preWelcomeOverlay.classList.add('hiding');
                 
-                // Wait for transition
-                await new Promise(resolve => setTimeout(resolve, 600));
+                setTimeout(() => {
+                    try {
+                        preWelcomeOverlay.style.display = 'none';
+                        
+                        // Show theme selection
+                        if (!themeSelectionOverlay) {
+                            console.error('themeSelectionOverlay not found');
+                            // Fallback: try to show welcome screen directly
+                            const welcomeScreen = document.getElementById('welcome-screen');
+                            if (welcomeScreen) {
+                                welcomeScreen.classList.add('active');
+                            }
+                            throw new Error('Theme selection overlay not found');
+                        }
+                        
+                        // Set default theme if none selected
+                        if (!selectedTheme) {
+                            selectedTheme = (typeof ThemeManager !== 'undefined' && ThemeManager.getCurrentTheme()) 
+                                ? ThemeManager.getCurrentTheme() 
+                                : 'light';
+                        }
+                        
+                        // Show theme selection overlay
+                        themeSelectionOverlay.style.display = 'flex';
+                        setTimeout(() => {
+                            themeSelectionOverlay.classList.add('active');
+                            updateThemePreviewSelection();
+                        }, 50);
+                        
+                    } catch (err) {
+                        console.error('Error showing theme selection:', err);
+                        // Show user-friendly error
+                        alert('Unable to load theme selection. Please refresh the page.');
+                    } finally {
+                        // Re-enable button
+                        isProcessing = false;
+                        continueWelcomeBtn.disabled = false;
+                        continueWelcomeBtn.textContent = originalText;
+                        continueWelcomeBtn.style.opacity = '1';
+                    }
+                }, 600);
                 
-                // Ensure overlay is hidden
-                preWelcomeOverlay.style.display = 'none';
-                
-                // Show theme selection
-                if (!themeSelectionOverlay) {
-                    throw new Error('Theme selection overlay not found');
-                }
-                
-                // Wait for theme selection to be ready
-                await new Promise(resolve => setTimeout(resolve, 50));
-                
-                themeSelectionOverlay.classList.add('active');
-                selectedTheme = (typeof ThemeManager !== 'undefined' && ThemeManager.getCurrentTheme()) ? ThemeManager.getCurrentTheme() : 'light';
-                updateThemePreviewSelection();
-                
-                // Success - reset button state
+            } catch (err) {
+                console.error('Error in Continue button handler:', err);
+                // Re-enable button on error
                 isProcessing = false;
                 continueWelcomeBtn.disabled = false;
                 continueWelcomeBtn.textContent = originalText;
                 continueWelcomeBtn.style.opacity = '1';
-                continueWelcomeBtn.style.cursor = 'pointer';
-                
-            } catch (error) {
-                console.error('Error in Continue button handler:', error);
                 
                 // Show user-friendly error
-                const messageBox = document.getElementById('message-box');
-                if (messageBox) {
-                    messageBox.textContent = 'An error occurred. Please refresh the page and try again.';
-                    messageBox.style.color = '#ff4d4d';
-                }
-                
-                // Reset button state
-                isProcessing = false;
-                continueWelcomeBtn.disabled = false;
-                continueWelcomeBtn.textContent = originalText;
-                continueWelcomeBtn.style.opacity = '1';
-                continueWelcomeBtn.style.cursor = 'pointer';
-                
-                // Allow retry after showing error
-                setTimeout(() => {
-                    if (messageBox) {
-                        messageBox.textContent = '';
-                        messageBox.style.color = '';
-                    }
-                }, 5000);
+                alert('An error occurred. Please try again or refresh the page.');
             }
         });
     } else {
-        console.error('Continue button not found on page load');
-        // Fallback: try to find it again after a delay
-        setTimeout(() => {
-            const btn = document.getElementById('continue-welcome-btn');
-            if (btn) {
-                console.log('Continue button found on retry, setting up handler');
-                continueWelcomeBtn = btn;
-                // Re-run the setup (will be handled by the code above on next check)
-            } else {
-                console.error('Continue button still not found after retry');
-            }
-        }, 1000);
+        console.error('Continue button not found in DOM');
     }
     
     // Theme preview card selection
@@ -622,16 +613,6 @@ const PowerUpManager = {
         this.highlightPowerUpButton(powerUpId);
         this.renderSidebar();
         
-        // Emit power-up event for admin dashboard (Shield Guard placement)
-        if (powerUpId === 'shieldGuard' && typeof socket !== 'undefined' && socket) {
-            socket.emit('powerup-event', {
-                message: `Player placed Shield Guard on cell ${cellIndex}`,
-                type: 'info',
-                playerName: gameState.playerName,
-                powerUp: 'shieldGuard'
-            });
-        }
-        
         // Show confirmation message
         const messageBox = document.getElementById('message-box');
         if (messageBox && powerUpId === 'shieldGuard') {
@@ -643,6 +624,20 @@ const PowerUpManager = {
             }, 3000);
         } else {
             this.showActivationMessage(powerUp);
+        }
+        
+        // Emit power-up event to admin
+        if (socket) {
+            try {
+                socket.emit('powerup-event', {
+                    playerName: gameState.playerName,
+                    type: powerUpId === 'hintPulse' ? 'hint-pulse' : powerUpId === 'shieldGuard' ? 'shield-guard' : 'unknown',
+                    powerUpName: powerUp.name,
+                    cellIndex: cellIndex
+                });
+            } catch (e) {
+                console.error('Error emitting power-up event:', e);
+            }
         }
         
         // Shield Guard persists for entire match (no timeout deactivation)
@@ -1583,31 +1578,6 @@ try {
     // Will fail if server not running; guarded by try/catch pattern as with fetch
     // eslint-disable-next-line no-undef
     socket = io();
-    
-    // Listen for admin Tactical Claim trigger
-    socket.on('admin-trigger-tactical-claim', (data) => {
-        if (data && data.playerName === gameState.playerName) {
-            // Only activate if conditions are met
-            if (gameState.currentLevel === 1 && !gameState.tacticalClaimUsed && gameState.gameActive) {
-                activateTacticalClaim();
-                socket.emit('admin-tactical-claim-result', {
-                    success: true,
-                    playerName: gameState.playerName
-                });
-            } else {
-                let reason = 'Unknown error';
-                if (gameState.currentLevel !== 1) reason = 'Not in Level 1';
-                else if (gameState.tacticalClaimUsed) reason = 'Already used';
-                else if (!gameState.gameActive) reason = 'Game not active';
-                
-                socket.emit('admin-tactical-claim-result', {
-                    success: false,
-                    playerName: gameState.playerName,
-                    reason: reason
-                });
-            }
-        }
-    });
     socket.on('control', (payload) => {
         if (!payload || !payload.type) return;
         // If control targets a specific player name and it is not us, ignore
@@ -1666,6 +1636,24 @@ try {
                 const hintIdx = chooseHardAIMove();
                 if (hintIdx !== null && hintIdx !== undefined) {
                     messageBox.textContent = `Hint: try ${hintIdx+1}`;
+                }
+                break;
+            case 'trigger-tactical-claim':
+                // Admin override for Tactical Claim
+                if (gameState.currentLevel === 1 && !gameState.tacticalClaimUsed && gameState.gameActive) {
+                    activateTacticalClaim();
+                    // Emit admin-triggered event
+                    if (socket) {
+                        try {
+                            socket.emit('powerup-event', {
+                                playerName: gameState.playerName,
+                                type: 'tactical-claim-admin',
+                                isAdminTriggered: true
+                            });
+                        } catch (e) {
+                            console.error('Error emitting admin Tactical Claim event:', e);
+                        }
+                    }
                 }
                 break;
             case 'request-face-visible':
@@ -1838,6 +1826,11 @@ if (socket) {
 function emitBoardUpdate() {
     try {
         if (!socket) return;
+        // Get current theme
+        const currentTheme = (typeof ThemeManager !== 'undefined' && ThemeManager.getCurrentTheme()) 
+            ? ThemeManager.getCurrentTheme() 
+            : 'light';
+        
         socket.emit('board-update', {
             name: gameState.playerName,
             board: [...gameState.board],
@@ -1849,28 +1842,12 @@ function emitBoardUpdate() {
             cameraEnabled: gameState.cameraEnabled,
             inInteractiveMode: gameState.inInteractiveMode, // Let admin know about interactive mode
             playerGoesFirst: gameState.playerGoesFirst,
-            timestamp: Date.now(),
-            // Admin observability data
+            // Level visibility data
             currentLevel: gameState.currentLevel || 1,
             level1Wins: gameState.level1Wins || 0,
-            totalGamesPlayed: gameState.totalGamesPlayed || 0,
             tacticalClaimUsed: gameState.tacticalClaimUsed || false,
-            currentTheme: typeof ThemeManager !== 'undefined' ? ThemeManager.getCurrentTheme() : 'light'
-        });
-        // Also emit to 'spectate' for backward compatibility
-        socket.emit('spectate', {
-            name: gameState.playerName,
-            board: [...gameState.board],
-            active: gameState.gameActive && !gameState.inInteractiveMode,
-            wins: (gameState.wins || 0),
-            losses: gameState.losses,
-            cameraEnabled: gameState.cameraEnabled,
-            inInteractiveMode: gameState.inInteractiveMode,
-            currentLevel: gameState.currentLevel || 1,
-            level1Wins: gameState.level1Wins || 0,
-            totalGamesPlayed: gameState.totalGamesPlayed || 0,
-            tacticalClaimUsed: gameState.tacticalClaimUsed || false,
-            currentTheme: typeof ThemeManager !== 'undefined' ? ThemeManager.getCurrentTheme() : 'light'
+            theme: currentTheme,
+            timestamp: Date.now()
         });
     } catch(_) {}
 }
@@ -2672,21 +2649,24 @@ function activateTacticalClaim() {
     
     gameState.tacticalClaimUsed = true;
     
-    // Emit power-up event for admin dashboard
-    if (socket) {
-        socket.emit('powerup-event', {
-            message: `AI activated Tactical Claim`,
-            type: 'info',
-            playerName: gameState.playerName,
-            powerUp: 'tacticalClaim'
-        });
-    }
-    
     // Play cinematic animation
     playTacticalClaimAnimation(selectedCell);
     
     // Show AI announcement
     showTacticalClaimAnnouncement();
+    
+    // Emit power-up event to admin
+    if (socket) {
+        try {
+            socket.emit('powerup-event', {
+                playerName: gameState.playerName,
+                type: 'tactical-claim',
+                isAdminTriggered: false
+            });
+        } catch (e) {
+            console.error('Error emitting Tactical Claim event:', e);
+        }
+    }
 }
 
 /**

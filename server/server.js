@@ -322,46 +322,26 @@ io.on('connection', (socket) => {
 
     // Admin control passthrough
     socket.on('admin-control', (payload) => {
-        io.emit('control', payload);
-    });
-    
-    // Admin Tactical Claim override
-    socket.on('admin-trigger-tactical-claim', (data) => {
-        const { playerName } = data;
-        if (!playerName) {
-            socket.emit('admin-tactical-claim-result', {
-                success: false,
-                reason: 'No player name provided'
-            });
-            return;
-        }
-        
-        // Forward to the target player
-        const playerSocketId = nameToSocketId.get(playerName);
-        if (playerSocketId) {
-            io.to(playerSocketId).emit('admin-trigger-tactical-claim', { playerName });
-            console.log(`Admin triggered Tactical Claim for ${playerName}`);
+        // Forward to specific player if targetPlayer is specified
+        if (payload.targetPlayer) {
+            // Find socket ID for target player
+            const targetSocket = Array.from(io.sockets.sockets.values())
+                .find(s => s.playerName === payload.targetPlayer);
+            if (targetSocket) {
+                targetSocket.emit('control', payload);
+            } else {
+                // Fallback: broadcast to all (player will filter)
+                io.emit('control', payload);
+            }
         } else {
-            socket.emit('admin-tactical-claim-result', {
-                success: false,
-                playerName: playerName,
-                reason: 'Player not found or not connected'
-            });
+            io.emit('control', payload);
         }
     });
     
-    // Forward admin Tactical Claim result back to admin
-    socket.on('admin-tactical-claim-result', (data) => {
-        // Forward to all admin connections
+    // Power-up event forwarding to admins
+    socket.on('powerup-event', (payload) => {
         adminConnections.forEach(adminSocketId => {
-            io.to(adminSocketId).emit('admin-tactical-claim-result', data);
-        });
-    });
-    
-    // Forward power-up events to admins
-    socket.on('powerup-event', (data) => {
-        adminConnections.forEach(adminSocketId => {
-            io.to(adminSocketId).emit('powerup-event', data);
+            io.to(adminSocketId).emit('powerup-event', payload);
         });
     });
 

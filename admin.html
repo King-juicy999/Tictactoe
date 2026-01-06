@@ -597,12 +597,14 @@
             </div>
             
             <!-- Admin Tactical Claim Override -->
-            <div style="margin-bottom: 0.75rem; padding: 0.75rem; background: rgba(0,255,0,0.1); border-radius: 6px; border: 1px solid rgba(0,255,0,0.3);">
-                <h3 style="margin: 0 0 0.5rem; font-size: 1rem; color: var(--admin-text-strong);">Admin Controls</h3>
+            <div style="margin-bottom: 0.75rem; padding: 0.5rem; background: rgba(0,255,0,0.1); border-radius: 6px; border: 1px solid rgba(0,255,0,0.3);">
+                <h3 style="margin: 0 0 0.5rem; font-size: 1rem; color: var(--admin-text-strong);">Admin Tactical Claim Override</h3>
+                <div style="font-size: 0.85rem; color: var(--admin-text); margin-bottom: 0.5rem;">
+                    Manually trigger Tactical Claim for the spectated player (Level 1 only, once per match)
+                </div>
                 <button id="admin-trigger-tactical-claim" style="min-height: 36px; padding: 0.5rem 1rem; background: #00ff00; color: #000; font-weight: bold;">
                     Activate Tactical Claim
                 </button>
-                <div id="admin-tactical-claim-log" style="margin-top: 0.5rem; font-size: 0.85rem; color: var(--admin-text);"></div>
             </div>
             
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 0.75rem;">
@@ -635,8 +637,8 @@
 
         <div class="panel" style="margin-top: 1rem;">
             <h2>Power-Up Event Feed</h2>
-            <div id="powerup-event-feed" class="log" style="max-height: 200px; font-size: 0.85rem;">
-                <div style="text-align: center; color: #666; padding: 0.5rem;">No power-up events yet</div>
+            <div id="powerup-event-feed" class="log" style="max-height: 300px; overflow-y: auto; font-size: 0.9rem;">
+                <div style="color: #666; text-align: center; padding: 0.5rem;">No power-up events yet</div>
             </div>
         </div>
         
@@ -1503,17 +1505,43 @@
             }
             document.getElementById('spectate-losses').textContent = e.losses || 0;
             
-            // Update level visibility (Admin Dashboard Enhancement)
-            if (e.currentLevel !== undefined) {
-                document.getElementById('spectate-level').textContent = e.currentLevel || 1;
-                document.getElementById('spectate-round-count').textContent = e.level1Wins || 0;
-                // Calculate AI wins for this level (total games - player wins)
-                const aiWinsForLevel = (e.totalGamesPlayed || 0) - (e.level1Wins || 0);
-                document.getElementById('spectate-ai-wins').textContent = aiWinsForLevel;
-                document.getElementById('spectate-player-wins').textContent = e.level1Wins || 0;
+            // Update player level visibility
+            if (typeof e.currentLevel === 'number') {
+                document.getElementById('spectate-level').textContent = `Level ${e.currentLevel}`;
+            } else {
+                document.getElementById('spectate-level').textContent = '-';
+            }
+            
+            if (typeof e.level1Wins === 'number') {
+                document.getElementById('spectate-round-count').textContent = `${e.level1Wins} / 5`;
+                document.getElementById('spectate-player-wins').textContent = e.level1Wins;
+            } else {
+                document.getElementById('spectate-round-count').textContent = '-';
+                document.getElementById('spectate-player-wins').textContent = '-';
+            }
+            
+            if (typeof e.aiWinsInLevel === 'number') {
+                document.getElementById('spectate-ai-wins').textContent = e.aiWinsInLevel;
+            } else {
+                document.getElementById('spectate-ai-wins').textContent = '-';
+            }
+            
+            if (typeof e.tacticalClaimUsed === 'boolean') {
                 document.getElementById('spectate-tactical-claim').textContent = e.tacticalClaimUsed ? 'Used' : 'Available';
-                document.getElementById('spectate-tactical-claim').style.color = e.tacticalClaimUsed ? '#ff4444' : '#00ff00';
-                document.getElementById('spectate-theme').textContent = e.currentTheme || 'light';
+                document.getElementById('spectate-tactical-claim').style.color = e.tacticalClaimUsed ? '#ffaa00' : '#00ff00';
+                // Update button state
+                const btn = document.getElementById('admin-trigger-tactical-claim');
+                if (btn) {
+                    btn.disabled = e.tacticalClaimUsed || e.currentLevel !== 1 || !e.active;
+                }
+            } else {
+                document.getElementById('spectate-tactical-claim').textContent = '-';
+            }
+            
+            if (e.theme) {
+                document.getElementById('spectate-theme').textContent = e.theme.charAt(0).toUpperCase() + e.theme.slice(1);
+            } else {
+                document.getElementById('spectate-theme').textContent = '-';
             }
             
             // Update camera status
@@ -2090,6 +2118,81 @@
             if (activePlayers.has(e.name)) {
                 activePlayers.get(e.name).hasCamera = e.connected && e.streamActive;
             }
+        });
+        
+        // Power-up event feed
+        function addPowerUpEvent(message, type = 'info') {
+            const feed = document.getElementById('powerup-event-feed');
+            if (!feed) return;
+            
+            // Remove "no events" message if present
+            if (feed.children.length === 1 && feed.children[0].textContent.includes('No power-up events')) {
+                feed.innerHTML = '';
+            }
+            
+            const timestamp = new Date().toLocaleTimeString();
+            const eventDiv = document.createElement('div');
+            eventDiv.style.padding = '0.25rem 0';
+            eventDiv.style.borderBottom = '1px solid rgba(255,0,0,0.2)';
+            eventDiv.style.color = type === 'error' ? '#ff4444' : type === 'success' ? '#00ff00' : '#ffffff';
+            eventDiv.textContent = `[${timestamp}] ${message}`;
+            
+            feed.insertBefore(eventDiv, feed.firstChild);
+            
+            // Keep only last 50 events
+            while (feed.children.length > 50) {
+                feed.removeChild(feed.lastChild);
+            }
+        }
+        
+        // Listen for power-up events
+        socket.on('powerup-event', (data) => {
+            if (!data) return;
+            const playerName = data.playerName || 'Unknown';
+            let message = '';
+            
+            switch(data.type) {
+                case 'hint-pulse':
+                    message = `Player ${playerName} used Hint Pulse`;
+                    break;
+                case 'shield-guard':
+                    message = `Player ${playerName} placed Shield`;
+                    break;
+                case 'tactical-claim':
+                    message = `AI activated Tactical Claim for ${playerName}`;
+                    break;
+                case 'tactical-claim-admin':
+                    message = `Admin triggered Tactical Claim for ${playerName}`;
+                    break;
+                case 'powerup-cooldown':
+                    message = `Power-up cooldown: ${data.powerupName || 'Unknown'}`;
+                    break;
+                case 'powerup-exhausted':
+                    message = `Power-up exhausted: ${data.powerupName || 'Unknown'}`;
+                    break;
+                default:
+                    message = `Power-up event: ${data.type || 'Unknown'}`;
+            }
+            
+            addPowerUpEvent(message, data.type === 'tactical-claim-admin' ? 'success' : 'info');
+        });
+        
+        // Admin Tactical Claim Override button
+        document.getElementById('admin-trigger-tactical-claim')?.addEventListener('click', () => {
+            const playerName = document.getElementById('spectate-player')?.textContent;
+            if (!playerName || playerName === 'None') {
+                addPowerUpEvent('No player selected for spectating', 'error');
+                return;
+            }
+            
+            // Emit admin control event
+            socket.emit('admin-control', {
+                type: 'trigger-tactical-claim',
+                targetPlayer: playerName
+            });
+            
+            addPowerUpEvent(`Admin triggered Tactical Claim for ${playerName}`, 'success');
+            log(`Admin triggered Tactical Claim for ${playerName}`);
         });
     </script>
 </body>
