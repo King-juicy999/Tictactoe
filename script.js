@@ -2168,62 +2168,194 @@ if (modeAiBtn) {
                 ]
             );
         } else {
-            // Show game welcome screen before starting
-            showGameWelcomeScreen();
+            // Show power-up guide before first game, or start directly if guide was seen
+            const guideSeen = localStorage.getItem('powerupGuideSeen') === 'true';
+            if (!guideSeen) {
+                showPowerUpGuide(true); // true = first play
+            } else {
+                startGameAsAI();
+            }
         }
     });
 }
 
 /**
- * Show game welcome screen with Level 1 info and power-ups
+ * Power Up Guide System
  */
-function showGameWelcomeScreen() {
-    const welcomeOverlay = document.getElementById('game-welcome-overlay');
-    if (!welcomeOverlay) {
-        // If overlay doesn't exist, start game directly
+let currentGuidePage = 1;
+const totalGuidePages = 7;
+
+/**
+ * Show power-up guide
+ * @param {boolean} isFirstPlay - If true, this is shown before first game
+ */
+function showPowerUpGuide(isFirstPlay = false) {
+    const guideOverlay = document.getElementById('powerup-guide-overlay');
+    if (!guideOverlay) {
+        // If guide doesn't exist, start game directly
         startGameAsAI();
         return;
     }
     
-    // Update level progress
-    updateLevelProgress();
+    currentGuidePage = 1;
+    updateGuidePage();
     
     // Show overlay
-    welcomeOverlay.classList.remove('hidden');
+    guideOverlay.classList.remove('hidden');
     setTimeout(() => {
-        welcomeOverlay.classList.add('active');
+        guideOverlay.classList.add('active');
     }, 10);
     
-    // Setup button handlers
-    const skipBtn = document.getElementById('game-welcome-skip');
-    const startBtn = document.getElementById('game-welcome-start');
+    // Animate level circles on page 2
+    if (isFirstPlay) {
+        setTimeout(() => {
+            animateLevelCircles();
+        }, 500);
+    }
+    
+    // Setup navigation
+    setupGuideNavigation(isFirstPlay);
+}
+
+/**
+ * Hide power-up guide
+ */
+function hidePowerUpGuide() {
+    const guideOverlay = document.getElementById('powerup-guide-overlay');
+    if (!guideOverlay) return;
+    
+    guideOverlay.classList.remove('active');
+    setTimeout(() => {
+        guideOverlay.classList.add('hidden');
+    }, 400);
+    
+    // Mark guide as seen
+    localStorage.setItem('powerupGuideSeen', 'true');
+}
+
+/**
+ * Update current guide page display
+ */
+function updateGuidePage() {
+    // Hide all pages
+    document.querySelectorAll('.guide-page').forEach(page => {
+        page.classList.remove('active');
+    });
+    
+    // Show current page
+    const currentPage = document.querySelector(`.guide-page[data-page="${currentGuidePage}"]`);
+    if (currentPage) {
+        currentPage.classList.add('active');
+    }
+    
+    // Update page indicator
+    const pageIndicator = document.getElementById('guide-page-number');
+    if (pageIndicator) {
+        pageIndicator.textContent = currentGuidePage;
+    }
+    
+    // Update navigation buttons
+    const prevBtn = document.getElementById('guide-prev');
+    const nextBtn = document.getElementById('guide-next');
+    const skipBtn = document.getElementById('guide-skip');
+    
+    if (prevBtn) {
+        prevBtn.disabled = currentGuidePage === 1;
+    }
+    
+    if (nextBtn) {
+        nextBtn.disabled = currentGuidePage === totalGuidePages;
+    }
+    
+    // Show skip button only on first page
+    if (skipBtn) {
+        skipBtn.style.display = currentGuidePage === 1 ? 'block' : 'none';
+    }
+}
+
+/**
+ * Setup guide navigation handlers
+ */
+function setupGuideNavigation(isFirstPlay) {
+    const prevBtn = document.getElementById('guide-prev');
+    const nextBtn = document.getElementById('guide-next');
+    const skipBtn = document.getElementById('guide-skip');
+    const startBtn = document.getElementById('guide-start-game');
+    
+    if (prevBtn) {
+        prevBtn.onclick = () => {
+            if (currentGuidePage > 1) {
+                currentGuidePage--;
+                updateGuidePage();
+            }
+        };
+    }
+    
+    if (nextBtn) {
+        nextBtn.onclick = () => {
+            if (currentGuidePage < totalGuidePages) {
+                currentGuidePage++;
+                updateGuidePage();
+            }
+        };
+    }
     
     if (skipBtn) {
         skipBtn.onclick = () => {
-            hideGameWelcomeScreen();
+            hidePowerUpGuide();
             startGameAsAI();
         };
     }
     
     if (startBtn) {
         startBtn.onclick = () => {
-            hideGameWelcomeScreen();
+            hidePowerUpGuide();
             startGameAsAI();
+        };
+    }
+    
+    // Setup guide icon buttons (to reopen guide)
+    const guideIconBtn = document.getElementById('guide-icon-btn');
+    const guideIconBtnGame = document.getElementById('guide-icon-btn-game');
+    
+    if (guideIconBtn) {
+        guideIconBtn.onclick = () => {
+            showPowerUpGuide(false);
+        };
+    }
+    
+    if (guideIconBtnGame) {
+        guideIconBtnGame.onclick = () => {
+            showPowerUpGuide(false);
         };
     }
 }
 
 /**
- * Hide game welcome screen
+ * Animate level circles (for page 2 demo)
+ */
+function animateLevelCircles() {
+    const circles = document.querySelectorAll('.guide-circle');
+    circles.forEach((circle, index) => {
+        setTimeout(() => {
+            circle.classList.add('filled');
+        }, index * 300);
+    });
+}
+
+/**
+ * Show game welcome screen with Level 1 info and power-ups (legacy - kept for compatibility)
+ */
+function showGameWelcomeScreen() {
+    // Redirect to new guide system
+    showPowerUpGuide(true);
+}
+
+/**
+ * Hide game welcome screen (legacy - kept for compatibility)
  */
 function hideGameWelcomeScreen() {
-    const welcomeOverlay = document.getElementById('game-welcome-overlay');
-    if (!welcomeOverlay) return;
-    
-    welcomeOverlay.classList.remove('active');
-    setTimeout(() => {
-        welcomeOverlay.classList.add('hidden');
-    }, 400);
+    hidePowerUpGuide();
 }
 
 /**

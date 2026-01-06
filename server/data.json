@@ -1,5 +1,13 @@
 {
   "players": {
+    "4": {
+      "losses": 2,
+      "wins": 0,
+      "plays": 3,
+      "lastActive": 1767644207378,
+      "matricNumber": "",
+      "life": ""
+    },
     "899": {
       "losses": 0,
       "wins": 2,
@@ -33,18 +41,18 @@
       "life": "dd"
     },
     "hmmm": {
-      "losses": 40,
+      "losses": 41,
       "wins": 0,
-      "plays": 38,
-      "lastActive": 1767605654435,
+      "plays": 47,
+      "lastActive": 1767658661657,
       "matricNumber": "",
       "life": ""
     },
     "sammy": {
-      "losses": 36,
-      "wins": 8,
-      "plays": 42,
-      "lastActive": 1767634946155,
+      "losses": 39,
+      "wins": 9,
+      "plays": 51,
+      "lastActive": 1767645651708,
       "matricNumber": "",
       "life": ""
     },
@@ -320,19 +328,27 @@
       "matricNumber": "",
       "life": ""
     },
-    "Am good": {
-      "losses": 2,
-      "wins": 0,
-      "plays": 6,
-      "lastActive": 1767638465195,
-      "matricNumber": "",
-      "life": ""
-    },
     "Tracy": {
       "losses": 3,
       "wins": 1,
       "plays": 6,
       "lastActive": 1767638849678,
+      "matricNumber": "",
+      "life": ""
+    },
+    "Sarah": {
+      "losses": 5,
+      "wins": 0,
+      "plays": 6,
+      "lastActive": 1767642830055,
+      "matricNumber": "",
+      "life": ""
+    },
+    "Jeslyn Kester Anegbode": {
+      "losses": 7,
+      "wins": 0,
+      "plays": 3,
+      "lastActive": 1767657540598,
       "matricNumber": "",
       "life": ""
     }
@@ -2890,46 +2906,6 @@
     },
     {
       "type": "start",
-      "name": "Am good",
-      "time": 1767636949937
-    },
-    {
-      "type": "start",
-      "name": "Am good",
-      "time": 1767637028885
-    },
-    {
-      "type": "start",
-      "name": "Am good",
-      "time": 1767637029499
-    },
-    {
-      "type": "loss",
-      "name": "Am good",
-      "time": 1767637045719
-    },
-    {
-      "type": "loss",
-      "name": "Am good",
-      "time": 1767637056398
-    },
-    {
-      "type": "start",
-      "name": "Am good",
-      "time": 1767638463818
-    },
-    {
-      "type": "start",
-      "name": "Am good",
-      "time": 1767638465157
-    },
-    {
-      "type": "start",
-      "name": "Am good",
-      "time": 1767638465195
-    },
-    {
-      "type": "start",
       "name": "Tracy",
       "time": 1767638640962
     },
@@ -2977,1760 +2953,259 @@
       "type": "loss",
       "name": "Tracy",
       "time": 1767638849678
+    },
+    {
+      "type": "start",
+      "name": "Sarah",
+      "time": 1767639945946
+    },
+    {
+      "type": "start",
+      "name": "Sarah",
+      "time": 1767639966852
+    },
+    {
+      "type": "start",
+      "name": "Sarah",
+      "time": 1767639966889
+    },
+    {
+      "type": "loss",
+      "name": "Sarah",
+      "time": 1767639977390
+    },
+    {
+      "type": "loss",
+      "name": "Sarah",
+      "time": 1767639984288
+    },
+    {
+      "type": "loss",
+      "name": "Sarah",
+      "time": 1767639999967
+    },
+    {
+      "type": "start",
+      "name": "sammy",
+      "time": 1767642707153
+    },
+    {
+      "type": "start",
+      "name": "sammy",
+      "time": 1767642708579
+    },
+    {
+      "type": "start",
+      "name": "sammy",
+      "time": 1767642708653
+    },
+    {
+      "type": "loss",
+      "name": "sammy",
+      "time": 1767642717706
+    },
+    {
+      "type": "loss",
+      "name": "sammy",
+      "time": 1767642722380
+    },
+    {
+      "type": "win",
+      "name": "sammy",
+      "time": 1767642731438
+    },
+    {
+      "type": "loss",
+      "name": "sammy",
+      "time": 1767642750314
+    },
+    {
+      "type": "start",
+      "name": "Sarah",
+      "time": 1767642787031
+    },
+    {
+      "type": "start",
+      "name": "Sarah",
+      "time": 1767642815483
+    },
+    {
+      "type": "start",
+      "name": "Sarah",
+      "time": 1767642815535
+    },
+    {
+      "type": "loss",
+      "name": "Sarah",
+      "time": 1767642821502
+    },
+    {
+      "type": "loss",
+      "name": "Sarah",
+      "time": 1767642830055
+    },
+    {
+      "type": "start",
+      "name": "sammy",
+      "time": 1767643561863
+    },
+    {
+      "type": "start",
+      "name": "sammy",
+      "time": 1767643566793
+    },
+    {
+      "type": "start",
+      "name": "sammy",
+      "time": 1767643566839
+    },
+    {
+      "type": "start",
+      "name": "hmmm",
+      "time": 1767644117948
+    },
+    {
+      "type": "start",
+      "name": "hmmm",
+      "time": 1767644120163
+    },
+    {
+      "type": "start",
+      "name": "hmmm",
+      "time": 1767644120344
+    },
+    {
+      "type": "start",
+      "name": "4",
+      "time": 1767644149190
+    },
+    {
+      "type": "start",
+      "name": "4",
+      "time": 1767644150430
+    },
+    {
+      "type": "start",
+      "name": "4",
+      "time": 1767644150479
+    },
+    {
+      "type": "loss",
+      "name": "4",
+      "time": 1767644175735
+    },
+    {
+      "type": "loss",
+      "name": "4",
+      "time": 1767644207378
+    },
+    {
+      "type": "start",
+      "name": "hmmm",
+      "time": 1767644991363
+    },
+    {
+      "type": "start",
+      "name": "hmmm",
+      "time": 1767645009397
+    },
+    {
+      "type": "start",
+      "name": "hmmm",
+      "time": 1767645009424
+    },
+    {
+      "type": "loss",
+      "name": "hmmm",
+      "time": 1767645035267
+    },
+    {
+      "type": "start",
+      "name": "sammy",
+      "time": 1767645624756
+    },
+    {
+      "type": "start",
+      "name": "sammy",
+      "time": 1767645651680
+    },
+    {
+      "type": "start",
+      "name": "sammy",
+      "time": 1767645651708
+    },
+    {
+      "type": "start",
+      "name": "Jeslyn Kester Anegbode",
+      "time": 1767657362387
+    },
+    {
+      "type": "start",
+      "name": "Jeslyn Kester Anegbode",
+      "time": 1767657408613
+    },
+    {
+      "type": "start",
+      "name": "Jeslyn Kester Anegbode",
+      "time": 1767657408921
+    },
+    {
+      "type": "loss",
+      "name": "Jeslyn Kester Anegbode",
+      "time": 1767657421441
+    },
+    {
+      "type": "loss",
+      "name": "Jeslyn Kester Anegbode",
+      "time": 1767657432970
+    },
+    {
+      "type": "loss",
+      "name": "Jeslyn Kester Anegbode",
+      "time": 1767657442056
+    },
+    {
+      "type": "loss",
+      "name": "Jeslyn Kester Anegbode",
+      "time": 1767657471765
+    },
+    {
+      "type": "loss",
+      "name": "Jeslyn Kester Anegbode",
+      "time": 1767657479626
+    },
+    {
+      "type": "loss",
+      "name": "Jeslyn Kester Anegbode",
+      "time": 1767657488076
+    },
+    {
+      "type": "loss",
+      "name": "Jeslyn Kester Anegbode",
+      "time": 1767657540598
+    },
+    {
+      "type": "start",
+      "name": "hmmm",
+      "time": 1767658653012
+    },
+    {
+      "type": "start",
+      "name": "hmmm",
+      "time": 1767658661642
+    },
+    {
+      "type": "start",
+      "name": "hmmm",
+      "time": 1767658661657
     }
   ],
   "ai": {
-    "wins": 1,
-    "losses": 2,
+    "wins": 9,
+    "losses": 5,
     "draws": 4,
-    "totalGames": 7,
+    "totalGames": 18,
     "moveHistory": [
-      {
-        "moveIndex": 6,
-        "boardState": [
-          "O",
-          "X",
-          "X",
-          "X",
-          "O",
-          "O",
-          "",
-          "",
-          "X"
-        ],
-        "moveType": "corner",
-        "reasoning": "Opposite corner",
-        "gameId": "game_1765023962276_8ovgv273y",
-        "timestamp": 1765023971927
-      },
-      {
-        "moveIndex": 4,
-        "boardState": [
-          "",
-          "",
-          "",
-          "",
-          "",
-          "",
-          "",
-          "",
-          ""
-        ],
-        "moveType": "center",
-        "reasoning": "Taking center",
-        "gameId": "game_1765023974967_6yrgveur4",
-        "timestamp": 1765023975673
-      },
-      {
-        "moveIndex": 6,
-        "boardState": [
-          "",
-          "",
-          "X",
-          "",
-          "O",
-          "",
-          "",
-          "",
-          ""
-        ],
-        "moveType": "corner",
-        "reasoning": "Opposite corner",
-        "gameId": "game_1765023974967_6yrgveur4",
-        "timestamp": 1765023977337
-      },
-      {
-        "moveIndex": 5,
-        "boardState": [
-          "",
-          "",
-          "X",
-          "",
-          "O",
-          "",
-          "O",
-          "",
-          "X"
-        ],
-        "moveType": "block",
-        "reasoning": "Blocking opponent win",
-        "gameId": "game_1765023974967_6yrgveur4",
-        "timestamp": 1765023980559
-      },
-      {
-        "moveIndex": 0,
-        "boardState": [
-          "",
-          "",
-          "X",
-          "X",
-          "O",
-          "O",
-          "O",
-          "",
-          "X"
-        ],
-        "moveType": "corner",
-        "reasoning": "Opposite corner",
-        "gameId": "game_1765023974967_6yrgveur4",
-        "timestamp": 1765023982531
-      },
-      {
-        "moveIndex": 7,
-        "boardState": [
-          "O",
-          "X",
-          "X",
-          "X",
-          "O",
-          "O",
-          "O",
-          "",
-          "X"
-        ],
-        "moveType": "side",
-        "reasoning": "Empty side",
-        "gameId": "game_1765023974967_6yrgveur4",
-        "timestamp": 1765023984009
-      },
-      {
-        "moveIndex": 4,
-        "boardState": [
-          "",
-          "",
-          "X",
-          "",
-          "",
-          "",
-          "",
-          "",
-          ""
-        ],
-        "moveType": "center",
-        "reasoning": "Taking center",
-        "gameId": "game_1765023999062_81hotg165",
-        "timestamp": 1765024002882
-      },
-      {
-        "moveIndex": 0,
-        "boardState": [
-          "",
-          "",
-          "X",
-          "",
-          "O",
-          "",
-          "X",
-          "",
-          ""
-        ],
-        "moveType": "block_fork",
-        "reasoning": "Blocking opponent fork",
-        "gameId": "game_1765023999062_81hotg165",
-        "timestamp": 1765024004721
-      },
-      {
-        "moveIndex": 7,
-        "boardState": [
-          "O",
-          "",
-          "X",
-          "",
-          "O",
-          "",
-          "X",
-          "",
-          "X"
-        ],
-        "moveType": "block",
-        "reasoning": "Blocking opponent win",
-        "gameId": "game_1765023999062_81hotg165",
-        "timestamp": 1765024006416
-      },
-      {
-        "moveIndex": 4,
-        "boardState": [
-          "",
-          "",
-          "",
-          "",
-          "",
-          "",
-          "",
-          "",
-          ""
-        ],
-        "moveType": "center",
-        "reasoning": "Taking center",
-        "gameId": "game_1765024013204_fdwg78q6x",
-        "timestamp": 1765024014936
-      },
-      {
-        "moveIndex": 6,
-        "boardState": [
-          "",
-          "X",
-          "",
-          "",
-          "O",
-          "",
-          "",
-          "",
-          ""
-        ],
-        "moveType": "corner",
-        "reasoning": "Empty corner",
-        "gameId": "game_1765024013204_fdwg78q6x",
-        "timestamp": 1765024016813
-      },
-      {
-        "moveIndex": 2,
-        "boardState": [
-          "X",
-          "X",
-          "",
-          "",
-          "O",
-          "",
-          "O",
-          "",
-          ""
-        ],
-        "moveType": "win",
-        "reasoning": "Immediate winning move",
-        "gameId": "game_1765024013204_fdwg78q6x",
-        "timestamp": 1765024018156
-      },
-      {
-        "moveIndex": 4,
-        "boardState": [
-          "",
-          "",
-          "X",
-          "",
-          "",
-          "",
-          "",
-          "",
-          ""
-        ],
-        "moveType": "center",
-        "reasoning": "Taking center",
-        "gameId": "game_1765024019157_j0oif9577",
-        "timestamp": 1765024023353
-      },
-      {
-        "moveIndex": 8,
-        "boardState": [
-          "",
-          "",
-          "X",
-          "",
-          "O",
-          "",
-          "X",
-          "",
-          ""
-        ],
-        "moveType": "block_fork",
-        "reasoning": "Blocking opponent fork",
-        "gameId": "game_1765024019157_j0oif9577",
-        "timestamp": 1765024025087
-      },
-      {
-        "moveIndex": 3,
-        "boardState": [
-          "X",
-          "",
-          "X",
-          "",
-          "O",
-          "",
-          "X",
-          "",
-          "O"
-        ],
-        "moveType": "block",
-        "reasoning": "Blocking opponent win",
-        "gameId": "game_1765024019157_j0oif9577",
-        "timestamp": 1765024026494
-      },
-      {
-        "moveIndex": 4,
-        "boardState": [
-          "X",
-          "",
-          "",
-          "",
-          "",
-          "",
-          "",
-          "",
-          ""
-        ],
-        "moveType": "center",
-        "reasoning": "Taking center",
-        "gameId": "game_1765024031898_xb9r3evjq",
-        "timestamp": 1765024033426
-      },
-      {
-        "moveIndex": 1,
-        "boardState": [
-          "X",
-          "",
-          "X",
-          "",
-          "O",
-          "",
-          "",
-          "",
-          ""
-        ],
-        "moveType": "block",
-        "reasoning": "Blocking opponent win",
-        "gameId": "game_1765024031898_xb9r3evjq",
-        "timestamp": 1765024034894
-      },
-      {
-        "moveIndex": 7,
-        "boardState": [
-          "X",
-          "O",
-          "X",
-          "",
-          "O",
-          "",
-          "",
-          "",
-          ""
-        ],
-        "moveType": "win",
-        "reasoning": "Immediate winning move",
-        "gameId": "game_1765024031898_xb9r3evjq",
-        "timestamp": 1765024036319
-      },
-      {
-        "moveIndex": 4,
-        "boardState": [
-          "",
-          "",
-          "X",
-          "",
-          "",
-          "",
-          "",
-          "",
-          ""
-        ],
-        "moveType": "center",
-        "reasoning": "Taking center",
-        "gameId": "game_1765024037320_w407qf88n",
-        "timestamp": 1765024040854
-      },
-      {
-        "moveIndex": 8,
-        "boardState": [
-          "",
-          "",
-          "X",
-          "",
-          "O",
-          "",
-          "X",
-          "",
-          ""
-        ],
-        "moveType": "block_fork",
-        "reasoning": "Blocking opponent fork",
-        "gameId": "game_1765024037320_w407qf88n",
-        "timestamp": 1765024042552
-      },
-      {
-        "moveIndex": 3,
-        "boardState": [
-          "X",
-          "",
-          "X",
-          "",
-          "O",
-          "",
-          "X",
-          "",
-          "O"
-        ],
-        "moveType": "block",
-        "reasoning": "Blocking opponent win",
-        "gameId": "game_1765024037320_w407qf88n",
-        "timestamp": 1765024044972
-      },
-      {
-        "moveIndex": 4,
-        "boardState": [
-          "",
-          "",
-          "",
-          "",
-          "",
-          "",
-          "",
-          "",
-          ""
-        ],
-        "moveType": "center",
-        "reasoning": "Taking center",
-        "gameId": "game_1765024048993_8s53kmct7",
-        "timestamp": 1765024050677
-      },
-      {
-        "moveIndex": 6,
-        "boardState": [
-          "",
-          "",
-          "X",
-          "",
-          "O",
-          "",
-          "",
-          "",
-          ""
-        ],
-        "moveType": "corner",
-        "reasoning": "Opposite corner",
-        "gameId": "game_1765024048993_8s53kmct7",
-        "timestamp": 1765024053498
-      },
-      {
-        "moveIndex": 0,
-        "boardState": [
-          "",
-          "X",
-          "X",
-          "",
-          "O",
-          "",
-          "O",
-          "",
-          ""
-        ],
-        "moveType": "block",
-        "reasoning": "Blocking opponent win",
-        "gameId": "game_1765024048993_8s53kmct7",
-        "timestamp": 1765024058700
-      },
-      {
-        "moveIndex": 3,
-        "boardState": [
-          "O",
-          "X",
-          "X",
-          "",
-          "O",
-          "",
-          "O",
-          "",
-          "X"
-        ],
-        "moveType": "win",
-        "reasoning": "Immediate winning move",
-        "gameId": "game_1765024048993_8s53kmct7",
-        "timestamp": 1765024061074
-      },
-      {
-        "moveIndex": 4,
-        "boardState": [
-          "X",
-          "",
-          "",
-          "",
-          "",
-          "",
-          "",
-          "",
-          ""
-        ],
-        "moveType": "center",
-        "reasoning": "Taking center",
-        "gameId": "game_1765024085677_tyq6nacvw",
-        "timestamp": 1765024089224
-      },
-      {
-        "moveIndex": 1,
-        "boardState": [
-          "X",
-          "",
-          "X",
-          "",
-          "O",
-          "",
-          "",
-          "",
-          ""
-        ],
-        "moveType": "block",
-        "reasoning": "Blocking opponent win",
-        "gameId": "game_1765024085677_tyq6nacvw",
-        "timestamp": 1765024091454
-      },
-      {
-        "moveIndex": 8,
-        "boardState": [
-          "X",
-          "O",
-          "X",
-          "",
-          "O",
-          "",
-          "",
-          "X",
-          ""
-        ],
-        "moveType": "block_fork",
-        "reasoning": "Blocking opponent fork",
-        "gameId": "game_1765024085677_tyq6nacvw",
-        "timestamp": 1765024093454
-      },
-      {
-        "moveIndex": 6,
-        "boardState": [
-          "X",
-          "O",
-          "X",
-          "X",
-          "O",
-          "",
-          "",
-          "X",
-          "O"
-        ],
-        "moveType": "block",
-        "reasoning": "Blocking opponent win",
-        "gameId": "game_1765024085677_tyq6nacvw",
-        "timestamp": 1765024096792
-      },
-      {
-        "moveIndex": 4,
-        "boardState": [
-          "",
-          "",
-          "",
-          "",
-          "",
-          "",
-          "",
-          "",
-          ""
-        ],
-        "moveType": "center",
-        "reasoning": "Taking center",
-        "gameId": "game_1765024100444_ytwkiqbel",
-        "timestamp": 1765024101447
-      },
-      {
-        "moveIndex": 6,
-        "boardState": [
-          "",
-          "",
-          "X",
-          "",
-          "O",
-          "",
-          "",
-          "",
-          ""
-        ],
-        "moveType": "corner",
-        "reasoning": "Opposite corner",
-        "gameId": "game_1765024100444_ytwkiqbel",
-        "timestamp": 1765024105763
-      },
-      {
-        "moveIndex": 1,
-        "boardState": [
-          "X",
-          "",
-          "X",
-          "",
-          "O",
-          "",
-          "O",
-          "",
-          ""
-        ],
-        "moveType": "block",
-        "reasoning": "Blocking opponent win",
-        "gameId": "game_1765024100444_ytwkiqbel",
-        "timestamp": 1765024107937
-      },
-      {
-        "moveIndex": 7,
-        "boardState": [
-          "X",
-          "O",
-          "X",
-          "",
-          "O",
-          "",
-          "O",
-          "",
-          "X"
-        ],
-        "moveType": "win",
-        "reasoning": "Immediate winning move",
-        "gameId": "game_1765024100444_ytwkiqbel",
-        "timestamp": 1765024110134
-      },
-      {
-        "moveIndex": 4,
-        "boardState": [
-          "",
-          "",
-          "",
-          "",
-          "",
-          "X",
-          "",
-          "",
-          ""
-        ],
-        "moveType": "center",
-        "reasoning": "Taking center",
-        "gameId": "game_1765024111133_n8v744lsh",
-        "timestamp": 1765024112405
-      },
-      {
-        "moveIndex": 8,
-        "boardState": [
-          "",
-          "",
-          "X",
-          "",
-          "O",
-          "X",
-          "",
-          "",
-          ""
-        ],
-        "moveType": "block",
-        "reasoning": "Blocking opponent win",
-        "gameId": "game_1765024111133_n8v744lsh",
-        "timestamp": 1765024120693
-      },
-      {
-        "moveIndex": 0,
-        "boardState": [
-          "",
-          "",
-          "X",
-          "",
-          "O",
-          "X",
-          "X",
-          "",
-          "O"
-        ],
-        "moveType": "win",
-        "reasoning": "Immediate winning move",
-        "gameId": "game_1765024111133_n8v744lsh",
-        "timestamp": 1765024123135
-      },
-      {
-        "moveIndex": 4,
-        "boardState": [
-          "",
-          "",
-          "",
-          "",
-          "",
-          "",
-          "",
-          "",
-          ""
-        ],
-        "moveType": "center",
-        "reasoning": "Taking center",
-        "gameId": "game_1765024124139_c5p3jaxqr",
-        "timestamp": 1765024125145
-      },
-      {
-        "moveIndex": 6,
-        "boardState": [
-          "",
-          "",
-          "X",
-          "",
-          "O",
-          "",
-          "",
-          "",
-          ""
-        ],
-        "moveType": "corner",
-        "reasoning": "Opposite corner",
-        "gameId": "game_1765024124139_c5p3jaxqr",
-        "timestamp": 1765024128742
-      },
-      {
-        "moveIndex": 5,
-        "boardState": [
-          "",
-          "",
-          "X",
-          "",
-          "O",
-          "",
-          "O",
-          "",
-          "X"
-        ],
-        "moveType": "block",
-        "reasoning": "Blocking opponent win",
-        "gameId": "game_1765024124139_c5p3jaxqr",
-        "timestamp": 1765024130588
-      },
-      {
-        "moveIndex": 0,
-        "boardState": [
-          "",
-          "",
-          "X",
-          "X",
-          "O",
-          "O",
-          "O",
-          "",
-          "X"
-        ],
-        "moveType": "corner",
-        "reasoning": "Opposite corner",
-        "gameId": "game_1765024124139_c5p3jaxqr",
-        "timestamp": 1765024133257
-      },
-      {
-        "moveIndex": 1,
-        "boardState": [
-          "O",
-          "",
-          "X",
-          "X",
-          "O",
-          "O",
-          "O",
-          "X",
-          "X"
-        ],
-        "moveType": "side",
-        "reasoning": "Empty side",
-        "gameId": "game_1765024124139_c5p3jaxqr",
-        "timestamp": 1765024136091
-      },
-      {
-        "moveIndex": 4,
-        "boardState": [
-          "",
-          "",
-          "X",
-          "",
-          "",
-          "",
-          "",
-          "",
-          ""
-        ],
-        "moveType": "center",
-        "reasoning": "Taking center",
-        "gameId": "game_1765024164824_iokslgc22",
-        "timestamp": 1765024173367
-      },
-      {
-        "moveIndex": 8,
-        "boardState": [
-          "",
-          "",
-          "X",
-          "",
-          "O",
-          "",
-          "X",
-          "",
-          ""
-        ],
-        "moveType": "block_fork",
-        "reasoning": "Blocking opponent fork",
-        "gameId": "game_1765024164824_iokslgc22",
-        "timestamp": 1765024174807
-      },
-      {
-        "moveIndex": 3,
-        "boardState": [
-          "X",
-          "",
-          "X",
-          "",
-          "O",
-          "",
-          "X",
-          "",
-          "O"
-        ],
-        "moveType": "block",
-        "reasoning": "Blocking opponent win",
-        "gameId": "game_1765024164824_iokslgc22",
-        "timestamp": 1765024176628
-      },
-      {
-        "moveIndex": 4,
-        "boardState": [
-          "",
-          "",
-          "",
-          "",
-          "",
-          "",
-          "",
-          "",
-          ""
-        ],
-        "moveType": "center",
-        "reasoning": "Taking center",
-        "gameId": "game_1765024180345_aprh6bihr",
-        "timestamp": 1765024181938
-      },
-      {
-        "moveIndex": 2,
-        "boardState": [
-          "",
-          "",
-          "",
-          "X",
-          "O",
-          "",
-          "",
-          "",
-          ""
-        ],
-        "moveType": "corner",
-        "reasoning": "Empty corner",
-        "gameId": "game_1765024180345_aprh6bihr",
-        "timestamp": 1765024188255
-      },
-      {
-        "moveIndex": 0,
-        "boardState": [
-          "",
-          "",
-          "O",
-          "X",
-          "O",
-          "",
-          "X",
-          "",
-          ""
-        ],
-        "moveType": "block",
-        "reasoning": "Blocking opponent win",
-        "gameId": "game_1765024180345_aprh6bihr",
-        "timestamp": 1765024190378
-      },
-      {
-        "moveIndex": 1,
-        "boardState": [
-          "O",
-          "",
-          "O",
-          "X",
-          "O",
-          "",
-          "X",
-          "",
-          "X"
-        ],
-        "moveType": "win",
-        "reasoning": "Immediate winning move",
-        "gameId": "game_1765024180345_aprh6bihr",
-        "timestamp": 1765024192860
-      },
-      {
-        "moveIndex": 4,
-        "boardState": [
-          "",
-          "X",
-          "",
-          "",
-          "",
-          "",
-          "",
-          "",
-          ""
-        ],
-        "moveType": "center",
-        "reasoning": "Taking center",
-        "gameId": "game_1765024193862_c8rp3b2sy",
-        "timestamp": 1765024204021
-      },
-      {
-        "moveIndex": 0,
-        "boardState": [
-          "",
-          "X",
-          "",
-          "X",
-          "O",
-          "",
-          "",
-          "",
-          ""
-        ],
-        "moveType": "block_fork",
-        "reasoning": "Blocking opponent fork",
-        "gameId": "game_1765024193862_c8rp3b2sy",
-        "timestamp": 1765024205929
-      },
-      {
-        "moveIndex": 8,
-        "boardState": [
-          "O",
-          "X",
-          "X",
-          "X",
-          "O",
-          "",
-          "",
-          "",
-          ""
-        ],
-        "moveType": "win",
-        "reasoning": "Immediate winning move",
-        "gameId": "game_1765024193862_c8rp3b2sy",
-        "timestamp": 1765024207652
-      },
-      {
-        "moveIndex": 4,
-        "boardState": [
-          "",
-          "",
-          "",
-          "",
-          "",
-          "",
-          "",
-          "",
-          ""
-        ],
-        "moveType": "center",
-        "reasoning": "Taking center",
-        "gameId": "game_1765024208653_r6p754utn",
-        "timestamp": 1765024209566
-      },
-      {
-        "moveIndex": 6,
-        "boardState": [
-          "",
-          "",
-          "X",
-          "",
-          "O",
-          "",
-          "",
-          "",
-          ""
-        ],
-        "moveType": "corner",
-        "reasoning": "Opposite corner",
-        "gameId": "game_1765024208653_r6p754utn",
-        "timestamp": 1765024212932
-      },
-      {
-        "moveIndex": 8,
-        "boardState": [
-          "",
-          "",
-          "X",
-          "",
-          "O",
-          "X",
-          "O",
-          "",
-          ""
-        ],
-        "moveType": "block",
-        "reasoning": "Blocking opponent win",
-        "gameId": "game_1765024208653_r6p754utn",
-        "timestamp": 1765024216293
-      },
-      {
-        "moveIndex": 7,
-        "boardState": [
-          "X",
-          "",
-          "X",
-          "",
-          "O",
-          "X",
-          "O",
-          "",
-          "O"
-        ],
-        "moveType": "win",
-        "reasoning": "Immediate winning move",
-        "gameId": "game_1765024208653_r6p754utn",
-        "timestamp": 1765024218780
-      },
-      {
-        "moveIndex": 4,
-        "boardState": [
-          "",
-          "",
-          "X",
-          "",
-          "",
-          "",
-          "",
-          "",
-          ""
-        ],
-        "moveType": "center",
-        "reasoning": "Taking center",
-        "gameId": "game_1765024244910_rht67vypq",
-        "timestamp": 1765024250383
-      },
-      {
-        "moveIndex": 0,
-        "boardState": [
-          "",
-          "",
-          "X",
-          "",
-          "O",
-          "",
-          "X",
-          "",
-          ""
-        ],
-        "moveType": "block_fork",
-        "reasoning": "Blocking opponent fork",
-        "gameId": "game_1765024244910_rht67vypq",
-        "timestamp": 1765024252085
-      },
-      {
-        "moveIndex": 7,
-        "boardState": [
-          "O",
-          "",
-          "X",
-          "",
-          "O",
-          "",
-          "X",
-          "",
-          "X"
-        ],
-        "moveType": "block",
-        "reasoning": "Blocking opponent win",
-        "gameId": "game_1765024244910_rht67vypq",
-        "timestamp": 1765024254312
-      },
-      {
-        "moveIndex": 4,
-        "boardState": [
-          "",
-          "",
-          "",
-          "",
-          "",
-          "",
-          "",
-          "",
-          ""
-        ],
-        "moveType": "center",
-        "reasoning": "Taking center",
-        "gameId": "game_1765024259479_azye3tue3",
-        "timestamp": 1765024261087
-      },
-      {
-        "moveIndex": 6,
-        "boardState": [
-          "",
-          "",
-          "X",
-          "",
-          "O",
-          "",
-          "",
-          "",
-          ""
-        ],
-        "moveType": "corner",
-        "reasoning": "Opposite corner",
-        "gameId": "game_1765024259479_azye3tue3",
-        "timestamp": 1765024263370
-      },
-      {
-        "moveIndex": 8,
-        "boardState": [
-          "",
-          "",
-          "X",
-          "",
-          "O",
-          "X",
-          "O",
-          "",
-          ""
-        ],
-        "moveType": "block",
-        "reasoning": "Blocking opponent win",
-        "gameId": "game_1765024259479_azye3tue3",
-        "timestamp": 1765024265202
-      },
-      {
-        "moveIndex": 7,
-        "boardState": [
-          "X",
-          "",
-          "X",
-          "",
-          "O",
-          "X",
-          "O",
-          "",
-          "O"
-        ],
-        "moveType": "win",
-        "reasoning": "Immediate winning move",
-        "gameId": "game_1765024259479_azye3tue3",
-        "timestamp": 1765024267829
-      },
-      {
-        "moveIndex": 4,
-        "boardState": [
-          "",
-          "",
-          "X",
-          "",
-          "",
-          "",
-          "",
-          "",
-          ""
-        ],
-        "moveType": "center",
-        "reasoning": "Taking center",
-        "gameId": "game_1765024268830_1hshla45u",
-        "timestamp": 1765024271814
-      },
-      {
-        "moveIndex": 0,
-        "boardState": [
-          "",
-          "",
-          "X",
-          "",
-          "O",
-          "",
-          "X",
-          "",
-          ""
-        ],
-        "moveType": "block_fork",
-        "reasoning": "Blocking opponent fork",
-        "gameId": "game_1765024268830_1hshla45u",
-        "timestamp": 1765024273617
-      },
-      {
-        "moveIndex": 7,
-        "boardState": [
-          "O",
-          "",
-          "X",
-          "",
-          "O",
-          "",
-          "X",
-          "",
-          "X"
-        ],
-        "moveType": "block",
-        "reasoning": "Blocking opponent win",
-        "gameId": "game_1765024268830_1hshla45u",
-        "timestamp": 1765024275821
-      },
-      {
-        "moveIndex": 4,
-        "boardState": [
-          "",
-          "",
-          "",
-          "",
-          "",
-          "",
-          "",
-          "",
-          ""
-        ],
-        "moveType": "center",
-        "reasoning": "Taking center",
-        "gameId": "game_1765024278764_fb36sqlp1",
-        "timestamp": 1765024280374
-      },
-      {
-        "moveIndex": 6,
-        "boardState": [
-          "",
-          "",
-          "X",
-          "",
-          "O",
-          "",
-          "",
-          "",
-          ""
-        ],
-        "moveType": "corner",
-        "reasoning": "Opposite corner",
-        "gameId": "game_1765024278764_fb36sqlp1",
-        "timestamp": 1765024282865
-      },
-      {
-        "moveIndex": 1,
-        "boardState": [
-          "X",
-          "",
-          "X",
-          "",
-          "O",
-          "",
-          "O",
-          "",
-          ""
-        ],
-        "moveType": "block",
-        "reasoning": "Blocking opponent win",
-        "gameId": "game_1765024278764_fb36sqlp1",
-        "timestamp": 1765024285481
-      },
-      {
-        "moveIndex": 8,
-        "boardState": [
-          "X",
-          "O",
-          "X",
-          "",
-          "O",
-          "",
-          "O",
-          "X",
-          ""
-        ],
-        "moveType": "corner",
-        "reasoning": "Opposite corner",
-        "gameId": "game_1765024278764_fb36sqlp1",
-        "timestamp": 1765024287768
-      },
-      {
-        "moveIndex": 5,
-        "boardState": [
-          "X",
-          "O",
-          "X",
-          "X",
-          "O",
-          "",
-          "O",
-          "X",
-          "O"
-        ],
-        "moveType": "side",
-        "reasoning": "Empty side",
-        "gameId": "game_1765024278764_fb36sqlp1",
-        "timestamp": 1765024290581
-      },
-      {
-        "moveIndex": 4,
-        "boardState": [
-          "",
-          "",
-          "X",
-          "",
-          "",
-          "",
-          "",
-          "",
-          ""
-        ],
-        "moveType": "center",
-        "reasoning": "Taking center",
-        "gameId": "game_1765025573646_fhjmaa2ht",
-        "timestamp": 1765025576915
-      },
-      {
-        "moveIndex": 0,
-        "boardState": [
-          "",
-          "X",
-          "X",
-          "",
-          "O",
-          "",
-          "",
-          "",
-          ""
-        ],
-        "moveType": "block",
-        "reasoning": "Blocking opponent win",
-        "gameId": "game_1765025573646_fhjmaa2ht",
-        "timestamp": 1765025578239
-      },
-      {
-        "moveIndex": 8,
-        "boardState": [
-          "O",
-          "X",
-          "X",
-          "X",
-          "O",
-          "",
-          "",
-          "",
-          ""
-        ],
-        "moveType": "win",
-        "reasoning": "Immediate winning move",
-        "gameId": "game_1765025573646_fhjmaa2ht",
-        "timestamp": 1765025580936
-      },
-      {
-        "moveIndex": 4,
-        "boardState": [
-          "",
-          "",
-          "",
-          "",
-          "",
-          "",
-          "",
-          "",
-          ""
-        ],
-        "moveType": "center",
-        "reasoning": "Taking center",
-        "gameId": "game_1765025582272_e4x44barp",
-        "timestamp": 1765025583035
-      },
-      {
-        "moveIndex": 8,
-        "boardState": [
-          "",
-          "X",
-          "",
-          "",
-          "O",
-          "",
-          "",
-          "",
-          ""
-        ],
-        "moveType": "corner",
-        "reasoning": "Empty corner",
-        "gameId": "game_1765025582272_e4x44barp",
-        "timestamp": 1765025584201
-      },
-      {
-        "moveIndex": 4,
-        "boardState": [
-          "",
-          "",
-          "",
-          "",
-          "",
-          "",
-          "",
-          "",
-          ""
-        ],
-        "moveType": "center",
-        "reasoning": "Taking center",
-        "gameId": "game_1765025585939_b0xp93phd",
-        "timestamp": 1765025586596
-      },
-      {
-        "moveIndex": 0,
-        "boardState": [
-          "",
-          "",
-          "",
-          "",
-          "O",
-          "",
-          "",
-          "",
-          ""
-        ],
-        "moveType": "corner",
-        "reasoning": "Empty corner",
-        "gameId": "game_1765025585939_b0xp93phd",
-        "timestamp": 1765025586761
-      },
-      {
-        "moveIndex": 8,
-        "boardState": [
-          "O",
-          "X",
-          "",
-          "",
-          "O",
-          "",
-          "",
-          "",
-          ""
-        ],
-        "moveType": "win",
-        "reasoning": "Immediate winning move",
-        "gameId": "game_1765025585939_b0xp93phd",
-        "timestamp": 1765025588210
-      },
-      {
-        "moveIndex": 8,
-        "boardState": [
-          "",
-          "",
-          "",
-          "",
-          "X",
-          "",
-          "",
-          "",
-          ""
-        ],
-        "moveType": "corner",
-        "reasoning": "Empty corner",
-        "gameId": "game_1765025589202_vyi40yuvv",
-        "timestamp": 1765025591948
-      },
-      {
-        "moveIndex": 2,
-        "boardState": [
-          "",
-          "",
-          "",
-          "",
-          "X",
-          "",
-          "X",
-          "",
-          "O"
-        ],
-        "moveType": "block",
-        "reasoning": "Blocking opponent win",
-        "gameId": "game_1765025589202_vyi40yuvv",
-        "timestamp": 1765025594105
-      },
-      {
-        "moveIndex": 5,
-        "boardState": [
-          "",
-          "",
-          "O",
-          "",
-          "X",
-          "",
-          "X",
-          "X",
-          "O"
-        ],
-        "moveType": "win",
-        "reasoning": "Immediate winning move",
-        "gameId": "game_1765025589202_vyi40yuvv",
-        "timestamp": 1765025596411
-      },
-      {
-        "moveIndex": 4,
-        "boardState": [
-          "",
-          "X",
-          "",
-          "",
-          "",
-          "",
-          "",
-          "",
-          ""
-        ],
-        "moveType": "center",
-        "reasoning": "Taking center",
-        "gameId": "game_1765027696556_48apuwtxi",
-        "timestamp": 1765027707582
-      },
-      {
-        "moveIndex": 2,
-        "boardState": [
-          "X",
-          "X",
-          "",
-          "",
-          "O",
-          "",
-          "",
-          "",
-          ""
-        ],
-        "moveType": "block",
-        "reasoning": "Blocking opponent win",
-        "gameId": "game_1765027696556_48apuwtxi",
-        "timestamp": 1765027709433
-      },
-      {
-        "moveIndex": 6,
-        "boardState": [
-          "X",
-          "X",
-          "O",
-          "",
-          "O",
-          "",
-          "",
-          "",
-          "X"
-        ],
-        "moveType": "win",
-        "reasoning": "Immediate winning move",
-        "gameId": "game_1765027696556_48apuwtxi",
-        "timestamp": 1765027711113
-      },
-      {
-        "moveIndex": 4,
-        "boardState": [
-          "",
-          "",
-          "",
-          "",
-          "",
-          "",
-          "",
-          "",
-          ""
-        ],
-        "moveType": "center",
-        "reasoning": "Taking center",
-        "gameId": "game_1765027716117_6k6df4lqx",
-        "timestamp": 1765027717147
-      },
-      {
-        "moveIndex": 4,
-        "boardState": [
-          "X",
-          "",
-          "",
-          "",
-          "",
-          "",
-          "",
-          "",
-          ""
-        ],
-        "moveType": "center",
-        "reasoning": "Taking center",
-        "gameId": "game_1765027927985_r6x6qnljg",
-        "timestamp": 1765027933813
-      },
-      {
-        "moveIndex": 2,
-        "boardState": [
-          "X",
-          "X",
-          "",
-          "",
-          "O",
-          "",
-          "",
-          "",
-          ""
-        ],
-        "moveType": "block",
-        "reasoning": "Blocking opponent win",
-        "gameId": "game_1765027927985_r6x6qnljg",
-        "timestamp": 1765027944990
-      },
-      {
-        "moveIndex": 3,
-        "boardState": [
-          "X",
-          "X",
-          "O",
-          "",
-          "O",
-          "",
-          "X",
-          "",
-          ""
-        ],
-        "moveType": "block",
-        "reasoning": "Blocking opponent win",
-        "gameId": "game_1765027927985_r6x6qnljg",
-        "timestamp": 1765027947784
-      },
-      {
-        "moveIndex": 8,
-        "boardState": [
-          "X",
-          "X",
-          "O",
-          "O",
-          "O",
-          "X",
-          "X",
-          "",
-          ""
-        ],
-        "moveType": "corner",
-        "reasoning": "Opposite corner",
-        "gameId": "game_1765027927985_r6x6qnljg",
-        "timestamp": 1765027950033
-      },
-      {
-        "moveIndex": 4,
-        "boardState": [
-          "",
-          "",
-          "",
-          "",
-          "",
-          "",
-          "",
-          "",
-          ""
-        ],
-        "moveType": "center",
-        "reasoning": "Taking center",
-        "gameId": "game_1765027953439_zfycbblj7",
-        "timestamp": 1765027954590
-      },
-      {
-        "moveIndex": 8,
-        "boardState": [
-          "X",
-          "",
-          "",
-          "",
-          "O",
-          "",
-          "",
-          "",
-          ""
-        ],
-        "moveType": "corner",
-        "reasoning": "Opposite corner",
-        "gameId": "game_1765027953439_zfycbblj7",
-        "timestamp": 1765027956354
-      },
-      {
-        "moveIndex": 1,
-        "boardState": [
-          "X",
-          "",
-          "X",
-          "",
-          "O",
-          "",
-          "",
-          "",
-          "O"
-        ],
-        "moveType": "block",
-        "reasoning": "Blocking opponent win",
-        "gameId": "game_1765027953439_zfycbblj7",
-        "timestamp": 1765027958327
-      },
-      {
-        "moveIndex": 6,
-        "boardState": [
-          "X",
-          "O",
-          "X",
-          "",
-          "O",
-          "",
-          "",
-          "X",
-          "O"
-        ],
-        "moveType": "corner",
-        "reasoning": "Opposite corner",
-        "gameId": "game_1765027953439_zfycbblj7",
-        "timestamp": 1765027960261
-      },
-      {
-        "moveIndex": 5,
-        "boardState": [
-          "X",
-          "O",
-          "X",
-          "X",
-          "O",
-          "",
-          "O",
-          "X",
-          "O"
-        ],
-        "moveType": "side",
-        "reasoning": "Empty side",
-        "gameId": "game_1765027953439_zfycbblj7",
-        "timestamp": 1765027962890
-      },
-      {
-        "moveIndex": 4,
-        "boardState": [
-          "X",
-          "",
-          "",
-          "",
-          "",
-          "",
-          "",
-          "",
-          ""
-        ],
-        "moveType": "center",
-        "reasoning": "Taking center",
-        "gameId": "game_1765027998435_dshzbokit",
-        "timestamp": 1765028002291
-      },
-      {
-        "moveIndex": 2,
-        "boardState": [
-          "X",
-          "X",
-          "",
-          "",
-          "O",
-          "",
-          "",
-          "",
-          ""
-        ],
-        "moveType": "block",
-        "reasoning": "Blocking opponent win",
-        "gameId": "game_1765027998435_dshzbokit",
-        "timestamp": 1765028003540
-      },
-      {
-        "moveIndex": 3,
-        "boardState": [
-          "X",
-          "X",
-          "O",
-          "",
-          "O",
-          "",
-          "X",
-          "",
-          ""
-        ],
-        "moveType": "block",
-        "reasoning": "Blocking opponent win",
-        "gameId": "game_1765027998435_dshzbokit",
-        "timestamp": 1765028011938
-      },
       {
         "moveIndex": 8,
         "boardState": [
@@ -20984,10 +19459,1756 @@
         "reasoning": "Opposite corner",
         "gameId": "game_1767638852244_mmt4ji03f",
         "timestamp": 1767638862527
+      },
+      {
+        "moveIndex": 4,
+        "boardState": [
+          "X",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          ""
+        ],
+        "moveType": "center",
+        "reasoning": "Taking center",
+        "gameId": "game_1767639966771_cnwdfcat3",
+        "timestamp": 1767639969107
+      },
+      {
+        "moveIndex": 2,
+        "boardState": [
+          "X",
+          "X",
+          "",
+          "",
+          "O",
+          "",
+          "",
+          "",
+          ""
+        ],
+        "moveType": "block",
+        "reasoning": "Blocking opponent win",
+        "gameId": "game_1767639966771_cnwdfcat3",
+        "timestamp": 1767639971264
+      },
+      {
+        "moveIndex": 3,
+        "boardState": [
+          "X",
+          "X",
+          "O",
+          "",
+          "O",
+          "",
+          "X",
+          "",
+          ""
+        ],
+        "moveType": "block",
+        "reasoning": "Blocking opponent win",
+        "gameId": "game_1767639966771_cnwdfcat3",
+        "timestamp": 1767639974067
+      },
+      {
+        "moveIndex": 5,
+        "boardState": [
+          "X",
+          "X",
+          "O",
+          "O",
+          "O",
+          "",
+          "X",
+          "",
+          "X"
+        ],
+        "moveType": "win",
+        "reasoning": "Immediate winning move",
+        "gameId": "game_1767639966771_cnwdfcat3",
+        "timestamp": 1767639977271
+      },
+      {
+        "moveIndex": 4,
+        "boardState": [
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          ""
+        ],
+        "moveType": "center",
+        "reasoning": "Taking center",
+        "gameId": "game_1767639978284_52mfqfvnp",
+        "timestamp": 1767639979497
+      },
+      {
+        "moveIndex": 8,
+        "boardState": [
+          "",
+          "X",
+          "",
+          "",
+          "O",
+          "",
+          "",
+          "",
+          ""
+        ],
+        "moveType": "corner",
+        "reasoning": "Empty corner",
+        "gameId": "game_1767639978284_52mfqfvnp",
+        "timestamp": 1767639980769
+      },
+      {
+        "moveIndex": 2,
+        "boardState": [
+          "X",
+          "X",
+          "",
+          "",
+          "O",
+          "",
+          "",
+          "",
+          "O"
+        ],
+        "moveType": "block",
+        "reasoning": "Blocking opponent win",
+        "gameId": "game_1767639978284_52mfqfvnp",
+        "timestamp": 1767639982350
+      },
+      {
+        "moveIndex": 5,
+        "boardState": [
+          "X",
+          "X",
+          "O",
+          "",
+          "O",
+          "",
+          "X",
+          "",
+          "O"
+        ],
+        "moveType": "win",
+        "reasoning": "Immediate winning move",
+        "gameId": "game_1767639978284_52mfqfvnp",
+        "timestamp": 1767639984137
+      },
+      {
+        "moveIndex": 4,
+        "boardState": [
+          "",
+          "X",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          ""
+        ],
+        "moveType": "center",
+        "reasoning": "Taking center",
+        "gameId": "game_1767639985142_2ic39fnfx",
+        "timestamp": 1767639992580
+      },
+      {
+        "moveIndex": 2,
+        "boardState": [
+          "X",
+          "X",
+          "",
+          "",
+          "O",
+          "",
+          "",
+          "",
+          ""
+        ],
+        "moveType": "block",
+        "reasoning": "Blocking opponent win",
+        "gameId": "game_1767639985142_2ic39fnfx",
+        "timestamp": 1767639994920
+      },
+      {
+        "moveIndex": 3,
+        "boardState": [
+          "X",
+          "X",
+          "O",
+          "",
+          "O",
+          "",
+          "X",
+          "",
+          ""
+        ],
+        "moveType": "block",
+        "reasoning": "Blocking opponent win",
+        "gameId": "game_1767639985142_2ic39fnfx",
+        "timestamp": 1767639997212
+      },
+      {
+        "moveIndex": 5,
+        "boardState": [
+          "X",
+          "X",
+          "O",
+          "O",
+          "O",
+          "",
+          "X",
+          "X",
+          ""
+        ],
+        "moveType": "win",
+        "reasoning": "Immediate winning move",
+        "gameId": "game_1767639985142_2ic39fnfx",
+        "timestamp": 1767639999829
+      },
+      {
+        "moveIndex": 4,
+        "boardState": [
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          ""
+        ],
+        "moveType": "center",
+        "reasoning": "Taking center",
+        "gameId": "game_1767640000823_7pwow0pwt",
+        "timestamp": 1767640001963
+      },
+      {
+        "moveIndex": 4,
+        "boardState": [
+          "X",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          ""
+        ],
+        "moveType": "center",
+        "reasoning": "Taking center",
+        "gameId": "game_1767642708501_f7crmo0il",
+        "timestamp": 1767642713788
+      },
+      {
+        "moveIndex": 3,
+        "boardState": [
+          "X",
+          "",
+          "",
+          "",
+          "O",
+          "",
+          "X",
+          "",
+          ""
+        ],
+        "moveType": "block",
+        "reasoning": "Blocking opponent win",
+        "gameId": "game_1767642708501_f7crmo0il",
+        "timestamp": 1767642715765
+      },
+      {
+        "moveIndex": 5,
+        "boardState": [
+          "X",
+          "X",
+          "",
+          "O",
+          "O",
+          "",
+          "X",
+          "",
+          ""
+        ],
+        "moveType": "win",
+        "reasoning": "Immediate winning move",
+        "gameId": "game_1767642708501_f7crmo0il",
+        "timestamp": 1767642717544
+      },
+      {
+        "moveIndex": 4,
+        "boardState": [
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          ""
+        ],
+        "moveType": "center",
+        "reasoning": "Taking center",
+        "gameId": "game_1767642718554_5lgd7y03d",
+        "timestamp": 1767642719632
+      },
+      {
+        "moveIndex": 0,
+        "boardState": [
+          "",
+          "X",
+          "",
+          "",
+          "O",
+          "",
+          "",
+          "",
+          ""
+        ],
+        "moveType": "corner",
+        "reasoning": "Empty corner",
+        "gameId": "game_1767642718554_5lgd7y03d",
+        "timestamp": 1767642720360
+      },
+      {
+        "moveIndex": 8,
+        "boardState": [
+          "O",
+          "X",
+          "X",
+          "",
+          "O",
+          "",
+          "",
+          "",
+          ""
+        ],
+        "moveType": "win",
+        "reasoning": "Immediate winning move",
+        "gameId": "game_1767642718554_5lgd7y03d",
+        "timestamp": 1767642722267
+      },
+      {
+        "moveIndex": 6,
+        "boardState": [
+          "",
+          "",
+          "",
+          "",
+          "X",
+          "",
+          "",
+          "",
+          ""
+        ],
+        "moveType": "corner",
+        "reasoning": "Empty corner",
+        "gameId": "game_1767642723261_khmvpd2cc",
+        "timestamp": 1767642725824
+      },
+      {
+        "moveIndex": 1,
+        "boardState": [
+          "",
+          "",
+          "X",
+          "",
+          "X",
+          "",
+          "O",
+          "",
+          ""
+        ],
+        "moveType": "block_fork",
+        "reasoning": "Blocking opponent fork",
+        "gameId": "game_1767642723261_khmvpd2cc",
+        "timestamp": 1767642727806
+      },
+      {
+        "moveIndex": 3,
+        "boardState": [
+          "",
+          "O",
+          "X",
+          "",
+          "X",
+          "X",
+          "O",
+          "",
+          ""
+        ],
+        "moveType": "block",
+        "reasoning": "Blocking opponent win",
+        "gameId": "game_1767642723261_khmvpd2cc",
+        "timestamp": 1767642729977
+      },
+      {
+        "moveIndex": 4,
+        "boardState": [
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          ""
+        ],
+        "moveType": "center",
+        "reasoning": "Taking center",
+        "gameId": "game_1767642738747_ezsc6n1be",
+        "timestamp": 1767642740458
+      },
+      {
+        "moveIndex": 6,
+        "boardState": [
+          "",
+          "",
+          "X",
+          "",
+          "O",
+          "",
+          "",
+          "",
+          ""
+        ],
+        "moveType": "corner",
+        "reasoning": "Opposite corner",
+        "gameId": "game_1767642738747_ezsc6n1be",
+        "timestamp": 1767642744609
+      },
+      {
+        "moveIndex": 8,
+        "boardState": [
+          "",
+          "",
+          "X",
+          "",
+          "O",
+          "X",
+          "O",
+          "",
+          ""
+        ],
+        "moveType": "block",
+        "reasoning": "Blocking opponent win",
+        "gameId": "game_1767642738747_ezsc6n1be",
+        "timestamp": 1767642746835
+      },
+      {
+        "moveIndex": 7,
+        "boardState": [
+          "",
+          "X",
+          "X",
+          "",
+          "O",
+          "X",
+          "O",
+          "",
+          "O"
+        ],
+        "moveType": "win",
+        "reasoning": "Immediate winning move",
+        "gameId": "game_1767642738747_ezsc6n1be",
+        "timestamp": 1767642750183
+      },
+      {
+        "moveIndex": 4,
+        "boardState": [
+          "X",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          ""
+        ],
+        "moveType": "center",
+        "reasoning": "Taking center",
+        "gameId": "game_1767642815409_gk47ucvz7",
+        "timestamp": 1767642817806
+      },
+      {
+        "moveIndex": 2,
+        "boardState": [
+          "X",
+          "X",
+          "",
+          "",
+          "O",
+          "",
+          "",
+          "",
+          ""
+        ],
+        "moveType": "block",
+        "reasoning": "Blocking opponent win",
+        "gameId": "game_1767642815409_gk47ucvz7",
+        "timestamp": 1767642819658
+      },
+      {
+        "moveIndex": 6,
+        "boardState": [
+          "X",
+          "X",
+          "O",
+          "",
+          "O",
+          "",
+          "",
+          "X",
+          ""
+        ],
+        "moveType": "win",
+        "reasoning": "Immediate winning move",
+        "gameId": "game_1767642815409_gk47ucvz7",
+        "timestamp": 1767642821382
+      },
+      {
+        "moveIndex": 4,
+        "boardState": [
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          ""
+        ],
+        "moveType": "center",
+        "reasoning": "Taking center",
+        "gameId": "game_1767642822380_ctv2w9xt1",
+        "timestamp": 1767642823564
+      },
+      {
+        "moveIndex": 8,
+        "boardState": [
+          "X",
+          "",
+          "",
+          "",
+          "O",
+          "",
+          "",
+          "",
+          ""
+        ],
+        "moveType": "corner",
+        "reasoning": "Opposite corner",
+        "gameId": "game_1767642822380_ctv2w9xt1",
+        "timestamp": 1767642825895
+      },
+      {
+        "moveIndex": 2,
+        "boardState": [
+          "X",
+          "X",
+          "",
+          "",
+          "O",
+          "",
+          "",
+          "",
+          "O"
+        ],
+        "moveType": "block",
+        "reasoning": "Blocking opponent win",
+        "gameId": "game_1767642822380_ctv2w9xt1",
+        "timestamp": 1767642827559
+      },
+      {
+        "moveIndex": 6,
+        "boardState": [
+          "X",
+          "X",
+          "O",
+          "",
+          "O",
+          "X",
+          "",
+          "",
+          "O"
+        ],
+        "moveType": "win",
+        "reasoning": "Immediate winning move",
+        "gameId": "game_1767642822380_ctv2w9xt1",
+        "timestamp": 1767642829935
+      },
+      {
+        "moveIndex": 4,
+        "boardState": [
+          "",
+          "X",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          ""
+        ],
+        "moveType": "center",
+        "reasoning": "Taking center",
+        "gameId": "game_1767643566717_9alth2kvk",
+        "timestamp": 1767643604150
+      },
+      {
+        "moveIndex": 0,
+        "boardState": [
+          "",
+          "X",
+          "",
+          "X",
+          "O",
+          "",
+          "",
+          "",
+          ""
+        ],
+        "moveType": "block_fork",
+        "reasoning": "Blocking opponent fork",
+        "gameId": "game_1767643566717_9alth2kvk",
+        "timestamp": 1767643606797
+      },
+      {
+        "moveIndex": 2,
+        "boardState": [
+          "O",
+          "X",
+          "",
+          "X",
+          "O",
+          "",
+          "",
+          "",
+          "X"
+        ],
+        "moveType": "corner",
+        "reasoning": "Empty corner",
+        "gameId": "game_1767643566717_9alth2kvk",
+        "timestamp": 1767643619069
+      },
+      {
+        "moveIndex": 4,
+        "boardState": [
+          "",
+          "X",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          ""
+        ],
+        "moveType": "center",
+        "reasoning": "Taking center",
+        "gameId": "game_1767643697768_kyjmixhzt",
+        "timestamp": 1767643705543
+      },
+      {
+        "moveIndex": 4,
+        "boardState": [
+          "X",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          ""
+        ],
+        "moveType": "center",
+        "reasoning": "Taking center",
+        "gameId": "game_1767644149077_9ml1rfpho",
+        "timestamp": 1767644161483
+      },
+      {
+        "moveIndex": 8,
+        "boardState": [
+          "X",
+          "",
+          "",
+          "",
+          "O",
+          "",
+          "",
+          "",
+          ""
+        ],
+        "moveType": "corner",
+        "reasoning": "Opposite corner",
+        "gameId": "game_1767644149077_9ml1rfpho",
+        "timestamp": 1767644162689
+      },
+      {
+        "moveIndex": 2,
+        "boardState": [
+          "X",
+          "",
+          "",
+          "",
+          "O",
+          "",
+          "",
+          "",
+          "X"
+        ],
+        "moveType": "block_fork",
+        "reasoning": "Blocking opponent fork",
+        "gameId": "game_1767644149077_9ml1rfpho",
+        "timestamp": 1767644166510
+      },
+      {
+        "moveIndex": 6,
+        "boardState": [
+          "X",
+          "X",
+          "O",
+          "",
+          "O",
+          "",
+          "",
+          "",
+          "X"
+        ],
+        "moveType": "win",
+        "reasoning": "Immediate winning move",
+        "gameId": "game_1767644149077_9ml1rfpho",
+        "timestamp": 1767644175470
+      },
+      {
+        "moveIndex": 4,
+        "boardState": [
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          ""
+        ],
+        "moveType": "center",
+        "reasoning": "Taking center",
+        "gameId": "game_1767644175466_3gobpj7bm",
+        "timestamp": 1767644177968
+      },
+      {
+        "moveIndex": 8,
+        "boardState": [
+          "X",
+          "",
+          "",
+          "",
+          "O",
+          "",
+          "",
+          "",
+          ""
+        ],
+        "moveType": "corner",
+        "reasoning": "Opposite corner",
+        "gameId": "game_1767644175466_3gobpj7bm",
+        "timestamp": 1767644187676
+      },
+      {
+        "moveIndex": 2,
+        "boardState": [
+          "X",
+          "X",
+          "",
+          "",
+          "O",
+          "",
+          "",
+          "",
+          "O"
+        ],
+        "moveType": "block",
+        "reasoning": "Blocking opponent win",
+        "gameId": "game_1767644175466_3gobpj7bm",
+        "timestamp": 1767644192936
+      },
+      {
+        "moveIndex": 4,
+        "boardState": [
+          "X",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          ""
+        ],
+        "moveType": "center",
+        "reasoning": "Taking center",
+        "gameId": "game_1767644120085_88j25imyd",
+        "timestamp": 1767644198445
+      },
+      {
+        "moveIndex": 3,
+        "boardState": [
+          "X",
+          "",
+          "",
+          "",
+          "O",
+          "",
+          "X",
+          "",
+          ""
+        ],
+        "moveType": "block",
+        "reasoning": "Blocking opponent win",
+        "gameId": "game_1767644120085_88j25imyd",
+        "timestamp": 1767644202402
+      },
+      {
+        "moveIndex": 5,
+        "boardState": [
+          "X",
+          "X",
+          "O",
+          "",
+          "O",
+          "",
+          "",
+          "",
+          "O"
+        ],
+        "moveType": "win",
+        "reasoning": "Immediate winning move",
+        "gameId": "game_1767644175466_3gobpj7bm",
+        "timestamp": 1767644204942
+      },
+      {
+        "moveIndex": 6,
+        "boardState": [
+          "X",
+          "X",
+          "O",
+          "",
+          "O",
+          "X",
+          "",
+          "",
+          "O"
+        ],
+        "moveType": "win",
+        "reasoning": "Immediate winning move",
+        "gameId": "game_1767644175466_3gobpj7bm",
+        "timestamp": 1767644207188
+      },
+      {
+        "moveIndex": 4,
+        "boardState": [
+          "",
+          "X",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          ""
+        ],
+        "moveType": "center",
+        "reasoning": "Taking center",
+        "gameId": "game_1767645009315_g3boeppf6",
+        "timestamp": 1767645012365
+      },
+      {
+        "moveIndex": 2,
+        "boardState": [
+          "X",
+          "X",
+          "",
+          "",
+          "O",
+          "",
+          "",
+          "",
+          ""
+        ],
+        "moveType": "block",
+        "reasoning": "Blocking opponent win",
+        "gameId": "game_1767645009315_g3boeppf6",
+        "timestamp": 1767645023726
+      },
+      {
+        "moveIndex": 6,
+        "boardState": [
+          "X",
+          "X",
+          "O",
+          "",
+          "O",
+          "",
+          "",
+          "",
+          ""
+        ],
+        "moveType": "win",
+        "reasoning": "Immediate winning move",
+        "gameId": "game_1767645009315_g3boeppf6",
+        "timestamp": 1767645029759
+      },
+      {
+        "moveIndex": 3,
+        "boardState": [
+          "X",
+          "X",
+          "O",
+          "",
+          "O",
+          "",
+          "X",
+          "",
+          ""
+        ],
+        "moveType": "block",
+        "reasoning": "Blocking opponent win",
+        "gameId": "game_1767645009315_g3boeppf6",
+        "timestamp": 1767645032460
+      },
+      {
+        "moveIndex": 5,
+        "boardState": [
+          "X",
+          "X",
+          "O",
+          "O",
+          "O",
+          "",
+          "X",
+          "",
+          "X"
+        ],
+        "moveType": "win",
+        "reasoning": "Immediate winning move",
+        "gameId": "game_1767645009315_g3boeppf6",
+        "timestamp": 1767645035135
+      },
+      {
+        "moveIndex": 4,
+        "boardState": [
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          ""
+        ],
+        "moveType": "center",
+        "reasoning": "Taking center",
+        "gameId": "game_1767645036148_wu1jkts7m",
+        "timestamp": 1767645037404
+      },
+      {
+        "moveIndex": 4,
+        "boardState": [
+          "X",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          ""
+        ],
+        "moveType": "center",
+        "reasoning": "Taking center",
+        "gameId": "game_1767645651599_19t0p6q7h",
+        "timestamp": 1767645659234
+      },
+      {
+        "moveIndex": 1,
+        "boardState": [
+          "X",
+          "",
+          "X",
+          "",
+          "O",
+          "",
+          "",
+          "",
+          ""
+        ],
+        "moveType": "block",
+        "reasoning": "Blocking opponent win",
+        "gameId": "game_1767645651599_19t0p6q7h",
+        "timestamp": 1767645661579
+      },
+      {
+        "moveIndex": 4,
+        "boardState": [
+          "X",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          ""
+        ],
+        "moveType": "center",
+        "reasoning": "Taking center",
+        "gameId": "game_1767657364029_1j2b348r2",
+        "timestamp": 1767657369957
+      },
+      {
+        "moveIndex": 6,
+        "boardState": [
+          "X",
+          "",
+          "",
+          "X",
+          "O",
+          "",
+          "",
+          "",
+          ""
+        ],
+        "moveType": "block",
+        "reasoning": "Blocking opponent win",
+        "gameId": "game_1767657364029_1j2b348r2",
+        "timestamp": 1767657374128
+      },
+      {
+        "moveIndex": 1,
+        "boardState": [
+          "X",
+          "",
+          "X",
+          "X",
+          "O",
+          "",
+          "O",
+          "",
+          ""
+        ],
+        "moveType": "block",
+        "reasoning": "Blocking opponent win",
+        "gameId": "game_1767657364029_1j2b348r2",
+        "timestamp": 1767657376408
+      },
+      {
+        "moveIndex": 8,
+        "boardState": [
+          "X",
+          "O",
+          "X",
+          "X",
+          "O",
+          "",
+          "O",
+          "X",
+          ""
+        ],
+        "moveType": "corner",
+        "reasoning": "Opposite corner",
+        "gameId": "game_1767657364029_1j2b348r2",
+        "timestamp": 1767657379069
+      },
+      {
+        "moveIndex": 4,
+        "boardState": [
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          ""
+        ],
+        "moveType": "center",
+        "reasoning": "Taking center",
+        "gameId": "game_1767657381641_9l7dgd7wq",
+        "timestamp": 1767657383644
+      },
+      {
+        "moveIndex": 8,
+        "boardState": [
+          "",
+          "",
+          "",
+          "X",
+          "O",
+          "",
+          "",
+          "",
+          ""
+        ],
+        "moveType": "corner",
+        "reasoning": "Empty corner",
+        "gameId": "game_1767657381641_9l7dgd7wq",
+        "timestamp": 1767657385614
+      },
+      {
+        "moveIndex": 6,
+        "boardState": [
+          "X",
+          "",
+          "",
+          "X",
+          "O",
+          "",
+          "",
+          "",
+          "O"
+        ],
+        "moveType": "block",
+        "reasoning": "Blocking opponent win",
+        "gameId": "game_1767657381641_9l7dgd7wq",
+        "timestamp": 1767657386634
+      },
+      {
+        "moveIndex": 6,
+        "boardState": [
+          "X",
+          "",
+          "",
+          "X",
+          "",
+          "",
+          "",
+          "",
+          ""
+        ],
+        "moveType": "block",
+        "reasoning": "Blocking opponent win",
+        "gameId": "game_1767657408070_i8tkqxsjy",
+        "timestamp": 1767657418302
+      },
+      {
+        "moveIndex": 4,
+        "boardState": [
+          "X",
+          "",
+          "",
+          "X",
+          "",
+          "",
+          "O",
+          "",
+          ""
+        ],
+        "moveType": "block_fork",
+        "reasoning": "Blocking opponent fork",
+        "gameId": "game_1767657408070_i8tkqxsjy",
+        "timestamp": 1767657418529
+      },
+      {
+        "moveIndex": 2,
+        "boardState": [
+          "X",
+          "",
+          "",
+          "X",
+          "O",
+          "X",
+          "O",
+          "",
+          ""
+        ],
+        "moveType": "win",
+        "reasoning": "Immediate winning move",
+        "gameId": "game_1767657408070_i8tkqxsjy",
+        "timestamp": 1767657421448
+      },
+      {
+        "moveIndex": 4,
+        "boardState": [
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          ""
+        ],
+        "moveType": "center",
+        "reasoning": "Taking center",
+        "gameId": "game_1767657422417_97yui0j3o",
+        "timestamp": 1767657423539
+      },
+      {
+        "moveIndex": 0,
+        "boardState": [
+          "",
+          "",
+          "",
+          "",
+          "O",
+          "X",
+          "",
+          "",
+          ""
+        ],
+        "moveType": "corner",
+        "reasoning": "Empty corner",
+        "gameId": "game_1767657422417_97yui0j3o",
+        "timestamp": 1767657427616
+      },
+      {
+        "moveIndex": 2,
+        "boardState": [
+          "O",
+          "",
+          "",
+          "",
+          "O",
+          "X",
+          "",
+          "",
+          "X"
+        ],
+        "moveType": "block",
+        "reasoning": "Blocking opponent win",
+        "gameId": "game_1767657422417_97yui0j3o",
+        "timestamp": 1767657431096
+      },
+      {
+        "moveIndex": 6,
+        "boardState": [
+          "O",
+          "X",
+          "O",
+          "",
+          "O",
+          "X",
+          "",
+          "",
+          "X"
+        ],
+        "moveType": "win",
+        "reasoning": "Immediate winning move",
+        "gameId": "game_1767657422417_97yui0j3o",
+        "timestamp": 1767657433123
+      },
+      {
+        "moveIndex": 4,
+        "boardState": [
+          "X",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          ""
+        ],
+        "moveType": "center",
+        "reasoning": "Taking center",
+        "gameId": "game_1767657434066_nbjzgxbti",
+        "timestamp": 1767657437659
+      },
+      {
+        "moveIndex": 2,
+        "boardState": [
+          "X",
+          "X",
+          "",
+          "",
+          "O",
+          "",
+          "",
+          "",
+          ""
+        ],
+        "moveType": "block",
+        "reasoning": "Blocking opponent win",
+        "gameId": "game_1767657434066_nbjzgxbti",
+        "timestamp": 1767657440113
+      },
+      {
+        "moveIndex": 6,
+        "boardState": [
+          "X",
+          "X",
+          "O",
+          "X",
+          "O",
+          "",
+          "",
+          "",
+          ""
+        ],
+        "moveType": "win",
+        "reasoning": "Immediate winning move",
+        "gameId": "game_1767657434066_nbjzgxbti",
+        "timestamp": 1767657442201
+      },
+      {
+        "moveIndex": 4,
+        "boardState": [
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          ""
+        ],
+        "moveType": "center",
+        "reasoning": "Taking center",
+        "gameId": "game_1767657463227_mugwxkble",
+        "timestamp": 1767657463973
+      },
+      {
+        "moveIndex": 4,
+        "boardState": [
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          ""
+        ],
+        "moveType": "center",
+        "reasoning": "Taking center",
+        "gameId": "game_1767657466225_p5fzsr5ok",
+        "timestamp": 1767657467002
+      },
+      {
+        "moveIndex": 6,
+        "boardState": [
+          "",
+          "",
+          "",
+          "",
+          "O",
+          "",
+          "",
+          "X",
+          ""
+        ],
+        "moveType": "corner",
+        "reasoning": "Empty corner",
+        "gameId": "game_1767657466225_p5fzsr5ok",
+        "timestamp": 1767657467688
+      },
+      {
+        "moveIndex": 0,
+        "boardState": [
+          "",
+          "",
+          "X",
+          "",
+          "O",
+          "",
+          "O",
+          "X",
+          ""
+        ],
+        "moveType": "fork",
+        "reasoning": "Creating fork (multiple threats)",
+        "gameId": "game_1767657466225_p5fzsr5ok",
+        "timestamp": 1767657470080
+      },
+      {
+        "moveIndex": 8,
+        "boardState": [
+          "O",
+          "X",
+          "X",
+          "",
+          "O",
+          "",
+          "O",
+          "X",
+          ""
+        ],
+        "moveType": "win",
+        "reasoning": "Immediate winning move",
+        "gameId": "game_1767657466225_p5fzsr5ok",
+        "timestamp": 1767657471898
+      },
+      {
+        "moveIndex": 4,
+        "boardState": [
+          "",
+          "X",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          ""
+        ],
+        "moveType": "center",
+        "reasoning": "Taking center",
+        "gameId": "game_1767657472853_ihw3pi9qd",
+        "timestamp": 1767657475336
+      },
+      {
+        "moveIndex": 0,
+        "boardState": [
+          "",
+          "X",
+          "X",
+          "",
+          "O",
+          "",
+          "",
+          "",
+          ""
+        ],
+        "moveType": "block",
+        "reasoning": "Blocking opponent win",
+        "gameId": "game_1767657472853_ihw3pi9qd",
+        "timestamp": 1767657477660
+      },
+      {
+        "moveIndex": 8,
+        "boardState": [
+          "O",
+          "X",
+          "X",
+          "X",
+          "O",
+          "",
+          "",
+          "",
+          ""
+        ],
+        "moveType": "win",
+        "reasoning": "Immediate winning move",
+        "gameId": "game_1767657472853_ihw3pi9qd",
+        "timestamp": 1767657479360
+      },
+      {
+        "moveIndex": 4,
+        "boardState": [
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          ""
+        ],
+        "moveType": "center",
+        "reasoning": "Taking center",
+        "gameId": "game_1767657480308_smxct9pug",
+        "timestamp": 1767657481416
+      },
+      {
+        "moveIndex": 8,
+        "boardState": [
+          "X",
+          "",
+          "",
+          "",
+          "O",
+          "",
+          "",
+          "",
+          ""
+        ],
+        "moveType": "corner",
+        "reasoning": "Opposite corner",
+        "gameId": "game_1767657480308_smxct9pug",
+        "timestamp": 1767657482563
+      },
+      {
+        "moveIndex": 6,
+        "boardState": [
+          "X",
+          "",
+          "",
+          "X",
+          "O",
+          "",
+          "",
+          "",
+          "O"
+        ],
+        "moveType": "block",
+        "reasoning": "Blocking opponent win",
+        "gameId": "game_1767657480308_smxct9pug",
+        "timestamp": 1767657485645
+      },
+      {
+        "moveIndex": 2,
+        "boardState": [
+          "X",
+          "X",
+          "",
+          "X",
+          "O",
+          "",
+          "O",
+          "",
+          "O"
+        ],
+        "moveType": "win",
+        "reasoning": "Immediate winning move",
+        "gameId": "game_1767657480308_smxct9pug",
+        "timestamp": 1767657488206
+      },
+      {
+        "moveIndex": 4,
+        "boardState": [
+          "X",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          ""
+        ],
+        "moveType": "center",
+        "reasoning": "Taking center",
+        "gameId": "game_1767657501828_aiot4lbkf",
+        "timestamp": 1767657505650
+      },
+      {
+        "moveIndex": 2,
+        "boardState": [
+          "X",
+          "X",
+          "",
+          "",
+          "O",
+          "",
+          "",
+          "",
+          ""
+        ],
+        "moveType": "block",
+        "reasoning": "Blocking opponent win",
+        "gameId": "game_1767657501828_aiot4lbkf",
+        "timestamp": 1767657507612
+      },
+      {
+        "moveIndex": 3,
+        "boardState": [
+          "X",
+          "X",
+          "O",
+          "",
+          "O",
+          "",
+          "X",
+          "",
+          ""
+        ],
+        "moveType": "block",
+        "reasoning": "Blocking opponent win",
+        "gameId": "game_1767657501828_aiot4lbkf",
+        "timestamp": 1767657509769
+      },
+      {
+        "moveIndex": 8,
+        "boardState": [
+          "X",
+          "X",
+          "O",
+          "O",
+          "O",
+          "X",
+          "X",
+          "",
+          ""
+        ],
+        "moveType": "corner",
+        "reasoning": "Opposite corner",
+        "gameId": "game_1767657501828_aiot4lbkf",
+        "timestamp": 1767657511532
+      },
+      {
+        "moveIndex": 4,
+        "boardState": [
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          ""
+        ],
+        "moveType": "center",
+        "reasoning": "Taking center",
+        "gameId": "game_1767657529080_969rcfhuz",
+        "timestamp": 1767657529834
+      },
+      {
+        "moveIndex": 8,
+        "boardState": [
+          "X",
+          "",
+          "",
+          "",
+          "O",
+          "",
+          "",
+          "",
+          ""
+        ],
+        "moveType": "corner",
+        "reasoning": "Opposite corner",
+        "gameId": "game_1767657529080_969rcfhuz",
+        "timestamp": 1767657534070
+      },
+      {
+        "moveIndex": 2,
+        "boardState": [
+          "X",
+          "X",
+          "",
+          "",
+          "O",
+          "",
+          "",
+          "",
+          "O"
+        ],
+        "moveType": "block",
+        "reasoning": "Blocking opponent win",
+        "gameId": "game_1767657529080_969rcfhuz",
+        "timestamp": 1767657538122
+      },
+      {
+        "moveIndex": 5,
+        "boardState": [
+          "X",
+          "X",
+          "O",
+          "",
+          "O",
+          "",
+          "X",
+          "",
+          "O"
+        ],
+        "moveType": "win",
+        "reasoning": "Immediate winning move",
+        "gameId": "game_1767657529080_969rcfhuz",
+        "timestamp": 1767657540591
+      },
+      {
+        "moveIndex": 4,
+        "boardState": [
+          "X",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          ""
+        ],
+        "moveType": "center",
+        "reasoning": "Taking center",
+        "gameId": "game_1767657544564_zq4zt0qbp",
+        "timestamp": 1767657550178
+      },
+      {
+        "moveIndex": 3,
+        "boardState": [
+          "X",
+          "",
+          "",
+          "",
+          "O",
+          "",
+          "X",
+          "",
+          ""
+        ],
+        "moveType": "block",
+        "reasoning": "Blocking opponent win",
+        "gameId": "game_1767657544564_zq4zt0qbp",
+        "timestamp": 1767657553652
+      },
+      {
+        "moveIndex": 8,
+        "boardState": [
+          "X",
+          "",
+          "",
+          "O",
+          "O",
+          "X",
+          "X",
+          "",
+          ""
+        ],
+        "moveType": "block_fork",
+        "reasoning": "Blocking opponent fork",
+        "gameId": "game_1767657544564_zq4zt0qbp",
+        "timestamp": 1767657555561
+      },
+      {
+        "moveIndex": 2,
+        "boardState": [
+          "X",
+          "",
+          "",
+          "O",
+          "O",
+          "X",
+          "X",
+          "X",
+          "O"
+        ],
+        "moveType": "corner",
+        "reasoning": "Opposite corner",
+        "gameId": "game_1767657544564_zq4zt0qbp",
+        "timestamp": 1767657557701
       }
     ],
-    "learnedPatterns": 16,
+    "learnedPatterns": 15,
     "blockedWinPatterns": [],
-    "adaptationLevel": 44
+    "adaptationLevel": 55
   }
 }

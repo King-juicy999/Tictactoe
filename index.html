@@ -96,6 +96,11 @@
             </div>
 
             <button id="reset-btn">Play Again... if you dare</button>
+            
+            <!-- Guide Icon Button (in game screen) -->
+            <button id="guide-icon-btn-game" class="guide-icon-btn" aria-label="Open Guide">
+                <span class="guide-icon">?</span>
+            </button>
         </div>
 
         <div id="tsukuyomi-overlay" class="hidden">
@@ -132,88 +137,146 @@
             </div>
         </div>
         
-        <!-- Game Welcome Screen (Level 1 & Power-ups Explanation) -->
-        <div id="game-welcome-overlay" class="game-welcome-overlay hidden">
-            <div class="game-welcome-container">
-                <h1 class="game-welcome-header">Welcome, Player!</h1>
-                <p class="game-welcome-subtext">Here's how the game works.</p>
+        <!-- Power Up Guide (Multi-page Manual) -->
+        <div id="powerup-guide-overlay" class="powerup-guide-overlay hidden">
+            <div class="powerup-guide-container">
+                <!-- Page 1: Introduction -->
+                <div class="guide-page active" data-page="1">
+                    <h2 class="guide-title">How the Game Works</h2>
+                    <p class="guide-text">This game is played against an adaptive AI. You progress through levels by winning rounds. Power ups help you make strategic decisions, but timing matters.</p>
+                    <div class="guide-board-preview">
+                        <div class="guide-board-cell"></div>
+                        <div class="guide-board-cell"></div>
+                        <div class="guide-board-cell"></div>
+                        <div class="guide-board-cell"></div>
+                        <div class="guide-board-cell"></div>
+                        <div class="guide-board-cell"></div>
+                        <div class="guide-board-cell"></div>
+                        <div class="guide-board-cell"></div>
+                        <div class="guide-board-cell"></div>
+                    </div>
+                </div>
                 
-                <div class="level-info-section">
-                    <h3 class="level-info-title">Level 1 System</h3>
-                    <p class="level-info-text">Win 5 rounds to proceed to the next level</p>
-                    <div class="level-progress-container">
-                        <div class="level-progress-visual">
-                            <div class="level-progress-dots" id="level-progress-dots">
-                                <span class="progress-dot" data-round="1">○</span>
-                                <span class="progress-dot" data-round="2">○</span>
-                                <span class="progress-dot" data-round="3">○</span>
-                                <span class="progress-dot" data-round="4">○</span>
-                                <span class="progress-dot" data-round="5">○</span>
-                            </div>
-                            <div class="level-progress-bar">
-                                <div class="level-progress-fill" id="level-progress-fill" style="width: 0%"></div>
-                            </div>
+                <!-- Page 2: Level System -->
+                <div class="guide-page" data-page="2">
+                    <h2 class="guide-title">Levels & Progress</h2>
+                    <div class="guide-level-visual">
+                        <div class="guide-level-circles">
+                            <div class="guide-circle"></div>
+                            <div class="guide-circle"></div>
+                            <div class="guide-circle"></div>
+                            <div class="guide-circle"></div>
+                            <div class="guide-circle"></div>
                         </div>
-                        <div class="level-progress-text">
-                            <span id="level-wins-count">0</span> / 5 wins
-                            <span class="level-progress-tooltip" title="Win this round to progress">ℹ️</span>
+                    </div>
+                    <p class="guide-text">Each level requires 5 wins to advance. Losing does not reset your progress.</p>
+                </div>
+                
+                <!-- Page 3: Power Ups Overview -->
+                <div class="guide-page" data-page="3">
+                    <h2 class="guide-title">Power Ups</h2>
+                    <div class="guide-powerups-overview">
+                        <div class="guide-powerup-card" data-powerup="hintPulse">
+                            <div class="guide-powerup-icon">💡</div>
+                            <div class="guide-powerup-name">Hint Pulse</div>
+                            <p class="guide-powerup-desc">Briefly shows a recommended move</p>
+                        </div>
+                        <div class="guide-powerup-card" data-powerup="shieldGuard">
+                            <div class="guide-powerup-icon">🛡️</div>
+                            <div class="guide-powerup-name">Shield Guard</div>
+                            <p class="guide-powerup-desc">Locks one cell from AI</p>
+                        </div>
+                        <div class="guide-powerup-card" data-powerup="focusAura">
+                            <div class="guide-powerup-icon">🌀</div>
+                            <div class="guide-powerup-name">Focus Aura</div>
+                            <p class="guide-powerup-desc">PvP mode only</p>
                         </div>
                     </div>
                 </div>
                 
-                <div class="powerups-showcase-section">
-                    <h3 class="powerups-showcase-title">Your Starter Power-Ups</h3>
-                    <div class="powerups-showcase-grid">
-                        <div class="powerup-showcase-item" data-powerup="hintPulse">
-                            <div class="powerup-showcase-icon-wrapper">
-                                <div class="powerup-showcase-icon">💡</div>
-                            </div>
-                            <div class="powerup-showcase-name">Hint Pulse</div>
-                            <div class="powerup-showcase-tooltip">
-                                <div class="tooltip-content">
-                                    <div class="tooltip-title">Hint Pulse</div>
-                                    <div class="tooltip-desc">Shows suggested move for 2s</div>
-                                    <div class="tooltip-duration">Duration: 2 seconds</div>
-                                </div>
-                            </div>
+                <!-- Page 4: Hint Pulse -->
+                <div class="guide-page" data-page="4">
+                    <h2 class="guide-title">Hint Pulse</h2>
+                    <div class="guide-powerup-demo">
+                        <div class="guide-demo-board">
+                            <div class="guide-demo-cell guide-hint-pulse-demo"></div>
+                            <div class="guide-demo-cell"></div>
+                            <div class="guide-demo-cell"></div>
+                            <div class="guide-demo-cell"></div>
+                            <div class="guide-demo-cell"></div>
+                            <div class="guide-demo-cell"></div>
+                            <div class="guide-demo-cell"></div>
+                            <div class="guide-demo-cell"></div>
+                            <div class="guide-demo-cell"></div>
                         </div>
-                        <div class="powerup-showcase-item" data-powerup="shieldGuard">
-                            <div class="powerup-showcase-icon-wrapper">
-                                <div class="powerup-showcase-icon">🛡️</div>
-                            </div>
-                            <div class="powerup-showcase-name">Shield Guard</div>
-                            <div class="powerup-showcase-tooltip">
-                                <div class="tooltip-content">
-                                    <div class="tooltip-title">Shield Guard</div>
-                                    <div class="tooltip-desc">Protect a cell for 1 turn</div>
-                                    <div class="tooltip-duration">Duration: Until next turn</div>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="powerup-showcase-item" data-powerup="focusAura">
-                            <div class="powerup-showcase-icon-wrapper">
-                                <div class="powerup-showcase-icon">🌀</div>
-                            </div>
-                            <div class="powerup-showcase-name">Focus Aura</div>
-                            <div class="powerup-showcase-tooltip">
-                                <div class="tooltip-content">
-                                    <div class="tooltip-title">Focus Aura</div>
-                                    <div class="tooltip-desc">PvP only (placeholder in PvE)</div>
-                                    <div class="tooltip-duration">Duration: 1-2 seconds</div>
-                                </div>
-                            </div>
-                        </div>
+                    </div>
+                    <p class="guide-text"><strong>Hint Pulse</strong><br>Briefly shows a recommended move for 2 seconds. Use it when you are unsure.</p>
+                    <div class="guide-notes">
+                        <p>• Does not play for you</p>
+                        <p>• Does not pause the AI</p>
                     </div>
                 </div>
                 
-                <div class="game-welcome-actions">
-                    <button id="game-welcome-start" class="game-welcome-btn primary">
-                        <span class="btn-text">Start Game</span>
-                        <span class="btn-glow"></span>
-                    </button>
+                <!-- Page 5: Shield Guard -->
+                <div class="guide-page" data-page="5">
+                    <h2 class="guide-title">Shield Guard</h2>
+                    <div class="guide-powerup-demo">
+                        <div class="guide-demo-board">
+                            <div class="guide-demo-cell"></div>
+                            <div class="guide-demo-cell"></div>
+                            <div class="guide-demo-cell"></div>
+                            <div class="guide-demo-cell"></div>
+                            <div class="guide-demo-cell guide-shield-demo">
+                                <div class="guide-shield-icon">🛡️</div>
+                            </div>
+                            <div class="guide-demo-cell"></div>
+                            <div class="guide-demo-cell"></div>
+                            <div class="guide-demo-cell"></div>
+                            <div class="guide-demo-cell"></div>
+                        </div>
+                    </div>
+                    <p class="guide-text"><strong>Shield Guard</strong><br>Locks one cell so the AI cannot play there. Placing a shield does NOT count as your turn.</p>
+                    <div class="guide-notes">
+                        <p>• Usable once per level</p>
+                        <p>• You still choose your move after placing it</p>
+                    </div>
                 </div>
+                
+                <!-- Page 6: Focus Aura -->
+                <div class="guide-page" data-page="6">
+                    <h2 class="guide-title">Focus Aura</h2>
+                    <div class="guide-powerup-demo">
+                        <div class="guide-aura-demo">
+                            <div class="guide-aura-icon">🌀</div>
+                        </div>
+                    </div>
+                    <p class="guide-text"><strong>Focus Aura</strong><br>Reserved for player vs player mode. Visual only in this mode.</p>
+                </div>
+                
+                <!-- Page 7: Closing -->
+                <div class="guide-page" data-page="7">
+                    <h2 class="guide-title">You are ready to play.</h2>
+                    <button id="guide-start-game" class="guide-start-btn">Start Game</button>
+                </div>
+                
+                <!-- Navigation -->
+                <div class="guide-navigation">
+                    <button class="guide-nav-btn guide-prev" id="guide-prev">←</button>
+                    <div class="guide-page-indicator">
+                        <span id="guide-page-number">1</span> / 7
+                    </div>
+                    <button class="guide-nav-btn guide-next" id="guide-next">→</button>
+                </div>
+                
+                <!-- Skip button (only on first page) -->
+                <button class="guide-skip" id="guide-skip">Skip</button>
             </div>
         </div>
+        
+        <!-- Guide Icon Button (to reopen guide) -->
+        <button id="guide-icon-btn" class="guide-icon-btn" aria-label="Open Guide">
+            <span class="guide-icon">?</span>
+        </button>
     </div>
 
     <!-- Mode selection (AI or Player) shown after entering name and enabling camera -->

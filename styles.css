@@ -158,9 +158,10 @@ button:disabled:hover {
 .game-board {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
-    gap: 10px;
-    margin: 2rem auto;
+    gap: 12px;
+    margin: 2.5rem auto;
     max-width: 400px;
+    padding: 0 1rem;
     transition: transform 0.4s ease, opacity 0.4s ease;
     position: relative;
     opacity: 1;
@@ -298,9 +299,12 @@ button:disabled:hover {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    font-size: 1.5rem;
-    margin-bottom: 1rem;
+    font-size: 1.3rem;
+    margin-bottom: 1.5rem;
+    padding: 0 1rem;
     color: #5a4a00;
+    gap: 1rem;
+    flex-wrap: wrap;
 }
 
 .camera-section {
@@ -2352,15 +2356,15 @@ button:disabled:hover {
 
 .powerup-sidebar {
     position: fixed;
-    right: 1rem;
+    right: 1.5rem;
     top: 50%;
     transform: translateY(-50%);
-    width: 200px;
-    max-height: 80vh;
+    width: 180px;
+    max-height: 75vh;
     background: var(--cell-bg);
     border: 2px solid var(--cell-border);
     border-radius: 16px;
-    padding: 1rem;
+    padding: 1.25rem;
     box-shadow: 0 8px 32px var(--shadow);
     z-index: 1000;
     transition: all 0.3s ease;
@@ -2386,9 +2390,9 @@ button:disabled:hover {
 .powerup-sidebar-header {
     display: flex;
     flex-direction: column;
-    gap: 0.5rem;
-    margin-bottom: 1rem;
-    padding-bottom: 0.75rem;
+    gap: 0.75rem;
+    margin-bottom: 1.25rem;
+    padding-bottom: 1rem;
     border-bottom: 1px solid var(--cell-border);
 }
 
@@ -3657,4 +3661,568 @@ button:disabled::after {
         bottom: 1rem;
         right: 1rem;
     }
+}
+
+/* ============================================
+   POWER UP GUIDE - Multi-page Manual
+   Premium, calm, clean design
+   ============================================ */
+
+/* Guide Overlay */
+.powerup-guide-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.85);
+    backdrop-filter: blur(8px);
+    z-index: 10000;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    opacity: 0;
+    transition: opacity 0.4s ease;
+    pointer-events: none;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    padding: 1rem;
+}
+
+.powerup-guide-overlay.active {
+    opacity: 1;
+    pointer-events: all;
+}
+
+.powerup-guide-overlay.hidden {
+    display: none;
+}
+
+/* Guide Container */
+.powerup-guide-container {
+    background: var(--bg-primary);
+    border: 2px solid var(--primary-color);
+    border-radius: 20px;
+    padding: 2.5rem;
+    max-width: 600px;
+    width: 95%;
+    max-height: 90vh;
+    box-shadow: 0 20px 60px var(--shadow);
+    text-align: center;
+    color: var(--text-primary);
+    transform: translateY(20px);
+    opacity: 0;
+    transition: transform 0.4s ease, opacity 0.4s ease;
+    position: relative;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+}
+
+.powerup-guide-overlay.active .powerup-guide-container {
+    transform: translateY(0);
+    opacity: 1;
+}
+
+/* Guide Pages */
+.guide-page {
+    display: none;
+    animation: guidePageFadeIn 0.4s ease;
+}
+
+.guide-page.active {
+    display: block;
+}
+
+@keyframes guidePageFadeIn {
+    from {
+        opacity: 0;
+        transform: translateX(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+/* Guide Title */
+.guide-title {
+    font-size: 2rem;
+    margin-bottom: 1.5rem;
+    color: var(--primary-color);
+    text-shadow: 0 0 10px var(--win-glow);
+    font-weight: 700;
+}
+
+/* Guide Text */
+.guide-text {
+    font-size: 1.1rem;
+    line-height: 1.6;
+    color: var(--text-secondary);
+    margin-bottom: 2rem;
+    padding: 0 1rem;
+}
+
+.guide-text strong {
+    color: var(--text-primary);
+    font-weight: 700;
+}
+
+/* Guide Board Preview (Page 1) */
+.guide-board-preview {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+    max-width: 200px;
+    margin: 2rem auto;
+    animation: guideBoardPulse 3s ease-in-out infinite;
+}
+
+@keyframes guideBoardPulse {
+    0%, 100% {
+        transform: scale(1);
+        opacity: 0.8;
+    }
+    50% {
+        transform: scale(1.02);
+        opacity: 1;
+    }
+}
+
+.guide-board-cell {
+    aspect-ratio: 1;
+    background: var(--cell-bg);
+    border: 1px solid var(--cell-border);
+    border-radius: 8px;
+    transition: all 0.3s ease;
+}
+
+/* Guide Level Visual (Page 2) */
+.guide-level-visual {
+    margin: 2rem 0;
+}
+
+.guide-level-circles {
+    display: flex;
+    justify-content: center;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+.guide-circle {
+    width: 40px;
+    height: 40px;
+    border: 2px solid var(--cell-border);
+    border-radius: 50%;
+    background: var(--cell-bg);
+    transition: all 0.5s ease;
+    position: relative;
+}
+
+.guide-circle.filled {
+    background: var(--primary-color);
+    border-color: var(--primary-color);
+    box-shadow: 0 0 15px var(--win-glow);
+}
+
+.guide-circle.filled::after {
+    content: '✓';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    color: var(--bg-primary);
+    font-size: 1.2rem;
+    font-weight: bold;
+}
+
+/* Guide Powerups Overview (Page 3) */
+.guide-powerups-overview {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1.5rem;
+    margin: 2rem 0;
+    max-width: 500px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.guide-powerup-card {
+    background: var(--cell-bg);
+    border: 2px solid var(--cell-border);
+    border-radius: 12px;
+    padding: 1.5rem 1rem;
+    transition: all 0.3s ease;
+    animation: guideCardFloat 3s ease-in-out infinite;
+}
+
+.guide-powerup-card:nth-child(1) {
+    animation-delay: 0s;
+}
+
+.guide-powerup-card:nth-child(2) {
+    animation-delay: 0.5s;
+}
+
+.guide-powerup-card:nth-child(3) {
+    animation-delay: 1s;
+}
+
+@keyframes guideCardFloat {
+    0%, 100% {
+        transform: translateY(0);
+    }
+    50% {
+        transform: translateY(-5px);
+    }
+}
+
+.guide-powerup-icon {
+    font-size: 2.5rem;
+    margin-bottom: 0.5rem;
+    animation: guideIconPulse 2s ease-in-out infinite;
+}
+
+@keyframes guideIconPulse {
+    0%, 100% {
+        transform: scale(1);
+    }
+    50% {
+        transform: scale(1.1);
+    }
+}
+
+.guide-powerup-name {
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin-bottom: 0.5rem;
+}
+
+.guide-powerup-desc {
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+    line-height: 1.4;
+}
+
+/* Guide Demo Board (Pages 4-6) */
+.guide-powerup-demo {
+    margin: 2rem 0;
+}
+
+.guide-demo-board {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+    max-width: 250px;
+    margin: 0 auto;
+}
+
+.guide-demo-cell {
+    aspect-ratio: 1;
+    background: var(--cell-bg);
+    border: 2px solid var(--cell-border);
+    border-radius: 8px;
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Hint Pulse Demo */
+.guide-hint-pulse-demo {
+    animation: guideHintPulse 2s ease-in-out infinite;
+}
+
+@keyframes guideHintPulse {
+    0%, 100% {
+        transform: scale(1);
+        box-shadow: 0 0 0 0 var(--primary-color);
+    }
+    50% {
+        transform: scale(1.05);
+        box-shadow: 0 0 20px var(--win-glow), 0 0 40px var(--primary-color);
+    }
+}
+
+/* Shield Demo */
+.guide-shield-demo {
+    background: var(--cell-bg);
+}
+
+.guide-shield-icon {
+    font-size: 2rem;
+    animation: guideShieldRotate 3s linear infinite, guideShieldPulse 2s ease-in-out infinite;
+    filter: drop-shadow(0 0 10px var(--primary-color));
+}
+
+@keyframes guideShieldRotate {
+    0% {
+        transform: rotate(0deg);
+    }
+    100% {
+        transform: rotate(360deg);
+    }
+}
+
+@keyframes guideShieldPulse {
+    0%, 100% {
+        transform: scale(1);
+    }
+    50% {
+        transform: scale(1.1);
+    }
+}
+
+/* Aura Demo */
+.guide-aura-demo {
+    margin: 2rem 0;
+}
+
+.guide-aura-icon {
+    font-size: 4rem;
+    animation: guideAuraRadiate 3s ease-in-out infinite;
+    filter: drop-shadow(0 0 20px var(--primary-color));
+}
+
+@keyframes guideAuraRadiate {
+    0%, 100% {
+        transform: scale(1);
+        opacity: 0.8;
+    }
+    50% {
+        transform: scale(1.2);
+        opacity: 1;
+    }
+}
+
+/* Guide Notes */
+.guide-notes {
+    text-align: left;
+    margin: 1.5rem auto;
+    max-width: 400px;
+    padding: 1rem;
+    background: var(--bg-secondary);
+    border-radius: 8px;
+    border-left: 3px solid var(--primary-color);
+}
+
+.guide-notes p {
+    font-size: 0.95rem;
+    color: var(--text-secondary);
+    margin: 0.5rem 0;
+    line-height: 1.5;
+}
+
+/* Guide Navigation */
+.guide-navigation {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 2rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid var(--cell-border);
+}
+
+.guide-nav-btn {
+    background: var(--cell-bg);
+    border: 2px solid var(--cell-border);
+    border-radius: 8px;
+    padding: 0.75rem 1.5rem;
+    font-size: 1.2rem;
+    color: var(--text-primary);
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-weight: 700;
+}
+
+.guide-nav-btn:hover:not(:disabled) {
+    background: var(--primary-color);
+    color: var(--bg-primary);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px var(--shadow);
+}
+
+.guide-nav-btn:disabled {
+    opacity: 0.3;
+    cursor: not-allowed;
+}
+
+.guide-page-indicator {
+    font-size: 1rem;
+    color: var(--text-secondary);
+    font-weight: 600;
+}
+
+/* Guide Skip Button */
+.guide-skip {
+    position: absolute;
+    top: 1rem;
+    right: 1rem;
+    background: transparent;
+    border: 1px solid var(--cell-border);
+    border-radius: 6px;
+    padding: 0.5rem 1rem;
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.guide-skip:hover {
+    background: var(--cell-bg);
+    color: var(--text-primary);
+}
+
+/* Guide Start Button */
+.guide-start-btn {
+    background: var(--primary-color);
+    border: none;
+    border-radius: 12px;
+    padding: 1rem 2.5rem;
+    font-size: 1.2rem;
+    font-weight: 700;
+    color: var(--bg-primary);
+    cursor: pointer;
+    transition: all 0.3s ease;
+    margin-top: 2rem;
+    box-shadow: 0 4px 12px var(--shadow);
+}
+
+.guide-start-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px var(--shadow);
+}
+
+/* Guide Icon Button */
+.guide-icon-btn {
+    position: fixed;
+    bottom: 1.5rem;
+    right: 1.5rem;
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    background: var(--cell-bg);
+    border: 2px solid var(--primary-color);
+    color: var(--text-primary);
+    font-size: 1.5rem;
+    font-weight: 700;
+    cursor: pointer;
+    display: none; /* Hidden by default, shown only in game screen */
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 12px var(--shadow);
+    z-index: 999;
+    transition: all 0.3s ease;
+}
+
+/* Show guide icon only in game screen */
+#game-screen.active ~ #guide-icon-btn,
+#guide-icon-btn-game {
+    display: flex;
+}
+
+.guide-icon-btn:hover {
+    background: var(--primary-color);
+    color: var(--bg-primary);
+    transform: scale(1.1);
+    box-shadow: 0 6px 20px var(--shadow);
+}
+
+.guide-icon {
+    display: block;
+}
+
+/* Mobile Responsive */
+@media (max-width: 768px) {
+    .powerup-guide-container {
+        padding: 1.5rem;
+        max-width: 95%;
+    }
+    
+    .guide-title {
+        font-size: 1.5rem;
+    }
+    
+    .guide-text {
+        font-size: 1rem;
+        padding: 0;
+    }
+    
+    .guide-powerups-overview {
+        grid-template-columns: 1fr;
+        gap: 1rem;
+    }
+    
+    .guide-powerup-card {
+        padding: 1rem;
+    }
+    
+    .guide-demo-board {
+        max-width: 200px;
+    }
+    
+    .guide-navigation {
+        flex-wrap: wrap;
+        gap: 1rem;
+    }
+    
+    .guide-nav-btn {
+        padding: 0.5rem 1rem;
+        font-size: 1rem;
+    }
+    
+    .guide-icon-btn {
+        width: 45px;
+        height: 45px;
+        font-size: 1.2rem;
+        bottom: 1rem;
+        right: 1rem;
+    }
+    
+    /* Mobile: Better spacing for game elements */
+    .game-info {
+        font-size: 1rem;
+        margin-bottom: 1rem;
+        padding: 0 0.5rem;
+        gap: 0.5rem;
+    }
+    
+    .game-board {
+        gap: 8px;
+        margin: 1.5rem auto;
+        padding: 0 0.5rem;
+    }
+    
+    .powerup-sidebar {
+        right: 0.5rem;
+        width: 160px;
+        padding: 1rem;
+    }
+    
+    /* Position guide icon above power-up bar on mobile */
+    .guide-icon-btn {
+        bottom: 5rem; /* Above power-up sidebar */
+        right: 1rem;
+    }
+    
+    #guide-icon-btn-game {
+        bottom: 5rem;
+        right: 1rem;
+    }
+}
+
+/* Theme Adaptations */
+body.theme-dark .powerup-guide-container {
+    background: var(--bg-primary);
+    border-color: var(--primary-color);
+}
+
+body.theme-neon .powerup-guide-container {
+    background: var(--bg-primary);
+    border-color: var(--primary-color);
+}
+
+body.theme-retro .powerup-guide-container {
+    background: var(--bg-primary);
+    border-color: var(--primary-color);
 }
