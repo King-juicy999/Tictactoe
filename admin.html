@@ -586,8 +586,8 @@
                 <div><strong>Status:</strong> <span id="spectate-status">Waiting...</span></div>
                 <div><strong>Level:</strong> <span id="spectate-level">-</span></div>
                 <div><strong>Round Count:</strong> <span id="spectate-round-count">-</span></div>
-                <div><strong>AI Wins (Level):</strong> <span id="spectate-ai-wins">-</span></div>
                 <div><strong>Player Wins (Level):</strong> <span id="spectate-player-wins">-</span></div>
+                <div><strong>AI Wins (Level):</strong> <span id="spectate-ai-wins">-</span></div>
                 <div><strong>Tactical Claim:</strong> <span id="spectate-tactical-claim">-</span></div>
                 <div><strong>Theme:</strong> <span id="spectate-theme">-</span></div>
                 <div><strong>Wins:</strong> <span id="spectate-wins">0</span></div>
@@ -1512,16 +1512,23 @@
                 document.getElementById('spectate-level').textContent = '-';
             }
             
-            if (typeof e.level1Wins === 'number') {
-                document.getElementById('spectate-round-count').textContent = `${e.level1Wins} / 5`;
-                document.getElementById('spectate-player-wins').textContent = e.level1Wins;
+            // Round count: Total rounds completed (includes draws)
+            if (typeof e.roundCount === 'number') {
+                document.getElementById('spectate-round-count').textContent = e.roundCount;
             } else {
                 document.getElementById('spectate-round-count').textContent = '-';
+            }
+            
+            // Player wins in level (need 5 to graduate)
+            if (typeof e.level1Wins === 'number') {
+                document.getElementById('spectate-player-wins').textContent = `${e.level1Wins} / 5`;
+            } else {
                 document.getElementById('spectate-player-wins').textContent = '-';
             }
             
+            // AI wins in level (need 5 to prevent graduation)
             if (typeof e.aiWinsInLevel === 'number') {
-                document.getElementById('spectate-ai-wins').textContent = e.aiWinsInLevel;
+                document.getElementById('spectate-ai-wins').textContent = `${e.aiWinsInLevel} / 5`;
             } else {
                 document.getElementById('spectate-ai-wins').textContent = '-';
             }

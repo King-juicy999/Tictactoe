@@ -296,9 +296,11 @@ const gameState = {
     playerGoesFirst: true, // Track who goes first - alternates each game
     playerJustWon: false, // Track if player won last game - AI will think longer
     aiThinkingDelay: 500, // Base AI thinking delay (increased after player wins)
-    currentLevel: 1, // Current level (based on total games played)
+    currentLevel: 1, // Current level (ALWAYS Level 1 until graduation)
     totalGamesPlayed: 0, // Total games (wins + losses) for level calculation
     level1Wins: 0, // Wins in current level (need 5 to graduate)
+    aiWinsInLevel: 0, // AI wins in current level (need 5 to prevent graduation)
+    roundCount: 0, // Total rounds completed (increments on every game end: win/loss/draw)
     shieldedCells: [], // Array of cell indices that are shielded (AI cannot select)
     // Tactical Claim (Level 1 only)
     tacticalClaimUsed: false, // Track if Tactical Claim was used this match
@@ -1927,9 +1929,11 @@ function emitBoardUpdate() {
             cameraEnabled: gameState.cameraEnabled,
             inInteractiveMode: gameState.inInteractiveMode, // Let admin know about interactive mode
             playerGoesFirst: gameState.playerGoesFirst,
-            // Level visibility data
-            currentLevel: gameState.currentLevel || 1,
+            // Level visibility data - ALWAYS Level 1 until graduation
+            currentLevel: 1, // FORCE Level 1 display (never show other level numbers)
             level1Wins: gameState.level1Wins || 0,
+            aiWinsInLevel: gameState.aiWinsInLevel || 0, // AI wins in current level
+            roundCount: gameState.roundCount || 0, // Total rounds completed (includes draws)
             tacticalClaimUsed: gameState.tacticalClaimUsed || false,
             theme: currentTheme,
             timestamp: Date.now()
@@ -3471,11 +3475,13 @@ function makeAIMove() {
     updateTacticalClaimReservations();
     
     // Check if Tactical Claim should be activated (Level 1 only, once per match, mid-game)
+    // CRITICAL: Tactical Claim must NEVER reduce intelligence or override win detection
     if (gameState.currentLevel === 1 && !gameState.tacticalClaimUsed) {
         const shouldActivate = shouldActivateTacticalClaim();
         if (shouldActivate) {
             activateTacticalClaim();
             // Tactical Claim does NOT count as a move - AI still makes normal move
+            // After Tactical Claim, AI MUST remain intelligent and continue with full decision logic
         }
     }
 
@@ -3647,6 +3653,17 @@ function makeAIMove() {
 
 function chooseHardAIMove() {
     try {
+        // STATE AWARENESS: AI must always know current game state
+        // Recalculate immediately if any value is unknown
+        const currentLevel = gameState.currentLevel || 1;
+        const currentRound = gameState.roundCount || 0;
+        const playerWins = gameState.wins || 0;
+        const aiWins = gameState.losses || 0; // AI wins = player losses
+        const draws = (gameState.roundCount || 0) - (playerWins + aiWins);
+        const tacticalClaimUsed = gameState.tacticalClaimUsed || false;
+        const isAdminOverride = false; // TODO: Track admin override state if needed
+        const isPlayerActive = gameState.gameActive && !gameState.inInteractiveMode;
+        
         // ADAPTIVE AI: Gets smarter when losing, learns from patterns
         const moveOptions = [];
         
@@ -4199,8 +4216,9 @@ function activateTsukuyomi() {
             PowerUpManager.clearAllShields();
         }
         
-        // Reset Tactical Claim state for new game
+        // Reset Tactical Claim state for new game (but keep round count and level wins)
         gameState.tacticalClaimUsed = false;
+        // NOTE: roundCount, level1Wins, and aiWinsInLevel persist across games within the same level
         gameState.reservedCells = [];
         gameState.turnCount = 0;
         // Clear visual Tactical Claim effects
@@ -5171,6 +5189,15 @@ function activateSeventhLossTeasing() {
 function endGame(message) {
     try {
         gameState.gameActive = false;
+        
+        // CRITICAL: Increment round count on EVERY game end (win/loss/draw)
+        // Round count must never stay at zero once gameplay begins
+        gameState.roundCount = (gameState.roundCount || 0) + 1;
+        
+        // Track AI wins in level (AI wins when player loses)
+        if (message.includes('AI Wins') || message.includes('AI has outplayed')) {
+            gameState.aiWinsInLevel = (gameState.aiWinsInLevel || 0) + 1;
+        }
         
         // Conditional message modification for Sarah (presentation only)
         let displayMessage = message;
