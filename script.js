@@ -3764,15 +3764,18 @@ function chooseHardAIMove() {
             minimaxScores.push({ index: idx, score: score });
         });
         
-        // Sort by score and ALWAYS pick the best move (no randomness)
+        // Sort by score and use weighted selection from top moves (restored adaptability)
         minimaxScores.sort((a, b) => b.score - a.score);
-        const bestMove = minimaxScores[0];
         
-        moveOptions.push({
-            index: bestMove.index,
-            priority: 300,
-            type: 'minimax',
-            reasoning: 'Minimax optimal move (best move selected)'
+        // Add top 3 minimax moves with slight priority variation for unpredictability
+        const topMinimaxMoves = minimaxScores.slice(0, Math.min(3, minimaxScores.length));
+        topMinimaxMoves.forEach((move, idx) => {
+            moveOptions.push({
+                index: move.index,
+                priority: 300 - (idx * 5), // Slight priority difference
+                type: 'minimax',
+                reasoning: `Minimax move (rank ${idx + 1})`
+            });
         });
     }
 
