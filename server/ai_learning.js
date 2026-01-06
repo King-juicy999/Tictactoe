@@ -14,9 +14,90 @@ class AILearningSystem {
         this.learnedPatterns = {}; // Player win patterns that AI has learned to block
         this.blockedWinPatterns = new Set(); // Patterns AI has successfully blocked
         this.adaptationLevel = 0; // How well AI adapts (0-100)
+        this.serverStats = null; // Snapshot of stats coming from server/data.json
+        this.lastServerSync = 0;
+        this.lastLosingMoveIndex = null; // Track last move that appeared in a losing game
         
         // Load persistent data from localStorage
         this.loadFromStorage();
+
+        // Also try to hydrate from server-side database in real time when running in browser
+        // This lets the AI use historical outcomes stored in data.json (via /api/ai/stats)
+        if (typeof window !== 'undefined' && typeof fetch === 'function') {
+            // Fire and forget – no need to block constructor
+            this.syncWithServer().catch(err => {
+                console.error('Error syncing AI learning data from server:', err);
+            });
+        }
+    }
+
+    // Merge stats from server-side DB (data.json) into local stats
+    async syncWithServer() {
+        try {
+            const now = Date.now();
+            // Avoid hammering the server – at most once every 2s from any caller,
+            // but still keep data.json effectively "live" for decision making.
+            if (this.lastServerSync && now - this.lastServerSync < 2000) return;
+
+            const res = await fetch('/api/ai/stats', { cache: 'no-store' });
+            if (!res.ok) return;
+
+            const payload = await res.json();
+            if (!payload || !payload.ok || !payload.stats) return;
+
+            this.serverStats = payload.stats;
+            this.lastServerSync = now;
+
+            // Carefully merge counts – prefer the highest values so we never "forget" history
+            const s = this.serverStats;
+            if (typeof s.wins === 'number')   this.aiStats.wins   = Math.max(this.aiStats.wins,   s.wins);
+            if (typeof s.losses === 'number') this.aiStats.losses = Math.max(this.aiStats.losses, s.losses);
+            if (typeof s.draws === 'number')  this.aiStats.draws  = Math.max(this.aiStats.draws,  s.draws);
+
+            const totalFromCounts = this.aiStats.wins + this.aiStats.losses + this.aiStats.draws;
+            const totalFromServer = typeof s.totalGames === 'number' ? s.totalGames : 0;
+            this.aiStats.totalGames = Math.max(this.aiStats.totalGames, totalFromCounts, totalFromServer);
+
+            // Merge long-term learned patterns from the shared database into the
+            // in-memory pattern map so the AI can counter strategies across
+            // multiple sessions and not just the current browser's history.
+            if (s.patternsData && typeof s.patternsData === 'object') {
+                for (const [patternKey, pdata] of Object.entries(s.patternsData)) {
+                    if (!this.learnedPatterns[patternKey]) {
+                        this.learnedPatterns[patternKey] = {
+                            count: 0,
+                            players: new Set(),
+                            lastSeen: Date.now(),
+                            firstSeen: Date.now(),
+                            boardStates: []
+                        };
+                    }
+                    const lp = this.learnedPatterns[patternKey];
+                    if (typeof pdata.count === 'number') {
+                        lp.count = Math.max(lp.count, pdata.count);
+                    }
+                    if (Array.isArray(pdata.players)) {
+                        pdata.players.forEach(p => lp.players.add(p));
+                    }
+                    if (pdata.lastSeen) {
+                        lp.lastSeen = Math.max(lp.lastSeen, pdata.lastSeen);
+                    }
+                    if (pdata.firstSeen) {
+                        lp.firstSeen = Math.min(lp.firstSeen, pdata.firstSeen);
+                    }
+                }
+            }
+
+            // Recompute win rate and adaptation level with merged data
+            this.aiStats.winRate = this.aiStats.totalGames > 0
+                ? (this.aiStats.wins / this.aiStats.totalGames) * 100
+                : 0;
+            this.adaptationLevel = this.calculateAdaptationLevel();
+
+            console.log('AI learning data hydrated from server stats (data.json)');
+        } catch (error) {
+            console.error('Error loading AI learning data from server:', error);
+        }
     }
     
     // Save patterns and stats to localStorage
@@ -123,6 +204,17 @@ class AILearningSystem {
             console.log(`AI won game ${this.aiStats.totalGames}. Total wins: ${this.aiStats.wins}`);
         } else if (result === 'loss') {
             this.aiStats.losses++;
+
+            // Remember the last AI move index that appeared in this losing game.
+            // This will be used by the move selector to avoid repeating losing moves
+            // twice in a row when there is any alternative.
+            if (this.moveHistory.length > 0) {
+                const lastMove = this.moveHistory[this.moveHistory.length - 1];
+                if (lastMove && typeof lastMove.moveIndex === 'number') {
+                    this.lastLosingMoveIndex = lastMove.moveIndex;
+                }
+            }
+
             // Learn from player's win pattern
             if (winPattern && Array.isArray(winPattern) && winPattern.length > 0) {
                 this.learnWinPattern(playerName, winPattern);
@@ -281,6 +373,11 @@ class AILearningSystem {
 
     // Get AI stats for display
     getStats() {
+        // Optionally refresh from server if stale when stats are requested
+        if (typeof window !== 'undefined' && typeof fetch === 'function') {
+            this.syncWithServer().catch(() => {});
+        }
+
         // Convert learned patterns to serializable format
         const patternsData = {};
         for (const [patternKey, patternData] of Object.entries(this.learnedPatterns)) {
@@ -304,7 +401,9 @@ class AILearningSystem {
             learnedPatterns: Object.keys(this.learnedPatterns).length,
             blockedPatterns: this.blockedWinPatterns.size,
             recentMoves: this.moveHistory.slice(-10), // Last 10 moves
-            patternsData: patternsData // Full pattern details
+            patternsData: patternsData, // Full pattern details
+            // Expose lastLosingMoveIndex so the move selector can avoid repeating it
+            lastLosingMoveIndex: this.lastLosingMoveIndex
         };
     }
 

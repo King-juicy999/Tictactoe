@@ -2983,9 +2983,9 @@ button:disabled:hover {
         transform: translateX(-50%);
         width: 90%;
         max-width: 500px;
-        max-height: auto;
+        max-height: none;
         top: auto;
-        bottom: 1rem;
+        bottom: calc(0.75rem + env(safe-area-inset-bottom, 0px));
         flex-direction: row;
         padding: 0.75rem;
         border-radius: 20px;
@@ -3078,7 +3078,7 @@ button:disabled:hover {
 @media (max-width: 480px) {
     .powerup-sidebar {
         width: 95%;
-        bottom: 0.5rem;
+        bottom: calc(0.4rem + env(safe-area-inset-bottom, 0px));
         padding: 0.5rem;
     }
     
@@ -4204,6 +4204,7 @@ button:disabled::after {
     box-shadow: 0 4px 12px var(--shadow);
     z-index: 999;
     transition: all 0.3s ease;
+    opacity: 0.85; /* Slight transparency so it feels lighter over content */
 }
 
 /* Show guide icon only in game screen */
@@ -4217,6 +4218,7 @@ button:disabled::after {
     color: var(--bg-primary);
     transform: scale(1.1);
     box-shadow: 0 6px 20px var(--shadow);
+    opacity: 1;
 }
 
 .guide-icon {
@@ -4263,11 +4265,19 @@ button:disabled::after {
     }
     
     .guide-icon-btn {
-        width: 45px;
-        height: 45px;
-        font-size: 1.2rem;
-        bottom: 1rem;
-        right: 1rem;
+        width: 42px;
+        height: 42px;
+        font-size: 1.1rem;
+        top: 0.75rem;      /* Move to top-right on mobile so it never covers the board */
+        right: 0.75rem;
+        bottom: auto;
+        opacity: 0.8;
+    }
+
+    #guide-icon-btn-game {
+        top: 0.75rem;
+        right: 0.75rem;
+        bottom: auto;
     }
     
     /* Mobile: Better spacing for game elements */
@@ -4280,25 +4290,9 @@ button:disabled::after {
     
     .game-board {
         gap: 8px;
-        margin: 1.5rem auto;
+        /* Extra bottom margin so fixed bottom UI (power-ups) never overlaps cells */
+        margin: 1.5rem auto 7rem;
         padding: 0 0.5rem;
-    }
-    
-    .powerup-sidebar {
-        right: 0.5rem;
-        width: 160px;
-        padding: 1rem;
-    }
-    
-    /* Position guide icon above power-up bar on mobile */
-    .guide-icon-btn {
-        bottom: 5rem; /* Above power-up sidebar */
-        right: 1rem;
-    }
-    
-    #guide-icon-btn-game {
-        bottom: 5rem;
-        right: 1rem;
     }
 }
 

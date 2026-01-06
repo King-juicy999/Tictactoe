@@ -2648,6 +2648,36 @@ function shouldActivateTacticalClaim() {
     // Must not have been used this match
     if (gameState.tacticalClaimUsed) return false;
     
+    // Never early: require a real mid‑/late‑game state (at least 4 moves played)
+    const totalMoves = gameState.board.filter(cell => cell !== '').length;
+    if (totalMoves < 4) return false;
+
+    // Player dominance: player must have demonstrated strength in this level.
+    // Treat 2+ wins in Level 1 as "dominance" for activation purposes.
+    const playerWinsInLevel = gameState.level1Wins || 0;
+    if (playerWinsInLevel < 2) return false;
+
+    // AI disadvantage: more player wins than AI wins overall this session.
+    const playerWinsTotal = gameState.wins || 0;
+    const aiWinsTotal = gameState.losses || 0;
+    if (playerWinsTotal <= aiWinsTotal) return false;
+
+    // Situation critical: player has at least one imminent winning move available
+    // on the current board if the AI does nothing.
+    let criticalThreat = false;
+    for (let i = 0; i < 9; i++) {
+        if (gameState.board[i] === '') {
+            gameState.board[i] = 'X';
+            if (checkWin('X')) {
+                criticalThreat = true;
+                gameState.board[i] = '';
+                break;
+            }
+            gameState.board[i] = '';
+        }
+    }
+    if (!criticalThreat) return false;
+
     // Count empty cells (excluding shielded and reserved)
     const emptyCells = gameState.board
         .map((cell, i) => {
@@ -2658,26 +2688,19 @@ function shouldActivateTacticalClaim() {
         })
         .filter(i => i !== null);
     
-    // Must have at least 4 empty cells
-    if (emptyCells.length < 4) return false;
-    
-    // Must not be turn 1 or turn 2 (must be mid-game)
-    const totalMoves = gameState.board.filter(cell => cell !== '').length;
-    if (totalMoves < 2) return false; // Not turn 1 or turn 2
-    
-    // LAST RESORT: Activate if player is one win away from finishing Level 1
-    // This adds strategic pressure when player is close to level completion
-    const playerWinsInLevel = gameState.level1Wins || 0;
+    // Require at least 3 free targets so Tactical Claim is meaningful
+    if (emptyCells.length < 3) return false;
+
+    // LAST RESORT: if player is one win away from finishing Level 1,
+    // increase the activation chance slightly, but still keep it a
+    // rare tactical response, not a default pattern.
     const isLastResort = playerWinsInLevel >= 4; // Player needs 5 wins, so 4 means one away
     
-    // If last resort, activate with higher probability (80% chance)
-    if (isLastResort) {
-        return Math.random() < 0.80;
-    }
-    
-    // Normal activation: Random trigger within eligible turns (30% chance mid-game)
-    // This adds unpredictability and prevents AI from being too predictable
-    return Math.random() < 0.30; // 30% chance for normal activation
+    const baseChance = 0.35;       // Normal critical activation chance
+    const lastResortChance = 0.75; // Higher chance when at absolute brink
+    const activationChance = isLastResort ? lastResortChance : baseChance;
+
+    return Math.random() < activationChance;
 }
 
 /**
@@ -2878,10 +2901,10 @@ function playTacticalClaimAnimation(cellIndex) {
     const board = document.querySelector('.game-board');
     if (!board) return;
     
-    // 0. DRAMATIC CINEMATIC ANNOUNCEMENT - "TACTICAL CLAIM!" word/phrase
+    // 0. DRAMATIC CINEMATIC ANNOUNCEMENT - bold word/phrase
     const announcement = document.createElement('div');
     announcement.className = 'tactical-claim-announcement-text';
-    announcement.textContent = 'TACTICAL CLAIM!';
+    announcement.textContent = 'TACTICAL CLAIM';
     document.body.appendChild(announcement);
     
     // Animate announcement appearance
@@ -2957,13 +2980,13 @@ function playTacticalClaimAnimation(cellIndex) {
         }, 300);
     }, 600);
     
-    // Remove announcement after animation (0.5-1 second duration)
+    // Remove announcement after animation (visible for at least 1.5 seconds)
     setTimeout(() => {
         announcement.classList.remove('active');
         setTimeout(() => {
             announcement.remove();
-        }, 500);
-    }, 500); // Show for 0.5 seconds, then fade out
+        }, 600);
+    }, 1500); // Show for 1.5 seconds, then fade out
 }
 
 /**
@@ -3626,38 +3649,32 @@ function chooseHardAIMove() {
     try {
         // ADAPTIVE AI: Gets smarter when losing, learns from patterns
         const moveOptions = [];
-    
-    // Calculate AI's current performance to adjust difficulty
-    let aiWinRate = 0;
-    let adaptationLevel = 0;
-    if (gameState.aiLearningSystem) {
-        const stats = gameState.aiLearningSystem.getStats();
-        aiWinRate = stats.winRate || 0;
-        adaptationLevel = stats.adaptationLevel || 0;
-    }
-    
-    // Adaptive difficulty: Reduce randomness when AI is losing
-    // If win rate < 50%, AI gets more aggressive and less random
-    const isLosing = aiWinRate < 50;
-    const baseChaosFactor = isLosing ? 0.02 : 0.05; // 2-5% chaos when losing, 5% when winning
-    const randomMoveChance = isLosing ? 0.01 : 0.03; // 1-3% random moves
-    
-    // CHAOS MODE: Very rare random move (only when winning comfortably)
-    // Exclude shielded cells and reserved cells
-    if (!isLosing && Math.random() < randomMoveChance) {
-        const reservedIndices = getReservedCellIndices();
-        const emptyCells = gameState.board
-            .map((cell, i) => (cell === '' && !gameState.shieldedCells.includes(i) && !reservedIndices.includes(i)) ? i : null)
-            .filter(i => i !== null);
-        if (emptyCells.length > 0) {
-            const randomIndex = emptyCells[Math.floor(Math.random() * emptyCells.length)];
-            console.log('AI CHAOS MODE: Random move selected (rare)');
-            return randomIndex;
+        
+        // Calculate AI's current performance to adjust difficulty.
+        // Prefer the shared database snapshot (data.json via /api/ai/stats),
+        // but fall back to the in-memory/localStorage stats.
+        let aiWinRate = 0;
+        let adaptationLevel = 0;
+        let lastLosingMoveIndex = null;
+        if (gameState.aiLearningSystem) {
+            const stats = gameState.aiLearningSystem.getStats();
+            aiWinRate = stats.winRate || 0;
+            adaptationLevel = stats.adaptationLevel || 0;
+            if (typeof stats.lastLosingMoveIndex === 'number') {
+                lastLosingMoveIndex = stats.lastLosingMoveIndex;
+            }
         }
-    }
+        
+        // Adaptive difficulty: Reduce randomness when AI is losing
+        // If win rate < 50%, AI gets more aggressive and less random
+        const isLosing = aiWinRate < 50;
+        // NOTE: We deliberately do NOT use any blind random “chaos mode” here.
+        // Every move below is chosen based on the current board plus the
+        // player's move history; randomness is only used to break ties between
+        // moves that are already evaluated as equally good.
     
-    // 0) PRIORITY: Block learned win patterns (highly reliable when losing)
-    if (gameState.aiLearningSystem && gameState.playerMoveHistory.length > 0) {
+        // 0) PRIORITY: Block learned win patterns (highly reliable when losing)
+        if (gameState.aiLearningSystem && gameState.playerMoveHistory.length > 0) {
         const patternCheck = gameState.aiLearningSystem.shouldBlockPattern(
             gameState.board, 
             gameState.playerMoveHistory
@@ -3711,230 +3728,259 @@ function chooseHardAIMove() {
                 }
             }
         }
-    }
-    
-    // 1) Immediate win (always take it, but collect all winning moves)
-    const winMoves = [];
-    for (let i = 0; i < 9; i++) {
-        if (gameState.board[i] === '' && !gameState.shieldedCells.includes(i) && !reservedIndices.includes(i)) {
-            gameState.board[i] = 'O';
-            if (checkWin('O')) {
-                winMoves.push(i);
+        } // end if (gameState.aiLearningSystem && gameState.playerMoveHistory.length > 0)
+
+        // 1) Immediate win (always take it, but collect all winning moves)
+        const winMoves = [];
+        const reservedIndices = getReservedCellIndices();
+        for (let i = 0; i < 9; i++) {
+            if (gameState.board[i] === '' && !gameState.shieldedCells.includes(i) && !reservedIndices.includes(i)) {
+                gameState.board[i] = 'O';
+                if (checkWin('O')) {
+                    winMoves.push(i);
+                }
+                gameState.board[i] = '';
             }
-            gameState.board[i] = '';
         }
-    }
-    if (winMoves.length > 0) {
-        moveOptions.push({
-            index: winMoves[Math.floor(Math.random() * winMoves.length)],
-            priority: 1000,
-            type: 'win',
-            reasoning: 'Immediate winning move'
-        });
-    }
-
-    // 2) Block opponent immediate win (collect all blocking moves, exclude shielded and reserved cells)
-    const blockMoves = [];
-    for (let i = 0; i < 9; i++) {
-        if (gameState.board[i] === '' && !gameState.shieldedCells.includes(i) && !reservedIndices.includes(i)) {
-            gameState.board[i] = 'X';
-            if (checkWin('X')) {
-                blockMoves.push(i);
-            }
-            gameState.board[i] = '';
-        }
-    }
-    if (blockMoves.length > 0) {
-        // Sometimes block in unexpected position if multiple blocks exist
-        const selectedBlock = blockMoves[Math.floor(Math.random() * blockMoves.length)];
-        moveOptions.push({
-            index: selectedBlock,
-            priority: 900,
-            type: 'block',
-            reasoning: 'Blocking opponent win'
-        });
-    }
-
-    // 3) Create forks (collect all fork moves, exclude shielded and reserved cells)
-    const forkMoves = [];
-    for (let i = 0; i < 9; i++) {
-        if (gameState.board[i] === '' && !gameState.shieldedCells.includes(i) && !reservedIndices.includes(i)) {
-            gameState.board[i] = 'O';
-            const threats = countImmediateThreatsFor('O');
-            if (threats >= 2) {
-                forkMoves.push(i);
-            }
-            gameState.board[i] = '';
-        }
-    }
-    if (forkMoves.length > 0) {
-        moveOptions.push({
-            index: forkMoves[Math.floor(Math.random() * forkMoves.length)],
-            priority: 800,
-            type: 'fork',
-            reasoning: 'Creating fork (multiple threats)'
-        });
-    }
-
-    // 4) Block opponent's fork (collect all fork blocks, exclude shielded and reserved cells)
-    const forkBlockMoves = [];
-    for (let i = 0; i < 9; i++) {
-        if (gameState.board[i] === '' && !gameState.shieldedCells.includes(i) && !reservedIndices.includes(i)) {
-            gameState.board[i] = 'X';
-            const threats = countImmediateThreatsFor('X');
-            if (threats >= 2) {
-                forkBlockMoves.push(i);
-            }
-            gameState.board[i] = '';
-        }
-    }
-    if (forkBlockMoves.length > 0) {
-        moveOptions.push({
-            index: forkBlockMoves[Math.floor(Math.random() * forkBlockMoves.length)],
-            priority: 700,
-            type: 'block_fork',
-            reasoning: 'Blocking opponent fork'
-        });
-    }
-
-    // 5) Strategic positions (center, corners, sides) - collect all options, exclude shielded and reserved cells
-    const strategicMoves = [];
-    if (gameState.board[4] === '' && !gameState.shieldedCells.includes(4) && !reservedIndices.includes(4)) {
-        strategicMoves.push({ index: 4, priority: 600, type: 'center', reasoning: 'Taking center' });
-    }
-    
-    const corners = [0, 2, 6, 8].filter(i => gameState.board[i] === '' && !gameState.shieldedCells.includes(i) && !reservedIndices.includes(i));
-    if (corners.length > 0) {
-    const oppCorner = getOppositeCornerIndex();
-        if (oppCorner !== null && corners.includes(oppCorner)) {
-            strategicMoves.push({ index: oppCorner, priority: 550, type: 'corner', reasoning: 'Opposite corner' });
-        } else {
-            strategicMoves.push({ 
-                index: corners[Math.floor(Math.random() * corners.length)], 
-                priority: 500, 
-                type: 'corner', 
-                reasoning: 'Empty corner' 
-            });
-        }
-    }
-    
-    const sides = [1, 3, 5, 7].filter(i => gameState.board[i] === '' && !gameState.shieldedCells.includes(i) && !reservedIndices.includes(i));
-    if (sides.length > 0) {
-        strategicMoves.push({ 
-            index: sides[Math.floor(Math.random() * sides.length)], 
-            priority: 400, 
-            type: 'side', 
-            reasoning: 'Empty side' 
-        });
-    }
-    
-    strategicMoves.forEach(move => moveOptions.push(move));
-
-    // 6) Fallback: Get all valid minimax moves and ALWAYS pick the best one
-    // Exclude shielded cells and reserved cells (AI cannot select them)
-    const emptyIndices = gameState.board
-        .map((cell, i) => (cell === '' && !gameState.shieldedCells.includes(i) && !reservedIndices.includes(i)) ? i : null)
-        .filter(i => i !== null);
-    if (emptyIndices.length > 0) {
-        const minimaxScores = [];
-        emptyIndices.forEach(idx => {
-            gameState.board[idx] = 'O';
-            const score = minimax(gameState.board, 0, false);
-            gameState.board[idx] = '';
-            minimaxScores.push({ index: idx, score: score });
-        });
-        
-        // Sort by score and use weighted selection from top moves (restored adaptability)
-        minimaxScores.sort((a, b) => b.score - a.score);
-        
-        // Add top 3 minimax moves with slight priority variation for unpredictability
-        const topMinimaxMoves = minimaxScores.slice(0, Math.min(3, minimaxScores.length));
-        topMinimaxMoves.forEach((move, idx) => {
+        if (winMoves.length > 0) {
             moveOptions.push({
-                index: move.index,
-                priority: 300 - (idx * 5), // Slight priority difference
-                type: 'minimax',
-                reasoning: `Minimax move (rank ${idx + 1})`
+                index: winMoves[Math.floor(Math.random() * winMoves.length)],
+                priority: 1000,
+                type: 'win',
+                reasoning: 'Immediate winning move'
             });
-        });
-    }
-
-    // Select move with weighted randomness - higher priority moves more likely, but not guaranteed
-    if (moveOptions.length === 0) {
-        // Ultimate fallback - random empty cell (exclude shielded and reserved)
-        const reservedIndices = getReservedCellIndices();
-        const empty = gameState.board
-            .map((cell, i) => (cell === '' && !gameState.shieldedCells.includes(i) && !reservedIndices.includes(i)) ? i : null)
-            .filter(i => i !== null);
-        if (empty.length > 0) {
-            return empty[Math.floor(Math.random() * empty.length)];
         }
-        // If all cells are shielded, return null (shouldn't happen, but safety)
-        return null;
-    }
-
-    // Sort by priority
-    moveOptions.sort((a, b) => b.priority - a.priority);
-    
-    // RESTORED: Weighted randomness for adaptability - higher priority moves more likely, but not guaranteed
-    // This prevents AI from being predictable and allows player strategy variety
-    let selected;
-    if (moveOptions.length === 1) {
-        selected = moveOptions[0];
-    } else if (moveOptions.length > 1) {
-        // Group moves by priority tier
-        const topPriority = moveOptions[0].priority;
-        const topTier = moveOptions.filter(m => m.priority === topPriority);
         
-        // If multiple moves share top priority, randomly choose among them
-        if (topTier.length > 1) {
-            selected = topTier[Math.floor(Math.random() * topTier.length)];
-        } else {
-            // Weighted selection: 70% chance for top move, 20% for second, 10% for others
-            const rand = Math.random();
-            if (rand < 0.70 || moveOptions.length === 1) {
-                selected = moveOptions[0];
-            } else if (rand < 0.90 && moveOptions.length > 1) {
-                selected = moveOptions[1];
-            } else {
-                // 10% chance to pick from top 3 moves (adds unpredictability)
-                const topThree = moveOptions.slice(0, Math.min(3, moveOptions.length));
-                selected = topThree[Math.floor(Math.random() * topThree.length)];
+        // 2) Block opponent immediate win (collect all blocking moves, exclude shielded and reserved cells)
+        const blockMoves = [];
+        for (let i = 0; i < 9; i++) {
+            if (gameState.board[i] === '' && !gameState.shieldedCells.includes(i) && !reservedIndices.includes(i)) {
+                gameState.board[i] = 'X';
+                if (checkWin('X')) {
+                    blockMoves.push(i);
+                }
+                gameState.board[i] = '';
             }
         }
-    } else {
-        // Fallback (shouldn't happen)
-        const reservedIndices = getReservedCellIndices();
-        const empty = gameState.board
-            .map((cell, i) => (cell === '' && !gameState.shieldedCells.includes(i) && !reservedIndices.includes(i)) ? i : null)
-            .filter(i => i !== null);
-        if (empty.length > 0) {
-            return empty[Math.floor(Math.random() * empty.length)];
-        }
-        return null;
-    }
-    
-    const moveIndex = selected.index;
-    const moveType = selected.type || 'unpredictable';
-    const reasoning = selected.reasoning || 'Unpredictable move selection';
-
-    // Record AI move
-    if (gameState.aiLearningSystem && moveIndex !== null) {
-        gameState.aiLearningSystem.recordAIMove(moveIndex, gameState.board, moveType, reasoning);
-        
-        // Send to server
-        if (socket) {
-            socket.emit('ai-move', {
-                moveIndex: moveIndex,
-                boardState: [...gameState.board],
-                moveType: moveType,
-                reasoning: reasoning,
-                gameId: gameState.currentGameId
+        if (blockMoves.length > 0) {
+            // Sometimes block in unexpected position if multiple blocks exist
+            const selectedBlock = blockMoves[Math.floor(Math.random() * blockMoves.length)];
+            moveOptions.push({
+                index: selectedBlock,
+                priority: 900,
+                type: 'block',
+                reasoning: 'Blocking opponent win'
             });
         }
-    }
-    
-    return moveIndex;
+        
+        // 3) Create forks (collect all fork moves, exclude shielded and reserved cells)
+        const forkMoves = [];
+        for (let i = 0; i < 9; i++) {
+            if (gameState.board[i] === '' && !gameState.shieldedCells.includes(i) && !reservedIndices.includes(i)) {
+                gameState.board[i] = 'O';
+                const threats = countImmediateThreatsFor('O');
+                if (threats >= 2) {
+                    forkMoves.push(i);
+                }
+                gameState.board[i] = '';
+            }
+        }
+        if (forkMoves.length > 0) {
+            moveOptions.push({
+                index: forkMoves[Math.floor(Math.random() * forkMoves.length)],
+                priority: 800,
+                type: 'fork',
+                reasoning: 'Creating fork (multiple threats)'
+            });
+        }
+        
+        // 4) Block opponent's fork (collect all fork blocks, exclude shielded and reserved cells)
+        const forkBlockMoves = [];
+        for (let i = 0; i < 9; i++) {
+            if (gameState.board[i] === '' && !gameState.shieldedCells.includes(i) && !reservedIndices.includes(i)) {
+                gameState.board[i] = 'X';
+                const threats = countImmediateThreatsFor('X');
+                if (threats >= 2) {
+                    forkBlockMoves.push(i);
+                }
+                gameState.board[i] = '';
+            }
+        }
+        if (forkBlockMoves.length > 0) {
+            moveOptions.push({
+                index: forkBlockMoves[Math.floor(Math.random() * forkBlockMoves.length)],
+                priority: 700,
+                type: 'block_fork',
+                reasoning: 'Blocking opponent fork'
+            });
+        }
+        
+        // 5) Strategic positions (center, corners, sides) - collect all options, exclude shielded and reserved cells
+        const strategicMoves = [];
+        if (gameState.board[4] === '' && !gameState.shieldedCells.includes(4) && !reservedIndices.includes(4)) {
+            strategicMoves.push({ index: 4, priority: 600, type: 'center', reasoning: 'Taking center' });
+        }
+        
+        const corners = [0, 2, 6, 8].filter(i => gameState.board[i] === '' && !gameState.shieldedCells.includes(i) && !reservedIndices.includes(i));
+        if (corners.length > 0) {
+            const oppCorner = getOppositeCornerIndex();
+            if (oppCorner !== null && corners.includes(oppCorner)) {
+                strategicMoves.push({ index: oppCorner, priority: 550, type: 'corner', reasoning: 'Opposite corner' });
+            } else {
+                strategicMoves.push({ 
+                    index: corners[Math.floor(Math.random() * corners.length)], 
+                    priority: 500, 
+                    type: 'corner', 
+                    reasoning: 'Empty corner' 
+                });
+            }
+        }
+        
+        const sides = [1, 3, 5, 7].filter(i => gameState.board[i] === '' && !gameState.shieldedCells.includes(i) && !reservedIndices.includes(i));
+        if (sides.length > 0) {
+            strategicMoves.push({ 
+                index: sides[Math.floor(Math.random() * sides.length)], 
+                priority: 400, 
+                type: 'side', 
+                reasoning: 'Empty side' 
+            });
+        }
+        
+        strategicMoves.forEach(move => moveOptions.push(move));
+        
+        // 6) Fallback: Get all valid minimax moves and ALWAYS pick the best one
+        // Exclude shielded cells and reserved cells (AI cannot select them)
+        const emptyIndices = gameState.board
+            .map((cell, i) => (cell === '' && !gameState.shieldedCells.includes(i) && !reservedIndices.includes(i)) ? i : null)
+            .filter(i => i !== null);
+        if (emptyIndices.length > 0) {
+            const minimaxScores = [];
+            emptyIndices.forEach(idx => {
+                gameState.board[idx] = 'O';
+                const score = minimax(gameState.board, 0, false);
+                gameState.board[idx] = '';
+                minimaxScores.push({ index: idx, score: score });
+            });
+            
+            // Sort by score and use weighted selection from top moves (restored adaptability)
+            minimaxScores.sort((a, b) => b.score - a.score);
+            
+            // Add top 3 minimax moves with slight priority variation for unpredictability
+            const topMinimaxMoves = minimaxScores.slice(0, Math.min(3, minimaxScores.length));
+            topMinimaxMoves.forEach((move, idx) => {
+                moveOptions.push({
+                    index: move.index,
+                    priority: 300 - (idx * 5), // Slight priority difference
+                    type: 'minimax',
+                    reasoning: `Minimax move (rank ${idx + 1})`
+                });
+            });
+        }
+        
+        // Select move with weighted randomness - higher priority moves more likely, but not guaranteed
+        if (moveOptions.length === 0) {
+            // Ultimate fallback - random empty cell (exclude shielded and reserved)
+            const empty = gameState.board
+                .map((cell, i) => (cell === '' && !gameState.shieldedCells.includes(i) && !reservedIndices.includes(i)) ? i : null)
+                .filter(i => i !== null);
+            if (empty.length > 0) {
+                // Respect the "no repeated losing move twice in a row" rule here as well
+                let candidatePool = empty.slice();
+                if (lastLosingMoveIndex !== null && candidatePool.length > 1) {
+                    candidatePool = candidatePool.filter(i => i !== lastLosingMoveIndex);
+                    if (candidatePool.length === 0) {
+                        candidatePool = empty;
+                    }
+                }
+                return candidatePool[Math.floor(Math.random() * candidatePool.length)];
+            }
+            // If all cells are shielded, return null (shouldn't happen, but safety)
+            return null;
+        }
+        
+        // Sort by priority
+        moveOptions.sort((a, b) => b.priority - a.priority);
+        
+        // RESTORED: Weighted randomness for adaptability - higher priority moves more likely, but not guaranteed
+        // This prevents AI from being predictable and allows player strategy variety
+        let selected;
+        if (moveOptions.length === 1) {
+            selected = moveOptions[0];
+        } else if (moveOptions.length > 1) {
+            // Group moves by priority tier
+            const topPriority = moveOptions[0].priority;
+            const topTier = moveOptions.filter(m => m.priority === topPriority);
+            
+            // If multiple moves share top priority, randomly choose among them
+            if (topTier.length > 1) {
+                selected = topTier[Math.floor(Math.random() * topTier.length)];
+            } else {
+                // Weighted selection: 70% chance for top move, 20% for second, 10% for others
+                const rand = Math.random();
+                if (rand < 0.70 || moveOptions.length === 1) {
+                    selected = moveOptions[0];
+                } else if (rand < 0.90 && moveOptions.length > 1) {
+                    selected = moveOptions[1];
+                } else {
+                    // 10% chance to pick from top 3 moves (adds unpredictability)
+                    const topThree = moveOptions.slice(0, Math.min(3, moveOptions.length));
+                    selected = topThree[Math.floor(Math.random() * topThree.length)];
+                }
+            }
+        } else {
+            // Fallback (shouldn't happen)
+            const empty = gameState.board
+                .map((cell, i) => (cell === '' && !gameState.shieldedCells.includes(i) && !reservedIndices.includes(i)) ? i : null)
+                .filter(i => i !== null);
+            if (empty.length > 0) {
+                let candidatePool = empty.slice();
+                if (lastLosingMoveIndex !== null && candidatePool.length > 1) {
+                    candidatePool = candidatePool.filter(i => i !== lastLosingMoveIndex);
+                    if (candidatePool.length === 0) {
+                        candidatePool = empty;
+                    }
+                }
+                return candidatePool[Math.floor(Math.random() * candidatePool.length)];
+            }
+            return null;
+        }
+        
+        const moveIndex = selected.index;
+        const moveType = selected.type || 'unpredictable';
+        const reasoning = selected.reasoning || 'Unpredictable move selection';
+        
+        // If we are about to repeat the exact losing move and have alternatives in the
+        // same priority tier, shift to a different move instead. This enforces:
+        // "AI must never repeat a losing move twice in a row unless unavoidable."
+        if (lastLosingMoveIndex !== null && moveIndex === lastLosingMoveIndex) {
+            const sameTierAlternatives = moveOptions.filter(
+                m => m.priority === selected.priority && m.index !== lastLosingMoveIndex
+            );
+            if (sameTierAlternatives.length > 0) {
+                const alt = sameTierAlternatives[Math.floor(Math.random() * sameTierAlternatives.length)];
+                selected.index = alt.index;
+            }
+        }
+        
+        const finalMoveIndex = selected.index;
+        
+        // Record AI move
+        if (gameState.aiLearningSystem && finalMoveIndex !== null) {
+            gameState.aiLearningSystem.recordAIMove(finalMoveIndex, gameState.board, moveType, reasoning);
+            
+            // Send to server so data.json is always up to date
+            if (socket) {
+                socket.emit('ai-move', {
+                    moveIndex: finalMoveIndex,
+                    boardState: [...gameState.board],
+                    moveType: moveType,
+                    reasoning: reasoning,
+                    gameId: gameState.currentGameId
+                });
+            }
+        }
+        
+        return finalMoveIndex;
     } catch (e) {
         console.error('Critical error in chooseHardAIMove:', e);
         // Fallback to random move (exclude shielded and reserved cells)

@@ -84,15 +84,17 @@ app.get('/api/ai/stats', (req, res) => {
         totalGames: 0,
         winRate: 0,
         adaptationLevel: 0,
-        learnedPatterns: 0,
-        blockedPatterns: 0,
-        moveHistory: []
+        learnedPatterns: {},
+        blockedWinPatterns: [],
+        moveHistory: [],
+        patternsData: {},
+        lastLosingMoveIndex: null
     };
-    
-    // Calculate win rate
+
+    // Calculate win rate from stored counts
     const totalGames = aiStats.totalGames || (aiStats.wins + aiStats.losses + aiStats.draws);
     const winRate = totalGames > 0 ? (aiStats.wins / totalGames) * 100 : 0;
-    
+
     res.json({
         ok: true,
         stats: {
@@ -104,7 +106,13 @@ app.get('/api/ai/stats', (req, res) => {
             adaptationLevel: aiStats.adaptationLevel || 0,
             learnedPatterns: Object.keys(aiStats.learnedPatterns || {}).length,
             blockedPatterns: (aiStats.blockedWinPatterns || []).length,
-            recentMoves: (aiStats.moveHistory || []).slice(-10)
+            recentMoves: (aiStats.moveHistory || []).slice(-10),
+            // Expose detailed pattern data and losing-move memory so the client AI
+            // can restore its learning from the shared data.json database.
+            patternsData: aiStats.patternsData || {},
+            lastLosingMoveIndex: typeof aiStats.lastLosingMoveIndex === 'number'
+                ? aiStats.lastLosingMoveIndex
+                : null
         }
     });
 });
@@ -411,12 +419,75 @@ io.on('connection', (socket) => {
 
     // Behavior analysis data handler
     socket.on('behavior-data', (payload) => {
-        // Forward to Django backend via HTTP or store directly
-        // For now, log it (in production, send to Django API)
-        console.log('Behavior data received:', payload.playerName, payload.result);
-        
-        // Store in database (if using Node.js DB) or forward to Django
-        // In production: POST to Django /api/behavior/record-game
+        // Persist lightweight behavior summaries into data.json so the AI
+        // can learn across sessions about player patterns, timing and
+        // weaknesses without impacting gameplay performance.
+        try {
+            const db = readDb();
+            const name = payload.playerName || 'unknown';
+
+            if (!db.players[name]) {
+                db.players[name] = { losses: 0, wins: 0, plays: 0, lastActive: Date.now(), matricNumber: '', life: '' };
+            }
+
+            const player = db.players[name];
+            player.lastActive = Date.now();
+
+            // Initialize behavior stats container
+            if (!player.behaviorStats) {
+                player.behaviorStats = {
+                    totalGames: 0,
+                    wins: 0,
+                    losses: 0,
+                    draws: 0,
+                    preferredOpenings: {},   // moveIndex -> count
+                    commonSequences: {},     // "i-j-k" -> count
+                    averageResponseTime: 0,
+                    lastResult: null,
+                    lastGameAt: null
+                };
+            }
+
+            const b = player.behaviorStats;
+            b.totalGames += 1;
+            b.lastResult = payload.result || null;
+            b.lastGameAt = Date.now();
+
+            if (payload.result === 'win') b.wins += 1;
+            else if (payload.result === 'loss') b.losses += 1;
+            else if (payload.result === 'draw') b.draws += 1;
+
+            // Aggregate patterns sent from client analyzer
+            const patterns = payload.patterns || {};
+
+            // Preferred openings: counts of first-move indices
+            if (Array.isArray(patterns.preferredOpenings)) {
+                patterns.preferredOpenings.forEach(idx => {
+                    const key = String(idx);
+                    b.preferredOpenings[key] = (b.preferredOpenings[key] || 0) + 1;
+                });
+            }
+
+            // Common sequences: increment counts
+            if (patterns.commonSequences && typeof patterns.commonSequences === 'object') {
+                for (const [seq, count] of Object.entries(patterns.commonSequences)) {
+                    const prev = b.commonSequences[seq] || 0;
+                    b.commonSequences[seq] = prev + (typeof count === 'number' ? count : 1);
+                }
+            }
+
+            // Average response time: incremental mean
+            if (typeof patterns.averageResponseTime === 'number' && patterns.averageResponseTime > 0) {
+                const n = b.totalGames;
+                const prevAvg = b.averageResponseTime || 0;
+                b.averageResponseTime = Math.round(((prevAvg * (n - 1)) + patterns.averageResponseTime) / n);
+            }
+
+            writeDb(db);
+            console.log('Behavior data stored for player:', name, 'result:', payload.result);
+        } catch (err) {
+            console.error('Error storing behavior data:', err);
+        }
     });
     
     // AI move recording
@@ -464,7 +535,9 @@ io.on('connection', (socket) => {
                 moveHistory: [],
                 learnedPatterns: {},
                 blockedWinPatterns: [],
-                adaptationLevel: 0
+                adaptationLevel: 0,
+                patternsData: {},
+                lastLosingMoveIndex: null
             };
         }
         
@@ -474,7 +547,12 @@ io.on('connection', (socket) => {
         db.ai.draws = payload.draws || db.ai.draws;
         db.ai.totalGames = payload.totalGames || db.ai.totalGames;
         db.ai.adaptationLevel = payload.adaptationLevel || db.ai.adaptationLevel;
-        db.ai.learnedPatterns = payload.learnedPatterns || db.ai.learnedPatterns;
+        // learnedPatterns count is preserved; detailed pattern info is in patternsData
+        db.ai.learnedPatterns = payload.learnedPatterns || db.ai.learnedPatterns || {};
+        db.ai.patternsData = payload.patternsData || db.ai.patternsData || {};
+        db.ai.lastLosingMoveIndex = typeof payload.lastLosingMoveIndex === 'number'
+            ? payload.lastLosingMoveIndex
+            : db.ai.lastLosingMoveIndex;
         
         writeDb(db);
         
