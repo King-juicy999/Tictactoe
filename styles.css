@@ -4317,3 +4317,323 @@ body.theme-retro .powerup-guide-container {
     background: var(--bg-primary);
     border-color: var(--primary-color);
 }
+
+/* Guide Tactical Claim Demo */
+.guide-tactical-claim-demo {
+    position: relative;
+    background: rgba(0, 255, 0, 0.1) !important;
+    border: 2px solid rgba(0, 255, 0, 0.4) !important;
+}
+
+.guide-tactical-claim-icon {
+    font-size: 2rem;
+    animation: guideTacticalClaimPulse 2s ease-in-out infinite;
+    filter: drop-shadow(0 0 8px rgba(0, 255, 0, 0.6));
+}
+
+@keyframes guideTacticalClaimPulse {
+    0%, 100% {
+        transform: scale(1);
+        opacity: 0.9;
+    }
+    50% {
+        transform: scale(1.1);
+        opacity: 1;
+    }
+}
+
+/* ============================================
+   TACTICAL CLAIM - Level 1 AI Power-Up
+   Cinematic, premium visual effects
+   ============================================ */
+
+/* Tactical Claim Dim Overlay */
+.tactical-claim-dim {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.3);
+    z-index: 5000;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    pointer-events: none;
+}
+
+.tactical-claim-dim.active {
+    opacity: 1;
+}
+
+/* Tactical Claim Green Energy Flash */
+.tactical-claim-flash {
+    position: absolute;
+    top: 50%;
+    right: -20%;
+    width: 200px;
+    height: 200px;
+    background: radial-gradient(circle, rgba(0, 255, 0, 0.8) 0%, transparent 70%);
+    border-radius: 50%;
+    transform: translateY(-50%);
+    z-index: 100;
+    opacity: 0;
+    transition: opacity 0.3s ease, transform 0.6s ease;
+    pointer-events: none;
+    filter: blur(20px);
+}
+
+.tactical-claim-flash.active {
+    opacity: 1;
+    transform: translateY(-50%) translateX(-100%);
+}
+
+/* Tactical Claim Reserved Cell */
+.tactical-claim-reserved {
+    position: relative;
+    opacity: 0.6;
+    pointer-events: none;
+    background: rgba(0, 255, 0, 0.05) !important;
+    border: 2px solid rgba(0, 255, 0, 0.3) !important;
+}
+
+/* Tactical Claim Lock Icon */
+.tactical-claim-lock {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 2rem;
+    z-index: 101;
+    pointer-events: none;
+    animation: tacticalClaimLockStamp 0.5s ease-out, tacticalClaimLockIdle 2s ease-in-out infinite 0.5s;
+    filter: drop-shadow(0 0 8px rgba(0, 255, 0, 0.6));
+}
+
+@keyframes tacticalClaimLockStamp {
+    0% {
+        transform: translate(-50%, -150%) scale(0.5);
+        opacity: 0;
+    }
+    50% {
+        transform: translate(-50%, -50%) scale(1.2);
+    }
+    100% {
+        transform: translate(-50%, -50%) scale(1);
+        opacity: 1;
+    }
+}
+
+@keyframes tacticalClaimLockIdle {
+    0%, 100% {
+        transform: translate(-50%, -50%) scale(1);
+        opacity: 0.9;
+    }
+    50% {
+        transform: translate(-50%, -50%) scale(1.05);
+        opacity: 1;
+    }
+}
+
+/* Tactical Claim Countdown */
+.tactical-claim-countdown {
+    position: absolute;
+    top: 0.25rem;
+    right: 0.25rem;
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: var(--primary-color);
+    background: rgba(0, 0, 0, 0.6);
+    padding: 0.2rem 0.4rem;
+    border-radius: 4px;
+    z-index: 102;
+    transition: opacity 0.3s ease;
+}
+
+.tactical-claim-countdown.fading {
+    opacity: 0.5;
+    animation: tacticalClaimCountdownPulse 1s ease-in-out infinite;
+}
+
+@keyframes tacticalClaimCountdownPulse {
+    0%, 100% {
+        opacity: 0.5;
+    }
+    50% {
+        opacity: 1;
+    }
+}
+
+/* Tactical Claim Holographic Ring */
+.tactical-claim-ring {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 120%;
+    height: 120%;
+    border: 2px solid rgba(0, 255, 0, 0.6);
+    border-radius: 8px;
+    z-index: 99;
+    pointer-events: none;
+    animation: tacticalClaimRingPulse 0.8s ease-out;
+    box-shadow: 0 0 20px rgba(0, 255, 0, 0.4), inset 0 0 20px rgba(0, 255, 0, 0.2);
+}
+
+@keyframes tacticalClaimRingPulse {
+    0% {
+        transform: translate(-50%, -50%) scale(0.8);
+        opacity: 0;
+    }
+    50% {
+        transform: translate(-50%, -50%) scale(1.1);
+        opacity: 1;
+    }
+    100% {
+        transform: translate(-50%, -50%) scale(1);
+        opacity: 0.6;
+    }
+}
+
+/* Tactical Claim Shockwave */
+.tactical-claim-shockwave {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 0;
+    height: 0;
+    border: 2px solid rgba(0, 255, 0, 0.4);
+    border-radius: 50%;
+    z-index: 98;
+    pointer-events: none;
+    opacity: 0;
+}
+
+.tactical-claim-shockwave.active {
+    animation: tacticalClaimShockwave 0.8s ease-out;
+}
+
+@keyframes tacticalClaimShockwave {
+    0% {
+        width: 0;
+        height: 0;
+        opacity: 1;
+    }
+    100% {
+        width: 500px;
+        height: 500px;
+        opacity: 0;
+    }
+}
+
+/* Tactical Claim Announcement */
+.tactical-claim-announcement {
+    color: #00ff00 !important;
+    font-weight: 600 !important;
+    text-shadow: 0 0 10px rgba(0, 255, 0, 0.6) !important;
+    animation: tacticalClaimAnnouncementFade 3s ease-out;
+}
+
+@keyframes tacticalClaimAnnouncementFade {
+    0% {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    20% {
+        opacity: 1;
+        transform: translateY(0);
+    }
+    80% {
+        opacity: 1;
+    }
+    100% {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+}
+
+/* Theme Adaptations for Tactical Claim */
+body.theme-light .tactical-claim-flash {
+    background: radial-gradient(circle, rgba(0, 200, 0, 0.7) 0%, transparent 70%);
+}
+
+body.theme-light .tactical-claim-reserved {
+    background: rgba(0, 200, 0, 0.08) !important;
+    border-color: rgba(0, 200, 0, 0.4) !important;
+}
+
+body.theme-light .tactical-claim-lock {
+    filter: drop-shadow(0 0 6px rgba(0, 200, 0, 0.5));
+}
+
+body.theme-dark .tactical-claim-flash {
+    background: radial-gradient(circle, rgba(0, 255, 100, 0.8) 0%, transparent 70%);
+}
+
+body.theme-dark .tactical-claim-reserved {
+    background: rgba(0, 255, 100, 0.1) !important;
+    border-color: rgba(0, 255, 100, 0.5) !important;
+}
+
+body.theme-dark .tactical-claim-lock {
+    filter: drop-shadow(0 0 10px rgba(0, 255, 100, 0.7));
+}
+
+body.theme-neon .tactical-claim-flash {
+    background: radial-gradient(circle, rgba(0, 255, 0, 1) 0%, transparent 70%);
+    filter: blur(15px);
+}
+
+body.theme-neon .tactical-claim-reserved {
+    background: rgba(0, 255, 0, 0.15) !important;
+    border-color: rgba(0, 255, 0, 0.8) !important;
+    box-shadow: 0 0 20px rgba(0, 255, 0, 0.4);
+}
+
+body.theme-neon .tactical-claim-lock {
+    filter: drop-shadow(0 0 15px rgba(0, 255, 0, 0.9));
+    animation: tacticalClaimLockStamp 0.5s ease-out, tacticalClaimLockIdle 2s ease-in-out infinite 0.5s, tacticalClaimNeonPulse 2s ease-in-out infinite 0.5s;
+}
+
+@keyframes tacticalClaimNeonPulse {
+    0%, 100% {
+        filter: drop-shadow(0 0 15px rgba(0, 255, 0, 0.9));
+    }
+    50% {
+        filter: drop-shadow(0 0 25px rgba(0, 255, 0, 1));
+    }
+}
+
+body.theme-retro .tactical-claim-flash {
+    background: radial-gradient(circle, rgba(0, 200, 0, 0.9) 0%, transparent 70%);
+    filter: blur(5px);
+}
+
+body.theme-retro .tactical-claim-reserved {
+    background: rgba(0, 200, 0, 0.1) !important;
+    border-color: rgba(0, 200, 0, 0.6) !important;
+    border-style: dashed;
+    image-rendering: pixelated;
+}
+
+body.theme-retro .tactical-claim-lock {
+    filter: drop-shadow(2px 2px 0 rgba(0, 0, 0, 0.8));
+    image-rendering: pixelated;
+}
+
+/* Mobile Responsive */
+@media (max-width: 768px) {
+    .tactical-claim-flash {
+        width: 150px;
+        height: 150px;
+    }
+    
+    .tactical-claim-lock {
+        font-size: 1.5rem;
+    }
+    
+    .tactical-claim-countdown {
+        font-size: 0.65rem;
+        padding: 0.15rem 0.3rem;
+    }
+}

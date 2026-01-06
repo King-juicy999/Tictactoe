@@ -195,7 +195,11 @@ const gameState = {
     currentLevel: 1, // Current level (based on total games played)
     totalGamesPlayed: 0, // Total games (wins + losses) for level calculation
     level1Wins: 0, // Wins in current level (need 5 to graduate)
-    shieldedCells: [] // Array of cell indices that are shielded (AI cannot select)
+    shieldedCells: [], // Array of cell indices that are shielded (AI cannot select)
+    // Tactical Claim (Level 1 only)
+    tacticalClaimUsed: false, // Track if Tactical Claim was used this match
+    reservedCells: [], // Array of {cellIndex, turnsRemaining} for Tactical Claim
+    turnCount: 0 // Track turns for Tactical Claim unlock timing
 };
 
 /**
@@ -2265,7 +2269,7 @@ if (modeAiBtn) {
  * Power Up Guide System
  */
 let currentGuidePage = 1;
-const totalGuidePages = 7;
+const totalGuidePages = 8;
 
 /**
  * Show power-up guide
@@ -2437,6 +2441,320 @@ function animateLevelCircles() {
 }
 
 /**
+ * Tactical Claim System (Level 1 only)
+ */
+
+/**
+ * Check if Tactical Claim should be activated
+ */
+function shouldActivateTacticalClaim() {
+    // Must be Level 1
+    if (gameState.currentLevel !== 1) return false;
+    
+    // Must not have been used this match
+    if (gameState.tacticalClaimUsed) return false;
+    
+    // Count empty cells (excluding shielded and reserved)
+    const emptyCells = gameState.board
+        .map((cell, i) => {
+            if (cell !== '') return null;
+            if (gameState.shieldedCells.includes(i)) return null;
+            if (gameState.reservedCells.some(r => r.cellIndex === i)) return null;
+            return i;
+        })
+        .filter(i => i !== null);
+    
+    // Must have at least 4 empty cells
+    if (emptyCells.length < 4) return false;
+    
+    // Must not be turn 1 or turn 2 (must be mid-game)
+    const totalMoves = gameState.board.filter(cell => cell !== '').length;
+    if (totalMoves < 2) return false; // Not turn 1 or 2
+    
+    // Must not target a cell that would immediately guarantee a win
+    // (We'll check this when selecting the cell)
+    
+    return true;
+}
+
+/**
+ * Activate Tactical Claim - reserves a cell for 2 full turns
+ */
+function activateTacticalClaim() {
+    // Find a suitable cell to reserve
+    const emptyCells = gameState.board
+        .map((cell, i) => {
+            if (cell !== '') return null;
+            if (gameState.shieldedCells.includes(i)) return null;
+            if (gameState.reservedCells.some(r => r.cellIndex === i)) return null;
+            return i;
+        })
+        .filter(i => i !== null);
+    
+    if (emptyCells.length === 0) return;
+    
+    // Select a cell that won't guarantee immediate win
+    // Prefer center or corners (strategic but not winning)
+    let selectedCell = null;
+    const center = 4;
+    const corners = [0, 2, 6, 8];
+    
+    // Try center first
+    if (emptyCells.includes(center)) {
+        // Check if reserving center would block a win
+        const wouldBlockWin = checkIfReservingWouldBlockWin(center);
+        if (!wouldBlockWin) {
+            selectedCell = center;
+        }
+    }
+    
+    // Try corners if center not suitable
+    if (!selectedCell) {
+        for (const corner of corners) {
+            if (emptyCells.includes(corner)) {
+                const wouldBlockWin = checkIfReservingWouldBlockWin(corner);
+                if (!wouldBlockWin) {
+                    selectedCell = corner;
+                    break;
+                }
+            }
+        }
+    }
+    
+    // Fallback to any empty cell
+    if (!selectedCell && emptyCells.length > 0) {
+        selectedCell = emptyCells[Math.floor(Math.random() * emptyCells.length)];
+    }
+    
+    if (selectedCell === null) return;
+    
+    // Reserve the cell for 2 full turns (player + AI)
+    gameState.reservedCells.push({
+        cellIndex: selectedCell,
+        turnsRemaining: 2
+    });
+    
+    gameState.tacticalClaimUsed = true;
+    
+    // Play cinematic animation
+    playTacticalClaimAnimation(selectedCell);
+    
+    // Show AI announcement
+    showTacticalClaimAnnouncement();
+}
+
+/**
+ * Check if reserving a cell would block an immediate win
+ */
+function checkIfReservingWouldBlockWin(cellIndex) {
+    // Temporarily reserve the cell
+    const testBoard = [...gameState.board];
+    testBoard[cellIndex] = 'RESERVED';
+    
+    // Check if player has a winning move that would be blocked
+    for (let i = 0; i < 9; i++) {
+        if (testBoard[i] === '') {
+            testBoard[i] = 'X';
+            if (checkWinOnBoard(testBoard, 'X')) {
+                return true; // Would block a win
+            }
+            testBoard[i] = '';
+        }
+    }
+    
+    return false;
+}
+
+/**
+ * Check win on a specific board state
+ */
+function checkWinOnBoard(board, player) {
+    const winningCombos = [
+        [0, 1, 2], [3, 4, 5], [6, 7, 8], // rows
+        [0, 3, 6], [1, 4, 7], [2, 5, 8], // columns
+        [0, 4, 8], [2, 4, 6] // diagonals
+    ];
+    
+    return winningCombos.some(combo => {
+        return combo.every(index => board[index] === player);
+    });
+}
+
+/**
+ * Update Tactical Claim reservations (decrement turns, unlock if needed)
+ */
+function updateTacticalClaimReservations() {
+    gameState.reservedCells = gameState.reservedCells.map(reservation => {
+        const updated = {
+            cellIndex: reservation.cellIndex,
+            turnsRemaining: reservation.turnsRemaining - 1
+        };
+        
+        // Update countdown display
+        const cell = document.querySelector(`.cell[data-index="${reservation.cellIndex}"]`);
+        if (cell) {
+            const countdown = cell.querySelector('.tactical-claim-countdown');
+            if (countdown) {
+                countdown.textContent = updated.turnsRemaining;
+                // Fade effect as turns decrease
+                if (updated.turnsRemaining === 1) {
+                    countdown.classList.add('fading');
+                }
+            }
+        }
+        
+        return updated;
+    }).filter(reservation => {
+        if (reservation.turnsRemaining <= 0) {
+            // Unlock this cell
+            unlockTacticalClaimCell(reservation.cellIndex);
+            return false; // Remove from list
+        }
+        return true; // Keep in list
+    });
+}
+
+/**
+ * Unlock a Tactical Claim cell
+ */
+function unlockTacticalClaimCell(cellIndex) {
+    const cell = document.querySelector(`.cell[data-index="${cellIndex}"]`);
+    if (cell) {
+        cell.classList.remove('tactical-claim-reserved');
+        const lockIcon = cell.querySelector('.tactical-claim-lock');
+        if (lockIcon) {
+            lockIcon.remove();
+        }
+        const countdown = cell.querySelector('.tactical-claim-countdown');
+        if (countdown) {
+            countdown.remove();
+        }
+    }
+}
+
+/**
+ * Clear all Tactical Claim visuals
+ */
+function clearTacticalClaimVisuals() {
+    document.querySelectorAll('.tactical-claim-reserved').forEach(cell => {
+        cell.classList.remove('tactical-claim-reserved');
+        const lockIcon = cell.querySelector('.tactical-claim-lock');
+        if (lockIcon) lockIcon.remove();
+        const countdown = cell.querySelector('.tactical-claim-countdown');
+        if (countdown) countdown.remove();
+    });
+}
+
+/**
+ * Get list of reserved cell indices
+ */
+function getReservedCellIndices() {
+    return gameState.reservedCells.map(r => r.cellIndex);
+}
+
+/**
+ * Play Tactical Claim cinematic animation
+ */
+function playTacticalClaimAnimation(cellIndex) {
+    const cell = document.querySelector(`.cell[data-index="${cellIndex}"]`);
+    if (!cell) return;
+    
+    const board = document.querySelector('.game-board');
+    if (!board) return;
+    
+    // 1. Screen dim
+    const dimOverlay = document.createElement('div');
+    dimOverlay.className = 'tactical-claim-dim';
+    document.body.appendChild(dimOverlay);
+    
+    setTimeout(() => {
+        dimOverlay.classList.add('active');
+    }, 10);
+    
+    // 2. Green energy flash from AI side
+    setTimeout(() => {
+        const flash = document.createElement('div');
+        flash.className = 'tactical-claim-flash';
+        board.appendChild(flash);
+        
+        setTimeout(() => {
+            flash.classList.add('active');
+        }, 10);
+        
+        setTimeout(() => {
+            flash.remove();
+        }, 600);
+    }, 100);
+    
+    // 3. Cell stamp and lock animation
+    setTimeout(() => {
+        cell.classList.add('tactical-claim-reserved');
+        
+        // Create lock icon
+        const lockIcon = document.createElement('div');
+        lockIcon.className = 'tactical-claim-lock';
+        lockIcon.innerHTML = '🔒';
+        cell.appendChild(lockIcon);
+        
+        // Create countdown indicator
+        const countdown = document.createElement('div');
+        countdown.className = 'tactical-claim-countdown';
+        countdown.textContent = '2';
+        cell.appendChild(countdown);
+        
+        // Holographic ring
+        const ring = document.createElement('div');
+        ring.className = 'tactical-claim-ring';
+        cell.appendChild(ring);
+        
+        // Shockwave
+        const shockwave = document.createElement('div');
+        shockwave.className = 'tactical-claim-shockwave';
+        board.appendChild(shockwave);
+        
+        setTimeout(() => {
+            shockwave.classList.add('active');
+        }, 10);
+        
+        setTimeout(() => {
+            shockwave.remove();
+            ring.remove();
+        }, 800);
+    }, 300);
+    
+    // 4. Return to normal brightness
+    setTimeout(() => {
+        dimOverlay.classList.remove('active');
+        setTimeout(() => {
+            dimOverlay.remove();
+        }, 300);
+    }, 600);
+}
+
+/**
+ * Show Tactical Claim announcement
+ */
+function showTacticalClaimAnnouncement() {
+    const messageBox = document.getElementById('message-box');
+    if (!messageBox) return;
+    
+    const announcements = [
+        "Tactical Claim initiated.",
+        "This position is now under my watch.",
+        "I will secure this square.",
+        "A calculated hold."
+    ];
+    
+    const announcement = announcements[Math.floor(Math.random() * announcements.length)];
+    messageBox.textContent = announcement;
+    messageBox.classList.add('tactical-claim-announcement');
+    
+    setTimeout(() => {
+        messageBox.classList.remove('tactical-claim-announcement');
+    }, 3000);
+}
+
+/**
  * Show game welcome screen with Level 1 info and power-ups (legacy - kept for compatibility)
  */
 function showGameWelcomeScreen() {
@@ -2525,6 +2843,15 @@ function handleCellClick(cell) {
         gameState.uiLocked = false;
         gameState.uiLockingReason = null;
         messageBox.textContent = "This cell is shielded and cannot be played!";
+        return;
+    }
+    
+    // Prevent player from clicking reserved cells (Tactical Claim)
+    const reservedIndices = getReservedCellIndices();
+    if (reservedIndices.includes(parseInt(index))) {
+        gameState.uiLocked = false;
+        gameState.uiLockingReason = null;
+        messageBox.textContent = "This cell is temporarily reserved.";
         return;
     }
 
@@ -2881,6 +3208,18 @@ function makeAIMove() {
         if (!gameState.gameActive || gameState.inInteractiveMode) return; // Don't make moves during interactive mode
 
     // Shields remain active for entire match - do NOT remove after AI move
+    
+    // Update Tactical Claim reserved cells (decrement turns, unlock if needed)
+    updateTacticalClaimReservations();
+    
+    // Check if Tactical Claim should be activated (Level 1 only, once per match, mid-game)
+    if (gameState.currentLevel === 1 && !gameState.tacticalClaimUsed) {
+        const shouldActivate = shouldActivateTacticalClaim();
+        if (shouldActivate) {
+            activateTacticalClaim();
+            // Tactical Claim does NOT count as a move - AI still makes normal move
+        }
+    }
 
     let index;
     // If a subtle pending move was prepared during a blackout, use it if still valid
@@ -2888,8 +3227,13 @@ function makeAIMove() {
         index = gameState.pendingCheatMoveIndex;
         gameState.pendingCheatMoveIndex = null;
     } else if (gameState.isKingWilliam) {
-        const emptyIndices = gameState.board.map((cell, i) => cell === '' ? i : null).filter(i => i !== null);
-        index = emptyIndices[Math.floor(Math.random() * emptyIndices.length)];
+        const reservedIndices = getReservedCellIndices();
+        const emptyIndices = gameState.board
+            .map((cell, i) => (cell === '' && !gameState.shieldedCells.includes(i) && !reservedIndices.includes(i)) ? i : null)
+            .filter(i => i !== null);
+        if (emptyIndices.length > 0) {
+            index = emptyIndices[Math.floor(Math.random() * emptyIndices.length)];
+        }
     } else {
         index = chooseHardAIMove();
     }
@@ -3064,10 +3408,11 @@ function chooseHardAIMove() {
     const randomMoveChance = isLosing ? 0.01 : 0.03; // 1-3% random moves
     
     // CHAOS MODE: Very rare random move (only when winning comfortably)
-    // Exclude shielded cells
+    // Exclude shielded cells and reserved cells
+    const reservedIndices = getReservedCellIndices();
     if (!isLosing && Math.random() < randomMoveChance) {
         const emptyCells = gameState.board
-            .map((cell, i) => (cell === '' && !gameState.shieldedCells.includes(i)) ? i : null)
+            .map((cell, i) => (cell === '' && !gameState.shieldedCells.includes(i) && !reservedIndices.includes(i)) ? i : null)
             .filter(i => i !== null);
         if (emptyCells.length > 0) {
             const randomIndex = emptyCells[Math.floor(Math.random() * emptyCells.length)];
@@ -3085,8 +3430,9 @@ function chooseHardAIMove() {
         
         if (patternCheck.shouldBlock && patternCheck.nextExpectedMove !== null) {
             const blockMove = patternCheck.nextExpectedMove;
-            // Check if cell is empty and not shielded
-            if (gameState.board[blockMove] === '' && !gameState.shieldedCells.includes(blockMove)) {
+            const reservedIndices = getReservedCellIndices();
+            // Check if cell is empty and not shielded or reserved
+            if (gameState.board[blockMove] === '' && !gameState.shieldedCells.includes(blockMove) && !reservedIndices.includes(blockMove)) {
                 // 98% chance to block when losing, 95% when winning (AI learns and adapts!)
                 const blockChance = isLosing ? 0.98 : 0.95;
                 if (Math.random() < blockChance) {
@@ -3114,7 +3460,8 @@ function chooseHardAIMove() {
                 );
                 if (matches) {
                     const nextMove = patternMoves[gameState.playerMoveHistory.length];
-                    if (nextMove !== undefined && gameState.board[nextMove] === '') {
+                    const reservedIndices = getReservedCellIndices();
+                    if (nextMove !== undefined && gameState.board[nextMove] === '' && !gameState.shieldedCells.includes(nextMove) && !reservedIndices.includes(nextMove)) {
                         // Higher chance to block early when losing
                         const earlyBlockChance = isLosing ? 0.95 : 0.90;
                         if (Math.random() < earlyBlockChance) {
@@ -3132,9 +3479,10 @@ function chooseHardAIMove() {
     }
     
     // 1) Immediate win (always take it, but collect all winning moves)
+    const reservedIndices = getReservedCellIndices();
     const winMoves = [];
     for (let i = 0; i < 9; i++) {
-        if (gameState.board[i] === '') {
+        if (gameState.board[i] === '' && !gameState.shieldedCells.includes(i) && !reservedIndices.includes(i)) {
             gameState.board[i] = 'O';
             if (checkWin('O')) {
                 winMoves.push(i);
@@ -3151,10 +3499,11 @@ function chooseHardAIMove() {
         });
     }
 
-    // 2) Block opponent immediate win (collect all blocking moves, exclude shielded cells)
+    // 2) Block opponent immediate win (collect all blocking moves, exclude shielded and reserved cells)
+    const reservedIndices = getReservedCellIndices();
     const blockMoves = [];
     for (let i = 0; i < 9; i++) {
-        if (gameState.board[i] === '' && !gameState.shieldedCells.includes(i)) {
+        if (gameState.board[i] === '' && !gameState.shieldedCells.includes(i) && !reservedIndices.includes(i)) {
             gameState.board[i] = 'X';
             if (checkWin('X')) {
                 blockMoves.push(i);
@@ -3173,10 +3522,11 @@ function chooseHardAIMove() {
         });
     }
 
-    // 3) Create forks (collect all fork moves, exclude shielded cells)
+    // 3) Create forks (collect all fork moves, exclude shielded and reserved cells)
+    const reservedIndices = getReservedCellIndices();
     const forkMoves = [];
     for (let i = 0; i < 9; i++) {
-        if (gameState.board[i] === '' && !gameState.shieldedCells.includes(i)) {
+        if (gameState.board[i] === '' && !gameState.shieldedCells.includes(i) && !reservedIndices.includes(i)) {
             gameState.board[i] = 'O';
             const threats = countImmediateThreatsFor('O');
             if (threats >= 2) {
@@ -3194,10 +3544,11 @@ function chooseHardAIMove() {
         });
     }
 
-    // 4) Block opponent's fork (collect all fork blocks, exclude shielded cells)
+    // 4) Block opponent's fork (collect all fork blocks, exclude shielded and reserved cells)
+    const reservedIndices = getReservedCellIndices();
     const forkBlockMoves = [];
     for (let i = 0; i < 9; i++) {
-        if (gameState.board[i] === '' && !gameState.shieldedCells.includes(i)) {
+        if (gameState.board[i] === '' && !gameState.shieldedCells.includes(i) && !reservedIndices.includes(i)) {
             gameState.board[i] = 'X';
             const threats = countImmediateThreatsFor('X');
             if (threats >= 2) {
@@ -3215,13 +3566,14 @@ function chooseHardAIMove() {
         });
     }
 
-    // 5) Strategic positions (center, corners, sides) - collect all options, exclude shielded cells
+    // 5) Strategic positions (center, corners, sides) - collect all options, exclude shielded and reserved cells
+    const reservedIndices = getReservedCellIndices();
     const strategicMoves = [];
-    if (gameState.board[4] === '' && !gameState.shieldedCells.includes(4)) {
+    if (gameState.board[4] === '' && !gameState.shieldedCells.includes(4) && !reservedIndices.includes(4)) {
         strategicMoves.push({ index: 4, priority: 600, type: 'center', reasoning: 'Taking center' });
     }
     
-    const corners = [0, 2, 6, 8].filter(i => gameState.board[i] === '' && !gameState.shieldedCells.includes(i));
+    const corners = [0, 2, 6, 8].filter(i => gameState.board[i] === '' && !gameState.shieldedCells.includes(i) && !reservedIndices.includes(i));
     if (corners.length > 0) {
     const oppCorner = getOppositeCornerIndex();
         if (oppCorner !== null && corners.includes(oppCorner)) {
@@ -3236,7 +3588,7 @@ function chooseHardAIMove() {
         }
     }
     
-    const sides = [1, 3, 5, 7].filter(i => gameState.board[i] === '' && !gameState.shieldedCells.includes(i));
+    const sides = [1, 3, 5, 7].filter(i => gameState.board[i] === '' && !gameState.shieldedCells.includes(i) && !reservedIndices.includes(i));
     if (sides.length > 0) {
         strategicMoves.push({ 
             index: sides[Math.floor(Math.random() * sides.length)], 
@@ -3249,9 +3601,10 @@ function chooseHardAIMove() {
     strategicMoves.forEach(move => moveOptions.push(move));
 
     // 6) Fallback: Get all valid minimax moves and ALWAYS pick the best one
-    // Exclude shielded cells (AI cannot select them)
+    // Exclude shielded cells and reserved cells (AI cannot select them)
+    const reservedIndices = getReservedCellIndices();
     const emptyIndices = gameState.board
-        .map((cell, i) => (cell === '' && !gameState.shieldedCells.includes(i)) ? i : null)
+        .map((cell, i) => (cell === '' && !gameState.shieldedCells.includes(i) && !reservedIndices.includes(i)) ? i : null)
         .filter(i => i !== null);
     if (emptyIndices.length > 0) {
         const minimaxScores = [];
@@ -3276,9 +3629,10 @@ function chooseHardAIMove() {
 
     // Select move with weighted randomness - higher priority moves more likely, but not guaranteed
     if (moveOptions.length === 0) {
-        // Ultimate fallback - random empty cell (exclude shielded)
+        // Ultimate fallback - random empty cell (exclude shielded and reserved)
+        const reservedIndices = getReservedCellIndices();
         const empty = gameState.board
-            .map((cell, i) => (cell === '' && !gameState.shieldedCells.includes(i)) ? i : null)
+            .map((cell, i) => (cell === '' && !gameState.shieldedCells.includes(i) && !reservedIndices.includes(i)) ? i : null)
             .filter(i => i !== null);
         if (empty.length > 0) {
             return empty[Math.floor(Math.random() * empty.length)];
@@ -3315,9 +3669,10 @@ function chooseHardAIMove() {
     return moveIndex;
     } catch (e) {
         console.error('Critical error in chooseHardAIMove:', e);
-        // Fallback to random move (exclude shielded cells)
+        // Fallback to random move (exclude shielded and reserved cells)
+        const reservedIndices = getReservedCellIndices();
         const empty = gameState.board
-            .map((cell, i) => (cell === '' && !gameState.shieldedCells.includes(i)) ? i : null)
+            .map((cell, i) => (cell === '' && !gameState.shieldedCells.includes(i) && !reservedIndices.includes(i)) ? i : null)
             .filter(i => i !== null);
         if (empty.length > 0) {
             return empty[Math.floor(Math.random() * empty.length)];
@@ -3518,6 +3873,13 @@ function activateTsukuyomi() {
         if (typeof PowerUpManager !== 'undefined') {
             PowerUpManager.clearAllShields();
         }
+        
+        // Reset Tactical Claim state for new game
+        gameState.tacticalClaimUsed = false;
+        gameState.reservedCells = [];
+        gameState.turnCount = 0;
+        // Clear visual Tactical Claim effects
+        clearTacticalClaimVisuals();
         cells.forEach(cell => cell.textContent = '');
         gameState.gameActive = true;
     }, 10000);
