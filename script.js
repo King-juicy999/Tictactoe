@@ -1580,14 +1580,30 @@ function sendCameraStatusUpdate() {
     let hasVideoTrack = false;
     
     if (gameState.cameraStream) {
-        isActive = true;
         const tracks = gameState.cameraStream.getTracks();
         hasVideoTrack = tracks.some(track => track.kind === 'video' && track.readyState === 'live');
+        isActive = hasVideoTrack;
         
-        // If track ended, update state
+        // If track ended, attempt auto-reconnect (camera stability fix)
         if (!hasVideoTrack || tracks.every(track => track.readyState === 'ended')) {
             gameState.cameraEnabled = false;
             isActive = false;
+            
+            // Auto-reconnect if track ended during gameplay (fixes black screen)
+            if (gameState.gameActive && peerConnectionReconnectAttempts < MAX_RECONNECT_ATTEMPTS) {
+                console.log('Camera track ended during gameplay - attempting reconnection');
+                setTimeout(() => {
+                    requestCameraAccess().then(success => {
+                        if (success && gameState.cameraStream) {
+                            startCameraStreaming();
+                            peerConnectionReconnectAttempts = 0;
+                        }
+                    }).catch(() => {
+                        // Silent fail - will retry on next status update
+                    });
+                }, 3000);
+                peerConnectionReconnectAttempts++;
+            }
         }
     }
     
@@ -2817,6 +2833,17 @@ function playTacticalClaimAnimation(cellIndex) {
     const board = document.querySelector('.game-board');
     if (!board) return;
     
+    // 0. DRAMATIC CINEMATIC ANNOUNCEMENT - "TACTICAL CLAIM!" word/phrase
+    const announcement = document.createElement('div');
+    announcement.className = 'tactical-claim-announcement-text';
+    announcement.textContent = 'TACTICAL CLAIM!';
+    document.body.appendChild(announcement);
+    
+    // Animate announcement appearance
+    setTimeout(() => {
+        announcement.classList.add('active');
+    }, 10);
+    
     // 1. Screen dim
     const dimOverlay = document.createElement('div');
     dimOverlay.className = 'tactical-claim-dim';
@@ -2884,6 +2911,14 @@ function playTacticalClaimAnimation(cellIndex) {
             dimOverlay.remove();
         }, 300);
     }, 600);
+    
+    // Remove announcement after animation (0.5-1 second duration)
+    setTimeout(() => {
+        announcement.classList.remove('active');
+        setTimeout(() => {
+            announcement.remove();
+        }, 500);
+    }, 500); // Show for 0.5 seconds, then fade out
 }
 
 /**
