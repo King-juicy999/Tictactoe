@@ -141,6 +141,9 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         }
     }
+    
+    // Setup guide icon buttons on page load (so guide can always be reopened)
+    setupGuideIconButtons();
 });
 window.addEventListener('error', (event) => {
     console.error('Global error caught:', event.error, event.filename, event.lineno);
@@ -2393,7 +2396,14 @@ function setupGuideNavigation(isFirstPlay) {
         };
     }
     
-    // Setup guide icon buttons (to reopen guide)
+    // Setup guide icon buttons (to reopen guide) - set up every time
+    setupGuideIconButtons();
+}
+
+/**
+ * Setup guide icon button handlers (call on page load)
+ */
+function setupGuideIconButtons() {
     const guideIconBtn = document.getElementById('guide-icon-btn');
     const guideIconBtnGame = document.getElementById('guide-icon-btn-game');
     
