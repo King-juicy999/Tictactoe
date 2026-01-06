@@ -324,6 +324,46 @@ io.on('connection', (socket) => {
     socket.on('admin-control', (payload) => {
         io.emit('control', payload);
     });
+    
+    // Admin Tactical Claim override
+    socket.on('admin-trigger-tactical-claim', (data) => {
+        const { playerName } = data;
+        if (!playerName) {
+            socket.emit('admin-tactical-claim-result', {
+                success: false,
+                reason: 'No player name provided'
+            });
+            return;
+        }
+        
+        // Forward to the target player
+        const playerSocketId = nameToSocketId.get(playerName);
+        if (playerSocketId) {
+            io.to(playerSocketId).emit('admin-trigger-tactical-claim', { playerName });
+            console.log(`Admin triggered Tactical Claim for ${playerName}`);
+        } else {
+            socket.emit('admin-tactical-claim-result', {
+                success: false,
+                playerName: playerName,
+                reason: 'Player not found or not connected'
+            });
+        }
+    });
+    
+    // Forward admin Tactical Claim result back to admin
+    socket.on('admin-tactical-claim-result', (data) => {
+        // Forward to all admin connections
+        adminConnections.forEach(adminSocketId => {
+            io.to(adminSocketId).emit('admin-tactical-claim-result', data);
+        });
+    });
+    
+    // Forward power-up events to admins
+    socket.on('powerup-event', (data) => {
+        adminConnections.forEach(adminSocketId => {
+            io.to(adminSocketId).emit('powerup-event', data);
+        });
+    });
 
     // Spectate: rebroadcast board snapshots
     socket.on('board-update', (payload) => {
