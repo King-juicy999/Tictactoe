@@ -622,6 +622,16 @@ const PowerUpManager = {
         this.highlightPowerUpButton(powerUpId);
         this.renderSidebar();
         
+        // Emit power-up event for admin dashboard (Shield Guard placement)
+        if (powerUpId === 'shieldGuard' && typeof socket !== 'undefined' && socket) {
+            socket.emit('powerup-event', {
+                message: `Player placed Shield Guard on cell ${cellIndex}`,
+                type: 'info',
+                playerName: gameState.playerName,
+                powerUp: 'shieldGuard'
+            });
+        }
+        
         // Show confirmation message
         const messageBox = document.getElementById('message-box');
         if (messageBox && powerUpId === 'shieldGuard') {
