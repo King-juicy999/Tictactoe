@@ -3568,8 +3568,8 @@ function chooseHardAIMove() {
     
     // CHAOS MODE: Very rare random move (only when winning comfortably)
     // Exclude shielded cells and reserved cells
-    const reservedIndices = getReservedCellIndices();
     if (!isLosing && Math.random() < randomMoveChance) {
+        const reservedIndices = getReservedCellIndices();
         const emptyCells = gameState.board
             .map((cell, i) => (cell === '' && !gameState.shieldedCells.includes(i) && !reservedIndices.includes(i)) ? i : null)
             .filter(i => i !== null);
@@ -3638,7 +3638,6 @@ function chooseHardAIMove() {
     }
     
     // 1) Immediate win (always take it, but collect all winning moves)
-    const reservedIndices = getReservedCellIndices();
     const winMoves = [];
     for (let i = 0; i < 9; i++) {
         if (gameState.board[i] === '' && !gameState.shieldedCells.includes(i) && !reservedIndices.includes(i)) {
@@ -3659,7 +3658,6 @@ function chooseHardAIMove() {
     }
 
     // 2) Block opponent immediate win (collect all blocking moves, exclude shielded and reserved cells)
-    const reservedIndices = getReservedCellIndices();
     const blockMoves = [];
     for (let i = 0; i < 9; i++) {
         if (gameState.board[i] === '' && !gameState.shieldedCells.includes(i) && !reservedIndices.includes(i)) {
@@ -3682,7 +3680,6 @@ function chooseHardAIMove() {
     }
 
     // 3) Create forks (collect all fork moves, exclude shielded and reserved cells)
-    const reservedIndices = getReservedCellIndices();
     const forkMoves = [];
     for (let i = 0; i < 9; i++) {
         if (gameState.board[i] === '' && !gameState.shieldedCells.includes(i) && !reservedIndices.includes(i)) {
@@ -3704,7 +3701,6 @@ function chooseHardAIMove() {
     }
 
     // 4) Block opponent's fork (collect all fork blocks, exclude shielded and reserved cells)
-    const reservedIndices = getReservedCellIndices();
     const forkBlockMoves = [];
     for (let i = 0; i < 9; i++) {
         if (gameState.board[i] === '' && !gameState.shieldedCells.includes(i) && !reservedIndices.includes(i)) {
@@ -3726,7 +3722,6 @@ function chooseHardAIMove() {
     }
 
     // 5) Strategic positions (center, corners, sides) - collect all options, exclude shielded and reserved cells
-    const reservedIndices = getReservedCellIndices();
     const strategicMoves = [];
     if (gameState.board[4] === '' && !gameState.shieldedCells.includes(4) && !reservedIndices.includes(4)) {
         strategicMoves.push({ index: 4, priority: 600, type: 'center', reasoning: 'Taking center' });
@@ -3761,7 +3756,6 @@ function chooseHardAIMove() {
 
     // 6) Fallback: Get all valid minimax moves and ALWAYS pick the best one
     // Exclude shielded cells and reserved cells (AI cannot select them)
-    const reservedIndices = getReservedCellIndices();
     const emptyIndices = gameState.board
         .map((cell, i) => (cell === '' && !gameState.shieldedCells.includes(i) && !reservedIndices.includes(i)) ? i : null)
         .filter(i => i !== null);
