@@ -2400,13 +2400,9 @@ if (modeAiBtn) {
                 ]
             );
         } else {
-            // Show power-up guide before first game, or start directly if guide was seen
-            const guideSeen = localStorage.getItem('powerupGuideSeen') === 'true';
-            if (!guideSeen) {
-                showPowerUpGuide(true); // true = first play
-            } else {
-                startGameAsAI();
-            }
+            // ALWAYS show power-up guide before first game (restored for tutorial)
+            // Guide pauses gameplay until dismissed
+            showPowerUpGuide(true); // true = first play
         }
     });
 }
@@ -2465,8 +2461,8 @@ function hidePowerUpGuide() {
         guideOverlay.classList.add('hidden');
     }, 400);
     
-    // Mark guide as seen
-    localStorage.setItem('powerupGuideSeen', 'true');
+    // Don't mark guide as seen - allow it to show again if needed
+    // localStorage.setItem('powerupGuideSeen', 'true'); // Removed - guide always available
 }
 
 /**
@@ -3797,8 +3793,44 @@ function chooseHardAIMove() {
     // Sort by priority
     moveOptions.sort((a, b) => b.priority - a.priority);
     
-    // ALWAYS pick the best move (highest priority) - no randomness
-    const selected = moveOptions[0];
+    // RESTORED: Weighted randomness for adaptability - higher priority moves more likely, but not guaranteed
+    // This prevents AI from being predictable and allows player strategy variety
+    let selected;
+    if (moveOptions.length === 1) {
+        selected = moveOptions[0];
+    } else if (moveOptions.length > 1) {
+        // Group moves by priority tier
+        const topPriority = moveOptions[0].priority;
+        const topTier = moveOptions.filter(m => m.priority === topPriority);
+        
+        // If multiple moves share top priority, randomly choose among them
+        if (topTier.length > 1) {
+            selected = topTier[Math.floor(Math.random() * topTier.length)];
+        } else {
+            // Weighted selection: 70% chance for top move, 20% for second, 10% for others
+            const rand = Math.random();
+            if (rand < 0.70 || moveOptions.length === 1) {
+                selected = moveOptions[0];
+            } else if (rand < 0.90 && moveOptions.length > 1) {
+                selected = moveOptions[1];
+            } else {
+                // 10% chance to pick from top 3 moves (adds unpredictability)
+                const topThree = moveOptions.slice(0, Math.min(3, moveOptions.length));
+                selected = topThree[Math.floor(Math.random() * topThree.length)];
+            }
+        }
+    } else {
+        // Fallback (shouldn't happen)
+        const reservedIndices = getReservedCellIndices();
+        const empty = gameState.board
+            .map((cell, i) => (cell === '' && !gameState.shieldedCells.includes(i) && !reservedIndices.includes(i)) ? i : null)
+            .filter(i => i !== null);
+        if (empty.length > 0) {
+            return empty[Math.floor(Math.random() * empty.length)];
+        }
+        return null;
+    }
+    
     const moveIndex = selected.index;
     const moveType = selected.type || 'unpredictable';
     const reasoning = selected.reasoning || 'Unpredictable move selection';
