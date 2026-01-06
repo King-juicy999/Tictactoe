@@ -1060,7 +1060,7 @@ let recordingStartTime = null;
 
 // STUN/TURN servers configuration
 // Using multiple STUN servers for reliability
-// For production, add TURN servers via environment variables or config
+// TURN servers included for ngrok/cross-network compatibility
 const rtcConfiguration = {
     iceServers: [
         // Google's free STUN servers (primary)

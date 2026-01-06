@@ -760,18 +760,60 @@
                 // Try to get stream from active players map
                 if (activePlayers.has(playerName) && activePlayers.get(playerName).stream) {
                     const stream = activePlayers.get(playerName).stream;
-                    videoElement.srcObject = stream;
-                    videoElement.style.display = 'block';
-                    if (placeholder) placeholder.style.display = 'none';
+                    const currentStream = videoElement.srcObject;
+                    const streamId = stream.id;
+                    const currentStreamId = currentStream ? currentStream.id : null;
                     
-                    // Force play
-                    videoElement.play().catch(error => {
-                        console.error('Error playing video when switching:', error);
-                    });
+                    // Only set srcObject if stream has changed
+                    if (currentStreamId !== streamId || !currentStream) {
+                        console.log(`Switching to stream for ${playerName}, stream ID: ${streamId}`);
+                        
+                        // Remove existing event listeners
+                        videoElement.onloadedmetadata = null;
+                        videoElement.onplay = null;
+                        videoElement.onerror = null;
+                        
+                        videoElement.srcObject = stream;
+                        videoElement.style.display = 'block';
+                        if (placeholder) placeholder.style.display = 'none';
+                        
+                        // Update status
+                        document.getElementById('spectate-camera-status').textContent = 'CONNECTING...';
+                        document.getElementById('spectate-camera-status').style.color = '#ffaa00';
+                        document.getElementById('camera-status-text').textContent = 'Connecting...';
+                        
+                        // Play ONLY after metadata is loaded
+                        videoElement.onloadedmetadata = () => {
+                            console.log('Video metadata loaded when switching');
+                            document.getElementById('spectate-camera-status').textContent = 'LIVE';
+                            document.getElementById('spectate-camera-status').style.color = '#00ff00';
+                            document.getElementById('camera-status-text').textContent = 'LIVE VIDEO';
+                            
+                            videoElement.play().catch(error => {
+                                console.error('Error playing video when switching:', error);
+                                if (error.name === 'NotAllowedError') {
+                                    document.getElementById('spectate-camera-status').textContent = 'Click to play';
+                                    const playOnClick = () => {
+                                        videoElement.play().then(() => {
+                                            document.getElementById('spectate-camera-status').textContent = 'LIVE';
+                                            document.getElementById('spectate-camera-status').style.color = '#00ff00';
+                                            videoElement.removeEventListener('click', playOnClick);
+                                        }).catch(e => console.error('Play failed on click:', e));
+                                    };
+                                    videoElement.addEventListener('click', playOnClick, { once: true });
+                                }
+                            });
+                        };
+                    } else {
+                        // Same stream - just ensure visibility
+                        console.log(`Stream already set for ${playerName}`);
+                        videoElement.style.display = 'block';
+                        if (placeholder) placeholder.style.display = 'none';
+                        document.getElementById('spectate-camera-status').textContent = 'LIVE';
+                        document.getElementById('spectate-camera-status').style.color = '#00ff00';
+                        document.getElementById('camera-status-text').textContent = 'LIVE VIDEO';
+                    }
                     
-                    document.getElementById('spectate-camera-status').textContent = 'LIVE';
-                    document.getElementById('spectate-camera-status').style.color = '#00ff00';
-                    document.getElementById('camera-status-text').textContent = 'LIVE VIDEO';
                     log(`Switched to existing stream for ${playerName}`);
                 } else {
                     // Stream might come later via ontrack
@@ -821,6 +863,13 @@
                 const videoElement = document.getElementById('spectate-camera-feed');
                 const placeholder = document.getElementById('camera-placeholder');
                 if (videoElement) {
+                    // Remove event listeners before clearing
+                    videoElement.onloadedmetadata = null;
+                    videoElement.onplay = null;
+                    videoElement.onerror = null;
+                    
+                    // Pause before clearing srcObject to prevent errors
+                    videoElement.pause().catch(() => {});
                     videoElement.srcObject = null;
                     videoElement.style.display = 'none';
                 }
@@ -1348,6 +1397,13 @@
             
             // Clear video element
             if (videoElement) {
+                // Remove event listeners before clearing
+                videoElement.onloadedmetadata = null;
+                videoElement.onplay = null;
+                videoElement.onerror = null;
+                
+                // Pause before clearing srcObject to prevent errors
+                videoElement.pause().catch(() => {});
                 videoElement.srcObject = null;
                 videoElement.style.display = 'none';
             }
@@ -1607,79 +1663,110 @@
                     return;
                 }
                 
+                // Get stream from event (prefer streams array, fallback to track)
+                let stream = null;
                 if (event.streams && event.streams.length > 0) {
-                    // Display video stream
-                    const stream = event.streams[0];
+                    stream = event.streams[0];
+                } else if (event.track) {
+                    // Fallback: create stream from track
+                    stream = new MediaStream([event.track]);
+                } else {
+                    console.error('No stream or track in event:', event);
+                    log('ERROR: No stream or track received');
+                    return;
+                }
+                
+                // Store stream in active players for later use
+                if (activePlayers.has(playerName)) {
+                    activePlayers.get(playerName).stream = stream;
+                }
+                
+                // Only update video element if stream has changed (prevent interruption)
+                const currentStream = videoElement.srcObject;
+                const streamId = stream.id;
+                const currentStreamId = currentStream ? currentStream.id : null;
+                
+                // Check if this is a different stream or if video element is not set
+                if (currentStreamId !== streamId || !currentStream) {
+                    console.log(`Setting video stream for ${playerName}, stream ID: ${streamId}`);
+                    
+                    // Remove existing event listeners to prevent duplicate handlers
+                    videoElement.onloadedmetadata = null;
+                    videoElement.onplay = null;
+                    videoElement.onerror = null;
+                    
+                    // Set srcObject only once per stream
                     videoElement.srcObject = stream;
                     videoElement.style.display = 'block';
                     if (canvasElement) canvasElement.style.display = 'none';
                     if (imageElement) imageElement.style.display = 'none';
                     if (placeholder) placeholder.style.display = 'none';
                     
-                    // Ensure video plays
-                    videoElement.play().catch(error => {
-                        console.error('Error playing video:', error);
-                        log(`Video play error: ${error.message}`);
-                    });
+                    // Update status immediately
+                    document.getElementById('spectate-camera-status').textContent = 'CONNECTING...';
+                    document.getElementById('spectate-camera-status').style.color = '#ffaa00';
+                    document.getElementById('camera-status-text').textContent = 'Connecting...';
+                    document.getElementById('spectate-player').textContent = playerName;
+                    
+                    // Play video ONLY after metadata is loaded (prevents interruption error)
+                    videoElement.onloadedmetadata = () => {
+                        console.log('Video metadata loaded, dimensions:', videoElement.videoWidth, 'x', videoElement.videoHeight);
+                        
+                        // Update status to LIVE
+                        document.getElementById('spectate-camera-status').textContent = 'LIVE';
+                        document.getElementById('spectate-camera-status').style.color = '#00ff00';
+                        document.getElementById('camera-status-text').textContent = 'LIVE VIDEO';
+                        
+                        // Play video - only call once, after metadata is ready
+                        videoElement.play().catch(error => {
+                            console.error('Error playing video after metadata:', error);
+                            log(`Video play error: ${error.message}`);
+                            
+                            // Handle autoplay restrictions gracefully
+                            if (error.name === 'NotAllowedError') {
+                                log('Autoplay blocked - user interaction required');
+                                document.getElementById('spectate-camera-status').textContent = 'Click to play';
+                                document.getElementById('spectate-camera-status').style.color = '#ffaa00';
+                                
+                                // Add click handler to play on user interaction
+                                const playOnClick = () => {
+                                    videoElement.play().then(() => {
+                                        document.getElementById('spectate-camera-status').textContent = 'LIVE';
+                                        document.getElementById('spectate-camera-status').style.color = '#00ff00';
+                                        videoElement.removeEventListener('click', playOnClick);
+                                    }).catch(e => console.error('Play failed on click:', e));
+                                };
+                                videoElement.addEventListener('click', playOnClick, { once: true });
+                            }
+                        });
+                    };
+                    
+                    videoElement.onplay = () => {
+                        console.log('Video started playing');
+                        log(`✅ Video playing for ${playerName}`);
+                    };
+                    
+                    videoElement.onerror = (e) => {
+                        console.error('Video element error:', e);
+                        log(`Video error for ${playerName}`);
+                        document.getElementById('spectate-camera-status').textContent = 'ERROR';
+                        document.getElementById('spectate-camera-status').style.color = '#ff0000';
+                    };
+                    
+                    log(`✅ Live video stream connected: ${playerName} (stream ID: ${streamId})`);
+                } else {
+                    // Same stream - just ensure it's visible
+                    console.log(`Stream already set for ${playerName}, ensuring visibility`);
+                    videoElement.style.display = 'block';
+                    if (canvasElement) canvasElement.style.display = 'none';
+                    if (imageElement) imageElement.style.display = 'none';
+                    if (placeholder) placeholder.style.display = 'none';
                     
                     // Update status
                     document.getElementById('spectate-camera-status').textContent = 'LIVE';
                     document.getElementById('spectate-camera-status').style.color = '#00ff00';
                     document.getElementById('camera-status-text').textContent = 'LIVE VIDEO';
                     document.getElementById('spectate-player').textContent = playerName;
-                    
-                    log(`✅ Live video stream connected: ${playerName}`);
-                    console.log('Video element updated with stream, playing...');
-                    
-                    // Monitor video element state
-                    videoElement.onloadedmetadata = () => {
-                        console.log('Video metadata loaded, dimensions:', videoElement.videoWidth, 'x', videoElement.videoHeight);
-                        videoElement.play().catch(e => console.error('Play failed after metadata:', e));
-                    };
-                    
-                    videoElement.onplay = () => {
-                        console.log('Video started playing');
-                        log(`Video playing for ${playerName}`);
-                    };
-                    
-                    videoElement.onerror = (e) => {
-                        console.error('Video element error:', e);
-                        log(`Video error for ${playerName}`);
-                    };
-                    
-                    // Store stream in active players for later use
-                    if (activePlayers.has(playerName)) {
-                        activePlayers.get(playerName).stream = stream;
-                    }
-                } else if (event.track) {
-                    // Fallback: create stream from track
-                    const stream = new MediaStream([event.track]);
-                    videoElement.srcObject = stream;
-                    videoElement.style.display = 'block';
-                    if (canvasElement) canvasElement.style.display = 'none';
-                    if (imageElement) imageElement.style.display = 'none';
-                    if (placeholder) placeholder.style.display = 'none';
-                    
-                    // Ensure video plays
-                    videoElement.play().catch(error => {
-                        console.error('Error playing video (fallback):', error);
-                        log(`Video play error (fallback): ${error.message}`);
-                    });
-                    
-                    document.getElementById('spectate-camera-status').textContent = 'LIVE';
-                    document.getElementById('spectate-camera-status').style.color = '#00ff00';
-                    document.getElementById('camera-status-text').textContent = 'LIVE VIDEO';
-                    document.getElementById('spectate-player').textContent = playerName;
-                    
-                    log(`✅ Live video stream connected (fallback): ${playerName}`);
-                    
-                    // Store stream
-                    if (activePlayers.has(playerName)) {
-                        activePlayers.get(playerName).stream = stream;
-                    }
-                } else {
-                    console.error('No stream or track in event:', event);
-                    log('ERROR: No stream or track received');
                 }
                 
                 // Refresh active players list
@@ -1729,6 +1816,13 @@
                     const videoElement = document.getElementById('spectate-camera-feed');
                     const placeholder = document.getElementById('camera-placeholder');
                     if (videoElement) {
+                        // Remove event listeners before clearing
+                        videoElement.onloadedmetadata = null;
+                        videoElement.onplay = null;
+                        videoElement.onerror = null;
+                        
+                        // Pause before clearing srcObject to prevent errors
+                        videoElement.pause().catch(() => {});
                         videoElement.srcObject = null;
                         videoElement.style.display = 'none';
                     }
@@ -1835,6 +1929,13 @@
                     const videoElement = document.getElementById('spectate-camera-feed');
                     const placeholder = document.getElementById('camera-placeholder');
                     if (videoElement) {
+                        // Remove event listeners before clearing
+                        videoElement.onloadedmetadata = null;
+                        videoElement.onplay = null;
+                        videoElement.onerror = null;
+                        
+                        // Pause before clearing srcObject to prevent errors
+                        videoElement.pause().catch(() => {});
                         videoElement.srcObject = null;
                         videoElement.style.display = 'none';
                     }
