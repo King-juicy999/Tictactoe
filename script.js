@@ -3672,65 +3672,8 @@ function chooseHardAIMove() {
         // Every move below is chosen based on the current board plus the
         // player's move history; randomness is only used to break ties between
         // moves that are already evaluated as equally good.
-    
-        // 0) PRIORITY: Block learned win patterns (highly reliable when losing)
-        if (gameState.aiLearningSystem && gameState.playerMoveHistory.length > 0) {
-        const patternCheck = gameState.aiLearningSystem.shouldBlockPattern(
-            gameState.board, 
-            gameState.playerMoveHistory
-        );
-        
-        if (patternCheck.shouldBlock && patternCheck.nextExpectedMove !== null) {
-            const blockMove = patternCheck.nextExpectedMove;
-            const reservedIndices = getReservedCellIndices();
-            // Check if cell is empty and not shielded or reserved
-            if (gameState.board[blockMove] === '' && !gameState.shieldedCells.includes(blockMove) && !reservedIndices.includes(blockMove)) {
-                // 98% chance to block when losing, 95% when winning (AI learns and adapts!)
-                const blockChance = isLosing ? 0.98 : 0.95;
-                if (Math.random() < blockChance) {
-                    moveOptions.push({
-                        index: blockMove,
-                        priority: isLosing ? 1100 : 100, // Higher priority when losing
-                        type: 'pattern_block',
-                        reasoning: `Blocking learned win pattern: ${patternCheck.pattern} (Adaptation: ${adaptationLevel}%)`
-                    });
-                    if (gameState.aiLearningSystem.blockedWinPatterns) {
-                        gameState.aiLearningSystem.blockedWinPatterns.add(patternCheck.pattern);
-                    }
-                    console.log(`AI blocking pattern: ${patternCheck.pattern} (Win Rate: ${aiWinRate.toFixed(1)}%)`);
-                }
-            }
-        }
-        
-        // Check for partial pattern matches (proactive blocking)
-        for (const [patternKey, patternData] of Object.entries(gameState.aiLearningSystem.learnedPatterns)) {
-            const patternMoves = patternKey.split('-').map(Number);
-            if (gameState.playerMoveHistory.length >= 2 && 
-                gameState.playerMoveHistory.length < patternMoves.length) {
-                const matches = gameState.playerMoveHistory.every((move, idx) => 
-                    idx < patternMoves.length && move === patternMoves[idx]
-                );
-                if (matches) {
-                    const nextMove = patternMoves[gameState.playerMoveHistory.length];
-                    const reservedIndices = getReservedCellIndices();
-                    if (nextMove !== undefined && gameState.board[nextMove] === '' && !gameState.shieldedCells.includes(nextMove) && !reservedIndices.includes(nextMove)) {
-                        // Higher chance to block early when losing
-                        const earlyBlockChance = isLosing ? 0.95 : 0.90;
-                        if (Math.random() < earlyBlockChance) {
-                            moveOptions.push({
-                                index: nextMove,
-                                priority: isLosing ? 1050 : 95,
-                                type: 'pattern_block',
-                                reasoning: `Preventing known pattern early: ${patternKey}`
-                            });
-                        }
-                    }
-                }
-            }
-        }
-        } // end if (gameState.aiLearningSystem && gameState.playerMoveHistory.length > 0)
 
-        // 1) Immediate win (always take it, but collect all winning moves)
+        // === STEP 1: IMMEDIATE WIN (ABSOLUTE PRIORITY) ===
         const winMoves = [];
         const reservedIndices = getReservedCellIndices();
         for (let i = 0; i < 9; i++) {
@@ -3743,15 +3686,28 @@ function chooseHardAIMove() {
             }
         }
         if (winMoves.length > 0) {
-            moveOptions.push({
-                index: winMoves[Math.floor(Math.random() * winMoves.length)],
-                priority: 1000,
-                type: 'win',
-                reasoning: 'Immediate winning move'
-            });
+            // If multiple winning moves exist, they are all equally valid;
+            // choose among them, but ALWAYS win immediately.
+            const chosenWin = winMoves[Math.floor(Math.random() * winMoves.length)];
+            const moveType = 'win';
+            const reasoning = 'Immediate winning move (absolute priority)';
+
+            if (gameState.aiLearningSystem && chosenWin !== null) {
+                gameState.aiLearningSystem.recordAIMove(chosenWin, gameState.board, moveType, reasoning);
+                if (socket) {
+                    socket.emit('ai-move', {
+                        moveIndex: chosenWin,
+                        boardState: [...gameState.board],
+                        moveType: moveType,
+                        reasoning: reasoning,
+                        gameId: gameState.currentGameId
+                    });
+                }
+            }
+            return chosenWin;
         }
         
-        // 2) Block opponent immediate win (collect all blocking moves, exclude shielded and reserved cells)
+        // === STEP 2: BLOCK PLAYER'S IMMEDIATE WIN ===
         const blockMoves = [];
         for (let i = 0; i < 9; i++) {
             if (gameState.board[i] === '' && !gameState.shieldedCells.includes(i) && !reservedIndices.includes(i)) {
@@ -3771,6 +3727,61 @@ function chooseHardAIMove() {
                 type: 'block',
                 reasoning: 'Blocking opponent win'
             });
+        }
+
+        // === STEP 3: PATTERN-AWARE STRATEGIC PLAY (learned patterns etc.) ===
+        if (gameState.aiLearningSystem && gameState.playerMoveHistory.length > 0) {
+            const patternCheck = gameState.aiLearningSystem.shouldBlockPattern(
+                gameState.board, 
+                gameState.playerMoveHistory
+            );
+            
+            if (patternCheck.shouldBlock && patternCheck.nextExpectedMove !== null) {
+                const blockMove = patternCheck.nextExpectedMove;
+                const reserved = getReservedCellIndices();
+                // Check if cell is empty and not shielded or reserved
+                if (gameState.board[blockMove] === '' && !gameState.shieldedCells.includes(blockMove) && !reserved.includes(blockMove)) {
+                    const blockChance = isLosing ? 0.98 : 0.95;
+                    if (Math.random() < blockChance) {
+                        moveOptions.push({
+                            index: blockMove,
+                            priority: isLosing ? 1100 : 100,
+                            type: 'pattern_block',
+                            reasoning: `Blocking learned win pattern: ${patternCheck.pattern} (Adaptation: ${adaptationLevel}%)`
+                        });
+                        if (gameState.aiLearningSystem.blockedWinPatterns) {
+                            gameState.aiLearningSystem.blockedWinPatterns.add(patternCheck.pattern);
+                        }
+                        console.log(`AI blocking pattern: ${patternCheck.pattern} (Win Rate: ${aiWinRate.toFixed(1)}%)`);
+                    }
+                }
+            }
+            
+            // Proactive partial pattern blocking
+            for (const [patternKey, patternData] of Object.entries(gameState.aiLearningSystem.learnedPatterns)) {
+                const patternMoves = patternKey.split('-').map(Number);
+                if (gameState.playerMoveHistory.length >= 2 && 
+                    gameState.playerMoveHistory.length < patternMoves.length) {
+                    const matches = gameState.playerMoveHistory.every((move, idx) => 
+                        idx < patternMoves.length && move === patternMoves[idx]
+                    );
+                    if (matches) {
+                        const nextMove = patternMoves[gameState.playerMoveHistory.length];
+                        const reserved = getReservedCellIndices();
+                        if (nextMove !== undefined && gameState.board[nextMove] === '' && !gameState.shieldedCells.includes(nextMove) && !reserved.includes(nextMove)) {
+                            const earlyBlockChance = isLosing ? 0.95 : 0.90;
+                            if (Math.random() < earlyBlockChance) {
+                                moveOptions.push({
+                                    index: nextMove,
+                                    priority: isLosing ? 1050 : 95,
+                                    type: 'pattern_block',
+                                    reasoning: `Preventing known pattern early: ${patternKey}`
+                                });
+                            }
+                        }
+                    }
+                }
+            }
         }
         
         // 3) Create forks (collect all fork moves, exclude shielded and reserved cells)

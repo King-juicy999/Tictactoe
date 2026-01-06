@@ -80,6 +80,25 @@
                 </div>
             </div>
             
+            <!-- Level 1 progress: 5 wins to complete -->
+            <div class="level-progress-container" aria-label="Level progress">
+                <div class="level-progress-visual">
+                    <div class="level-progress-dots">
+                        <span class="progress-dot" data-win="1">○</span>
+                        <span class="progress-dot" data-win="2">○</span>
+                        <span class="progress-dot" data-win="3">○</span>
+                        <span class="progress-dot" data-win="4">○</span>
+                        <span class="progress-dot" data-win="5">○</span>
+                    </div>
+                    <div class="level-progress-bar">
+                        <div id="level-progress-fill" class="level-progress-fill"></div>
+                    </div>
+                </div>
+                <div class="level-progress-text">
+                    Wins this level: <span id="level-wins-count">0</span> / 5
+                </div>
+            </div>
+            
             <div id="message-box" class="message"></div>
             
             <div class="game-board">
