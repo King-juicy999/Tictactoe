@@ -13,6 +13,84 @@ let welcomeFlowState = {
 let preWelcomeOverlay, continueWelcomeBtn, themeSelectionOverlay, themePreviewCards, themeConfirmBtn, aiPresenceGameplay;
 let selectedTheme = null;
 
+// Define handleContinueClick IMMEDIATELY so inline onclick can use it
+window.handleContinueClick = function(e) {
+    if (e) {
+        e.preventDefault();
+        e.stopPropagation();
+    }
+    
+    console.log('=== Continue button clicked ===');
+    
+    // Re-check elements
+    const btn = document.getElementById('continue-welcome-btn');
+    const overlay = document.getElementById('pre-welcome-overlay');
+    const themeOverlay = document.getElementById('theme-selection-overlay');
+    
+    if (!btn) {
+        console.error('Button not found!');
+        alert('Button not found. Refreshing page...');
+        window.location.reload();
+        return;
+    }
+    
+    if (!overlay) {
+        console.error('Overlay not found!');
+        alert('Overlay not found. Refreshing page...');
+        window.location.reload();
+        return;
+    }
+    
+    // Disable button immediately
+    btn.disabled = true;
+    btn.style.pointerEvents = 'none';
+    btn.style.cursor = 'not-allowed';
+    const originalText = btn.textContent;
+    btn.textContent = 'Loading...';
+    
+    console.log('Hiding pre-welcome overlay');
+    overlay.classList.add('hiding');
+    
+    // Hide overlay and show theme selection
+    setTimeout(() => {
+        overlay.style.display = 'none';
+        
+        if (themeOverlay) {
+            console.log('Showing theme selection');
+            // Set default theme
+            if (!selectedTheme) {
+                selectedTheme = (typeof ThemeManager !== 'undefined' && ThemeManager.getCurrentTheme()) 
+                    ? ThemeManager.getCurrentTheme() 
+                    : 'light';
+            }
+            
+            themeOverlay.style.display = 'flex';
+            themeOverlay.style.visibility = 'visible';
+            themeOverlay.style.opacity = '1';
+            themeOverlay.style.zIndex = '10000';
+            
+            setTimeout(() => {
+                themeOverlay.classList.add('active');
+                if (typeof updateThemePreviewSelection === 'function') {
+                    updateThemePreviewSelection();
+                }
+                console.log('Theme selection shown successfully');
+            }, 50);
+        } else {
+            console.log('Theme overlay not found, going to welcome screen');
+            const welcomeScreen = document.getElementById('welcome-screen');
+            if (welcomeScreen) {
+                welcomeScreen.classList.add('active');
+            }
+        }
+        
+        // Re-enable button (though it's hidden now)
+        btn.disabled = false;
+        btn.style.pointerEvents = 'auto';
+        btn.textContent = originalText;
+    }, 300);
+};
+
 function updateThemePreviewSelection() {
     if (themePreviewCards && selectedTheme) {
         themePreviewCards.forEach(card => {
