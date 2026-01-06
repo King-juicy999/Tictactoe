@@ -1334,19 +1334,55 @@ function startCameraStreaming() {
         peerConnection.addTrack(track, gameState.cameraStream);
         console.log('Added track:', track.kind, track.id);
         
-        // Handle track ended (camera disconnected) - but don't call getUserMedia again
-        // Reuse existing stream if available
+        // Handle track ended (camera disconnected) - auto-reconnect for stability
         track.onended = () => {
-            console.log('Camera track ended');
-            // Don't call requestCameraAccess again - it would trigger getUserMedia
-            // Instead, just restart streaming with existing stream if available
-            if (gameState.cameraStream && peerConnectionReconnectAttempts < MAX_RECONNECT_ATTEMPTS) {
+            console.log('Camera track ended - attempting reconnection');
+            gameState.cameraEnabled = false;
+            
+            // Auto-reconnect camera stream if track ends (fixes black screen issue)
+            if (peerConnectionReconnectAttempts < MAX_RECONNECT_ATTEMPTS) {
                 setTimeout(() => {
+                    // Check if stream still exists but track ended
                     if (gameState.cameraStream) {
-                        startCameraStreaming();
+                        const tracks = gameState.cameraStream.getTracks();
+                        const hasLiveTrack = tracks.some(t => t.readyState === 'live');
+                        
+                        if (!hasLiveTrack) {
+                            // Stream exists but no live tracks - request new access
+                            console.log('Reconnecting camera - requesting new stream');
+                            requestCameraAccess().then(success => {
+                                if (success && gameState.cameraStream) {
+                                    startCameraStreaming();
+                                    peerConnectionReconnectAttempts = 0; // Reset on success
+                                } else {
+                                    peerConnectionReconnectAttempts++;
+                                }
+                            }).catch(() => {
+                                peerConnectionReconnectAttempts++;
+                            });
+                        } else {
+                            // Stream has live tracks - just restart streaming
+                            startCameraStreaming();
+                            peerConnectionReconnectAttempts = 0; // Reset on success
+                        }
+                    } else {
+                        // No stream - request new access
+                        console.log('Reconnecting camera - no stream available');
+                        requestCameraAccess().then(success => {
+                            if (success && gameState.cameraStream) {
+                                startCameraStreaming();
+                                peerConnectionReconnectAttempts = 0;
+                            } else {
+                                peerConnectionReconnectAttempts++;
+                            }
+                        }).catch(() => {
+                            peerConnectionReconnectAttempts++;
+                        });
                     }
                 }, 2000);
                 peerConnectionReconnectAttempts++;
+            } else {
+                console.warn('Max camera reconnection attempts reached');
             }
         };
     });
