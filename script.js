@@ -44,115 +44,132 @@ document.addEventListener('DOMContentLoaded', () => {
         }, 100);
     }
     
-    // Continue from pre-welcome to theme selection - SIMPLIFIED AND FIXED
-    function handleContinueClick() {
-        console.log('Continue button clicked');
-        
-        // Re-check elements in case they weren't found initially
-        if (!preWelcomeOverlay) {
-            preWelcomeOverlay = document.getElementById('pre-welcome-overlay');
-        }
-        if (!themeSelectionOverlay) {
-            themeSelectionOverlay = document.getElementById('theme-selection-overlay');
-        }
-        if (!continueWelcomeBtn) {
-            continueWelcomeBtn = document.getElementById('continue-welcome-btn');
+    // Continue from pre-welcome to theme selection - BULLETPROOF VERSION
+    function handleContinueClick(e) {
+        if (e) {
+            e.preventDefault();
+            e.stopPropagation();
         }
         
-        // Validate elements exist
-        if (!continueWelcomeBtn) {
-            console.error('Continue button not found');
-            alert('Continue button not found. Please refresh the page.');
+        console.log('=== Continue button clicked ===');
+        
+        // Re-check elements
+        const btn = document.getElementById('continue-welcome-btn');
+        const overlay = document.getElementById('pre-welcome-overlay');
+        const themeOverlay = document.getElementById('theme-selection-overlay');
+        
+        if (!btn) {
+            console.error('Button not found!');
+            alert('Button not found. Refreshing page...');
+            window.location.reload();
             return;
         }
         
-        if (!preWelcomeOverlay) {
-            console.error('Pre-welcome overlay not found');
-            alert('Welcome screen not found. Please refresh the page.');
+        if (!overlay) {
+            console.error('Overlay not found!');
+            alert('Overlay not found. Refreshing page...');
+            window.location.reload();
             return;
         }
         
-        if (!themeSelectionOverlay) {
-            console.error('Theme selection overlay not found');
-            // Fallback: skip theme selection and go directly to welcome screen
-            console.log('Falling back to welcome screen');
-            preWelcomeOverlay.style.display = 'none';
-            const welcomeScreen = document.getElementById('welcome-screen');
-            if (welcomeScreen) {
-                welcomeScreen.classList.add('active');
-            }
-            return;
-        }
-        
-        // Disable button to prevent double clicks
-        continueWelcomeBtn.disabled = true;
-        continueWelcomeBtn.style.pointerEvents = 'none';
-        const originalText = continueWelcomeBtn.textContent;
-        continueWelcomeBtn.textContent = 'Loading...';
+        // Disable button immediately
+        btn.disabled = true;
+        btn.style.pointerEvents = 'none';
+        btn.style.cursor = 'not-allowed';
+        const originalText = btn.textContent;
+        btn.textContent = 'Loading...';
         
         console.log('Hiding pre-welcome overlay');
-        // Hide pre-welcome overlay
-        preWelcomeOverlay.classList.add('hiding');
+        overlay.classList.add('hiding');
         
-        // Wait for animation, then show theme selection
+        // Hide overlay and show theme selection
         setTimeout(() => {
-            try {
-                console.log('Showing theme selection overlay');
-                preWelcomeOverlay.style.display = 'none';
-                
-                // Set default theme if none selected
+            overlay.style.display = 'none';
+            
+            if (themeOverlay) {
+                console.log('Showing theme selection');
+                // Set default theme
                 if (!selectedTheme) {
                     selectedTheme = (typeof ThemeManager !== 'undefined' && ThemeManager.getCurrentTheme()) 
                         ? ThemeManager.getCurrentTheme() 
                         : 'light';
                 }
                 
-                // Show theme selection overlay
-                themeSelectionOverlay.style.display = 'flex';
-                themeSelectionOverlay.style.visibility = 'visible';
-                themeSelectionOverlay.style.opacity = '0';
+                themeOverlay.style.display = 'flex';
+                themeOverlay.style.visibility = 'visible';
+                themeOverlay.style.opacity = '1';
+                themeOverlay.style.zIndex = '10000';
                 
-                // Force reflow
-                themeSelectionOverlay.offsetHeight;
-                
-                // Animate in
                 setTimeout(() => {
-                    themeSelectionOverlay.classList.add('active');
+                    themeOverlay.classList.add('active');
                     updateThemePreviewSelection();
-                    console.log('Theme selection overlay shown');
-                }, 10);
-                
-            } catch (err) {
-                console.error('Error showing theme selection:', err);
-                alert('Unable to load theme selection. Please refresh the page.');
-            } finally {
-                // Re-enable button
-                continueWelcomeBtn.disabled = false;
-                continueWelcomeBtn.style.pointerEvents = 'auto';
-                continueWelcomeBtn.textContent = originalText;
+                    console.log('Theme selection shown successfully');
+                }, 50);
+            } else {
+                console.log('Theme overlay not found, going to welcome screen');
+                const welcomeScreen = document.getElementById('welcome-screen');
+                if (welcomeScreen) {
+                    welcomeScreen.classList.add('active');
+                }
             }
-        }, 600);
+            
+            // Re-enable button (though it's hidden now)
+            btn.disabled = false;
+            btn.style.pointerEvents = 'auto';
+            btn.textContent = originalText;
+        }, 300);
     }
     
-    // Attach event listener
-    if (continueWelcomeBtn) {
-        console.log('Continue button found, attaching event listener');
-        continueWelcomeBtn.addEventListener('click', handleContinueClick);
-        // Also allow direct call for debugging
-        window.handleContinueClick = handleContinueClick;
-    } else {
-        console.error('Continue button not found in DOM on page load');
-        // Try again after a short delay in case DOM isn't ready
+    // MULTIPLE ways to attach event listener for maximum reliability
+    function attachContinueButton() {
+        const btn = document.getElementById('continue-welcome-btn');
+        if (btn) {
+            console.log('✅ Continue button found, attaching listeners');
+            
+            // Remove any existing listeners
+            const newBtn = btn.cloneNode(true);
+            btn.parentNode.replaceChild(newBtn, btn);
+            
+            // Method 1: addEventListener
+            newBtn.addEventListener('click', handleContinueClick, { capture: true });
+            
+            // Method 2: onclick (fallback)
+            newBtn.onclick = handleContinueClick;
+            
+            // Method 3: Make it globally accessible for debugging
+            window.handleContinueClick = handleContinueClick;
+            window.continueBtn = newBtn;
+            
+            // Ensure button is clickable
+            newBtn.style.pointerEvents = 'auto';
+            newBtn.style.cursor = 'pointer';
+            newBtn.style.zIndex = '10001';
+            
+            console.log('✅ Event listeners attached');
+            return true;
+        }
+        return false;
+    }
+    
+    // Try to attach immediately
+    if (!attachContinueButton()) {
+        console.warn('Button not found on first try, retrying...');
+        // Retry after delays
         setTimeout(() => {
-            continueWelcomeBtn = document.getElementById('continue-welcome-btn');
-            if (continueWelcomeBtn) {
-                console.log('Continue button found on retry, attaching event listener');
-                continueWelcomeBtn.addEventListener('click', handleContinueClick);
-                window.handleContinueClick = handleContinueClick;
-            } else {
-                console.error('Continue button still not found after retry');
+            if (!attachContinueButton()) {
+                setTimeout(() => {
+                    if (!attachContinueButton()) {
+                        console.error('❌ Failed to attach button after multiple retries');
+                        // Last resort: add inline onclick to HTML
+                        const btn = document.getElementById('continue-welcome-btn');
+                        if (btn) {
+                            btn.setAttribute('onclick', 'window.handleContinueClick && window.handleContinueClick(event); return false;');
+                            console.log('✅ Added inline onclick as fallback');
+                        }
+                    }
+                }, 1000);
             }
-        }, 500);
+        }, 200);
     }
     
     // Theme preview card selection
