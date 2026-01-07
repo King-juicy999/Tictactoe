@@ -44,126 +44,82 @@ document.addEventListener('DOMContentLoaded', () => {
         }, 100);
     }
     
-    // Continue from pre-welcome to theme selection - ABSOLUTE FIX
-    let hasTransitioned = false;
-    
-    const doTransition = () => {
-        if (hasTransitioned) {
-            console.log('[Continue] Already transitioned');
-            return;
-        }
-        hasTransitioned = true;
-        
-        console.log('[Continue] TRANSITION STARTED - Going to welcome screen');
+    // Continue button - SIMPLEST POSSIBLE FIX
+    const handleContinueClick = () => {
+        console.log('=== BUTTON CLICKED ===');
         
         // Hide pre-welcome overlay
-        if (preWelcomeOverlay) {
-            preWelcomeOverlay.style.display = 'none';
-            preWelcomeOverlay.style.opacity = '0';
-            preWelcomeOverlay.style.pointerEvents = 'none';
-            preWelcomeOverlay.style.visibility = 'hidden';
+        const overlay = document.getElementById('pre-welcome-overlay');
+        if (overlay) {
+            overlay.style.display = 'none';
+            overlay.style.visibility = 'hidden';
+            overlay.style.opacity = '0';
+            overlay.style.pointerEvents = 'none';
+            console.log('Overlay hidden');
         }
         
-        // ALWAYS go to welcome screen (name entry) - this is what user expects
+        // Show welcome screen
         const welcomeScreen = document.getElementById('welcome-screen');
         if (welcomeScreen) {
             welcomeScreen.classList.add('active');
             welcomeScreen.style.display = 'block';
-            welcomeScreen.style.opacity = '1';
             welcomeScreen.style.visibility = 'visible';
-            console.log('[Continue] Welcome screen shown');
-        } else {
-            console.error('[Continue] Welcome screen not found!');
+            welcomeScreen.style.opacity = '1';
+            welcomeScreen.style.zIndex = '1';
+            console.log('Welcome screen shown');
         }
         
         // Re-enable inputs
-        if (gameState) {
+        if (typeof gameState !== 'undefined' && gameState) {
             gameState.uiLocked = false;
             gameState.uiLockingReason = null;
         }
     };
     
-    // Function to setup button - called multiple times as failsafe
-    const setupButton = () => {
+    // Setup button with multiple attempts
+    const setupContinueButton = () => {
         const btn = document.getElementById('continue-welcome-btn');
-        if (!btn) {
-            console.warn('[Continue] Button not found, will retry...');
-            return false;
+        if (btn) {
+            console.log('Button found, setting up handlers');
+            
+            // Make button clickable
+            btn.style.opacity = '1';
+            btn.style.pointerEvents = 'auto';
+            btn.style.cursor = 'pointer';
+            btn.disabled = false;
+            btn.style.zIndex = '10002';
+            btn.style.visibility = 'visible';
+            btn.style.display = 'block';
+            
+            // Remove old handlers and add new one
+            const newBtn = btn.cloneNode(true);
+            btn.parentNode.replaceChild(newBtn, btn);
+            
+            // Direct onclick - simplest approach
+            newBtn.onclick = handleContinueClick;
+            newBtn.addEventListener('click', handleContinueClick, false);
+            newBtn.addEventListener('touchend', handleContinueClick, false);
+            
+            console.log('Button handlers attached');
+            return true;
         }
-        
-        console.log('[Continue] Button found, setting up...');
-        
-        // Make button immediately visible and clickable
-        btn.style.opacity = '1';
-        btn.style.pointerEvents = 'auto';
-        btn.style.cursor = 'pointer';
-        btn.disabled = false;
-        btn.style.zIndex = '10002';
-        btn.style.position = 'relative';
-        btn.style.touchAction = 'manipulation';
-        btn.style.animation = 'none';
-        btn.style.visibility = 'visible';
-        btn.style.display = 'block';
-        
-        // Remove all existing listeners by cloning
-        const newBtn = btn.cloneNode(true);
-        btn.parentNode.replaceChild(newBtn, btn);
-        
-        // Setup handlers on new button
-        newBtn.onclick = doTransition;
-        newBtn.addEventListener('click', doTransition, true);
-        newBtn.addEventListener('touchend', doTransition, true);
-        newBtn.addEventListener('pointerup', doTransition, true);
-        newBtn.addEventListener('mousedown', doTransition, true);
-        
-        // Also add to overlay as backup
-        if (preWelcomeOverlay) {
-            preWelcomeOverlay.addEventListener('click', (e) => {
-                if (e.target === newBtn || newBtn.contains(e.target)) {
-                    doTransition();
-                }
-            }, true);
-        }
-        
-        console.log('[Continue] Button setup complete');
-        return true;
+        return false;
     };
     
-    // Try to setup immediately
-    if (!setupButton()) {
-        // Retry after delays
-        setTimeout(() => setupButton(), 100);
-        setTimeout(() => setupButton(), 500);
-        setTimeout(() => setupButton(), 1000);
-        setTimeout(() => setupButton(), 2000);
-    }
+    // Try immediately and with delays
+    setupContinueButton();
+    setTimeout(setupContinueButton, 50);
+    setTimeout(setupContinueButton, 200);
+    setTimeout(setupContinueButton, 500);
+    setTimeout(setupContinueButton, 1000);
     
-    // Also try when overlay is shown
-    if (preWelcomeOverlay) {
-        const observer = new MutationObserver(() => {
-            setupButton();
-        });
-        observer.observe(preWelcomeOverlay, { childList: true, subtree: true });
-        
-        // Event delegation on overlay as ultimate failsafe
-        preWelcomeOverlay.addEventListener('click', (e) => {
-            const btn = e.target.closest('#continue-welcome-btn, .pre-welcome-continue');
-            if (btn) {
-                console.log('[Continue] Click detected via delegation');
-                e.preventDefault();
-                e.stopPropagation();
-                doTransition();
-            }
-        }, true);
-    }
-    
-    // Global click handler as last resort
+    // Event delegation on document
     document.addEventListener('click', (e) => {
-        if (e.target.id === 'continue-welcome-btn' || e.target.closest('#continue-welcome-btn')) {
-            console.log('[Continue] Click detected via global handler');
+        if (e.target && (e.target.id === 'continue-welcome-btn' || e.target.closest('#continue-welcome-btn'))) {
+            console.log('Click caught by document handler');
             e.preventDefault();
             e.stopPropagation();
-            doTransition();
+            handleContinueClick();
         }
     }, true);
     
