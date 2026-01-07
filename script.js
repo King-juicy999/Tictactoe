@@ -2379,13 +2379,41 @@ if (document.readyState === 'loading') {
 function startGameAsAI() {
     displayName.textContent = gameState.playerName;
     
-    // Hide welcome screen with smooth fade
+    // Hide welcome screen with smooth fade, then fully remove onboarding DOM
     if (welcomeScreen) {
-        welcomeScreen.style.opacity = '0';
-        welcomeScreen.style.transition = 'opacity 0.4s ease-out';
-        setTimeout(() => {
-            welcomeScreen.classList.remove('active');
-        }, 400);
+        try {
+            welcomeScreen.style.opacity = '0';
+            welcomeScreen.style.transition = 'opacity 0.4s ease-out';
+            setTimeout(() => {
+                welcomeScreen.classList.remove('active');
+                // MVP: Fully unmount welcome screen so it cannot push layout
+                if (welcomeScreen.parentNode) {
+                    welcomeScreen.parentNode.removeChild(welcomeScreen);
+                }
+            }, 400);
+        } catch (e) {
+            console.warn('[Layout] Failed to fade/remove welcome screen:', e);
+            // Hard fallback: force-remove without animation
+            try {
+                if (welcomeScreen.parentNode) {
+                    welcomeScreen.parentNode.removeChild(welcomeScreen);
+                }
+            } catch (_) {}
+        }
+    }
+
+    // MVP: Also ensure pre-welcome and theme overlays are removed from DOM
+    try {
+        const preOverlay = document.getElementById('pre-welcome-overlay');
+        if (preOverlay && preOverlay.parentNode) {
+            preOverlay.parentNode.removeChild(preOverlay);
+        }
+        const themeOverlay = document.getElementById('theme-selection-overlay');
+        if (themeOverlay && themeOverlay.parentNode) {
+            themeOverlay.parentNode.removeChild(themeOverlay);
+        }
+    } catch (e) {
+        console.warn('[Layout] Failed to remove onboarding overlays (non‑critical):', e);
     }
     
     // Show game screen with smooth fade
@@ -2394,6 +2422,13 @@ function startGameAsAI() {
     setTimeout(() => {
         gameScreen.style.transition = 'opacity 0.4s ease-out';
         gameScreen.style.opacity = '1';
+
+        // MVP: Hard-reset scroll so board is immediately visible, no vertical gap
+        try {
+            window.scrollTo({ top: 0, behavior: 'auto' });
+        } catch (_) {
+            window.scrollTo(0, 0);
+        }
     }, 100);
 
     // STAGE 5: FINAL PRE-PLAY MESSAGE
@@ -2634,7 +2669,8 @@ if (modeAiBtn) {
  * Power Up Guide System
  */
 let currentGuidePage = 1;
-const totalGuidePages = 9;
+// MVP: Keep JS in sync with HTML - there are exactly 8 guide pages
+const totalGuidePages = 8;
 
 /**
  * Show power-up guide

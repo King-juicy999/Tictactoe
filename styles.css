@@ -60,7 +60,8 @@ body {
     min-height: 100vh;
     display: flex;
     justify-content: center;
-    align-items: center;
+    /* MVP: Top‑align content so the game board sits near the top, no huge vertical gap */
+    align-items: flex-start;
     position: relative;
     overflow-x: hidden;
     overflow-y: auto;
@@ -620,7 +621,8 @@ button:disabled:hover {
         max-width: 95vw;
         width: 100%;
         gap: 12px;
-        margin: 2.5rem auto;
+        /* MVP: Minimal vertical spacing above board on phones */
+        margin: clamp(0.75rem, 3vw, 1.25rem) auto;
     }
     
     .cell {
@@ -640,7 +642,8 @@ button:disabled:hover {
         flex-direction: column;
         gap: 1rem;
         font-size: 1.6rem;
-        margin-bottom: 2rem;
+        /* MVP: Reduce gap between stats and board */
+        margin-bottom: clamp(0.5rem, 2.5vw, 1.25rem);
         padding: 1rem;
         background: rgba(255, 255, 255, 0.3);
         border-radius: 12px;
@@ -1334,7 +1337,8 @@ button:disabled:hover {
         max-width: 95vw;
         width: 100%;
         gap: 10px;
-        margin: 2rem auto;
+        /* MVP: Tight, clean spacing above the board on small phones */
+        margin: clamp(0.75rem, 2.5vw, 1.5rem) auto;
     }
 
     .cell {
@@ -1471,7 +1475,8 @@ button:disabled:hover {
         max-width: 95vw;
         width: 100%;
         gap: 8px;
-        margin: 2rem auto;
+        /* MVP: Very small gap above board on the smallest phones */
+        margin: clamp(0.5rem, 2.5vw, 1.25rem) auto;
     }
 
     .cell {
@@ -3886,7 +3891,8 @@ button:disabled::after {
     z-index: 10000;
     display: flex;
     justify-content: center;
-    align-items: center;
+    /* MVP: keep guide content higher so board is closer when it closes */
+    align-items: flex-start;
     opacity: 0;
     transition: opacity 0.4s ease;
     pointer-events: none;
@@ -3912,7 +3918,7 @@ button:disabled::after {
     padding: 2.5rem;
     max-width: 600px;
     width: 95%;
-    max-height: 90vh;
+    max-height: 80vh; /* MVP: slightly shorter so there’s less scroll and less leftover gap */
     box-shadow: 0 20px 60px var(--shadow);
     text-align: center;
     color: var(--text-primary);
