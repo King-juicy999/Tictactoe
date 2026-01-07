@@ -2136,14 +2136,17 @@ const winningCombos = [
 ];
 
 // Taunting messages
+// TAUNTING SYSTEM: The AI does NOT praise players. Ever.
+// The AI exists to: Mock, Taunt, Undermine confidence, Apply pressure, Distract
+// Taunts must feel: Intelligent, Context aware, Mean but fun, Not repetitive
 const tauntMessages = [
+    // Context-aware taunts
     "Are you even trying?",
     "You play worse than a chicken!",
     "Pathetic! Is that all you've got?",
     "My grandmother plays better than you!",
     "Is this your first time playing?",
     "You're making this too easy!",
-    "I told your dad I fucked you",
     "Even a toaster has better strategy.",
     "Your moves are a cry for help.",
     "I've seen rocks think faster than this.",
@@ -2166,8 +2169,33 @@ const tauntMessages = [
     "You couldn't beat a wet paper bag.",
     "Is your mouse asleep?",
     "You're speedrunning failure.",
-    "Even luck gave up on you."
+    "Even luck gave up on you.",
+    // Additional variety
+    "Predictable.",
+    "I knew you'd do that.",
+    "How original.",
+    "Tell me you're new without telling me.",
+    "This is getting sad.",
+    "I'm almost impressed by how bad that was.",
+    "Did you think about that move?",
+    "Swing and a miss.",
+    "Close... if close meant impossible.",
+    "Thanks for the free win.",
+    "You're making my job easy.",
+    "I've seen better play from a bot... on easy mode.",
+    "Maybe try thinking first?",
+    "That wasn't even close to good.",
+    "You're predictable and bad.",
+    "I could win blindfolded.",
+    "Your best move is quitting.",
+    "Each game just gets worse for you.",
+    "I'm starting to feel bad. Almost.",
+    "You're not improving. At all."
 ];
+
+// Taunt triggers tracking (to avoid repetition)
+let recentTauntTypes = [];
+const MAX_RECENT_TAUNTS = 5;
 
 // After entering name & enabling camera, show mode selection (AI or Player)
 // UI INPUT GUARANTEE: Button must ALWAYS respond - if handler fails, reset and proceed
@@ -2233,6 +2261,61 @@ startBtn.addEventListener('click', () => {
     }
 });
 
+/**
+ * Show name entry explanation (STAGE 2: NAME ENTRY SCREEN)
+ * UX ONLY: Explains that AI will remember how they play, implies intelligence
+ */
+function showNameEntryExplanation() {
+    const nameInput = document.getElementById('player-name');
+    if (!nameInput) return;
+    
+    // Show subtle explanation after name is entered
+    nameInput.addEventListener('blur', () => {
+        if (nameInput.value.trim()) {
+            // Create subtle tooltip/explanation
+            const explanation = document.createElement('div');
+            explanation.className = 'name-explanation';
+            explanation.textContent = 'The AI will remember how you play.';
+            explanation.style.cssText = `
+                position: absolute;
+                top: 100%;
+                left: 0;
+                margin-top: 8px;
+                font-size: 0.85rem;
+                color: rgba(255, 255, 255, 0.7);
+                opacity: 0;
+                transition: opacity 0.3s ease;
+                pointer-events: none;
+            `;
+            
+            const formContainer = nameInput.closest('.form-container');
+            if (formContainer) {
+                formContainer.style.position = 'relative';
+                formContainer.appendChild(explanation);
+                
+                setTimeout(() => {
+                    explanation.style.opacity = '1';
+                }, 10);
+                
+                // Remove after 3 seconds
+                setTimeout(() => {
+                    explanation.style.opacity = '0';
+                    setTimeout(() => {
+                        explanation.remove();
+                    }, 300);
+                }, 3000);
+            }
+        }
+    }, { once: true });
+}
+
+// Initialize name entry explanation
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', showNameEntryExplanation);
+} else {
+    showNameEntryExplanation();
+}
+
 // Start game as AI (extract of previous start logic)
 function startGameAsAI() {
     displayName.textContent = gameState.playerName;
@@ -2254,7 +2337,9 @@ function startGameAsAI() {
         gameScreen.style.opacity = '1';
     }, 100);
 
-    messageBox.textContent = "Foolish mortal, prepare to suffer!";
+    // STAGE 5: FINAL PRE-PLAY MESSAGE
+    // Just before first move: One last short line, Something ominous, No advice, No friendliness
+    messageBox.textContent = "Let's see what you're made of...";
     
     // Animate board entry (premium animation)
     if (typeof AnimationUtils !== 'undefined') {
@@ -3721,6 +3806,26 @@ function makeAIMove() {
         gameState.losses++;
         lossesDisplay.textContent = gameState.losses;
         
+        // ADVANCED TAUNT TYPE: "SHOW YOU HOW STUPID YOU WERE"
+        // When player loses in a clearly avoidable way:
+        // - Freeze the board briefly
+        // - Highlight the missed winning or blocking cell
+        // - Animate the correct move
+        // - Explain visually what should have been done
+        // This is NOT a tutorial - it's an insult disguised as instruction
+        // UX ONLY - does NOT affect AI logic
+        if (!gameState.isKingWilliam && !isSarah() && gameState.playerMoveHistory.length > 0) {
+            // Check if player had a winning move they missed (30% chance to show taunt)
+            if (Math.random() < 0.3) {
+                try {
+                    showMissedMoveTaunt();
+                } catch (tauntError) {
+                    console.error('Error showing missed move taunt:', tauntError);
+                    // Continue with normal endGame - taunt is optional
+                }
+            }
+        }
+        
         // ADAPTIVE INTELLIGENCE PERSISTENCE: AI intelligence must persist after AI wins
         // The AI must NOT lose intelligence, adaptability, or strategic awareness after winning
         // Record AI win in learning system - intelligence persists
@@ -3837,7 +3942,27 @@ function makeAIMove() {
     }
 
     if (!gameState.isKingWilliam) {
-        messageBox.textContent = tauntMessages[Math.floor(Math.random() * tauntMessages.length)];
+        // TAUNT VARIETY RULE: Randomize taunt selection to avoid repetition
+        // Track recent taunts to ensure variety
+        let selectedTaunt = tauntMessages[Math.floor(Math.random() * tauntMessages.length)];
+        
+        // Avoid repeating same taunt if possible
+        if (recentTauntTypes.length > 0) {
+            const recentTaunts = recentTauntTypes.slice(-3);
+            let attempts = 0;
+            while (recentTaunts.includes(selectedTaunt) && attempts < 5) {
+                selectedTaunt = tauntMessages[Math.floor(Math.random() * tauntMessages.length)];
+                attempts++;
+            }
+        }
+        
+        // Track this taunt
+        recentTauntTypes.push(selectedTaunt);
+        if (recentTauntTypes.length > MAX_RECENT_TAUNTS) {
+            recentTauntTypes.shift();
+        }
+        
+        messageBox.textContent = selectedTaunt;
     }
     } catch (e) {
         console.error('Critical error in makeAIMove:', e);
