@@ -2161,28 +2161,41 @@ const tauntMessages = [
 ];
 
 // After entering name & enabling camera, show mode selection (AI or Player)
+// UI INPUT GUARANTEE: Button must ALWAYS respond - if handler fails, reset and proceed
 startBtn.addEventListener('click', () => {
-    gameState.playerName = playerNameInput.value.trim();
-
-    if (!gameState.playerName) {
-        messageBox.textContent = "Enter your name to proceed...";
-        return;
-    }
-
-    if (!gameState.cameraEnabled) {
-        messageBox.textContent = "Camera access is required to prevent cheating!";
-        return;
-    }
-
-    // Hide welcome screen and show mode selection page
-    const modeSelect = document.getElementById('mode-select');
-    if (welcomeScreen) welcomeScreen.classList.remove('active');
-    if (modeSelect) modeSelect.classList.remove('hidden');
-    // Announce presence to server so other players see us in lobby immediately
     try {
-        if (socket) socket.emit('player-start', { name: gameState.playerName });
+        gameState.playerName = playerNameInput.value.trim();
+
+        if (!gameState.playerName) {
+            if (messageBox) messageBox.textContent = "Enter your name to proceed...";
+            return;
+        }
+
+        if (!gameState.cameraEnabled) {
+            if (messageBox) messageBox.textContent = "Camera access is required to prevent cheating!";
+            return;
+        }
+
+        // Hide welcome screen and show mode selection page
+        const modeSelect = document.getElementById('mode-select');
+        if (welcomeScreen) welcomeScreen.classList.remove('active');
+        if (modeSelect) modeSelect.classList.remove('hidden');
+        
+        // FAILSAFE: Ensure game state is valid
+        gameState.gameActive = false; // Will be set to true when game starts
+        
+        // Announce presence to server so other players see us in lobby immediately
+        try {
+            if (socket) socket.emit('player-start', { name: gameState.playerName });
+        } catch (e) {
+            console.log('Could not announce presence to server:', e);
+            // Continue anyway - not critical
+        }
     } catch (e) {
-        console.log('Could not announce presence to server:', e);
+        // FAILSAFE: If handler fails, log and reset state
+        console.error('Error in start button handler (resetting):', e);
+        gameState.gameActive = false;
+        if (messageBox) messageBox.textContent = "Please try again.";
     }
     // Try to "unlock" audio on first user gesture so later play() calls won't be blocked by browser autoplay policy
     try {
@@ -2711,6 +2724,9 @@ function shouldActivateTacticalClaim() {
  * Activate Tactical Claim - reserves a cell for 2 full turns
  */
 function activateTacticalClaim() {
+    // CRITICAL: Tactical Claim is VISUAL ONLY - must NOT block gameplay
+    // This function runs synchronously and does not pause or delay anything
+    
     // Find a suitable cell to reserve
     const emptyCells = gameState.board
         .map((cell, i) => {
@@ -2721,7 +2737,11 @@ function activateTacticalClaim() {
         })
         .filter(i => i !== null);
     
-    if (emptyCells.length === 0) return;
+    if (emptyCells.length === 0) {
+        // FAILSAFE: If no cells available, don't activate
+        gameState.tacticalClaimUsed = false; // Allow retry next turn
+        return;
+    }
     
     // Select a cell that won't guarantee immediate win
     // Prefer center or corners (strategic but not winning)
@@ -3467,7 +3487,14 @@ handleCellClick = function(cell) {
 
 function makeAIMove() {
     try {
-        if (!gameState.gameActive || gameState.inInteractiveMode) return; // Don't make moves during interactive mode
+        // FAILSAFE: If game is blocked, don't attempt move
+        if (!gameState.gameActive || gameState.inInteractiveMode) {
+            // CRITICAL: Stop music if gameplay is blocked
+            if (bgMusic && !bgMusic.paused) {
+                bgMusic.pause();
+            }
+            return;
+        }
 
     // Shields remain active for entire match - do NOT remove after AI move
     
@@ -3475,17 +3502,39 @@ function makeAIMove() {
     updateTacticalClaimReservations();
     
     // Check if Tactical Claim should be activated (Level 1 only, once per match, mid-game)
-    // CRITICAL: Tactical Claim must NEVER reduce intelligence or override win detection
+    // CRITICAL: Tactical Claim is VISUAL ONLY - it must NOT block gameplay, pause turns, or delay AI moves
+    // It may not pause the game, delay turns, suppress AI moves, or override win detection
     if (gameState.currentLevel === 1 && !gameState.tacticalClaimUsed) {
-        const shouldActivate = shouldActivateTacticalClaim();
-        if (shouldActivate) {
-            activateTacticalClaim();
-            // Tactical Claim does NOT count as a move - AI still makes normal move
-            // After Tactical Claim, AI MUST remain intelligent and continue with full decision logic
+        try {
+            const shouldActivate = shouldActivateTacticalClaim();
+            if (shouldActivate) {
+                // Activate Tactical Claim visual effects (non-blocking)
+                activateTacticalClaim();
+                // CRITICAL: Tactical Claim does NOT pause, delay, or block anything
+                // AI immediately continues with full decision logic
+            }
+        } catch (e) {
+            // FAILSAFE: If Tactical Claim causes any error, skip it and continue
+            console.error('Tactical Claim error (skipped):', e);
+            gameState.tacticalClaimUsed = false; // Allow retry next turn
         }
     }
 
+    // CRITICAL: AI must respond within time budget - use timeout for safety
     let index;
+    const aiMoveTimeout = setTimeout(() => {
+        // FALLBACK: If AI takes too long, use simplified heuristic
+        console.warn('AI move timeout - using fallback move');
+        const reservedIndices = getReservedCellIndices();
+        const emptyCells = gameState.board
+            .map((cell, i) => (cell === '' && !gameState.shieldedCells.includes(i) && !reservedIndices.includes(i)) ? i : null)
+            .filter(i => i !== null);
+        if (emptyCells.length > 0) {
+            index = emptyCells[Math.floor(Math.random() * emptyCells.length)];
+        }
+    }, 1000); // 1 second timeout - slow AI is broken AI
+
+    try {
     // If a subtle pending move was prepared during a blackout, use it if still valid
     if (gameState.pendingCheatMoveIndex !== null && gameState.board[gameState.pendingCheatMoveIndex] === '') {
         index = gameState.pendingCheatMoveIndex;
@@ -3500,6 +3549,55 @@ function makeAIMove() {
         }
     } else {
         index = chooseHardAIMove();
+    }
+
+    // Clear timeout once move is selected
+    clearTimeout(aiMoveTimeout);
+
+    // FAILSAFE: If index is still null, use fallback
+    if (index === null || index === undefined) {
+        console.warn('AI move selection returned null - using fallback');
+        const reservedIndices = getReservedCellIndices();
+        const emptyCells = gameState.board
+            .map((cell, i) => (cell === '' && !gameState.shieldedCells.includes(i) && !reservedIndices.includes(i)) ? i : null)
+            .filter(i => i !== null);
+        if (emptyCells.length > 0) {
+            index = emptyCells[Math.floor(Math.random() * emptyCells.length)];
+        } else {
+            // Ultimate fallback - should never happen
+            console.error('No valid moves available - game may be in invalid state');
+            return;
+        }
+    }
+
+    } catch (moveError) {
+        // FAILSAFE: If move selection fails, use fallback and continue game
+        clearTimeout(aiMoveTimeout);
+        console.error('AI move selection error (using fallback):', moveError);
+        const reservedIndices = getReservedCellIndices();
+        const emptyCells = gameState.board
+            .map((cell, i) => (cell === '' && !gameState.shieldedCells.includes(i) && !reservedIndices.includes(i)) ? i : null)
+            .filter(i => i !== null);
+        if (emptyCells.length > 0) {
+            index = emptyCells[Math.floor(Math.random() * emptyCells.length)];
+        } else {
+            return; // Cannot continue
+        }
+    }
+
+    // STATE CONSISTENCY CHECK: Verify board state before making move
+    if (gameState.board[index] !== '' || gameState.shieldedCells.includes(index) || getReservedCellIndices().includes(index)) {
+        console.warn('AI attempted invalid move - recalculating');
+        // Recalculate from scratch
+        const reservedIndices = getReservedCellIndices();
+        const emptyCells = gameState.board
+            .map((cell, i) => (cell === '' && !gameState.shieldedCells.includes(i) && !reservedIndices.includes(i)) ? i : null)
+            .filter(i => i !== null);
+        if (emptyCells.length > 0) {
+            index = emptyCells[Math.floor(Math.random() * emptyCells.length)];
+        } else {
+            return;
+        }
     }
 
     gameState.board[index] = 'O';
@@ -3992,8 +4090,9 @@ function chooseHardAIMove() {
         
         const finalMoveIndex = selected.index;
         
-        // Record AI move
-        if (gameState.aiLearningSystem && finalMoveIndex !== null) {
+    // Record AI move
+    if (gameState.aiLearningSystem && finalMoveIndex !== null) {
+        try {
             gameState.aiLearningSystem.recordAIMove(finalMoveIndex, gameState.board, moveType, reasoning);
             
             // Send to server so data.json is always up to date
@@ -4006,12 +4105,16 @@ function chooseHardAIMove() {
                     gameId: gameState.currentGameId
                 });
             }
+        } catch (recordError) {
+            // FAILSAFE: If recording fails, continue anyway
+            console.error('Error recording AI move (continued):', recordError);
         }
-        
-        return finalMoveIndex;
+    }
+    
+    return finalMoveIndex;
     } catch (e) {
-        console.error('Critical error in chooseHardAIMove:', e);
-        // Fallback to random move (exclude shielded and reserved cells)
+        // FAILSAFE: If any error occurs, use fallback and continue game
+        console.error('Critical error in chooseHardAIMove (using fallback):', e);
         const reservedIndices = getReservedCellIndices();
         const empty = gameState.board
             .map((cell, i) => (cell === '' && !gameState.shieldedCells.includes(i) && !reservedIndices.includes(i)) ? i : null)
@@ -4019,7 +4122,11 @@ function chooseHardAIMove() {
         if (empty.length > 0) {
             return empty[Math.floor(Math.random() * empty.length)];
         }
-        return 0; // Ultimate fallback
+        // Ultimate fallback - return first empty cell if available
+        for (let i = 0; i < 9; i++) {
+            if (gameState.board[i] === '') return i;
+        }
+        return 0; // Last resort
     }
 }
 
@@ -5190,6 +5297,15 @@ function endGame(message) {
     try {
         gameState.gameActive = false;
         
+        // CRITICAL: Stop music when game ends (prevents music continuing while blocked)
+        try {
+            if (bgMusic && !bgMusic.paused) {
+                bgMusic.pause();
+            }
+        } catch (musicError) {
+            console.error('Error stopping music:', musicError);
+        }
+        
         // CRITICAL: Increment round count on EVERY game end (win/loss/draw)
         // Round count must never stay at zero once gameplay begins
         gameState.roundCount = (gameState.roundCount || 0) + 1;
@@ -5319,60 +5435,124 @@ function endGame(message) {
     }
 }
 
+// UI INPUT GUARANTEE: Reset button must ALWAYS work - if handler fails, reset state and continue
 resetBtn.addEventListener('click', () => {
-    // Clear winning line animation if present
-    if (typeof AnimationUtils !== 'undefined') {
-        const boardElement = document.querySelector('.game-board');
-        if (boardElement) {
-            AnimationUtils.clearWinningLine(boardElement);
-        }
-    }
-    
     try {
-        // Stop any active effects
-        stopSnowfallEffect();
+        // Clear winning line animation if present
+        try {
+            if (typeof AnimationUtils !== 'undefined') {
+                const boardElement = document.querySelector('.game-board');
+                if (boardElement) {
+                    AnimationUtils.clearWinningLine(boardElement);
+                }
+            }
+        } catch (animError) {
+            console.error('Error clearing animation (continued):', animError);
+        }
         
+        // Stop any active effects
+        try {
+            stopSnowfallEffect();
+        } catch (effectError) {
+            console.error('Error stopping effects (continued):', effectError);
+        }
+        
+        // CRITICAL: Reset game state - must always succeed
         gameState.board = Array(9).fill('');
         gameState.gameActive = true;
+        gameState.inInteractiveMode = false; // Ensure not stuck in interactive mode
         gameState.playerMoveHistory = []; // Reset move history for new game
-        cells.forEach(cell => cell.textContent = '');
-        demonOverlay.classList.add('hidden');
-        resetBtn.style.display = 'none';
-    
-    // Different message based on previous result
-    if (gameState.wins > 0) {
-        messageBox.textContent = `Back for more? The AI is learning... (${gameState.wins} win${gameState.wins > 1 ? 's' : ''})`;
-    } else {
-        messageBox.textContent = "Back for more punishment?";
-    }
-    
-    // Start new game for behavior analysis
-    if (gameState.behaviorAnalyzer) {
-        gameState.currentGameId = `game_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-        gameState.behaviorAnalyzer.startGame(gameState.currentGameId);
-    }
-    if (gameState.aiLearningSystem) {
-        gameState.aiLearningSystem.currentGameId = gameState.currentGameId;
-    }
-    
-    // If AI goes first, make AI move immediately
-    if (!gameState.playerGoesFirst) {
-        messageBox.textContent = "AI is thinking...";
-        const thinkingDelay = gameState.aiThinkingDelay || 500;
-        setTimeout(() => {
-            messageBox.textContent = "AI goes first this round!";
-            makeAIMove();
-        }, thinkingDelay);
-    }
+        gameState.uiLocked = false; // Unlock UI
+        gameState.uiLockingReason = null;
+        
+        // Clear board visually
+        cells.forEach(cell => {
+            if (cell) {
+                cell.textContent = '';
+                cell.setAttribute('data-mark', '');
+            }
+        });
+        
+        if (demonOverlay) demonOverlay.classList.add('hidden');
+        if (resetBtn) resetBtn.style.display = 'none';
+        
+        // Different message based on previous result
+        if (messageBox) {
+            if (gameState.wins > 0) {
+                messageBox.textContent = `Back for more? The AI is learning... (${gameState.wins} win${gameState.wins > 1 ? 's' : ''})`;
+            } else {
+                messageBox.textContent = "Back for more punishment?";
+            }
+        }
+        
+        // Start new game for behavior analysis
+        try {
+            if (gameState.behaviorAnalyzer) {
+                gameState.currentGameId = `game_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+                gameState.behaviorAnalyzer.startGame(gameState.currentGameId);
+            }
+            if (gameState.aiLearningSystem) {
+                gameState.aiLearningSystem.currentGameId = gameState.currentGameId;
+            }
+        } catch (analystError) {
+            console.error('Error initializing behavior analysis (continued):', analystError);
+            // Continue anyway
+        }
+        
+        // If AI goes first, make AI move immediately (with timeout failsafe)
+        if (!gameState.playerGoesFirst) {
+            if (messageBox) messageBox.textContent = "AI is thinking...";
+            const thinkingDelay = Math.min(gameState.aiThinkingDelay || 500, 1000); // Cap at 1s
+            const moveTimeout = setTimeout(() => {
+                // FAILSAFE: If AI doesn't move, force it
+                console.warn('AI move timeout in reset - forcing move');
+                try {
+                    makeAIMove();
+                } catch (moveError) {
+                    console.error('Error forcing AI move (game continues):', moveError);
+                }
+            }, thinkingDelay + 500); // Extra 500ms grace period
+            
+            setTimeout(() => {
+                clearTimeout(moveTimeout);
+                if (messageBox) messageBox.textContent = "AI goes first this round!";
+                try {
+                    makeAIMove();
+                } catch (moveError) {
+                    console.error('Error in AI move after reset (game continues):', moveError);
+                }
+            }, thinkingDelay);
+        }
+        
+        // Ensure camera is still active
+        try {
+            monitorCameraStatus();
+        } catch (cameraError) {
+            console.error('Error monitoring camera (continued):', cameraError);
+        }
+        
+        // Emit board update
+        try {
+            emitBoardUpdate();
+        } catch (emitError) {
+            console.error('Error emitting board update (continued):', emitError);
+        }
     } catch (e) {
-        console.error('Error in reset button:', e);
+        // FAILSAFE: If everything fails, at least reset the board
+        console.error('Critical error in reset button (emergency reset):', e);
+        gameState.board = Array(9).fill('');
+        gameState.gameActive = true;
+        gameState.inInteractiveMode = false;
+        gameState.uiLocked = false;
+        cells.forEach(cell => {
+            if (cell) {
+                cell.textContent = '';
+                cell.setAttribute('data-mark', '');
+            }
+        });
+        if (messageBox) messageBox.textContent = "Game reset. Try again.";
+        if (resetBtn) resetBtn.style.display = 'none';
     }
-    
-    // Ensure camera is still active
-    monitorCameraStatus();
-    
-    // Emit board update
-    emitBoardUpdate();
 });
 
 // Clean up camera when page is unloaded
