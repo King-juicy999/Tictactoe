@@ -54,30 +54,26 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         hasTransitioned = true;
         
-        console.log('[Continue] TRANSITION STARTED');
+        console.log('[Continue] TRANSITION STARTED - Going to welcome screen');
         
         // Hide pre-welcome overlay
         if (preWelcomeOverlay) {
             preWelcomeOverlay.style.display = 'none';
             preWelcomeOverlay.style.opacity = '0';
             preWelcomeOverlay.style.pointerEvents = 'none';
+            preWelcomeOverlay.style.visibility = 'hidden';
         }
         
-        // Show theme selection or welcome screen
-        if (themeSelectionOverlay) {
-            if (!selectedTheme) {
-                selectedTheme = (typeof ThemeManager !== 'undefined' && ThemeManager.getCurrentTheme()) 
-                    ? ThemeManager.getCurrentTheme() 
-                    : 'light';
-            }
-            themeSelectionOverlay.style.display = 'flex';
-            themeSelectionOverlay.classList.add('active');
-            updateThemePreviewSelection();
+        // ALWAYS go to welcome screen (name entry) - this is what user expects
+        const welcomeScreen = document.getElementById('welcome-screen');
+        if (welcomeScreen) {
+            welcomeScreen.classList.add('active');
+            welcomeScreen.style.display = 'block';
+            welcomeScreen.style.opacity = '1';
+            welcomeScreen.style.visibility = 'visible';
+            console.log('[Continue] Welcome screen shown');
         } else {
-            const welcomeScreen = document.getElementById('welcome-screen');
-            if (welcomeScreen) {
-                welcomeScreen.classList.add('active');
-            }
+            console.error('[Continue] Welcome screen not found!');
         }
         
         // Re-enable inputs
