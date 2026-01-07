@@ -375,7 +375,9 @@ const gameState = {
     // MVP: Taunt system flags to prevent infinite loops
     secondLossTauntShown: false, // Track if second loss taunt has been shown (prevents loops)
     // MVP: Board layout lock - prevent shrinking between rounds
-    boardInitialized: false // Track if board has been initialized (prevents re-animation between rounds)
+    boardInitialized: false, // Track if board has been initialized (prevents re-animation between rounds)
+    // MVP: Game flow control - prevent Play button from reappearing
+    hasGameStartedOnce: false // Track if game has started at least once (prevents Play button from reappearing)
 };
 
 /**
@@ -2394,6 +2396,9 @@ if (document.readyState === 'loading') {
 
 // Start game as AI (extract of previous start logic)
 function startGameAsAI() {
+    // MVP: Mark that game has started at least once
+    gameState.hasGameStartedOnce = true;
+    
     displayName.textContent = gameState.playerName;
     
     // Hide welcome screen with smooth fade, then fully remove onboarding DOM
@@ -4865,19 +4870,23 @@ function makeAIMove() {
             gameState.level1Losses = (gameState.level1Losses || 0) + 1;
         }
         
+        // ============================================
+        // CRITICAL: SECOND LOSS TAUNT TRIGGER (MUST BE FIRST CHECK)
+        // ============================================
         // MVP: SECOND LOSS IN LEVEL 1 - Trigger exactly once when level1Losses === 2
-        // Check BEFORE other taunt logic to ensure it triggers correctly
+        // Check IMMEDIATELY after increment, BEFORE any other logic
+        // This ensures taunt fires before endGame() or any other state changes
         if (gameState.currentLevel === 1 && 
             gameState.level1Losses === 2 && 
             !gameState.isKingWilliam && 
             !isSarah() && 
-            gameState.playerMoveHistory.length > 0 &&
-            !gameState.secondLossTauntShown) { // MVP: Additional check to prevent loops
+            !gameState.secondLossTauntShown) { // MVP: Explicit check to prevent loops
             try {
-                console.log('[Taunt] Second loss detected - triggering taunt', {
+                console.log('[Taunt] Second loss detected - triggering taunt IMMEDIATELY', {
                     totalLosses: gameState.losses,
                     level1Losses: gameState.level1Losses,
-                    tauntShown: gameState.secondLossTauntShown
+                    tauntShown: gameState.secondLossTauntShown,
+                    playerMoveHistory: gameState.playerMoveHistory.length
                 });
                 // CRITICAL: Pass endGame callback so taunt can call it after completion
                 const lossMessage = "AI Wins!\nThe AI has outplayed you this round, " + gameState.playerName + "!";
@@ -4886,6 +4895,7 @@ function makeAIMove() {
                     endGame(lossMessage);
                 });
                 // CRITICAL: Return early to prevent endGame from being called immediately
+                // This prevents any other taunt logic or endGame() from executing
                 return;
             } catch (tauntError) {
                 console.error('[Taunt] Error showing second loss taunt:', tauntError);
@@ -6397,6 +6407,7 @@ function resetToLanding() {
         gameState.level1Losses = 0; // Reset level-specific loss count
         gameState.secondLossTauntShown = false; // MVP: Reset taunt flag to allow taunt on next session
         gameState.boardInitialized = false; // MVP: Reset board initialization so it can animate on next fresh start
+        gameState.hasGameStartedOnce = false; // MVP: Reset game start flag when returning to landing
         gameState.gameActive = true;
         gameState.inInteractiveMode = false;
         gameState.playerMoveHistory = [];
@@ -6773,6 +6784,75 @@ function endGame(message) {
         if (typeof PowerUpManager !== 'undefined') {
             PowerUpManager.updateLevel();
         }
+        
+        // MVP: Auto-start next round if game has started once (no Play button)
+        // Only show reset button if this is the very first game
+        if (gameState.hasGameStartedOnce) {
+            // Hide reset button - game will auto-start
+            if (resetBtn) resetBtn.style.display = 'none';
+            
+            // Auto-start next round after a brief delay
+            setTimeout(() => {
+                try {
+                    // Reset board for next round
+                    gameState.board = Array(9).fill('');
+                    gameState.gameActive = true;
+                    gameState.inInteractiveMode = false;
+                    gameState.playerMoveHistory = [];
+                    gameState.uiLocked = false;
+                    gameState.uiLockingReason = null;
+                    
+                    // Clear board visually
+                    cells.forEach(cell => {
+                        if (cell) {
+                            cell.textContent = '';
+                            cell.setAttribute('data-mark', '');
+                        }
+                    });
+                    
+                    // Clear message
+                    if (messageBox) {
+                        messageBox.textContent = '';
+                    }
+                    
+                    // Start new game for behavior analysis
+                    if (gameState.behaviorAnalyzer) {
+                        gameState.currentGameId = `game_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+                        gameState.behaviorAnalyzer.startGame(gameState.currentGameId);
+                    }
+                    if (gameState.aiLearningSystem) {
+                        gameState.aiLearningSystem.currentGameId = gameState.currentGameId;
+                    }
+                    
+                    // If AI goes first, make AI move
+                    if (!gameState.playerGoesFirst) {
+                        if (messageBox) messageBox.textContent = "AI is thinking...";
+                        const thinkingDelay = Math.min(gameState.aiThinkingDelay || 500, 1000);
+                        setTimeout(() => {
+                            if (messageBox) messageBox.textContent = "AI goes first this round!";
+                            try {
+                                makeAIMove();
+                            } catch (moveError) {
+                                console.error('Error in AI move after auto-start:', moveError);
+                            }
+                        }, thinkingDelay);
+                    } else {
+                        if (messageBox) {
+                            messageBox.textContent = gameState.playerName ? `Your turn, ${gameState.playerName}!` : 'Your turn!';
+                        }
+                    }
+                    
+                    emitBoardUpdate();
+                } catch (autoStartError) {
+                    console.error('Error in auto-start next round:', autoStartError);
+                    // Fallback: show reset button if auto-start fails
+                    if (resetBtn) resetBtn.style.display = 'block';
+                }
+            }, 1500); // Brief delay to let endGame message display
+        } else {
+            // First game - show reset button
+            if (resetBtn) resetBtn.style.display = 'block';
+        }
     } catch (e) {
         console.error('Critical error in endGame:', e);
         // Fallback: just disable game
@@ -6805,12 +6885,19 @@ resetBtn.addEventListener('click', () => {
         }
         
         // CRITICAL: Reset game state - must always succeed
+        // MVP: DO NOT reset secondLossTauntShown or hasGameStartedOnce on round restart
+        // These flags persist across rounds within the same match
         gameState.board = Array(9).fill('');
         gameState.gameActive = true;
         gameState.inInteractiveMode = false; // Ensure not stuck in interactive mode
         gameState.playerMoveHistory = []; // Reset move history for new game
         gameState.uiLocked = false; // Unlock UI
         gameState.uiLockingReason = null;
+        
+        // MVP: Hide reset button if game has started once (auto-start enabled)
+        if (gameState.hasGameStartedOnce) {
+            if (resetBtn) resetBtn.style.display = 'none';
+        }
         
         // MVP: Clear board visually WITHOUT re-animating or resizing
         // Ensure board stays locked to prevent shrinking
