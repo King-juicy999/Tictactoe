@@ -3510,6 +3510,23 @@ function showSecondLossTaunt(onCompleteCallback) {
         
         const missedCell = missedMove ? cells[missedMove.index] : null;
         
+        // MVP: Create dim overlay for screen background (10-15% opacity as per storyboard)
+        const screenDimOverlay = document.createElement('div');
+        screenDimOverlay.className = 'second-loss-screen-dim';
+        screenDimOverlay.style.cssText = `
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.12); /* 12% opacity - between 10-15% */
+            z-index: 9998;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        `;
+        document.body.appendChild(screenDimOverlay);
+        
         // Create dim overlay for board freeze effect
         const boardDimOverlay = document.createElement('div');
         boardDimOverlay.className = 'second-loss-board-dim';
@@ -3519,7 +3536,7 @@ function showSecondLossTaunt(onCompleteCallback) {
             left: 0;
             width: 100%;
             height: 100%;
-            background: rgba(0, 0, 0, 0.4);
+            background: rgba(0, 0, 0, 0.3);
             z-index: 9999;
             pointer-events: none;
             opacity: 0;
@@ -3528,81 +3545,114 @@ function showSecondLossTaunt(onCompleteCallback) {
         boardElement.style.position = 'relative';
         boardElement.appendChild(boardDimOverlay);
         
-        // Animate dim overlay in
+        // Store cleanup elements
+        const cleanupElements = [];
+        cleanupElements.push(screenDimOverlay);
+        cleanupElements.push(boardDimOverlay);
+        
+        // ============================================
+        // SCENE 1: Highlight Mistake (1.5 seconds)
+        // ============================================
+        // Animate dim overlays in immediately
         requestAnimationFrame(() => {
+            screenDimOverlay.style.opacity = '1';
             boardDimOverlay.style.opacity = '1';
         });
         
-        // Create main taunt overlay
-        const tauntOverlay = document.createElement('div');
-        tauntOverlay.className = 'second-loss-taunt-overlay';
-        tauntOverlay.id = 'second-loss-taunt-overlay';
-        tauntOverlay.style.cssText = `
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.75);
-            z-index: 10000;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            opacity: 0;
-            transition: opacity 0.4s ease;
-            pointer-events: none;
-        `;
-        document.body.appendChild(tauntOverlay);
-        
-        // Animate overlay in
-        requestAnimationFrame(() => {
-            tauntOverlay.style.opacity = '1';
-        });
-        
-        // Highlight missed cell if found
-        if (missedCell) {
-            const originalCellStyle = missedCell.getAttribute('data-original-style') || '';
-            missedCell.setAttribute('data-original-style', missedCell.style.cssText);
-            missedCell.style.cssText += `
-                box-shadow: 0 0 40px rgba(255, 100, 100, 0.9), inset 0 0 20px rgba(255, 100, 100, 0.5) !important;
-                border: 3px solid #ff6666 !important;
-                z-index: 10001;
-                position: relative;
-            `;
-            
-            // Add pulse animation
-            const pulseStyle = document.createElement('style');
-            pulseStyle.id = 'second-loss-pulse-style';
-            pulseStyle.textContent = `
-                @keyframes second-loss-pulse {
-                    0%, 100% { 
-                        box-shadow: 0 0 40px rgba(255, 100, 100, 0.9), inset 0 0 20px rgba(255, 100, 100, 0.5);
-                    }
-                    50% { 
-                        box-shadow: 0 0 60px rgba(255, 100, 100, 1), inset 0 0 30px rgba(255, 100, 100, 0.7);
-                    }
+        // Highlight missed winning moves (red glow + shake)
+        const highlightedWinningCells = [];
+        if (missedWinningMoves.length > 0) {
+            missedWinningMoves.forEach(move => {
+                const cell = cells[move.index];
+                if (cell) {
+                    const originalStyle = cell.getAttribute('data-original-style') || cell.style.cssText;
+                    cell.setAttribute('data-original-style', originalStyle);
+                    cell.style.cssText += `
+                        box-shadow: 0 0 40px rgba(255, 50, 50, 0.9), inset 0 0 20px rgba(255, 50, 50, 0.5) !important;
+                        border: 3px solid #ff3333 !important;
+                        z-index: 10001;
+                        position: relative;
+                    `;
+                    
+                    // Add shake animation
+                    const shakeStyle = document.createElement('style');
+                    shakeStyle.id = `cell-shake-style-${move.index}`;
+                    shakeStyle.textContent = `
+                        @keyframes cell-shake-${move.index} {
+                            0%, 100% { transform: translate(0, 0); }
+                            10%, 30%, 50%, 70%, 90% { transform: translate(-3px, -3px); }
+                            20%, 40%, 60%, 80% { transform: translate(3px, 3px); }
+                        }
+                    `;
+                    document.head.appendChild(shakeStyle);
+                    cleanupElements.push(shakeStyle);
+                    cell.style.animation = `cell-shake-${move.index} 0.8s ease-in-out`;
+                    highlightedWinningCells.push(cell);
                 }
-            `;
-            document.head.appendChild(pulseStyle);
-            missedCell.style.animation = 'second-loss-pulse 0.6s ease-in-out infinite';
+            });
         }
         
-        // Store cleanup function
-        const cleanupElements = [];
-        cleanupElements.push(tauntOverlay);
-        cleanupElements.push(boardDimOverlay);
-        if (missedCell) cleanupElements.push(missedCell);
+        // Highlight missed blocking moves (yellow glow + ghost X/O)
+        const highlightedBlockingCells = [];
+        if (missedBlockingMoves.length > 0) {
+            missedBlockingMoves.forEach(move => {
+                const cell = cells[move.index];
+                if (cell && !highlightedWinningCells.includes(cell)) {
+                    const originalStyle = cell.getAttribute('data-original-style') || cell.style.cssText;
+                    cell.setAttribute('data-original-style', originalStyle);
+                    cell.style.cssText += `
+                        box-shadow: 0 0 40px rgba(255, 200, 0, 0.9), inset 0 0 20px rgba(255, 200, 0, 0.5) !important;
+                        border: 3px solid #ffcc00 !important;
+                        z-index: 10001;
+                        position: relative;
+                    `;
+                    
+                    // Add ghost X/O for blocking move (appears in Scene 1)
+                    const ghostBlock = document.createElement('div');
+                    ghostBlock.className = 'ghost-block-yellow';
+                    ghostBlock.textContent = 'O';
+                    ghostBlock.style.cssText = `
+                        position: absolute;
+                        top: 50%;
+                        left: 50%;
+                        transform: translate(-50%, -50%);
+                        font-size: clamp(2rem, 6vw, 3.5rem);
+                        color: rgba(255, 200, 0, 0.7);
+                        opacity: 0;
+                        pointer-events: none;
+                        text-shadow: 0 0 20px rgba(255, 200, 0, 0.8);
+                        z-index: 10002;
+                        font-weight: bold;
+                        transition: opacity 0.4s ease;
+                    `;
+                    cell.style.position = 'relative';
+                    cell.appendChild(ghostBlock);
+                    cleanupElements.push(ghostBlock);
+                    
+                    // Animate ghost block appearance
+                    setTimeout(() => {
+                        ghostBlock.style.opacity = '0.7';
+                    }, 400);
+                    
+                    highlightedBlockingCells.push(cell);
+                }
+            });
+        }
         
-        // SCENE 1: Initial freeze and highlight (0.5s)
-        // Already done above
+        // If we have a primary missed move (for Scene 2), use it
+        const primaryMissedCell = missedCell;
         
-        // SCENE 2: AI demonstrates correct move (2s)
+        // ============================================
+        // SCENE 2: AI Demonstrates Correct Move (2 seconds) - Starts at 1.5s, ends at 3.5s
+        // ============================================
         setTimeout(() => {
             try {
-                if (!missedCell || !missedMove) return;
+                if (!primaryMissedCell || !missedMove) {
+                    // If no specific move, still show AI taunt
+                    console.log('[Taunt] No specific move to demonstrate, showing generic taunt');
+                }
                 
-                // AI avatar appears
+                // AI avatar appears near board
                 const aiAvatar = document.createElement('div');
                 aiAvatar.className = 'ai-taunt-avatar';
                 aiAvatar.innerHTML = '🤖';
@@ -3614,9 +3664,9 @@ function showSecondLossTaunt(onCompleteCallback) {
                     font-size: clamp(2rem, 6vw, 4rem);
                     opacity: 0;
                     pointer-events: none;
-                    z-index: 10002;
+                    z-index: 10010;
                     filter: drop-shadow(0 0 25px rgba(100, 200, 255, 0.9));
-                    transition: all 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+                    transition: all 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
                 `;
                 document.body.appendChild(aiAvatar);
                 cleanupElements.push(aiAvatar);
@@ -3627,169 +3677,167 @@ function showSecondLossTaunt(onCompleteCallback) {
                     aiAvatar.style.opacity = '1';
                 });
                 
-                // AI points at cell
-                setTimeout(() => {
-                    try {
-                        const boardRect = boardElement.getBoundingClientRect();
-                        const cellRect = missedCell.getBoundingClientRect();
-                        const cellCenterX = cellRect.left + cellRect.width / 2;
-                        const cellCenterY = cellRect.top + cellRect.height / 2;
-                        
-                        aiAvatar.style.transition = 'all 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94)';
-                        aiAvatar.style.left = (cellCenterX - 60) + 'px';
-                        aiAvatar.style.top = (cellCenterY - 100) + 'px';
-                        aiAvatar.style.fontSize = 'clamp(2rem, 5vw, 3rem)';
-                        aiAvatar.style.animation = 'ai-point-at-cell 0.6s ease-in-out infinite';
-                    } catch (pointError) {
-                        console.warn('Error positioning AI avatar:', pointError);
-                    }
-                }, 700);
-                
-                // Ghost move animation
-                setTimeout(() => {
-                    try {
-                        const ghostMove = document.createElement('div');
-                        ghostMove.className = 'ghost-move-green';
-                        ghostMove.textContent = tauntType === 'win' ? 'X' : 'O';
-                        ghostMove.style.cssText = `
-                            position: absolute;
-                            top: 50%;
-                            left: 50%;
-                            transform: translate(-50%, -50%) scale(0);
-                            font-size: clamp(2.5rem, 7vw, 4rem);
-                            color: rgba(100, 255, 100, 0.9);
-                            opacity: 0;
-                            pointer-events: none;
-                            text-shadow: 0 0 30px rgba(100, 255, 100, 1);
-                            z-index: 10003;
-                            font-weight: bold;
-                        `;
-                        missedCell.style.position = 'relative';
-                        missedCell.appendChild(ghostMove);
-                        cleanupElements.push(ghostMove);
-                        
-                        // Animate ghost move
-                        requestAnimationFrame(() => {
-                            ghostMove.style.transition = 'all 1s cubic-bezier(0.34, 1.56, 0.64, 1)';
-                            ghostMove.style.transform = 'translate(-50%, -50%) scale(1)';
-                            ghostMove.style.opacity = '0.8';
-                        });
-                        
-                        // Particle effects
-                        for (let i = 0; i < 8; i++) {
-                            const particle = document.createElement('div');
-                            particle.style.cssText = `
+                // AI points at correct cell (if we have one)
+                if (primaryMissedCell && missedMove) {
+                    setTimeout(() => {
+                        try {
+                            const boardRect = boardElement.getBoundingClientRect();
+                            const cellRect = primaryMissedCell.getBoundingClientRect();
+                            const cellCenterX = cellRect.left + cellRect.width / 2;
+                            const cellCenterY = cellRect.top + cellRect.height / 2;
+                            
+                            aiAvatar.style.transition = 'all 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94)';
+                            aiAvatar.style.left = (cellCenterX - 60) + 'px';
+                            aiAvatar.style.top = (cellCenterY - 100) + 'px';
+                            aiAvatar.style.fontSize = 'clamp(2rem, 5vw, 3rem)';
+                            
+                            // Add pointing animation
+                            const pointStyle = document.createElement('style');
+                            pointStyle.id = 'ai-point-style';
+                            pointStyle.textContent = `
+                                @keyframes ai-point {
+                                    0%, 100% { transform: translate(0, 0); }
+                                    50% { transform: translate(10px, -10px); }
+                                }
+                            `;
+                            document.head.appendChild(pointStyle);
+                            cleanupElements.push(pointStyle);
+                            aiAvatar.style.animation = 'ai-point 0.6s ease-in-out infinite';
+                        } catch (pointError) {
+                            console.warn('Error positioning AI avatar:', pointError);
+                        }
+                    }, 300);
+                    
+                    // Green ghost X/O moves into correct cell
+                    setTimeout(() => {
+                        try {
+                            const ghostMove = document.createElement('div');
+                            ghostMove.className = 'ghost-move-green';
+                            ghostMove.textContent = tauntType === 'win' ? 'X' : 'O';
+                            ghostMove.style.cssText = `
                                 position: absolute;
                                 top: 50%;
                                 left: 50%;
-                                width: clamp(4px, 1vw, 6px);
-                                height: clamp(4px, 1vw, 6px);
-                                background: rgba(100, 255, 100, 0.8);
-                                border-radius: 50%;
+                                transform: translate(-50%, -50%) scale(0);
+                                font-size: clamp(2.5rem, 7vw, 4rem);
+                                color: rgba(100, 255, 100, 0.9);
+                                opacity: 0;
                                 pointer-events: none;
-                                z-index: 10004;
+                                text-shadow: 0 0 30px rgba(100, 255, 100, 1);
+                                z-index: 10011;
+                                font-weight: bold;
                             `;
-                            missedCell.appendChild(particle);
-                            cleanupElements.push(particle);
+                            primaryMissedCell.style.position = 'relative';
+                            primaryMissedCell.appendChild(ghostMove);
+                            cleanupElements.push(ghostMove);
                             
-                            const angle = (i / 8) * Math.PI * 2;
-                            const distance = 30 + Math.random() * 20;
-                            particle.style.animation = `particle-spark-${i} 0.8s ease-out forwards`;
+                            // Animate ghost move entering cell
+                            requestAnimationFrame(() => {
+                                ghostMove.style.transition = 'all 0.8s cubic-bezier(0.34, 1.56, 0.64, 1)';
+                                ghostMove.style.transform = 'translate(-50%, -50%) scale(1)';
+                                ghostMove.style.opacity = '0.8';
+                            });
                             
-                            // Add particle animation
-                            const particleStyle = document.createElement('style');
-                            particleStyle.id = `particle-style-${i}`;
-                            particleStyle.textContent = `
-                                @keyframes particle-spark-${i} {
-                                    0% { 
-                                        opacity: 1; 
-                                        transform: translate(-50%, -50%) scale(1) rotate(0deg);
+                            // Optional subtle particle/spark effect
+                            for (let i = 0; i < 6; i++) {
+                                const particle = document.createElement('div');
+                                particle.style.cssText = `
+                                    position: absolute;
+                                    top: 50%;
+                                    left: 50%;
+                                    width: clamp(3px, 0.8vw, 5px);
+                                    height: clamp(3px, 0.8vw, 5px);
+                                    background: rgba(100, 255, 100, 0.8);
+                                    border-radius: 50%;
+                                    pointer-events: none;
+                                    z-index: 10012;
+                                `;
+                                primaryMissedCell.appendChild(particle);
+                                cleanupElements.push(particle);
+                                
+                                const angle = (i / 6) * Math.PI * 2;
+                                const distance = 25 + Math.random() * 15;
+                                particle.style.animation = `particle-spark-${i} 0.7s ease-out forwards`;
+                                
+                                const particleStyle = document.createElement('style');
+                                particleStyle.id = `particle-style-${i}`;
+                                particleStyle.textContent = `
+                                    @keyframes particle-spark-${i} {
+                                        0% { 
+                                            opacity: 1; 
+                                            transform: translate(-50%, -50%) scale(1);
+                                        }
+                                        100% { 
+                                            opacity: 0; 
+                                            transform: translate(-50%, -50%) translate(${Math.cos(angle) * distance}px, ${Math.sin(angle) * distance}px) scale(0);
+                                        }
                                     }
-                                    100% { 
-                                        opacity: 0; 
-                                        transform: translate(-50%, -50%) translate(${Math.cos(angle) * distance}px, ${Math.sin(angle) * distance}px) scale(0) rotate(360deg);
-                                    }
-                                }
-                            `;
-                            document.head.appendChild(particleStyle);
-                            cleanupElements.push(particleStyle);
+                                `;
+                                document.head.appendChild(particleStyle);
+                                cleanupElements.push(particleStyle);
+                            }
+                        } catch (ghostError) {
+                            console.error('Error creating ghost move animation:', ghostError);
                         }
-                        
-                        // Demo text - Different messages for Sarah vs others
-                        const demoText = document.createElement('div');
-                        demoText.className = 'ai-demo-text';
-                        let demoMessages;
-                        if (isSarah()) {
-                            // Respectful messages for Sarah
-                            demoMessages = [
-                                "Miss Sarah, this cell would have been the optimal move.",
-                                "Miss Sarah, placing your mark here would have been more strategic.",
-                                "Miss Sarah, this position would have improved your chances.",
-                                "Miss Sarah, consider this cell for future reference."
-                            ];
-                        } else {
-                            // Highly insulting, sarcastic, condescending messages for others
-                            demoMessages = [
-                                "Wow… you really thought that would work? Trash.",
-                                "Are you losing brain cells trying to play this game?",
-                                "You should consider giving up; this is embarrassing.",
-                                "This is what you should have done... not that.",
-                                "You really missed this one, how predictable!",
-                                "See? Right here. You had it and you blew it.",
-                                "This move was so obvious, even I'm surprised you missed it.",
-                                "Seriously? You had a winning move and you missed it?",
-                                "Your strategy is as weak as your execution.",
-                                "Maybe tic-tac-toe isn't for you. Have you considered checkers?",
-                                "I've seen better moves from a random number generator.",
-                                "This is getting sad. You had it right there and you blew it."
-                            ];
-                        }
-                        demoText.textContent = demoMessages[Math.floor(Math.random() * demoMessages.length)];
-                        demoText.style.cssText = `
-                            position: fixed;
-                            top: 50%;
-                            left: 50%;
-                            transform: translate(-50%, -50%) translateY(30px);
-                            color: #ff8888;
-                            font-size: clamp(1rem, 3vw, 1.4rem);
-                            font-weight: bold;
-                            text-align: center;
-                            text-shadow: 2px 2px 8px rgba(0,0,0,0.9);
-                            opacity: 0;
-                            z-index: 10005;
-                            pointer-events: none;
-                            padding: 0 1rem;
-                            max-width: 90%;
-                            word-wrap: break-word;
-                        `;
-                        document.body.appendChild(demoText);
-                        cleanupElements.push(demoText);
-                        
-                        requestAnimationFrame(() => {
-                            demoText.style.transition = 'all 0.6s ease-out';
-                            demoText.style.opacity = '1';
-                            demoText.style.transform = 'translate(-50%, -50%) translateY(0)';
-                        });
-                        
-                        // Remove demo text after 3 seconds (longer for reading)
-                        setTimeout(() => {
-                            demoText.style.transition = 'all 0.5s ease-out';
-                            demoText.style.opacity = '0';
-                            demoText.style.transform = 'translate(-50%, -50%) translateY(-30px)';
-                            setTimeout(() => {
-                                if (demoText.parentNode) demoText.remove();
-                            }, 500);
-                        }, 3000); // 3 seconds for reading
-                    } catch (ghostError) {
-                        console.error('Error creating ghost move animation:', ghostError);
-                    }
-                }, 1000);
+                    }, 600);
+                }
+                
+                // Text overlay: "This is what you should have done… not that." (fade in, hold, fade out)
+                const demoText = document.createElement('div');
+                demoText.className = 'ai-demo-text';
+                let demoMessage;
+                if (isSarah()) {
+                    demoMessage = "Miss Sarah, this cell would have been the optimal move.";
+                } else {
+                    demoMessage = "This is what you should have done… not that.";
+                }
+                demoText.textContent = demoMessage;
+                demoText.style.cssText = `
+                    position: fixed;
+                    top: 50%;
+                    left: 50%;
+                    transform: translate(-50%, -50%) translateY(30px);
+                    color: #ff8888;
+                    font-size: clamp(1rem, 3vw, 1.4rem);
+                    font-weight: bold;
+                    text-align: center;
+                    text-shadow: 2px 2px 8px rgba(0,0,0,0.9);
+                    opacity: 0;
+                    z-index: 10013;
+                    pointer-events: none;
+                    padding: 0 1rem;
+                    max-width: 90%;
+                    word-wrap: break-word;
+                `;
+                document.body.appendChild(demoText);
+                cleanupElements.push(demoText);
+                
+                // Fade in
+                setTimeout(() => {
+                    requestAnimationFrame(() => {
+                        demoText.style.transition = 'all 0.5s ease-out';
+                        demoText.style.opacity = '1';
+                        demoText.style.transform = 'translate(-50%, -50%) translateY(0)';
+                    });
+                }, 800);
+                
+                // Hold for reading, then fade out
+                setTimeout(() => {
+                    demoText.style.transition = 'all 0.4s ease-out';
+                    demoText.style.opacity = '0';
+                    demoText.style.transform = 'translate(-50%, -50%) translateY(-20px)';
+                    setTimeout(() => {
+                        if (demoText.parentNode) demoText.remove();
+                    }, 400);
+                }, 2500); // Fade out near end of Scene 2
             } catch (scene2Error) {
                 console.error('Error in Scene 2:', scene2Error);
             }
-        }, 500);
+        }, 1500); // Scene 2 starts at 1.5s
         
-        // SCENE 3: AI taunt intensifies (1.5s)
+        // ============================================
+        // SCENE 3: Taunt Intensifies (1-1.5 seconds) - Starts at 3.5s, ends at 5s
+        // ============================================
         setTimeout(() => {
             try {
                 // Taunt bubble - Different messages for Sarah vs others
@@ -3874,39 +3922,56 @@ function showSecondLossTaunt(onCompleteCallback) {
                     aiAvatar.style.animation = 'ai-laugh-shake 0.5s ease-in-out 3';
                 }
                 
-                // Remove bubble after 3 seconds (longer for reading insulting messages)
+                // Remove bubble after 1.5 seconds (Scene 3 duration)
                 setTimeout(() => {
-                    tauntBubble.style.transition = 'all 0.4s ease-out';
+                    tauntBubble.style.transition = 'all 0.3s ease-out';
                     tauntBubble.style.opacity = '0';
                     tauntBubble.style.transform = 'scale(0.8) rotate(10deg)';
                     setTimeout(() => {
                         if (tauntBubble.parentNode) tauntBubble.remove();
-                    }, 400);
-                }, 3000); // 3 seconds for reading
+                    }, 300);
+                }, 1500); // Scene 3 duration: 1.5 seconds
             } catch (scene3Error) {
                 console.error('Error in Scene 3:', scene3Error);
             }
-        }, 2500);
+        }, 3500); // Scene 3 starts at 3.5s
         
-        // SCENE 4: Resume gameplay (0.5s cleanup)
+        // ============================================
+        // SCENE 4: Resume Gameplay (0.5 seconds) - Starts at 5s, ends at 5.5s
+        // ============================================
         setTimeout(() => {
             try {
-                // Fade out overlay
-                tauntOverlay.style.transition = 'opacity 0.5s ease';
-                tauntOverlay.style.opacity = '0';
+                // Fade out dim overlays
+                screenDimOverlay.style.transition = 'opacity 0.3s ease';
+                screenDimOverlay.style.opacity = '0';
+                boardDimOverlay.style.transition = 'opacity 0.3s ease';
                 boardDimOverlay.style.opacity = '0';
                 
-                // Reset cell styling
-                if (missedCell) {
-                    const originalStyle = missedCell.getAttribute('data-original-style') || '';
-                    missedCell.style.cssText = originalStyle;
-                    missedCell.removeAttribute('data-original-style');
-                    
-                    // Remove ghost move and particles
-                    const ghostMove = missedCell.querySelector('.ghost-move-green');
+                // Reset all highlighted cell styling
+                [...highlightedWinningCells, ...highlightedBlockingCells].forEach(cell => {
+                    if (cell) {
+                        const originalStyle = cell.getAttribute('data-original-style') || '';
+                        cell.style.cssText = originalStyle;
+                        cell.removeAttribute('data-original-style');
+                        cell.style.animation = '';
+                        
+                        // Remove ghost elements
+                        const ghostMove = cell.querySelector('.ghost-move-green');
+                        if (ghostMove) ghostMove.remove();
+                        const ghostBlock = cell.querySelector('.ghost-block-yellow');
+                        if (ghostBlock) ghostBlock.remove();
+                        const particles = cell.querySelectorAll('[style*="particle"]');
+                        particles.forEach(p => p.remove());
+                    }
+                });
+                
+                // Also clean up primary missed cell if different
+                if (primaryMissedCell && !highlightedWinningCells.includes(primaryMissedCell) && !highlightedBlockingCells.includes(primaryMissedCell)) {
+                    const originalStyle = primaryMissedCell.getAttribute('data-original-style') || '';
+                    primaryMissedCell.style.cssText = originalStyle;
+                    primaryMissedCell.removeAttribute('data-original-style');
+                    const ghostMove = primaryMissedCell.querySelector('.ghost-move-green');
                     if (ghostMove) ghostMove.remove();
-                    const particles = missedCell.querySelectorAll('[class*="particle"]');
-                    particles.forEach(p => p.remove());
                 }
                 
                 // Remove AI avatar
@@ -3921,13 +3986,11 @@ function showSecondLossTaunt(onCompleteCallback) {
                 
                 // Remove all style elements
                 const stylesToRemove = [
-                    'second-loss-pulse-style',
-                    'ghost-move-style',
-                    'demo-text-style',
-                    'taunt-intensify-style',
+                    'ai-point-style',
                     'ai-shake-style'
                 ];
                 for (let i = 0; i < 20; i++) {
+                    stylesToRemove.push(`cell-shake-style-${i}`);
                     stylesToRemove.push(`particle-style-${i}`);
                 }
                 stylesToRemove.forEach(id => {
@@ -3935,7 +3998,7 @@ function showSecondLossTaunt(onCompleteCallback) {
                     if (styleEl) styleEl.remove();
                 });
                 
-                // Cleanup all elements
+                // Cleanup all elements after fade completes
                 setTimeout(() => {
                     cleanupElements.forEach(el => {
                         try {
@@ -4008,7 +4071,7 @@ function showSecondLossTaunt(onCompleteCallback) {
                     }
                 }
             }
-        }, 5500); // Total duration: ~5.5 seconds (5-6 seconds as requested)
+        }, 5000); // Scene 4 starts at 5s, total duration: 5.5 seconds (Scene 1: 1.5s + Scene 2: 2s + Scene 3: 1.5s + Scene 4: 0.5s)
         
     } catch (error) {
         console.error('Critical error in showSecondLossTaunt:', error);
