@@ -373,7 +373,9 @@ const gameState = {
     reservedCells: [], // Array of {cellIndex, turnsRemaining} for Tactical Claim
     turnCount: 0, // Track turns for Tactical Claim unlock timing
     // MVP: Taunt system flags to prevent infinite loops
-    secondLossTauntShown: false // Track if second loss taunt has been shown (prevents loops)
+    secondLossTauntShown: false, // Track if second loss taunt has been shown (prevents loops)
+    // MVP: Board layout lock - prevent shrinking between rounds
+    boardInitialized: false // Track if board has been initialized (prevents re-animation between rounds)
 };
 
 /**
@@ -1960,15 +1962,30 @@ if (socket) {
             
             resetBtn.style.display = 'none';
             
-            // Animate board entry for PvP (premium animation)
-            if (typeof AnimationUtils !== 'undefined') {
+            // MVP: Animate board entry ONLY on first PvP start - prevent shrinking between rounds
+            if (typeof AnimationUtils !== 'undefined' && !gameState.boardInitialized) {
                 setTimeout(() => {
                     const boardElement = document.querySelector('.game-board');
                     if (boardElement) {
                         AnimationUtils.animateBoardEntry(boardElement);
+                        // MVP: Lock board dimensions after initial animation completes
+                        setTimeout(() => {
+                            boardElement.style.opacity = '1';
+                            boardElement.style.transform = 'translateY(0)';
+                            boardElement.style.transition = 'none'; // Remove transitions to prevent shrinking
+                            gameState.boardInitialized = true; // Mark as initialized
+                        }, 450); // After animation completes (400ms + 50ms buffer)
                     }
                     AnimationUtils.animateMessage(messageBox, 'default');
                 }, 350);
+            } else if (gameState.boardInitialized) {
+                // MVP: Board already initialized - ensure it stays locked
+                const boardElement = document.querySelector('.game-board');
+                if (boardElement) {
+                    boardElement.style.opacity = '1';
+                    boardElement.style.transform = 'translateY(0)';
+                    boardElement.style.transition = 'none'; // Ensure no transitions
+                }
             }
             // TODO: implement real-time move sync via socket events (on next step)
         } catch (e) {
@@ -2435,15 +2452,30 @@ function startGameAsAI() {
     // Just before first move: One last short line, Something ominous, No advice, No friendliness
     messageBox.textContent = "Let's see what you're made of...";
     
-    // Animate board entry (premium animation)
-    if (typeof AnimationUtils !== 'undefined') {
+    // MVP: Animate board entry ONLY on first game start - prevent shrinking between rounds
+    if (typeof AnimationUtils !== 'undefined' && !gameState.boardInitialized) {
         setTimeout(() => {
             const boardElement = document.querySelector('.game-board');
             if (boardElement) {
                 AnimationUtils.animateBoardEntry(boardElement);
+                // MVP: Lock board dimensions after initial animation completes
+                setTimeout(() => {
+                    boardElement.style.opacity = '1';
+                    boardElement.style.transform = 'translateY(0)';
+                    boardElement.style.transition = 'none'; // Remove transitions to prevent shrinking
+                    gameState.boardInitialized = true; // Mark as initialized
+                }, 450); // After animation completes (400ms + 50ms buffer)
             }
             AnimationUtils.animateMessage(messageBox, 'default');
         }, 200);
+    } else if (gameState.boardInitialized) {
+        // MVP: Board already initialized - ensure it stays locked
+        const boardElement = document.querySelector('.game-board');
+        if (boardElement) {
+            boardElement.style.opacity = '1';
+            boardElement.style.transform = 'translateY(0)';
+            boardElement.style.transition = 'none'; // Ensure no transitions
+        }
     }
     
     // Fade out AI presence during active play (subtle presence only)
@@ -6716,7 +6748,16 @@ resetBtn.addEventListener('click', () => {
         gameState.uiLocked = false; // Unlock UI
         gameState.uiLockingReason = null;
         
-        // Clear board visually
+        // MVP: Clear board visually WITHOUT re-animating or resizing
+        // Ensure board stays locked to prevent shrinking
+        const boardElement = document.querySelector('.game-board');
+        if (boardElement && gameState.boardInitialized) {
+            // MVP: Lock board dimensions - prevent any size changes
+            boardElement.style.opacity = '1';
+            boardElement.style.transform = 'translateY(0)';
+            boardElement.style.transition = 'none'; // No transitions between rounds
+        }
+        
         cells.forEach(cell => {
             if (cell) {
                 cell.textContent = '';

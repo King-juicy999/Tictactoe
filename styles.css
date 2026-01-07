@@ -180,12 +180,17 @@ button:disabled:hover {
     gap: 12px;
     margin: clamp(0.5rem, 2vw, 1rem) auto; /* MVP: Minimal spacing (10-20px) */
     max-width: 400px;
+    width: 100%; /* MVP: Lock width to prevent shrinking */
     padding: 0 1rem;
-    transition: transform 0.4s ease, opacity 0.4s ease;
+    /* MVP: Remove transitions that cause board shrinking between rounds */
+    /* transition: transform 0.4s ease, opacity 0.4s ease; */
     position: relative;
-    opacity: 1;
-    transform: translateY(0);
+    opacity: 1 !important; /* MVP: Lock opacity - no transitions between rounds */
+    transform: translateY(0) !important; /* MVP: Lock transform - no position changes */
     scroll-margin-top: 20px; /* MVP: Smooth scroll target */
+    /* MVP: Lock dimensions to prevent any size recalculation */
+    box-sizing: border-box;
+    min-height: 0; /* Prevent height expansion */
 }
 
 /* Winning line SVG styles */
@@ -631,10 +636,14 @@ button:disabled:hover {
     
     .game-board {
         max-width: 95vw;
-        width: 100%;
+        width: 100% !important; /* MVP: Lock width - prevent shrinking */
         gap: 12px;
         /* MVP: Minimal vertical spacing above board on phones */
         margin: clamp(0.75rem, 3vw, 1.25rem) auto;
+        /* MVP: Lock dimensions - no transitions between rounds */
+        transition: none !important;
+        opacity: 1 !important;
+        transform: translateY(0) !important;
     }
     
     .cell {
@@ -752,6 +761,11 @@ button:disabled:hover {
     }
     .game-board {
         max-width: 320px;
+        width: 100% !important; /* MVP: Lock width - prevent shrinking */
+        /* MVP: Lock dimensions - no transitions between rounds */
+        transition: none !important;
+        opacity: 1 !important;
+        transform: translateY(0) !important;
     }
     .cell {
         font-size: 2.5rem;
@@ -1348,10 +1362,14 @@ button:disabled:hover {
 
     .game-board {
         max-width: 95vw;
-        width: 100%;
+        width: 100% !important; /* MVP: Lock width - prevent shrinking */
         gap: 10px;
         /* MVP: Tight, clean spacing above the board on small phones */
         margin: clamp(0.75rem, 2.5vw, 1.5rem) auto;
+        /* MVP: Lock dimensions - no transitions between rounds */
+        transition: none !important;
+        opacity: 1 !important;
+        transform: translateY(0) !important;
     }
 
     .cell {
@@ -1486,10 +1504,14 @@ button:disabled:hover {
 
     .game-board {
         max-width: 95vw;
-        width: 100%;
+        width: 100% !important; /* MVP: Lock width - prevent shrinking */
         gap: 8px;
         /* MVP: Very small gap above board on the smallest phones */
         margin: clamp(0.5rem, 2.5vw, 1.25rem) auto;
+        /* MVP: Lock dimensions - no transitions between rounds */
+        transition: none !important;
+        opacity: 1 !important;
+        transform: translateY(0) !important;
     }
 
     .cell {
@@ -4429,6 +4451,11 @@ button:disabled::after {
         /* MVP: Minimal top margin, keep bottom margin for power-ups */
         margin: clamp(0.5rem, 2vw, 1rem) auto 7rem;
         padding: 0 0.5rem;
+        width: 100% !important; /* MVP: Lock width - prevent shrinking */
+        /* MVP: Lock dimensions - no transitions between rounds */
+        transition: none !important;
+        opacity: 1 !important;
+        transform: translateY(0) !important;
     }
 }
 
