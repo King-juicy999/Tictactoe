@@ -83,7 +83,8 @@ body.theme-retro {
 .container {
     width: 100%;
     max-width: 800px;
-    padding: 20px;
+    padding: clamp(10px, 2vw, 20px); /* MVP: Responsive padding, minimal on mobile */
+    margin: 0 auto; /* MVP: Center container */
 }
 
 .screen {
