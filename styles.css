@@ -1713,6 +1713,8 @@ button:disabled:hover {
     opacity: 0;
     animation: welcomeFadeIn 0.8s ease-out forwards;
     transition: opacity 0.6s ease-out;
+    /* CRITICAL: Ensure overlay doesn't block button clicks */
+    pointer-events: auto;
 }
 
 .pre-welcome-overlay.hiding {
@@ -1732,8 +1734,23 @@ button:disabled:hover {
 .pre-welcome-content {
     text-align: center;
     max-width: 600px;
-    padding: 2rem;
+    width: 90%;
+    max-width: min(600px, 90vw);
+    padding: clamp(1.5rem, 4vw, 2rem);
     position: relative;
+    /* CRITICAL: Ensure content doesn't block button */
+    pointer-events: auto;
+    z-index: 1;
+}
+
+/* CRITICAL: Ensure button is always on top and clickable, even during animations */
+.pre-welcome-content > .pre-welcome-continue {
+    position: relative !important;
+    z-index: 10002 !important;
+    pointer-events: auto !important;
+    cursor: pointer !important;
+    /* Button is clickable even if opacity animation hasn't completed */
+    /* Visual opacity is handled by animation, but pointer-events ensure clicks work */
 }
 
 /* Visual AI Presence - Decorative Only */
@@ -1742,6 +1759,9 @@ button:disabled:hover {
     width: 120px;
     height: 120px;
     margin: 0 auto 3rem;
+    /* CRITICAL: Ensure AI presence doesn't block button clicks */
+    pointer-events: none;
+    z-index: 1;
 }
 
 .ai-orb {
@@ -1753,6 +1773,8 @@ button:disabled:hover {
     position: relative;
     animation: aiBreath 4s ease-in-out infinite;
     box-shadow: 0 0 40px var(--win-glow);
+    /* CRITICAL: Ensure orb doesn't block button */
+    pointer-events: none;
 }
 
 .ai-glow {
@@ -1792,26 +1814,36 @@ button:disabled:hover {
 }
 
 .pre-welcome-title {
-    font-size: 3.5rem;
+    font-size: clamp(2rem, 6vw, 3.5rem);
     color: var(--text-primary);
-    margin-bottom: 2rem;
+    margin-bottom: clamp(1.5rem, 4vw, 2rem);
     font-weight: 300;
     letter-spacing: 2px;
     opacity: 0;
     animation: fadeInUp 0.6s ease-out 0.2s forwards;
+    /* CRITICAL: Ensure title doesn't block button */
+    pointer-events: none;
+    position: relative;
+    z-index: 1;
 }
 
 .pre-welcome-messages {
-    margin-bottom: 3rem;
+    margin-bottom: clamp(2rem, 5vw, 3rem);
+    /* CRITICAL: Ensure messages don't block button */
+    pointer-events: none;
+    position: relative;
+    z-index: 1;
 }
 
 .pre-welcome-text {
-    font-size: 1.3rem;
+    font-size: clamp(1rem, 2.5vw, 1.3rem);
     color: var(--text-secondary);
     margin-bottom: 1rem;
     line-height: 1.8;
     opacity: 0;
     font-weight: 300;
+    /* CRITICAL: Ensure text doesn't block button */
+    pointer-events: none;
 }
 
 .fade-in-delay-1 {
@@ -1852,20 +1884,26 @@ button:disabled:hover {
 /* Pre-welcome features section */
 .pre-welcome-features {
     opacity: 0;
-    margin-top: 1.5rem;
+    margin-top: clamp(1rem, 3vw, 1.5rem);
     text-align: center;
+    /* CRITICAL: Ensure features don't block button */
+    pointer-events: none;
+    position: relative;
+    z-index: 1;
 }
 
 .pre-welcome-feature {
-    font-size: 0.95rem;
+    font-size: clamp(0.85rem, 2vw, 0.95rem);
     color: rgba(255, 255, 255, 0.75);
     margin: 0.4rem 0;
     letter-spacing: 0.5px;
+    /* CRITICAL: Ensure feature text doesn't block button */
+    pointer-events: none;
 }
 
 .pre-welcome-continue {
-    padding: 1rem 3rem;
-    font-size: 1.2rem;
+    padding: clamp(0.75rem, 2vw, 1rem) clamp(2rem, 5vw, 3rem);
+    font-size: clamp(1rem, 2.5vw, 1.2rem);
     background: var(--primary-color);
     color: var(--text-primary);
     border: 2px solid var(--cell-border);
@@ -1874,9 +1912,20 @@ button:disabled:hover {
     font-family: inherit;
     transition: all 0.3s ease;
     box-shadow: 0 4px 16px var(--shadow);
-    opacity: 0;
+    /* CRITICAL: Button is ALWAYS visible and clickable - NO opacity 0 */
+    opacity: 1 !important;
     position: relative;
-    overflow: hidden;
+    overflow: visible;
+    /* CRITICAL: Ensure button is always clickable - highest z-index */
+    z-index: 10002 !important;
+    pointer-events: auto !important;
+    /* Ensure tappable on mobile */
+    min-height: 44px;
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: rgba(255, 255, 255, 0.3);
+    /* NO ANIMATION DELAY - button is immediately visible and clickable */
+    visibility: visible !important;
+    display: block !important;
 }
 
 .pre-welcome-continue::before {
@@ -1890,6 +1939,9 @@ button:disabled:hover {
     background: rgba(255, 255, 255, 0.3);
     transform: translate(-50%, -50%);
     transition: width 0.6s ease, height 0.6s ease;
+    /* CRITICAL: Ensure pseudo-element doesn't block clicks */
+    pointer-events: none;
+    z-index: -1;
 }
 
 .pre-welcome-continue:hover {
@@ -3760,6 +3812,31 @@ button:disabled::after {
         margin-bottom: 2rem;
     }
     
+    /* CRITICAL: Ensure continue button is always tappable on mobile */
+    .pre-welcome-continue {
+        padding: 1rem 2.5rem;
+        font-size: 1.1rem;
+        min-height: 48px; /* Minimum tappable size for mobile */
+        width: auto;
+        max-width: 90%;
+        margin: 1rem auto 0;
+        /* Ensure button is always visible and clickable */
+        opacity: 1 !important;
+        pointer-events: auto !important;
+        z-index: 10002 !important;
+        position: relative !important;
+        /* Better touch target */
+        touch-action: manipulation;
+        -webkit-tap-highlight-color: rgba(255, 255, 255, 0.3);
+        /* Override animation for immediate clickability on mobile */
+        animation: none !important;
+    }
+    
+    .pre-welcome-content {
+        padding: 1.5rem 1rem;
+        width: 95%;
+    }
+    
     .theme-selection-container {
         padding: 2rem;
     }
@@ -4713,5 +4790,276 @@ body.theme-retro .tactical-claim-announcement-text {
     .tactical-claim-countdown {
         font-size: 0.65rem;
         padding: 0.15rem 0.3rem;
+    }
+}
+
+/* ============================================
+   SECOND LOSS SEQUENCE - Responsive Animations
+   Fully responsive for mobile and desktop
+   ============================================ */
+
+/* Second Loss Taunt Overlay */
+.second-loss-taunt-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.75);
+    z-index: 10000;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    opacity: 0;
+    transition: opacity 0.4s ease;
+    pointer-events: none;
+    backdrop-filter: blur(4px);
+}
+
+/* Board Dim Overlay */
+.second-loss-board-dim {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.4);
+    z-index: 9999;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+/* AI Taunt Avatar */
+.ai-taunt-avatar {
+    position: fixed;
+    font-size: clamp(2rem, 6vw, 4rem);
+    pointer-events: none;
+    z-index: 10002;
+    filter: drop-shadow(0 0 25px rgba(100, 200, 255, 0.9));
+    transition: all 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+/* Ghost Move Animation */
+.ghost-move-green {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: clamp(2.5rem, 7vw, 4rem);
+    color: rgba(100, 255, 100, 0.9);
+    opacity: 0;
+    pointer-events: none;
+    z-index: 10003;
+    font-weight: bold;
+    text-shadow: 0 0 30px rgba(100, 255, 100, 1);
+    transition: all 1s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+/* AI Demo Text */
+.ai-demo-text {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    color: #ff8888;
+    font-size: clamp(1rem, 3vw, 1.4rem);
+    font-weight: bold;
+    text-align: center;
+    text-shadow: 2px 2px 8px rgba(0, 0, 0, 0.9);
+    opacity: 0;
+    z-index: 10005;
+    pointer-events: none;
+    padding: 0 1rem;
+    max-width: 90%;
+    word-wrap: break-word;
+    transition: all 0.6s ease-out;
+}
+
+/* AI Taunt Bubble */
+.ai-taunt-bubble {
+    position: fixed;
+    background: rgba(255, 68, 68, 0.95);
+    color: white;
+    padding: clamp(0.75rem, 2vw, 1rem) clamp(1rem, 3vw, 1.5rem);
+    border-radius: 20px;
+    font-size: clamp(0.9rem, 2.5vw, 1.1rem);
+    font-weight: bold;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+    z-index: 10006;
+    pointer-events: none;
+    opacity: 0;
+    transform: scale(0) rotate(-10deg);
+    max-width: clamp(200px, 40vw, 300px);
+    word-wrap: break-word;
+    transition: all 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+/* Pulse Animation for Highlighted Cell */
+@keyframes second-loss-pulse {
+    0%, 100% { 
+        box-shadow: 0 0 40px rgba(255, 100, 100, 0.9), inset 0 0 20px rgba(255, 100, 100, 0.5);
+    }
+    50% { 
+        box-shadow: 0 0 60px rgba(255, 100, 100, 1), inset 0 0 30px rgba(255, 100, 100, 0.7);
+    }
+}
+
+/* AI Point Animation */
+@keyframes ai-point-at-cell {
+    0%, 100% { 
+        transform: translate(0, 0) scale(1);
+    }
+    50% { 
+        transform: translate(10px, -10px) scale(1.1);
+    }
+}
+
+/* AI Laugh/Shake Animation */
+@keyframes ai-laugh-shake {
+    0%, 100% { 
+        transform: translate(0, 0) rotate(0deg);
+    }
+    25% { 
+        transform: translate(-5px, -5px) rotate(-5deg);
+    }
+    75% { 
+        transform: translate(5px, -5px) rotate(5deg);
+    }
+}
+
+/* Ghost Move Enter Animation */
+@keyframes ghost-move-enter {
+    0% { 
+        opacity: 0; 
+        transform: translate(-50%, -50%) scale(0) rotate(-90deg);
+    }
+    50% { 
+        opacity: 1; 
+        transform: translate(-50%, -50%) scale(1.2) rotate(10deg);
+    }
+    100% { 
+        opacity: 0.8; 
+        transform: translate(-50%, -50%) scale(1) rotate(0deg);
+    }
+}
+
+/* Particle Spark Animation */
+@keyframes particle-spark {
+    0% { 
+        opacity: 1; 
+        transform: translate(-50%, -50%) scale(1) rotate(0deg);
+    }
+    100% { 
+        opacity: 0; 
+        transform: translate(-50%, -50%) scale(0) rotate(360deg);
+    }
+}
+
+/* Demo Text Fade In */
+@keyframes demo-text-fade-in {
+    0% { 
+        opacity: 0; 
+        transform: translate(-50%, -50%) translateY(30px);
+    }
+    100% { 
+        opacity: 1; 
+        transform: translate(-50%, -50%) translateY(0);
+    }
+}
+
+/* Bubble Pop In */
+@keyframes bubble-pop-in {
+    0% { 
+        opacity: 0; 
+        transform: scale(0) rotate(-10deg);
+    }
+    50% { 
+        transform: scale(1.1) rotate(5deg);
+    }
+    100% { 
+        opacity: 1; 
+        transform: scale(1) rotate(0deg);
+    }
+}
+
+/* Responsive Adjustments */
+@media (max-width: 768px) {
+    .ai-taunt-avatar {
+        font-size: clamp(1.5rem, 5vw, 2.5rem);
+        top: clamp(8%, 10vh, 12%);
+        right: clamp(3%, 5vw, 8%);
+    }
+    
+    .ghost-move-green {
+        font-size: clamp(2rem, 6vw, 3rem);
+    }
+    
+    .ai-demo-text {
+        font-size: clamp(0.9rem, 2.5vw, 1.2rem);
+        padding: 0 0.75rem;
+        top: 60%;
+        max-width: 95%;
+    }
+    
+    .ai-taunt-bubble {
+        font-size: clamp(0.85rem, 2vw, 1rem);
+        padding: clamp(0.5rem, 1.5vw, 0.75rem) clamp(0.75rem, 2vw, 1rem);
+        max-width: clamp(180px, 35vw, 250px);
+        top: clamp(12%, 15vh, 18%);
+        right: clamp(3%, 5vw, 6%);
+    }
+}
+
+@media (max-width: 480px) {
+    .second-loss-taunt-overlay {
+        padding: 0.5rem;
+    }
+    
+    .ai-taunt-avatar {
+        font-size: clamp(1.2rem, 4vw, 2rem);
+    }
+    
+    .ghost-move-green {
+        font-size: clamp(1.8rem, 5vw, 2.5rem);
+    }
+    
+    .ai-demo-text {
+        font-size: clamp(0.8rem, 2vw, 1rem);
+    }
+    
+    .ai-taunt-bubble {
+        font-size: clamp(0.75rem, 1.8vw, 0.9rem);
+        max-width: clamp(150px, 30vw, 200px);
+    }
+}
+
+/* Ensure animations don't overlap board on mobile */
+@media (max-width: 768px) {
+    .second-loss-taunt-overlay {
+        z-index: 10000;
+    }
+    
+    .ai-taunt-avatar {
+        z-index: 10002;
+    }
+    
+    .ai-demo-text {
+        top: 60%;
+        max-width: 95%;
+    }
+}
+
+/* Desktop optimizations */
+@media (min-width: 769px) {
+    .ai-taunt-avatar {
+        top: 15%;
+        right: 10%;
+    }
+    
+    .ai-taunt-bubble {
+        top: 20%;
+        right: 8%;
     }
 }

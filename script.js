@@ -44,114 +44,44 @@ document.addEventListener('DOMContentLoaded', () => {
         }, 100);
     }
     
-    // Continue from pre-welcome to theme selection - UNBLOCKABLE with hard timeout
+    // Continue from pre-welcome to theme selection - BULLETPROOF FIX
     if (continueWelcomeBtn) {
-        let isProcessing = false;
-        let transitionTimeout = null;
+        let hasTransitioned = false;
         
-        continueWelcomeBtn.addEventListener('click', (e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            
-            console.log('[Continue] Clicked - State:', { isProcessing, hasOverlay: !!preWelcomeOverlay });
-            
-            if (isProcessing) {
-                console.log('[Continue] Already processing, ignoring');
-                return;
-            }
-            
-            isProcessing = true;
-            continueWelcomeBtn.disabled = true;
-            const originalText = continueWelcomeBtn.textContent;
-            continueWelcomeBtn.textContent = 'Loading...';
-            continueWelcomeBtn.style.opacity = '0.6';
-            
-            // HARD TIMEOUT FAILSAFE - Force transition after 500ms
-            transitionTimeout = setTimeout(() => {
-                console.warn('[Continue] TIMEOUT - Forcing transition');
-                forceContinueTransition();
-            }, 500);
-            
-            // Immediate transition (no waiting)
-            try {
-                console.log('[Continue] Starting transition');
-                
-                // Hide pre-welcome overlay immediately
-                if (preWelcomeOverlay) {
-                    preWelcomeOverlay.classList.add('hiding');
-                    preWelcomeOverlay.style.display = 'none';
-                }
-                
-                // Show theme selection immediately (no async wait)
-                if (themeSelectionOverlay) {
-                    // Set default theme if none selected
-                    if (!selectedTheme) {
-                        selectedTheme = (typeof ThemeManager !== 'undefined' && ThemeManager.getCurrentTheme()) 
-                            ? ThemeManager.getCurrentTheme() 
-                            : 'light';
-                    }
-                    
-                    themeSelectionOverlay.style.display = 'flex';
-                    themeSelectionOverlay.classList.add('active');
-                    updateThemePreviewSelection();
-                    console.log('[Continue] Theme selection shown');
-                } else {
-                    // Fallback: show welcome screen directly
-                    const welcomeScreen = document.getElementById('welcome-screen');
-                    if (welcomeScreen) {
-                        welcomeScreen.classList.add('active');
-                        console.log('[Continue] Fallback: Welcome screen shown');
-                    }
-                }
-                
-                // Clear timeout - transition completed
-                if (transitionTimeout) {
-                    clearTimeout(transitionTimeout);
-                    transitionTimeout = null;
-                }
-                
-                console.log('[Continue] Transition complete');
-                
-            } catch (err) {
-                console.error('[Continue] Error:', err);
-                forceContinueTransition();
-            } finally {
-                // Always reset button state
-                isProcessing = false;
-                continueWelcomeBtn.disabled = false;
-                continueWelcomeBtn.textContent = originalText;
-                continueWelcomeBtn.style.opacity = '1';
-                
-                // CRITICAL: Re-enable all inputs after welcome screen transition
-                gameState.uiLocked = false;
-                gameState.uiLockingReason = null;
-                if (cells) {
-                    cells.forEach(cell => {
-                        if (cell) cell.style.pointerEvents = 'auto';
-                    });
-                }
-            }
-        });
+        // CRITICAL: Make button IMMEDIATELY visible and clickable - NO DELAYS
+        continueWelcomeBtn.style.opacity = '1';
+        continueWelcomeBtn.style.pointerEvents = 'auto';
+        continueWelcomeBtn.style.cursor = 'pointer';
+        continueWelcomeBtn.disabled = false;
+        continueWelcomeBtn.style.zIndex = '10002';
+        continueWelcomeBtn.style.position = 'relative';
+        continueWelcomeBtn.style.touchAction = 'manipulation';
+        continueWelcomeBtn.style.animation = 'none';
+        continueWelcomeBtn.style.visibility = 'visible';
+        continueWelcomeBtn.style.display = 'block';
         
-        // Force transition function (failsafe)
-        function forceContinueTransition() {
-            console.log('[Continue] Force transition called');
+        console.log('[Continue] Button initialized - ready to click');
+        
+        // SIMPLE, DIRECT CLICK HANDLER - NO COMPLEXITY
+        const doTransition = () => {
+            if (hasTransitioned) return;
+            hasTransitioned = true;
             
-            if (transitionTimeout) {
-                clearTimeout(transitionTimeout);
-                transitionTimeout = null;
-            }
+            console.log('[Continue] Transitioning...');
             
-            // Force hide pre-welcome
+            // Hide pre-welcome overlay
             if (preWelcomeOverlay) {
                 preWelcomeOverlay.style.display = 'none';
-                preWelcomeOverlay.classList.remove('hiding');
+                preWelcomeOverlay.style.opacity = '0';
+                preWelcomeOverlay.style.pointerEvents = 'none';
             }
             
-            // Force show theme selection or welcome screen
+            // Show theme selection or welcome screen
             if (themeSelectionOverlay) {
                 if (!selectedTheme) {
-                    selectedTheme = 'light';
+                    selectedTheme = (typeof ThemeManager !== 'undefined' && ThemeManager.getCurrentTheme()) 
+                        ? ThemeManager.getCurrentTheme() 
+                        : 'light';
                 }
                 themeSelectionOverlay.style.display = 'flex';
                 themeSelectionOverlay.classList.add('active');
@@ -163,14 +93,28 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             }
             
-            // Reset button
-            isProcessing = false;
-            if (continueWelcomeBtn) {
-                continueWelcomeBtn.disabled = false;
-                continueWelcomeBtn.textContent = 'Continue';
-                continueWelcomeBtn.style.opacity = '1';
+            // Re-enable inputs
+            if (gameState) {
+                gameState.uiLocked = false;
+                gameState.uiLockingReason = null;
             }
-        }
+        };
+        
+        // MULTIPLE EVENT HANDLERS - MAXIMUM COMPATIBILITY
+        continueWelcomeBtn.onclick = doTransition;
+        continueWelcomeBtn.addEventListener('click', doTransition);
+        continueWelcomeBtn.addEventListener('touchend', (e) => {
+            e.preventDefault();
+            doTransition();
+        });
+        continueWelcomeBtn.addEventListener('pointerup', doTransition);
+        continueWelcomeBtn.addEventListener('mousedown', (e) => {
+            e.preventDefault();
+            doTransition();
+        });
+        
+        console.log('[Continue] All event handlers attached');
+        
     } else {
         console.error('[Continue] Button not found in DOM');
     }
@@ -308,6 +252,7 @@ const gameState = {
     currentLevel: 1, // Current level (ALWAYS Level 1 until graduation)
     totalGamesPlayed: 0, // Total games (wins + losses) for level calculation
     level1Wins: 0, // Wins in current level (need 5 to graduate)
+    level1Losses: 0, // Losses in current level (for second-loss sequence)
     aiWinsInLevel: 0, // AI wins in current level (need 5 to prevent graduation)
     roundCount: 0, // Total rounds completed (increments on every game end: win/loss/draw)
     shieldedCells: [], // Array of cell indices that are shielded (AI cannot select)
@@ -2436,7 +2381,8 @@ let sarahDifficultyChoice = null; // 'easy' or 'hard'
 let sarahWinCount = 0; // Track wins for narrative only
 
 function isSarah() {
-    return gameState.playerName && gameState.playerName.trim() === 'Sarah';
+    // Case-insensitive Sarah detection: 'Sarah', 'SARAH', 'sarah', etc.
+    return gameState.playerName && gameState.playerName.trim().toLowerCase() === 'sarah';
 }
 
 function showSarahNarrative(message, actions) {
@@ -2574,7 +2520,7 @@ if (modeAiBtn) {
  * Power Up Guide System
  */
 let currentGuidePage = 1;
-const totalGuidePages = 8;
+const totalGuidePages = 9;
 
 /**
  * Show power-up guide
@@ -3202,389 +3148,619 @@ function playTacticalClaimAnimation(cellIndex) {
  * SECOND LOSS TAUNT STORYBOARD - 4-5 SECONDS VERSION
  * Scene-by-scene cinematic taunt sequence
  * UX ONLY - Does NOT affect AI logic
+ * 
+ * Requirements:
+ * - Only triggers on second loss in Level 1
+ * - Freezes game board for 4-5 seconds
+ * - Highlights missed winning/blocking moves
+ * - Shows AI animation and taunts
+ * - Resumes game with full AI intelligence
+ * - Handles audio pause/resume
+ * - Fully responsive for mobile and desktop
+ * - Comprehensive error handling
  */
 function showSecondLossTaunt() {
-    // Pause background music during taunt sequence
-    let musicWasPlaying = false;
-    if (bgMusic && !bgMusic.paused) {
-        bgMusic.pause();
-        musicWasPlaying = true;
-    }
-    // Find if player had a winning move they missed
-    const missedWinningMoves = [];
-    const missedBlockingMoves = [];
-    
-    // Check for missed winning moves
-    for (let i = 0; i < 9; i++) {
-        if (gameState.board[i] === '') {
-            const testBoard = [...gameState.board];
-            testBoard[i] = 'X';
-            const testWinningCombo = winningCombos.find(combo => 
-                combo.every(idx => testBoard[idx] === 'X')
-            );
-            if (testWinningCombo) {
-                missedWinningMoves.push({ index: i, combo: testWinningCombo });
-            }
-            
-            // Check for missed blocks
-            testBoard[i] = 'O';
-            const aiWinCombo = winningCombos.find(combo => 
-                combo.every(idx => testBoard[idx] === 'O')
-            );
-            if (aiWinCombo) {
-                missedBlockingMoves.push({ index: i, combo: aiWinCombo });
-            }
+    try {
+        // VALIDATION: Ensure we're in the right state
+        if (!gameState || gameState.currentLevel !== 1 || gameState.level1Losses !== 2) {
+            console.warn('Second loss taunt skipped: Invalid state', {
+                currentLevel: gameState?.currentLevel,
+                level1Losses: gameState?.level1Losses,
+                totalLosses: gameState?.losses
+            });
+            return;
         }
-    }
-    
-    let missedMove = null;
-    let tauntType = 'none';
-    
-    if (missedWinningMoves.length > 0) {
-        missedMove = missedWinningMoves[0];
-        tauntType = 'win';
-    } else if (missedBlockingMoves.length > 0) {
-        missedMove = missedBlockingMoves[0];
-        tauntType = 'block';
-    }
-    
-    if (!missedMove || tauntType === 'none') {
-        return; // No clear missed move
-    }
-    
-    // Freeze board
-    gameState.uiLocked = true;
-    const missedCell = cells[missedMove.index];
-    if (!missedCell) return;
-    
-    // Create premium taunt overlay with slide-in animation
-    const tauntOverlay = document.createElement('div');
-    tauntOverlay.className = 'second-loss-taunt-overlay';
-    tauntOverlay.style.cssText = `
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        background: rgba(0, 0, 0, 0.75);
-        z-index: 10000;
-        display: flex;
-        flex-direction: column;
-        justify-content: center;
-        align-items: center;
-        opacity: 0;
-        transition: opacity 0.4s ease;
-        pointer-events: none;
-    `;
-    document.body.appendChild(tauntOverlay);
-    
-    // Animate overlay in
-    setTimeout(() => {
-        tauntOverlay.style.opacity = '1';
-    }, 50);
-    
-    // Highlight the missed cell with glowing outline
-    missedCell.style.cssText += `
-        box-shadow: 0 0 40px rgba(255, 100, 100, 0.9), inset 0 0 20px rgba(255, 100, 100, 0.5) !important;
-        border: 3px solid #ff6666 !important;
-        animation: pulse-highlight 0.6s ease-in-out infinite;
-        z-index: 10001;
-        position: relative;
-    `;
-    
-    // ============================================
-    // SCENE 2: AI DEMONSTRATES CORRECT MOVE (2 sec)
-    // ============================================
-    setTimeout(() => {
-        // AI avatar appears next to board (floating)
-        const aiAvatar = document.createElement('div');
-        aiAvatar.className = 'ai-taunt-avatar';
-        aiAvatar.innerHTML = '🤖';
-        aiAvatar.style.cssText = `
-            position: fixed;
-            top: 15%;
-            right: 10%;
-            transform: scale(0) rotate(-180deg);
-            font-size: 4rem;
-            opacity: 0;
-            pointer-events: none;
-            z-index: 10002;
-            filter: drop-shadow(0 0 25px rgba(100, 200, 255, 0.9));
-            transition: transform 0.3s ease;
-        `;
-        document.body.appendChild(aiAvatar);
         
-        // Animate AI avatar appearance
-        setTimeout(() => {
-            aiAvatar.style.transition = 'all 0.6s cubic-bezier(0.34, 1.56, 0.64, 1)';
-            aiAvatar.style.transform = 'scale(1) rotate(0deg)';
-            aiAvatar.style.opacity = '1';
-        }, 50);
+        // VALIDATION: Ensure board and cells exist
+        if (!gameState.board || !Array.isArray(gameState.board) || gameState.board.length !== 9) {
+            console.error('Second loss taunt failed: Invalid board state');
+            return;
+        }
         
-        // AI's hand/icon points at correct cell
-        setTimeout(() => {
-            const boardRect = document.querySelector('.game-board').getBoundingClientRect();
-            const cellRect = missedCell.getBoundingClientRect();
-            const cellCenterX = cellRect.left + cellRect.width / 2;
-            const cellCenterY = cellRect.top + cellRect.height / 2;
-            
-            // Move avatar to point at cell
-            aiAvatar.style.transition = 'all 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94)';
-            aiAvatar.style.left = (cellCenterX - 60) + 'px';
-            aiAvatar.style.top = (cellCenterY - 100) + 'px';
-            aiAvatar.style.fontSize = '3rem';
-            aiAvatar.style.animation = 'ai-point-at-cell 0.6s ease-in-out infinite';
-        }, 700);
+        const boardElement = document.querySelector('.game-board');
+        if (!boardElement) {
+            console.error('Second loss taunt failed: Board element not found');
+            return;
+        }
         
-        // Green ghost X/O moves into cell with particle effects
-        setTimeout(() => {
-            const ghostMove = document.createElement('div');
-            ghostMove.className = 'ghost-move-green';
-            ghostMove.textContent = tauntType === 'win' ? 'X' : 'O';
-            ghostMove.style.cssText = `
-                position: absolute;
-                top: 50%;
-                left: 50%;
-                transform: translate(-50%, -50%) scale(0);
-                font-size: 4rem;
-                color: rgba(100, 255, 100, 0.9);
-                opacity: 0;
-                pointer-events: none;
-                text-shadow: 0 0 30px rgba(100, 255, 100, 1);
-                z-index: 10003;
-                animation: ghost-move-enter 1s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
-            `;
-            missedCell.style.position = 'relative';
-            missedCell.appendChild(ghostMove);
-            
-            // Particle effects when ghost appears
-            for (let i = 0; i < 8; i++) {
-                const particle = document.createElement('div');
-                particle.style.cssText = `
-                    position: absolute;
-                    top: 50%;
-                    left: 50%;
-                    width: 6px;
-                    height: 6px;
-                    background: rgba(100, 255, 100, 0.8);
-                    border-radius: 50%;
-                    pointer-events: none;
-                    z-index: 10004;
-                    animation: particle-spark ${0.8 + i * 0.1}s ease-out forwards;
-                `;
-                missedCell.appendChild(particle);
+        // CRITICAL: Freeze game completely - prevent all interactions
+        const originalGameActive = gameState.gameActive;
+        const originalUILocked = gameState.uiLocked;
+        gameState.gameActive = false;
+        gameState.uiLocked = true;
+        gameState.uiLockingReason = 'second-loss-taunt';
+        
+        // Disable all cell clicks during taunt
+        const cells = Array.from(document.querySelectorAll('.cell'));
+        cells.forEach(cell => {
+            cell.style.pointerEvents = 'none';
+            cell.style.cursor = 'not-allowed';
+        });
+        
+        // Audio handling: Pause background music
+        let musicWasPlaying = false;
+        try {
+            if (bgMusic && !bgMusic.paused) {
+                bgMusic.pause();
+                musicWasPlaying = true;
             }
+        } catch (audioError) {
+            console.warn('Could not pause background music:', audioError);
+        }
+        
+        // Find missed moves: Check for winning moves first, then blocking moves
+        const missedWinningMoves = [];
+        const missedBlockingMoves = [];
+        
+        try {
+            for (let i = 0; i < 9; i++) {
+                if (gameState.board[i] === '') {
+                    // Check for missed winning move
+                    const testBoard = [...gameState.board];
+                    testBoard[i] = 'X';
+                    const testWinningCombo = winningCombos.find(combo => 
+                        combo.every(idx => testBoard[idx] === 'X')
+                    );
+                    if (testWinningCombo) {
+                        missedWinningMoves.push({ index: i, combo: testWinningCombo });
+                    }
+                    
+                    // Check for missed blocking move
+                    testBoard[i] = 'O';
+                    const aiWinCombo = winningCombos.find(combo => 
+                        combo.every(idx => testBoard[idx] === 'O')
+                    );
+                    if (aiWinCombo) {
+                        missedBlockingMoves.push({ index: i, combo: aiWinCombo });
+                    }
+                }
+            }
+        } catch (moveCheckError) {
+            console.error('Error checking missed moves:', moveCheckError);
+            // Continue with taunt even if move check fails
+        }
+        
+        // Determine which move to highlight (prefer winning moves)
+        let missedMove = null;
+        let tauntType = 'none';
+        
+        if (missedWinningMoves.length > 0) {
+            missedMove = missedWinningMoves[0];
+            tauntType = 'win';
+        } else if (missedBlockingMoves.length > 0) {
+            missedMove = missedBlockingMoves[0];
+            tauntType = 'block';
+        }
+        
+        // If no missed move found, still show taunt but without specific cell highlight
+        if (!missedMove || tauntType === 'none') {
+            console.log('No clear missed move found, showing generic taunt');
+            // Still proceed with taunt, just without cell highlight
+        }
+        
+        const missedCell = missedMove ? cells[missedMove.index] : null;
+        
+        // Create dim overlay for board freeze effect
+        const boardDimOverlay = document.createElement('div');
+        boardDimOverlay.className = 'second-loss-board-dim';
+        boardDimOverlay.style.cssText = `
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.4);
+            z-index: 9999;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        `;
+        boardElement.style.position = 'relative';
+        boardElement.appendChild(boardDimOverlay);
+        
+        // Animate dim overlay in
+        requestAnimationFrame(() => {
+            boardDimOverlay.style.opacity = '1';
+        });
+        
+        // Create main taunt overlay
+        const tauntOverlay = document.createElement('div');
+        tauntOverlay.className = 'second-loss-taunt-overlay';
+        tauntOverlay.id = 'second-loss-taunt-overlay';
+        tauntOverlay.style.cssText = `
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.75);
+            z-index: 10000;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            opacity: 0;
+            transition: opacity 0.4s ease;
+            pointer-events: none;
+        `;
+        document.body.appendChild(tauntOverlay);
+        
+        // Animate overlay in
+        requestAnimationFrame(() => {
+            tauntOverlay.style.opacity = '1';
+        });
+        
+        // Highlight missed cell if found
+        if (missedCell) {
+            const originalCellStyle = missedCell.getAttribute('data-original-style') || '';
+            missedCell.setAttribute('data-original-style', missedCell.style.cssText);
+            missedCell.style.cssText += `
+                box-shadow: 0 0 40px rgba(255, 100, 100, 0.9), inset 0 0 20px rgba(255, 100, 100, 0.5) !important;
+                border: 3px solid #ff6666 !important;
+                z-index: 10001;
+                position: relative;
+            `;
             
-            // Add animations
-            const ghostStyle = document.createElement('style');
-            ghostStyle.id = 'ghost-move-style';
-            ghostStyle.textContent = `
-                @keyframes ghost-move-enter {
-                    0% { opacity: 0; transform: translate(-50%, -50%) scale(0) rotate(-90deg); }
-                    50% { opacity: 1; transform: translate(-50%, -50%) scale(1.2) rotate(10deg); }
-                    100% { opacity: 0.8; transform: translate(-50%, -50%) scale(1) rotate(0deg); }
-                }
-                @keyframes ai-point-at-cell {
-                    0%, 100% { transform: translate(0, 0) scale(1); }
-                    50% { transform: translate(10px, -10px) scale(1.1); }
-                }
-                @keyframes particle-spark {
-                    0% { opacity: 1; transform: translate(-50%, -50%) scale(1) rotate(0deg); }
-                    100% { 
-                        opacity: 0; 
-                        transform: translate(-50%, -50%) scale(0) rotate(360deg);
-                        top: ${Math.random() * 100 - 50}%;
-                        left: ${Math.random() * 100 - 50}%;
+            // Add pulse animation
+            const pulseStyle = document.createElement('style');
+            pulseStyle.id = 'second-loss-pulse-style';
+            pulseStyle.textContent = `
+                @keyframes second-loss-pulse {
+                    0%, 100% { 
+                        box-shadow: 0 0 40px rgba(255, 100, 100, 0.9), inset 0 0 20px rgba(255, 100, 100, 0.5);
+                    }
+                    50% { 
+                        box-shadow: 0 0 60px rgba(255, 100, 100, 1), inset 0 0 30px rgba(255, 100, 100, 0.7);
                     }
                 }
             `;
-            document.head.appendChild(ghostStyle);
-            
-            // Text overlay: Mocking text appears
-            const demoText = document.createElement('div');
-            demoText.className = 'ai-demo-text';
-            demoText.textContent = "This is what you should have done... not that.";
-            demoText.style.cssText = `
-                position: fixed;
-                top: 50%;
-                left: 50%;
-                transform: translate(-50%, -50%) translateY(30px);
-                color: #ff8888;
-                font-size: 1.4rem;
-                font-weight: bold;
-                text-align: center;
-                text-shadow: 2px 2px 8px rgba(0,0,0,0.9);
-                opacity: 0;
-                z-index: 10005;
-                pointer-events: none;
-                animation: demo-text-fade-in 0.6s ease-out forwards;
-            `;
-            document.body.appendChild(demoText);
-            
-            const demoTextStyle = document.createElement('style');
-            demoTextStyle.id = 'demo-text-style';
-            demoTextStyle.textContent = `
-                @keyframes demo-text-fade-in {
-                    0% { opacity: 0; transform: translate(-50%, -50%) translateY(30px); }
-                    100% { opacity: 1; transform: translate(-50%, -50%) translateY(0); }
-                }
-            `;
-            document.head.appendChild(demoTextStyle);
-            
-            // Remove demo text after 1.5-2 seconds
-            setTimeout(() => {
-                demoText.style.animation = 'demo-text-fade-in 0.5s ease-out reverse';
-                demoText.style.opacity = '0';
-                setTimeout(() => demoText.remove(), 500);
-            }, 2000);
-            
-        }, 1000);
-        
-    }, 2000); // Start Scene 2 after Scene 1
-    
-    // ============================================
-    // SCENE 3: AI TAUNT INTENSIFIES (1-1.5 sec)
-    // ============================================
-    setTimeout(() => {
-        // Animated text bubble pops from AI
-        const tauntBubble = document.createElement('div');
-        tauntBubble.className = 'ai-taunt-bubble';
-        const tauntMessages = [
-            "Really? That's the best you've got?",
-            "Oops, missed again... this is easy!",
-            "Try harder, maybe next time!",
-            "I'm almost impressed by how bad that was.",
-            "Did you think about that move?"
-        ];
-        tauntBubble.textContent = tauntMessages[Math.floor(Math.random() * tauntMessages.length)];
-        tauntBubble.style.cssText = `
-            position: fixed;
-            top: 20%;
-            right: 8%;
-            background: rgba(255, 68, 68, 0.95);
-            color: white;
-            padding: 1rem 1.5rem;
-            border-radius: 20px;
-            font-size: 1.1rem;
-            font-weight: bold;
-            box-shadow: 0 8px 32px rgba(0,0,0,0.5);
-            z-index: 10006;
-            pointer-events: none;
-            opacity: 0;
-            transform: scale(0) rotate(-10deg);
-            animation: bubble-pop-in 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
-        `;
-        document.body.appendChild(tauntBubble);
-        
-        // AI laughing/shaking head animation
-        const aiAvatar = document.querySelector('.ai-taunt-avatar');
-        if (aiAvatar) {
-            aiAvatar.style.animation = 'ai-laugh-shake 0.5s ease-in-out 3';
+            document.head.appendChild(pulseStyle);
+            missedCell.style.animation = 'second-loss-pulse 0.6s ease-in-out infinite';
         }
         
-        // Small frustration icons (exclamation marks)
-        for (let i = 0; i < 3; i++) {
-            const frustrationIcon = document.createElement('div');
-            frustrationIcon.textContent = '!';
-            frustrationIcon.style.cssText = `
-                position: fixed;
-                top: ${15 + i * 5}%;
-                right: ${12 + i * 2}%;
-                color: #ff4444;
-                font-size: 2rem;
-                font-weight: bold;
-                opacity: 0;
-                z-index: 10007;
-                pointer-events: none;
-                animation: frustration-pop ${0.3 + i * 0.1}s ease-out ${i * 0.1}s forwards;
-            `;
-            document.body.appendChild(frustrationIcon);
-            
-            setTimeout(() => {
-                frustrationIcon.style.animation = 'frustration-pop 0.3s ease-out reverse';
-                setTimeout(() => frustrationIcon.remove(), 300);
-            }, 1200);
-        }
+        // Store cleanup function
+        const cleanupElements = [];
+        cleanupElements.push(tauntOverlay);
+        cleanupElements.push(boardDimOverlay);
+        if (missedCell) cleanupElements.push(missedCell);
         
-        // Add animation styles
-        const tauntStyle = document.createElement('style');
-        tauntStyle.id = 'taunt-intensify-style';
-        tauntStyle.textContent = `
-            @keyframes bubble-pop-in {
-                0% { opacity: 0; transform: scale(0) rotate(-10deg); }
-                50% { transform: scale(1.1) rotate(5deg); }
-                100% { opacity: 1; transform: scale(1) rotate(0deg); }
-            }
-            @keyframes ai-laugh-shake {
-                0%, 100% { transform: translate(0, 0) rotate(0deg); }
-                25% { transform: translate(-5px, -5px) rotate(-5deg); }
-                75% { transform: translate(5px, -5px) rotate(5deg); }
-            }
-            @keyframes frustration-pop {
-                0% { opacity: 0; transform: scale(0) translateY(0); }
-                50% { opacity: 1; transform: scale(1.3) translateY(-10px); }
-                100% { opacity: 0.8; transform: scale(1) translateY(-5px); }
-            }
-        `;
-        document.head.appendChild(tauntStyle);
+        // SCENE 1: Initial freeze and highlight (0.5s)
+        // Already done above
         
-        // Remove bubble after 1.5 seconds
+        // SCENE 2: AI demonstrates correct move (2s)
         setTimeout(() => {
-            tauntBubble.style.animation = 'bubble-pop-in 0.4s ease-out reverse';
-            setTimeout(() => tauntBubble.remove(), 400);
-        }, 1500);
-        
-    }, 3500); // Start Scene 3 after Scene 2
-    
-    // ============================================
-    // SCENE 4: RESUME GAMEPLAY (0.5 sec)
-    // ============================================
-    setTimeout(() => {
-        // Fade out dim overlay
-        boardDimOverlay.style.opacity = '0';
-        
-        // Reset cell styling
-        missedCell.style.cssText = '';
-        const ghostIcon = missedCell.querySelector('.ghost-icon-tiny');
-        if (ghostIcon) ghostIcon.remove();
-        const ghostMove = missedCell.querySelector('.ghost-move-green');
-        if (ghostMove) ghostMove.remove();
-        const particles = missedCell.querySelectorAll('[style*="particle-spark"]');
-        particles.forEach(p => p.remove());
-        
-        // Remove AI avatar
-        const aiAvatar = document.querySelector('.ai-taunt-avatar');
-        if (aiAvatar) {
-            aiAvatar.style.transition = 'opacity 0.4s ease';
-            aiAvatar.style.opacity = '0';
-            setTimeout(() => aiAvatar.remove(), 400);
-        }
-        
-        // Remove all style elements
-        const stylesToRemove = [
-            'cell-shake-style',
-            'ghost-move-style',
-            'demo-text-style',
-            'taunt-intensify-style'
-        ];
-        stylesToRemove.forEach(id => {
-            const styleEl = document.getElementById(id);
-            if (styleEl) styleEl.remove();
-        });
-        
-        // Unlock UI - resume normal gameplay
-        setTimeout(() => {
-            boardDimOverlay.remove();
-            gameState.uiLocked = false;
-            gameState.uiLockingReason = null;
-            
-            // Resume background music
-            if (musicWasPlaying && bgMusic) {
-                bgMusic.play().catch(() => {});
+            try {
+                if (!missedCell || !missedMove) return;
+                
+                // AI avatar appears
+                const aiAvatar = document.createElement('div');
+                aiAvatar.className = 'ai-taunt-avatar';
+                aiAvatar.innerHTML = '🤖';
+                aiAvatar.style.cssText = `
+                    position: fixed;
+                    top: clamp(10%, 15vh, 15%);
+                    right: clamp(5%, 10vw, 10%);
+                    transform: scale(0) rotate(-180deg);
+                    font-size: clamp(2rem, 6vw, 4rem);
+                    opacity: 0;
+                    pointer-events: none;
+                    z-index: 10002;
+                    filter: drop-shadow(0 0 25px rgba(100, 200, 255, 0.9));
+                    transition: all 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+                `;
+                document.body.appendChild(aiAvatar);
+                cleanupElements.push(aiAvatar);
+                
+                // Animate AI avatar appearance
+                requestAnimationFrame(() => {
+                    aiAvatar.style.transform = 'scale(1) rotate(0deg)';
+                    aiAvatar.style.opacity = '1';
+                });
+                
+                // AI points at cell
+                setTimeout(() => {
+                    try {
+                        const boardRect = boardElement.getBoundingClientRect();
+                        const cellRect = missedCell.getBoundingClientRect();
+                        const cellCenterX = cellRect.left + cellRect.width / 2;
+                        const cellCenterY = cellRect.top + cellRect.height / 2;
+                        
+                        aiAvatar.style.transition = 'all 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94)';
+                        aiAvatar.style.left = (cellCenterX - 60) + 'px';
+                        aiAvatar.style.top = (cellCenterY - 100) + 'px';
+                        aiAvatar.style.fontSize = 'clamp(2rem, 5vw, 3rem)';
+                        aiAvatar.style.animation = 'ai-point-at-cell 0.6s ease-in-out infinite';
+                    } catch (pointError) {
+                        console.warn('Error positioning AI avatar:', pointError);
+                    }
+                }, 700);
+                
+                // Ghost move animation
+                setTimeout(() => {
+                    try {
+                        const ghostMove = document.createElement('div');
+                        ghostMove.className = 'ghost-move-green';
+                        ghostMove.textContent = tauntType === 'win' ? 'X' : 'O';
+                        ghostMove.style.cssText = `
+                            position: absolute;
+                            top: 50%;
+                            left: 50%;
+                            transform: translate(-50%, -50%) scale(0);
+                            font-size: clamp(2.5rem, 7vw, 4rem);
+                            color: rgba(100, 255, 100, 0.9);
+                            opacity: 0;
+                            pointer-events: none;
+                            text-shadow: 0 0 30px rgba(100, 255, 100, 1);
+                            z-index: 10003;
+                            font-weight: bold;
+                        `;
+                        missedCell.style.position = 'relative';
+                        missedCell.appendChild(ghostMove);
+                        cleanupElements.push(ghostMove);
+                        
+                        // Animate ghost move
+                        requestAnimationFrame(() => {
+                            ghostMove.style.transition = 'all 1s cubic-bezier(0.34, 1.56, 0.64, 1)';
+                            ghostMove.style.transform = 'translate(-50%, -50%) scale(1)';
+                            ghostMove.style.opacity = '0.8';
+                        });
+                        
+                        // Particle effects
+                        for (let i = 0; i < 8; i++) {
+                            const particle = document.createElement('div');
+                            particle.style.cssText = `
+                                position: absolute;
+                                top: 50%;
+                                left: 50%;
+                                width: clamp(4px, 1vw, 6px);
+                                height: clamp(4px, 1vw, 6px);
+                                background: rgba(100, 255, 100, 0.8);
+                                border-radius: 50%;
+                                pointer-events: none;
+                                z-index: 10004;
+                            `;
+                            missedCell.appendChild(particle);
+                            cleanupElements.push(particle);
+                            
+                            const angle = (i / 8) * Math.PI * 2;
+                            const distance = 30 + Math.random() * 20;
+                            particle.style.animation = `particle-spark-${i} 0.8s ease-out forwards`;
+                            
+                            // Add particle animation
+                            const particleStyle = document.createElement('style');
+                            particleStyle.id = `particle-style-${i}`;
+                            particleStyle.textContent = `
+                                @keyframes particle-spark-${i} {
+                                    0% { 
+                                        opacity: 1; 
+                                        transform: translate(-50%, -50%) scale(1) rotate(0deg);
+                                    }
+                                    100% { 
+                                        opacity: 0; 
+                                        transform: translate(-50%, -50%) translate(${Math.cos(angle) * distance}px, ${Math.sin(angle) * distance}px) scale(0) rotate(360deg);
+                                    }
+                                }
+                            `;
+                            document.head.appendChild(particleStyle);
+                            cleanupElements.push(particleStyle);
+                        }
+                        
+                        // Demo text - Different messages for Sarah vs others
+                        const demoText = document.createElement('div');
+                        demoText.className = 'ai-demo-text';
+                        let demoMessages;
+                        if (isSarah()) {
+                            // Respectful messages for Sarah
+                            demoMessages = [
+                                "Miss Sarah, this cell would have been the optimal move.",
+                                "Miss Sarah, placing your mark here would have been more strategic.",
+                                "Miss Sarah, this position would have improved your chances.",
+                                "Miss Sarah, consider this cell for future reference."
+                            ];
+                        } else {
+                            // Highly insulting, sarcastic, condescending messages for others
+                            demoMessages = [
+                                "Wow… you really thought that would work? Trash.",
+                                "Are you losing brain cells trying to play this game?",
+                                "You should consider giving up; this is embarrassing.",
+                                "This is what you should have done... not that.",
+                                "You really missed this one, how predictable!",
+                                "See? Right here. You had it and you blew it.",
+                                "This move was so obvious, even I'm surprised you missed it.",
+                                "Seriously? You had a winning move and you missed it?",
+                                "Your strategy is as weak as your execution.",
+                                "Maybe tic-tac-toe isn't for you. Have you considered checkers?",
+                                "I've seen better moves from a random number generator.",
+                                "This is getting sad. You had it right there and you blew it."
+                            ];
+                        }
+                        demoText.textContent = demoMessages[Math.floor(Math.random() * demoMessages.length)];
+                        demoText.style.cssText = `
+                            position: fixed;
+                            top: 50%;
+                            left: 50%;
+                            transform: translate(-50%, -50%) translateY(30px);
+                            color: #ff8888;
+                            font-size: clamp(1rem, 3vw, 1.4rem);
+                            font-weight: bold;
+                            text-align: center;
+                            text-shadow: 2px 2px 8px rgba(0,0,0,0.9);
+                            opacity: 0;
+                            z-index: 10005;
+                            pointer-events: none;
+                            padding: 0 1rem;
+                            max-width: 90%;
+                            word-wrap: break-word;
+                        `;
+                        document.body.appendChild(demoText);
+                        cleanupElements.push(demoText);
+                        
+                        requestAnimationFrame(() => {
+                            demoText.style.transition = 'all 0.6s ease-out';
+                            demoText.style.opacity = '1';
+                            demoText.style.transform = 'translate(-50%, -50%) translateY(0)';
+                        });
+                        
+                        // Remove demo text after 3 seconds (longer for reading)
+                        setTimeout(() => {
+                            demoText.style.transition = 'all 0.5s ease-out';
+                            demoText.style.opacity = '0';
+                            demoText.style.transform = 'translate(-50%, -50%) translateY(-30px)';
+                            setTimeout(() => {
+                                if (demoText.parentNode) demoText.remove();
+                            }, 500);
+                        }, 3000); // 3 seconds for reading
+                    } catch (ghostError) {
+                        console.error('Error creating ghost move animation:', ghostError);
+                    }
+                }, 1000);
+            } catch (scene2Error) {
+                console.error('Error in Scene 2:', scene2Error);
             }
         }, 500);
         
-    }, 5000); // Total duration: 5 seconds
+        // SCENE 3: AI taunt intensifies (1.5s)
+        setTimeout(() => {
+            try {
+                // Taunt bubble - Different messages for Sarah vs others
+                const tauntBubble = document.createElement('div');
+                tauntBubble.className = 'ai-taunt-bubble';
+                let tauntMessages;
+                if (isSarah()) {
+                    // Respectful, encouraging messages for Sarah
+                    tauntMessages = [
+                        "Miss Sarah, the AI has identified a more strategic move.",
+                        "Miss Sarah, consider this position for your next attempt.",
+                        "Miss Sarah, learning from each game will improve your strategy.",
+                        "Miss Sarah, this demonstrates the importance of careful planning."
+                    ];
+                } else {
+                    // Highly insulting, sarcastic, condescending messages for others
+                    tauntMessages = [
+                        "Wow… you really thought that would work? Trash.",
+                        "Are you losing brain cells trying to play this game?",
+                        "You should consider giving up; this is embarrassing.",
+                        "Really? That's the best you've got?",
+                        "Oops, missed again... this is easy!",
+                        "Try harder, maybe next time!",
+                        "I'm almost impressed by how bad that was.",
+                        "Did you think about that move?",
+                        "You really missed this one, how predictable!",
+                        "This is getting embarrassing...",
+                        "Even I'm surprised you missed that.",
+                        "Your gameplay is as weak as your excuses.",
+                        "Maybe you should stick to games for toddlers.",
+                        "I've seen better strategy from a coin flip.",
+                        "This is pathetic. You had a winning move and you missed it.",
+                        "Your moves are so predictable, it's almost sad.",
+                        "Are you even trying? Because it doesn't look like it.",
+                        "This is why you lose. You don't think ahead.",
+                        "You had it right there. Right. There. And you missed it.",
+                        "I'm starting to think you're doing this on purpose."
+                    ];
+                }
+                tauntBubble.textContent = tauntMessages[Math.floor(Math.random() * tauntMessages.length)];
+                tauntBubble.style.cssText = `
+                    position: fixed;
+                    top: clamp(15%, 20vh, 20%);
+                    right: clamp(5%, 8vw, 8%);
+                    background: rgba(255, 68, 68, 0.95);
+                    color: white;
+                    padding: clamp(0.75rem, 2vw, 1rem) clamp(1rem, 3vw, 1.5rem);
+                    border-radius: 20px;
+                    font-size: clamp(0.9rem, 2.5vw, 1.1rem);
+                    font-weight: bold;
+                    box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+                    z-index: 10006;
+                    pointer-events: none;
+                    opacity: 0;
+                    transform: scale(0) rotate(-10deg);
+                    max-width: clamp(200px, 40vw, 300px);
+                    word-wrap: break-word;
+                `;
+                document.body.appendChild(tauntBubble);
+                cleanupElements.push(tauntBubble);
+                
+                requestAnimationFrame(() => {
+                    tauntBubble.style.transition = 'all 0.5s cubic-bezier(0.34, 1.56, 0.64, 1)';
+                    tauntBubble.style.opacity = '1';
+                    tauntBubble.style.transform = 'scale(1) rotate(0deg)';
+                });
+                
+                // AI avatar shake
+                const aiAvatar = document.querySelector('.ai-taunt-avatar');
+                if (aiAvatar) {
+                    const shakeStyle = document.createElement('style');
+                    shakeStyle.id = 'ai-shake-style';
+                    shakeStyle.textContent = `
+                        @keyframes ai-laugh-shake {
+                            0%, 100% { transform: translate(0, 0) rotate(0deg); }
+                            25% { transform: translate(-5px, -5px) rotate(-5deg); }
+                            75% { transform: translate(5px, -5px) rotate(5deg); }
+                        }
+                    `;
+                    document.head.appendChild(shakeStyle);
+                    cleanupElements.push(shakeStyle);
+                    aiAvatar.style.animation = 'ai-laugh-shake 0.5s ease-in-out 3';
+                }
+                
+                // Remove bubble after 3 seconds (longer for reading insulting messages)
+                setTimeout(() => {
+                    tauntBubble.style.transition = 'all 0.4s ease-out';
+                    tauntBubble.style.opacity = '0';
+                    tauntBubble.style.transform = 'scale(0.8) rotate(10deg)';
+                    setTimeout(() => {
+                        if (tauntBubble.parentNode) tauntBubble.remove();
+                    }, 400);
+                }, 3000); // 3 seconds for reading
+            } catch (scene3Error) {
+                console.error('Error in Scene 3:', scene3Error);
+            }
+        }, 2500);
+        
+        // SCENE 4: Resume gameplay (0.5s cleanup)
+        setTimeout(() => {
+            try {
+                // Fade out overlay
+                tauntOverlay.style.transition = 'opacity 0.5s ease';
+                tauntOverlay.style.opacity = '0';
+                boardDimOverlay.style.opacity = '0';
+                
+                // Reset cell styling
+                if (missedCell) {
+                    const originalStyle = missedCell.getAttribute('data-original-style') || '';
+                    missedCell.style.cssText = originalStyle;
+                    missedCell.removeAttribute('data-original-style');
+                    
+                    // Remove ghost move and particles
+                    const ghostMove = missedCell.querySelector('.ghost-move-green');
+                    if (ghostMove) ghostMove.remove();
+                    const particles = missedCell.querySelectorAll('[class*="particle"]');
+                    particles.forEach(p => p.remove());
+                }
+                
+                // Remove AI avatar
+                const aiAvatar = document.querySelector('.ai-taunt-avatar');
+                if (aiAvatar) {
+                    aiAvatar.style.transition = 'opacity 0.4s ease';
+                    aiAvatar.style.opacity = '0';
+                    setTimeout(() => {
+                        if (aiAvatar.parentNode) aiAvatar.remove();
+                    }, 400);
+                }
+                
+                // Remove all style elements
+                const stylesToRemove = [
+                    'second-loss-pulse-style',
+                    'ghost-move-style',
+                    'demo-text-style',
+                    'taunt-intensify-style',
+                    'ai-shake-style'
+                ];
+                for (let i = 0; i < 20; i++) {
+                    stylesToRemove.push(`particle-style-${i}`);
+                }
+                stylesToRemove.forEach(id => {
+                    const styleEl = document.getElementById(id);
+                    if (styleEl) styleEl.remove();
+                });
+                
+                // Cleanup all elements
+                setTimeout(() => {
+                    cleanupElements.forEach(el => {
+                        try {
+                            if (el && el.parentNode) {
+                                el.remove();
+                            }
+                        } catch (cleanupError) {
+                            console.warn('Error cleaning up element:', cleanupError);
+                        }
+                    });
+                    
+                    // Re-enable cells
+                    cells.forEach(cell => {
+                        cell.style.pointerEvents = '';
+                        cell.style.cursor = '';
+                    });
+                    
+                    // Unlock UI - resume normal gameplay
+                    gameState.uiLocked = originalUILocked;
+                    gameState.uiLockingReason = null;
+                    // CRITICAL: Do NOT restore gameActive - let endGame handle it
+                    // gameState.gameActive = originalGameActive;
+                    
+                    // Resume background music
+                    if (musicWasPlaying && bgMusic) {
+                        try {
+                            bgMusic.play().catch(audioError => {
+                                console.warn('Could not resume background music:', audioError);
+                            });
+                        } catch (audioError) {
+                            console.warn('Error resuming background music:', audioError);
+                        }
+                    }
+                    
+                    // CRITICAL: AI intelligence must persist - no reset
+                    // The game will continue with endGame() which maintains AI state
+                    
+                }, 500);
+            } catch (cleanupError) {
+                console.error('Error in cleanup:', cleanupError);
+                // Force cleanup
+                try {
+                    gameState.uiLocked = false;
+                    gameState.uiLockingReason = null;
+                    cells.forEach(cell => {
+                        cell.style.pointerEvents = '';
+                        cell.style.cursor = '';
+                    });
+                    if (musicWasPlaying && bgMusic) {
+                        bgMusic.play().catch(() => {});
+                    }
+                } catch (forceCleanupError) {
+                    console.error('Force cleanup failed:', forceCleanupError);
+                }
+            }
+        }, 5500); // Total duration: ~5.5 seconds (5-6 seconds as requested)
+        
+    } catch (error) {
+        console.error('Critical error in showSecondLossTaunt:', error);
+        // Emergency cleanup
+        try {
+            gameState.uiLocked = false;
+            gameState.uiLockingReason = null;
+            const cells = Array.from(document.querySelectorAll('.cell'));
+            cells.forEach(cell => {
+                cell.style.pointerEvents = '';
+                cell.style.cursor = '';
+            });
+            if (bgMusic && musicWasPlaying) {
+                bgMusic.play().catch(() => {});
+            }
+        } catch (emergencyError) {
+            console.error('Emergency cleanup failed:', emergencyError);
+        }
+    }
 }
 
 /**
@@ -4340,22 +4516,34 @@ function makeAIMove() {
         
         // ADVANCED TAUNT TYPE: "SHOW YOU HOW STUPID YOU WERE"
         // SECOND LOSS (ENHANCED): Show visual demonstration of missed move
-        // - Freeze the board briefly (~1-2 seconds)
+        // - Freeze the board briefly (4-5 seconds)
         // - Highlight mistake(s): Missed winning cell, Failed block
         // - Visual demonstration: Animate ghost X/O where player should have played
         // - Condescending taunt: Sarcastic, mocking, lightly cruel
         // - Resume gameplay automatically with smooth transition
         // UX ONLY - does NOT affect AI logic
-        if (!gameState.isKingWilliam && !isSarah() && gameState.playerMoveHistory.length > 0) {
-            // SECOND LOSS: Always show visual demonstration (enhanced)
-            if (gameState.losses === 2) {
-                try {
+        // CRITICAL: Only trigger on second loss in Level 1
+        if (gameState.currentLevel === 1) {
+            gameState.level1Losses = (gameState.level1Losses || 0) + 1;
+        }
+        
+        // SECOND LOSS IN LEVEL 1: Always show visual demonstration (enhanced)
+        if (gameState.currentLevel === 1 && gameState.level1Losses === 2 && !gameState.isKingWilliam && !isSarah() && gameState.playerMoveHistory.length > 0) {
+            try {
+                // Validate loss count before triggering
+                if (gameState.losses >= 2 && gameState.level1Losses === 2) {
                     showSecondLossTaunt();
-                } catch (tauntError) {
-                    console.error('Error showing second loss taunt:', tauntError);
-                    // Continue with normal endGame - taunt is optional
+                } else {
+                    console.warn('Second loss sequence skipped: loss count mismatch', {
+                        totalLosses: gameState.losses,
+                        level1Losses: gameState.level1Losses
+                    });
                 }
+            } catch (tauntError) {
+                console.error('Error showing second loss taunt:', tauntError);
+                // Continue with normal endGame - taunt is optional
             }
+        }
             // Other losses: 30% chance to show taunt
             else if (Math.random() < 0.3) {
                 try {
@@ -5765,6 +5953,8 @@ function closeInteractiveMode() {
     gameState.board = Array(9).fill('');
     gameState.gameActive = true;
     gameState.playerMoveHistory = [];
+    // NOTE: level1Losses persists across games within the same level
+    // It only resets when level changes or player resets to landing
     cells.forEach(cell => cell.textContent = '');
     resetBtn.style.display = 'none';
     messageBox.textContent = "Back for more punishment?";
@@ -5856,6 +6046,7 @@ function resetToLanding() {
         gameState.losses = 0;
         gameState.wins = 0;
         gameState.aiLosses = 0;
+        gameState.level1Losses = 0; // Reset level-specific loss count
         gameState.gameActive = true;
         gameState.inInteractiveMode = false;
         gameState.playerMoveHistory = [];
