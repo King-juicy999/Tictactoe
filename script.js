@@ -3356,11 +3356,15 @@ function playTacticalClaimAnimation(cellIndex) {
  * - Fully responsive for mobile and desktop
  * - Comprehensive error handling
  */
-function showSecondLossTaunt() {
+function showSecondLossTaunt(onCompleteCallback) {
     try {
         // MVP: Prevent infinite loops - only show once per session per round
         if (gameState.secondLossTauntShown) {
             console.log('[Taunt] Second loss taunt already shown this session, skipping');
+            // Still call callback if provided
+            if (onCompleteCallback && typeof onCompleteCallback === 'function') {
+                onCompleteCallback();
+            }
             return;
         }
         
@@ -3374,6 +3378,10 @@ function showSecondLossTaunt() {
                 totalLosses: gameState?.losses,
                 tauntShown: gameState?.secondLossTauntShown
             });
+            // Still call callback if provided
+            if (onCompleteCallback && typeof onCompleteCallback === 'function') {
+                onCompleteCallback();
+            }
             return;
         }
         
@@ -3933,6 +3941,15 @@ function showSecondLossTaunt() {
                     // CRITICAL: AI intelligence must persist - no reset
                     // The game will continue with endGame() which maintains AI state
                     
+                    // CRITICAL: Call the completion callback to trigger endGame()
+                    if (onCompleteCallback && typeof onCompleteCallback === 'function') {
+                        try {
+                            onCompleteCallback();
+                        } catch (callbackError) {
+                            console.error('[Taunt] Error calling completion callback:', callbackError);
+                        }
+                    }
+                    
                 }, 500);
             } catch (cleanupError) {
                 console.error('Error in cleanup:', cleanupError);
@@ -3949,6 +3966,14 @@ function showSecondLossTaunt() {
                     }
                 } catch (forceCleanupError) {
                     console.error('Force cleanup failed:', forceCleanupError);
+                }
+                // Still call callback even if cleanup had errors
+                if (onCompleteCallback && typeof onCompleteCallback === 'function') {
+                    try {
+                        onCompleteCallback();
+                    } catch (callbackError) {
+                        console.error('[Taunt] Error calling completion callback after cleanup error:', callbackError);
+                    }
                 }
             }
         }, 5500); // Total duration: ~5.5 seconds (5-6 seconds as requested)
@@ -3969,6 +3994,14 @@ function showSecondLossTaunt() {
             }
         } catch (emergencyError) {
             console.error('Emergency cleanup failed:', emergencyError);
+        }
+        // Still call callback even in emergency cleanup
+        if (onCompleteCallback && typeof onCompleteCallback === 'function') {
+            try {
+                onCompleteCallback();
+            } catch (callbackError) {
+                console.error('[Taunt] Error calling completion callback in emergency cleanup:', callbackError);
+            }
         }
     }
 }
@@ -4751,10 +4784,19 @@ function makeAIMove() {
                     level1Losses: gameState.level1Losses,
                     tauntShown: gameState.secondLossTauntShown
                 });
-                showSecondLossTaunt();
+                // CRITICAL: Pass endGame callback so taunt can call it after completion
+                const lossMessage = "AI Wins!\nThe AI has outplayed you this round, " + gameState.playerName + "!";
+                showSecondLossTaunt(() => {
+                    // Call endGame after taunt completes
+                    endGame(lossMessage);
+                });
+                // CRITICAL: Return early to prevent endGame from being called immediately
+                return;
             } catch (tauntError) {
                 console.error('[Taunt] Error showing second loss taunt:', tauntError);
-                // Continue with normal endGame - taunt is optional
+                // Fallback: Continue with normal endGame if taunt fails
+                endGame("AI Wins!\nThe AI has outplayed you this round, " + gameState.playerName + "!");
+                return;
             }
         } else if (Math.random() < 0.3) {
             // Other losses: 30% chance to show taunt
