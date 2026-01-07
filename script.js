@@ -6333,6 +6333,7 @@ function resetToLanding() {
         gameState.aiLosses = 0;
         gameState.level1Losses = 0; // Reset level-specific loss count
         gameState.secondLossTauntShown = false; // MVP: Reset taunt flag to allow taunt on next session
+        gameState.boardInitialized = false; // MVP: Reset board initialization so it can animate on next fresh start
         gameState.gameActive = true;
         gameState.inInteractiveMode = false;
         gameState.playerMoveHistory = [];
