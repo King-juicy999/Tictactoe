@@ -44,45 +44,76 @@ document.addEventListener('DOMContentLoaded', () => {
         }, 100);
     }
     
-    // Continue button - SIMPLEST POSSIBLE FIX
-    const handleContinueClick = () => {
-        console.log('=== BUTTON CLICKED ===');
-        
-        // Hide pre-welcome overlay
-        const overlay = document.getElementById('pre-welcome-overlay');
-        if (overlay) {
-            overlay.style.display = 'none';
-            overlay.style.visibility = 'hidden';
-            overlay.style.opacity = '0';
-            overlay.style.pointerEvents = 'none';
-            console.log('Overlay hidden');
-        }
-        
-        // Show welcome screen
-        const welcomeScreen = document.getElementById('welcome-screen');
-        if (welcomeScreen) {
-            welcomeScreen.classList.add('active');
-            welcomeScreen.style.display = 'block';
-            welcomeScreen.style.visibility = 'visible';
-            welcomeScreen.style.opacity = '1';
-            welcomeScreen.style.zIndex = '1';
-            console.log('Welcome screen shown');
-        }
-        
-        // Re-enable inputs
-        if (typeof gameState !== 'undefined' && gameState) {
-            gameState.uiLocked = false;
-            gameState.uiLockingReason = null;
+    // Continue button - BULLETPROOF FIX
+    let buttonTransitioned = false;
+    
+    const handleContinueClick = (e) => {
+        try {
+            // Prevent multiple transitions
+            if (buttonTransitioned) {
+                console.log('[Continue] Already transitioned, ignoring click');
+                return;
+            }
+            
+            console.log('[Continue] === BUTTON CLICKED ===');
+            
+            // Mark as transitioned immediately to prevent double-clicks
+            buttonTransitioned = true;
+            
+            // Hide pre-welcome overlay
+            const overlay = document.getElementById('pre-welcome-overlay');
+            if (overlay) {
+                overlay.style.display = 'none';
+                overlay.style.visibility = 'hidden';
+                overlay.style.opacity = '0';
+                overlay.style.pointerEvents = 'none';
+                overlay.classList.add('hiding');
+                console.log('[Continue] Overlay hidden');
+            }
+            
+            // Show welcome screen (name input & camera enable)
+            const welcomeScreen = document.getElementById('welcome-screen');
+            if (welcomeScreen) {
+                welcomeScreen.classList.add('active');
+                welcomeScreen.style.display = 'block';
+                welcomeScreen.style.visibility = 'visible';
+                welcomeScreen.style.opacity = '1';
+                welcomeScreen.style.zIndex = '1';
+                console.log('[Continue] Welcome screen shown');
+            } else {
+                console.error('[Continue] Welcome screen not found!');
+            }
+            
+            // Re-enable inputs
+            if (typeof gameState !== 'undefined' && gameState) {
+                gameState.uiLocked = false;
+                gameState.uiLockingReason = null;
+            }
+            
+        } catch (error) {
+            console.error('[Continue] Error in handleContinueClick:', error);
+            // Even if there's an error, try to show welcome screen
+            const welcomeScreen = document.getElementById('welcome-screen');
+            const overlay = document.getElementById('pre-welcome-overlay');
+            if (overlay) overlay.style.display = 'none';
+            if (welcomeScreen) {
+                welcomeScreen.classList.add('active');
+                welcomeScreen.style.display = 'block';
+            }
         }
     };
     
-    // Setup button with multiple attempts
+    // Setup button with multiple attempts and error handling
     const setupContinueButton = () => {
-        const btn = document.getElementById('continue-welcome-btn');
-        if (btn) {
-            console.log('Button found, setting up handlers');
+        try {
+            const btn = document.getElementById('continue-welcome-btn');
+            if (!btn) {
+                return false;
+            }
             
-            // Make button clickable
+            console.log('[Continue] Button found, setting up handlers');
+            
+            // Make button immediately clickable
             btn.style.opacity = '1';
             btn.style.pointerEvents = 'auto';
             btn.style.cursor = 'pointer';
@@ -90,36 +121,49 @@ document.addEventListener('DOMContentLoaded', () => {
             btn.style.zIndex = '10002';
             btn.style.visibility = 'visible';
             btn.style.display = 'block';
+            btn.style.position = 'relative';
             
-            // Remove old handlers and add new one
+            // Clone button to remove any existing listeners
             const newBtn = btn.cloneNode(true);
             btn.parentNode.replaceChild(newBtn, btn);
             
-            // Direct onclick - simplest approach
+            // Add multiple event handlers for maximum compatibility
             newBtn.onclick = handleContinueClick;
-            newBtn.addEventListener('click', handleContinueClick, false);
-            newBtn.addEventListener('touchend', handleContinueClick, false);
+            newBtn.addEventListener('click', handleContinueClick, { passive: false, capture: false });
+            newBtn.addEventListener('touchend', (e) => {
+                e.preventDefault();
+                handleContinueClick(e);
+            }, { passive: false });
+            newBtn.addEventListener('pointerup', handleContinueClick, { passive: false });
             
-            console.log('Button handlers attached');
+            console.log('[Continue] Button handlers attached successfully');
             return true;
+        } catch (error) {
+            console.error('[Continue] Error setting up button:', error);
+            return false;
         }
-        return false;
     };
     
-    // Try immediately and with delays
-    setupContinueButton();
-    setTimeout(setupContinueButton, 50);
-    setTimeout(setupContinueButton, 200);
-    setTimeout(setupContinueButton, 500);
-    setTimeout(setupContinueButton, 1000);
+    // Try to setup button immediately and with delays (multiple failsafes)
+    if (!setupContinueButton()) {
+        setTimeout(() => setupContinueButton(), 50);
+        setTimeout(() => setupContinueButton(), 200);
+        setTimeout(() => setupContinueButton(), 500);
+        setTimeout(() => setupContinueButton(), 1000);
+        setTimeout(() => setupContinueButton(), 2000);
+    }
     
-    // Event delegation on document
+    // Event delegation on document as ultimate failsafe
     document.addEventListener('click', (e) => {
-        if (e.target && (e.target.id === 'continue-welcome-btn' || e.target.closest('#continue-welcome-btn'))) {
-            console.log('Click caught by document handler');
-            e.preventDefault();
-            e.stopPropagation();
-            handleContinueClick();
+        try {
+            if (e.target && (e.target.id === 'continue-welcome-btn' || e.target.closest('#continue-welcome-btn'))) {
+                console.log('[Continue] Click caught by document handler');
+                e.preventDefault();
+                e.stopPropagation();
+                handleContinueClick(e);
+            }
+        } catch (error) {
+            console.error('[Continue] Error in document click handler:', error);
         }
     }, true);
     
@@ -4687,29 +4731,29 @@ function makeAIMove() {
         return;
     }
 
-    if (!gameState.isKingWilliam) {
-        // TAUNT VARIETY RULE: Randomize taunt selection to avoid repetition
-        // Track recent taunts to ensure variety
-        let selectedTaunt = tauntMessages[Math.floor(Math.random() * tauntMessages.length)];
-        
-        // Avoid repeating same taunt if possible
-        if (recentTauntTypes.length > 0) {
-            const recentTaunts = recentTauntTypes.slice(-3);
-            let attempts = 0;
-            while (recentTaunts.includes(selectedTaunt) && attempts < 5) {
-                selectedTaunt = tauntMessages[Math.floor(Math.random() * tauntMessages.length)];
-                attempts++;
+        if (!gameState.isKingWilliam) {
+            // TAUNT VARIETY RULE: Randomize taunt selection to avoid repetition
+            // Track recent taunts to ensure variety
+            let selectedTaunt = tauntMessages[Math.floor(Math.random() * tauntMessages.length)];
+            
+            // Avoid repeating same taunt if possible
+            if (recentTauntTypes.length > 0) {
+                const recentTaunts = recentTauntTypes.slice(-3);
+                let attempts = 0;
+                while (recentTaunts.includes(selectedTaunt) && attempts < 5) {
+                    selectedTaunt = tauntMessages[Math.floor(Math.random() * tauntMessages.length)];
+                    attempts++;
+                }
             }
+            
+            // Track this taunt
+            recentTauntTypes.push(selectedTaunt);
+            if (recentTauntTypes.length > MAX_RECENT_TAUNTS) {
+                recentTauntTypes.shift();
+            }
+            
+            messageBox.textContent = selectedTaunt;
         }
-        
-        // Track this taunt
-        recentTauntTypes.push(selectedTaunt);
-        if (recentTauntTypes.length > MAX_RECENT_TAUNTS) {
-            recentTauntTypes.shift();
-        }
-        
-        messageBox.textContent = selectedTaunt;
-    }
     } catch (e) {
         console.error('Critical error in makeAIMove:', e);
         // Try to recover - just disable game
