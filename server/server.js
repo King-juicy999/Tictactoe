@@ -90,11 +90,11 @@ app.get('/api/ai/stats', (req, res) => {
         patternsData: {},
         lastLosingMoveIndex: null
     };
-
+    
     // Calculate win rate from stored counts
     const totalGames = aiStats.totalGames || (aiStats.wins + aiStats.losses + aiStats.draws);
     const winRate = totalGames > 0 ? (aiStats.wins / totalGames) * 100 : 0;
-
+    
     res.json({
         ok: true,
         stats: {
@@ -456,7 +456,7 @@ io.on('connection', (socket) => {
             if (payload.result === 'win') b.wins += 1;
             else if (payload.result === 'loss') b.losses += 1;
             else if (payload.result === 'draw') b.draws += 1;
-
+        
             // Aggregate patterns sent from client analyzer
             const patterns = payload.patterns || {};
 
