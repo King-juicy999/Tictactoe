@@ -3588,11 +3588,8 @@ handleCellClick = function(cell) {
 function makeAIMove() {
     try {
         // FAILSAFE: If game is blocked, don't attempt move
+        // CRITICAL: Do NOT pause music when game is blocked - music continues as global ambience
         if (!gameState.gameActive || gameState.inInteractiveMode) {
-            // CRITICAL: Stop music if gameplay is blocked
-            if (bgMusic && !bgMusic.paused) {
-                bgMusic.pause();
-            }
             return;
         }
 
@@ -3724,15 +3721,18 @@ function makeAIMove() {
         gameState.losses++;
         lossesDisplay.textContent = gameState.losses;
         
-        // Record AI win in learning system
+        // ADAPTIVE INTELLIGENCE PERSISTENCE: AI intelligence must persist after AI wins
+        // The AI must NOT lose intelligence, adaptability, or strategic awareness after winning
+        // Record AI win in learning system - intelligence persists
         if (gameState.aiLearningSystem && gameState.currentGameId) {
             gameState.aiLearningSystem.recordGameResult('win', gameState.playerName);
             
-            // Send AI stats update to server
+            // Send AI stats update to server - maintains intelligence state
             if (socket) {
                 socket.emit('ai-stats-update', gameState.aiLearningSystem.getStats());
             }
         }
+        // CRITICAL: AI intelligence persists - never reset or degrade after wins
         
         // 3rd loss - trigger interactive mock sequence (disco, insults, mock song)
         // Now works for all players including Sarah (with respectful messages for Sarah)
@@ -3883,14 +3883,52 @@ function chooseHardAIMove() {
         // Adaptive difficulty: Reduce randomness when AI is losing
         // If win rate < 50%, AI gets more aggressive and less random
         const isLosing = aiWinRate < 50;
-        // NOTE: We deliberately do NOT use any blind random “chaos mode” here.
+        // NOTE: We deliberately do NOT use any blind random "chaos mode" here.
         // Every move below is chosen based on the current board plus the
         // player's move history; randomness is only used to break ties between
         // moves that are already evaluated as equally good.
 
-        // === STEP 1: IMMEDIATE WIN (ABSOLUTE PRIORITY) ===
-        const winMoves = [];
         const reservedIndices = getReservedCellIndices();
+
+        // === STEP 1: IMMEDIATE BLOCK (ABSOLUTE PRIORITY - MANDATORY) ===
+        // CRITICAL: The AI must NEVER prioritize winning over blocking an imminent player win.
+        // If the player has a guaranteed winning move on their next turn, the AI MUST block it.
+        // This rule is absolute and cannot be overridden by winning opportunities.
+        const blockMoves = [];
+        for (let i = 0; i < 9; i++) {
+            if (gameState.board[i] === '' && !gameState.shieldedCells.includes(i) && !reservedIndices.includes(i)) {
+                gameState.board[i] = 'X';
+                if (checkWin('X')) {
+                    blockMoves.push(i);
+                }
+                gameState.board[i] = '';
+            }
+        }
+        if (blockMoves.length > 0) {
+            // If player has immediate win, block it - this is mandatory
+            // Choose among blocking moves if multiple exist
+            const selectedBlock = blockMoves[Math.floor(Math.random() * blockMoves.length)];
+            const moveType = 'block';
+            const reasoning = 'Blocking imminent player win (absolute priority - cannot be overridden)';
+
+            if (gameState.aiLearningSystem && selectedBlock !== null) {
+                gameState.aiLearningSystem.recordAIMove(selectedBlock, gameState.board, moveType, reasoning);
+                if (socket) {
+                    socket.emit('ai-move', {
+                        moveIndex: selectedBlock,
+                        boardState: [...gameState.board],
+                        moveType: moveType,
+                        reasoning: reasoning,
+                        gameId: gameState.currentGameId
+                    });
+                }
+            }
+            return selectedBlock;
+        }
+        
+        // === STEP 2: SECURE WIN (Only if no immediate player threat) ===
+        // Only if there is no immediate threat from the player, the AI may take a winning move.
+        const winMoves = [];
         for (let i = 0; i < 9; i++) {
             if (gameState.board[i] === '' && !gameState.shieldedCells.includes(i) && !reservedIndices.includes(i)) {
                 gameState.board[i] = 'O';
@@ -3902,10 +3940,10 @@ function chooseHardAIMove() {
         }
         if (winMoves.length > 0) {
             // If multiple winning moves exist, they are all equally valid;
-            // choose among them, but ALWAYS win immediately.
+            // choose among them, but only if player cannot win next turn
             const chosenWin = winMoves[Math.floor(Math.random() * winMoves.length)];
             const moveType = 'win';
-            const reasoning = 'Immediate winning move (absolute priority)';
+            const reasoning = 'Secure winning move (only when no player threat)';
 
             if (gameState.aiLearningSystem && chosenWin !== null) {
                 gameState.aiLearningSystem.recordAIMove(chosenWin, gameState.board, moveType, reasoning);
@@ -3920,28 +3958,6 @@ function chooseHardAIMove() {
                 }
             }
             return chosenWin;
-        }
-        
-        // === STEP 2: BLOCK PLAYER'S IMMEDIATE WIN ===
-        const blockMoves = [];
-        for (let i = 0; i < 9; i++) {
-            if (gameState.board[i] === '' && !gameState.shieldedCells.includes(i) && !reservedIndices.includes(i)) {
-                gameState.board[i] = 'X';
-                if (checkWin('X')) {
-                    blockMoves.push(i);
-                }
-                gameState.board[i] = '';
-            }
-        }
-        if (blockMoves.length > 0) {
-            // Sometimes block in unexpected position if multiple blocks exist
-            const selectedBlock = blockMoves[Math.floor(Math.random() * blockMoves.length)];
-            moveOptions.push({
-                index: selectedBlock,
-                priority: 900,
-                type: 'block',
-                reasoning: 'Blocking opponent win'
-            });
         }
 
         // === STEP 3: PATTERN-AWARE STRATEGIC PLAY (learned patterns etc.) ===
@@ -4457,11 +4473,8 @@ function activateInteractiveAIMock() {
         });
     }
     
-    // Stop background music
-    if (bgMusic) {
-        bgMusic.pause();
-        bgMusic.currentTime = 0;
-    }
+    // MUSIC CONTINUITY: Background music continues even during interactive sequences
+    // Music is global ambience and should not stop
     
     // Show wait message - different for Sarah
     if (isSarah()) {
@@ -4915,11 +4928,8 @@ function activateEnhancedInteractiveAIMock() {
         });
     }
     
-    // Stop background music
-    if (bgMusic) {
-        bgMusic.pause();
-        bgMusic.currentTime = 0;
-    }
+    // MUSIC CONTINUITY: Background music continues even during interactive sequences
+    // Music is global ambience and should not stop
     
     // Show wait message
     endGame("Wait... now the AI will be interactive here. Tell the person wait.");
@@ -5395,16 +5405,16 @@ function activateSeventhLossTeasing() {
 
 function endGame(message) {
     try {
+        // CRITICAL: Win state must NOT pause the game loop, freeze inputs, reset AI brain, or stop music
+        // Winning a round must only: Update score, Trigger UI feedback, Trigger dialogue or taunts
+        // Win state must be isolated from core gameplay systems
         gameState.gameActive = false;
         
-        // CRITICAL: Stop music when game ends (prevents music continuing while blocked)
-        try {
-            if (bgMusic && !bgMusic.paused) {
-                bgMusic.pause();
-            }
-        } catch (musicError) {
-            console.error('Error stopping music:', musicError);
-        }
+        // MUSIC CONTINUITY RULE: Background music must continue across rounds, wins, losses, animations
+        // Background music must NEVER stop unless the user explicitly toggles sound off
+        // Winning, losing, or ending a round must NOT pause, stop, reset, or mute background music
+        // Music is global ambience and should continue playing
+        // REMOVED: Music pause on win/loss - music continues
         
         // CRITICAL: Increment round count on EVERY game end (win/loss/draw)
         // Round count must never stay at zero once gameplay begins
@@ -5496,22 +5506,29 @@ function endGame(message) {
                     }
                 }
                 
-                // Record game result
+                // ADAPTIVE INTELLIGENCE PERSISTENCE RULE: AI must NEVER lose intelligence, adaptability, or strategic awareness
+                // after AI win, Player win, Draw, Tactical Claim usage, End of round, or Level continuation.
+                // Winning a round must NOT reset, degrade, pause, or simplify AI reasoning.
+                // The AI must carry forward learned patterns within the same session.
+                // Record game result - intelligence persists across rounds
                 gameState.aiLearningSystem.recordGameResult(
                     aiResult, 
                     gameState.playerName,
                     message.includes('win') || message.includes('Win') ? gameState.playerMoveHistory : null
                 );
                 
-                // Save patterns to localStorage after recording game result
+                // Save patterns to localStorage after recording game result - ensures persistence
                 if (typeof gameState.aiLearningSystem.saveToStorage === 'function') {
                     gameState.aiLearningSystem.saveToStorage();
                 }
                 
-                // Send AI stats to server
+                // Send AI stats to server - maintains intelligence state across sessions
                 if (socket) {
                     socket.emit('ai-stats-update', gameState.aiLearningSystem.getStats());
                 }
+                
+                // CRITICAL: AI intelligence must persist - never reset or degrade
+                // The AI learning system maintains its state and continues to adapt
             } catch (e) {
                 console.error('Error in aiLearningSystem operations:', e);
             }
