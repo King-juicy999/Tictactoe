@@ -1717,6 +1717,14 @@ button:disabled:hover {
     pointer-events: auto;
 }
 
+/* CRITICAL: Ensure button area is always clickable */
+.pre-welcome-overlay #continue-welcome-btn,
+.pre-welcome-overlay .pre-welcome-continue {
+    pointer-events: auto !important;
+    z-index: 10003 !important;
+    position: relative !important;
+}
+
 .pre-welcome-overlay.hiding {
     opacity: 0;
     pointer-events: none;
