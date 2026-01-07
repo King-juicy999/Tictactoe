@@ -121,6 +121,15 @@ document.addEventListener('DOMContentLoaded', () => {
                 continueWelcomeBtn.disabled = false;
                 continueWelcomeBtn.textContent = originalText;
                 continueWelcomeBtn.style.opacity = '1';
+                
+                // CRITICAL: Re-enable all inputs after welcome screen transition
+                gameState.uiLocked = false;
+                gameState.uiLockingReason = null;
+                if (cells) {
+                    cells.forEach(cell => {
+                        if (cell) cell.style.pointerEvents = 'auto';
+                    });
+                }
             }
         });
         
@@ -2520,6 +2529,7 @@ function showPowerUpGuide(isFirstPlay = false) {
 
 /**
  * Hide power-up guide
+ * CRITICAL: Must re-enable all inputs immediately after closing
  */
 function hidePowerUpGuide() {
     const guideOverlay = document.getElementById('powerup-guide-overlay');
@@ -2528,6 +2538,31 @@ function hidePowerUpGuide() {
     guideOverlay.classList.remove('active');
     setTimeout(() => {
         guideOverlay.classList.add('hidden');
+        
+        // CRITICAL: Re-enable all inputs immediately after guide closes
+        // No screen, overlay, animation, or modal is allowed to trap clicks
+        gameState.uiLocked = false;
+        gameState.uiLockingReason = null;
+        gameState.gameActive = true; // Ensure game is active if it should be
+        
+        // Release any waiting handlers
+        if (typeof window.__guideCloseHandler === 'function') {
+            try {
+                window.__guideCloseHandler();
+                window.__guideCloseHandler = null;
+            } catch (e) {
+                console.error('Error in guide close handler:', e);
+            }
+        }
+        
+        // Ensure cells are clickable
+        cells.forEach(cell => {
+            if (cell) {
+                cell.style.pointerEvents = 'auto';
+            }
+        });
+        
+        console.log('Guide closed - all inputs re-enabled');
     }, 400);
     
     // Don't mark guide as seen - allow it to show again if needed
@@ -2604,14 +2639,24 @@ function setupGuideNavigation(isFirstPlay) {
     if (skipBtn) {
         skipBtn.onclick = () => {
             hidePowerUpGuide();
-            startGameAsAI();
+            // CRITICAL: Re-enable inputs before starting game
+            setTimeout(() => {
+                gameState.uiLocked = false;
+                gameState.uiLockingReason = null;
+                startGameAsAI();
+            }, 450); // Wait for guide close animation
         };
     }
     
     if (startBtn) {
         startBtn.onclick = () => {
             hidePowerUpGuide();
-            startGameAsAI();
+            // CRITICAL: Re-enable inputs before starting game
+            setTimeout(() => {
+                gameState.uiLocked = false;
+                gameState.uiLockingReason = null;
+                startGameAsAI();
+            }, 450); // Wait for guide close animation
         };
     }
     
@@ -2917,100 +2962,155 @@ function getReservedCellIndices() {
 
 /**
  * Play Tactical Claim cinematic animation
+ * CRITICAL: This is VISUAL ONLY - must NOT block gameplay, inputs, or AI thinking
  */
 function playTacticalClaimAnimation(cellIndex) {
-    const cell = document.querySelector(`.cell[data-index="${cellIndex}"]`);
-    if (!cell) return;
-    
-    const board = document.querySelector('.game-board');
-    if (!board) return;
-    
-    // 0. DRAMATIC CINEMATIC ANNOUNCEMENT - bold word/phrase
-    const announcement = document.createElement('div');
-    announcement.className = 'tactical-claim-announcement-text';
-    announcement.textContent = 'TACTICAL CLAIM';
-    document.body.appendChild(announcement);
-    
-    // Animate announcement appearance
-    setTimeout(() => {
-        announcement.classList.add('active');
-    }, 10);
-    
-    // 1. Screen dim
-    const dimOverlay = document.createElement('div');
-    dimOverlay.className = 'tactical-claim-dim';
-    document.body.appendChild(dimOverlay);
-    
-    setTimeout(() => {
-        dimOverlay.classList.add('active');
-    }, 10);
-    
-    // 2. Green energy flash from AI side
-    setTimeout(() => {
-        const flash = document.createElement('div');
-        flash.className = 'tactical-claim-flash';
-        board.appendChild(flash);
+    // FAILSAFE: If animation system fails, skip it and continue
+    try {
+        const cell = document.querySelector(`.cell[data-index="${cellIndex}"]`);
+        if (!cell) return;
         
+        const board = document.querySelector('.game-board');
+        if (!board) return;
+        
+        // CRITICAL: Ensure inputs remain enabled during animation
+        // Tactical Claim animation must NEVER block clicks or pause the game
+        gameState.uiLocked = false; // Explicitly unlock UI
+        cells.forEach(c => {
+            if (c) c.style.pointerEvents = 'auto';
+        });
+        
+        // 0. DRAMATIC CINEMATIC ANNOUNCEMENT - bold word/phrase
+        const announcement = document.createElement('div');
+        announcement.className = 'tactical-claim-announcement-text';
+        announcement.textContent = 'TACTICAL CLAIM';
+        announcement.style.pointerEvents = 'none'; // Don't block clicks
+        document.body.appendChild(announcement);
+        
+        // Animate announcement appearance
         setTimeout(() => {
-            flash.classList.add('active');
+            announcement.classList.add('active');
         }, 10);
         
-        setTimeout(() => {
-            flash.remove();
-        }, 600);
-    }, 100);
-    
-    // 3. Cell stamp and lock animation
-    setTimeout(() => {
-        cell.classList.add('tactical-claim-reserved');
-        
-        // Create lock icon
-        const lockIcon = document.createElement('div');
-        lockIcon.className = 'tactical-claim-lock';
-        lockIcon.innerHTML = '🔒';
-        cell.appendChild(lockIcon);
-        
-        // Create countdown indicator
-        const countdown = document.createElement('div');
-        countdown.className = 'tactical-claim-countdown';
-        countdown.textContent = '2';
-        cell.appendChild(countdown);
-        
-        // Holographic ring
-        const ring = document.createElement('div');
-        ring.className = 'tactical-claim-ring';
-        cell.appendChild(ring);
-        
-        // Shockwave
-        const shockwave = document.createElement('div');
-        shockwave.className = 'tactical-claim-shockwave';
-        board.appendChild(shockwave);
+        // 1. Screen dim (non-blocking overlay)
+        const dimOverlay = document.createElement('div');
+        dimOverlay.className = 'tactical-claim-dim';
+        dimOverlay.style.pointerEvents = 'none'; // CRITICAL: Don't block clicks
+        document.body.appendChild(dimOverlay);
         
         setTimeout(() => {
-            shockwave.classList.add('active');
+            dimOverlay.classList.add('active');
         }, 10);
-        
-        setTimeout(() => {
-            shockwave.remove();
-            ring.remove();
-        }, 800);
-    }, 300);
     
-    // 4. Return to normal brightness
-    setTimeout(() => {
-        dimOverlay.classList.remove('active');
+        // 2. Green energy flash from AI side (non-blocking)
         setTimeout(() => {
-            dimOverlay.remove();
+            try {
+                const flash = document.createElement('div');
+                flash.className = 'tactical-claim-flash';
+                flash.style.pointerEvents = 'none'; // Don't block clicks
+                board.appendChild(flash);
+                
+                setTimeout(() => {
+                    flash.classList.add('active');
+                }, 10);
+                
+                setTimeout(() => {
+                    flash.remove();
+                }, 600);
+            } catch (e) {
+                console.error('Flash animation error (continued):', e);
+            }
+        }, 100);
+        
+        // 3. Cell stamp and lock animation (non-blocking)
+        setTimeout(() => {
+            try {
+                const cell = document.querySelector(`.cell[data-index="${cellIndex}"]`);
+                if (!cell) return;
+                
+                cell.classList.add('tactical-claim-reserved');
+                
+                // Create lock icon
+                const lockIcon = document.createElement('div');
+                lockIcon.className = 'tactical-claim-lock';
+                lockIcon.innerHTML = '🔒';
+                lockIcon.style.pointerEvents = 'none'; // Don't block clicks
+                cell.appendChild(lockIcon);
+                
+                // Create countdown indicator
+                const countdown = document.createElement('div');
+                countdown.className = 'tactical-claim-countdown';
+                countdown.textContent = '2';
+                countdown.style.pointerEvents = 'none'; // Don't block clicks
+                cell.appendChild(countdown);
+                
+                // Holographic ring (non-blocking)
+                const ring = document.createElement('div');
+                ring.className = 'tactical-claim-ring';
+                ring.style.pointerEvents = 'none';
+                cell.appendChild(ring);
+                
+                // Shockwave (non-blocking)
+                const shockwave = document.createElement('div');
+                shockwave.className = 'tactical-claim-shockwave';
+                shockwave.style.pointerEvents = 'none';
+                board.appendChild(shockwave);
+                
+                setTimeout(() => {
+                    shockwave.classList.add('active');
+                }, 10);
+                
+                setTimeout(() => {
+                    shockwave.remove();
+                    ring.remove();
+                }, 800);
+            } catch (e) {
+                console.error('Cell animation error (continued):', e);
+            }
         }, 300);
-    }, 600);
-    
-    // Remove announcement after animation (visible for at least 1.5 seconds)
-    setTimeout(() => {
-        announcement.classList.remove('active');
+        
+        // 4. Return to normal brightness (non-blocking)
         setTimeout(() => {
-            announcement.remove();
+            try {
+                const dimOverlay = document.querySelector('.tactical-claim-dim');
+                if (dimOverlay) {
+                    dimOverlay.classList.remove('active');
+                    setTimeout(() => {
+                        dimOverlay.remove();
+                    }, 300);
+                }
+            } catch (e) {
+                console.error('Dim overlay cleanup error (continued):', e);
+            }
         }, 600);
-    }, 1500); // Show for 1.5 seconds, then fade out
+        
+        // Remove announcement after animation (visible for at least 1.5 seconds)
+        setTimeout(() => {
+            try {
+                const announcement = document.querySelector('.tactical-claim-announcement-text');
+                if (announcement) {
+                    announcement.classList.remove('active');
+                    setTimeout(() => {
+                        announcement.remove();
+                    }, 600);
+                }
+            } catch (e) {
+                console.error('Announcement cleanup error (continued):', e);
+            }
+            
+            // CRITICAL: Ensure inputs are fully enabled after animation completes
+            gameState.uiLocked = false;
+            gameState.uiLockingReason = null;
+            cells.forEach(c => {
+                if (c) c.style.pointerEvents = 'auto';
+            });
+        }, 1500); // Show for 1.5 seconds, then fade out
+    } catch (animError) {
+        // FAILSAFE: If entire animation fails, ensure game continues
+        console.error('Tactical Claim animation critical error (game continues):', animError);
+        gameState.uiLocked = false;
+        gameState.uiLockingReason = null;
+    }
 }
 
 /**
