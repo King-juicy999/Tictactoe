@@ -159,13 +159,14 @@ button:disabled:hover {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
     gap: 12px;
-    margin: 2.5rem auto;
+    margin: clamp(0.5rem, 2vw, 1rem) auto; /* MVP: Minimal spacing (10-20px) */
     max-width: 400px;
     padding: 0 1rem;
     transition: transform 0.4s ease, opacity 0.4s ease;
     position: relative;
     opacity: 1;
     transform: translateY(0);
+    scroll-margin-top: 20px; /* MVP: Smooth scroll target */
 }
 
 /* Winning line SVG styles */
@@ -300,7 +301,7 @@ button:disabled:hover {
     justify-content: space-between;
     align-items: center;
     font-size: 1.3rem;
-    margin-bottom: 1.5rem;
+    margin-bottom: clamp(0.5rem, 2vw, 1rem); /* MVP: Minimal spacing */
     padding: 0 1rem;
     color: #5a4a00;
     gap: 1rem;
@@ -4397,8 +4398,8 @@ button:disabled::after {
     
     .game-board {
         gap: 8px;
-        /* Extra bottom margin so fixed bottom UI (power-ups) never overlaps cells */
-        margin: 1.5rem auto 7rem;
+        /* MVP: Minimal top margin, keep bottom margin for power-ups */
+        margin: clamp(0.5rem, 2vw, 1rem) auto 7rem;
         padding: 0 0.5rem;
     }
 }

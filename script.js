@@ -2684,6 +2684,37 @@ function hidePowerUpGuide() {
     setTimeout(() => {
         guideOverlay.classList.add('hidden');
         
+        // MVP: Smooth scroll to game board immediately after guidebook closes
+        try {
+            const gameBoard = document.querySelector('.game-board');
+            const gameScreen = document.getElementById('game-screen');
+            
+            if (gameBoard && gameScreen && gameScreen.classList.contains('active')) {
+                // Scroll to board smoothly (0.3-0.5 seconds as requested)
+                gameBoard.scrollIntoView({ 
+                    behavior: 'smooth', 
+                    block: 'start',
+                    inline: 'nearest'
+                });
+                
+                // Alternative: Use window.scrollTo for better control
+                setTimeout(() => {
+                    const boardRect = gameBoard.getBoundingClientRect();
+                    const scrollOffset = window.pageYOffset || document.documentElement.scrollTop;
+                    const targetY = boardRect.top + scrollOffset - 20; // 20px top padding
+                    
+                    window.scrollTo({
+                        top: Math.max(0, targetY),
+                        behavior: 'smooth'
+                    });
+                }, 50);
+                
+                console.log('[Guide] Scrolled to game board');
+            }
+        } catch (scrollError) {
+            console.warn('[Guide] Scroll to board failed (non-critical):', scrollError);
+        }
+        
         // CRITICAL: Re-enable all inputs immediately after guide closes
         // No screen, overlay, animation, or modal is allowed to trap clicks
         gameState.uiLocked = false;
@@ -2707,7 +2738,7 @@ function hidePowerUpGuide() {
             }
         });
         
-        console.log('Guide closed - all inputs re-enabled');
+        console.log('[Guide] Guide closed - all inputs re-enabled');
     }, 400);
     
     // Don't mark guide as seen - allow it to show again if needed
