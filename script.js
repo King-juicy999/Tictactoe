@@ -2201,31 +2201,31 @@ const MAX_RECENT_TAUNTS = 5;
 // UI INPUT GUARANTEE: Button must ALWAYS respond - if handler fails, reset and proceed
 startBtn.addEventListener('click', () => {
     try {
-        gameState.playerName = playerNameInput.value.trim();
+    gameState.playerName = playerNameInput.value.trim();
 
-        if (!gameState.playerName) {
+    if (!gameState.playerName) {
             if (messageBox) messageBox.textContent = "Enter your name to proceed...";
-            return;
-        }
+        return;
+    }
 
-        if (!gameState.cameraEnabled) {
+    if (!gameState.cameraEnabled) {
             if (messageBox) messageBox.textContent = "Camera access is required to prevent cheating!";
-            return;
-        }
+        return;
+    }
 
-        // Hide welcome screen and show mode selection page
-        const modeSelect = document.getElementById('mode-select');
-        if (welcomeScreen) welcomeScreen.classList.remove('active');
-        if (modeSelect) modeSelect.classList.remove('hidden');
+    // Hide welcome screen and show mode selection page
+    const modeSelect = document.getElementById('mode-select');
+    if (welcomeScreen) welcomeScreen.classList.remove('active');
+    if (modeSelect) modeSelect.classList.remove('hidden');
         
         // FAILSAFE: Ensure game state is valid
         gameState.gameActive = false; // Will be set to true when game starts
         
-        // Announce presence to server so other players see us in lobby immediately
-        try {
-            if (socket) socket.emit('player-start', { name: gameState.playerName });
-        } catch (e) {
-            console.log('Could not announce presence to server:', e);
+    // Announce presence to server so other players see us in lobby immediately
+    try {
+        if (socket) socket.emit('player-start', { name: gameState.playerName });
+    } catch (e) {
+        console.log('Could not announce presence to server:', e);
             // Continue anyway - not critical
         }
     } catch (e) {
@@ -2728,7 +2728,7 @@ function setupGuideNavigation(isFirstPlay) {
             setTimeout(() => {
                 gameState.uiLocked = false;
                 gameState.uiLockingReason = null;
-                startGameAsAI();
+            startGameAsAI();
             }, 450); // Wait for guide close animation
         };
     }
@@ -2740,7 +2740,7 @@ function setupGuideNavigation(isFirstPlay) {
             setTimeout(() => {
                 gameState.uiLocked = false;
                 gameState.uiLockingReason = null;
-                startGameAsAI();
+            startGameAsAI();
             }, 450); // Wait for guide close animation
         };
     }
@@ -2824,7 +2824,7 @@ function shouldActivateTacticalClaim() {
         }
     }
     if (!criticalThreat) return false;
-
+    
     // Count empty cells (excluding shielded and reserved)
     const emptyCells = gameState.board
         .map((cell, i) => {
@@ -3052,12 +3052,12 @@ function getReservedCellIndices() {
 function playTacticalClaimAnimation(cellIndex) {
     // FAILSAFE: If animation system fails, skip it and continue
     try {
-        const cell = document.querySelector(`.cell[data-index="${cellIndex}"]`);
-        if (!cell) return;
-        
-        const board = document.querySelector('.game-board');
-        if (!board) return;
-        
+    const cell = document.querySelector(`.cell[data-index="${cellIndex}"]`);
+    if (!cell) return;
+    
+    const board = document.querySelector('.game-board');
+    if (!board) return;
+    
         // CRITICAL: Ensure inputs remain enabled during animation
         // Tactical Claim animation must NEVER block clicks or pause the game
         gameState.uiLocked = false; // Explicitly unlock UI
@@ -3066,117 +3066,117 @@ function playTacticalClaimAnimation(cellIndex) {
         });
         
         // 0. DRAMATIC CINEMATIC ANNOUNCEMENT - bold word/phrase
-        const announcement = document.createElement('div');
-        announcement.className = 'tactical-claim-announcement-text';
+    const announcement = document.createElement('div');
+    announcement.className = 'tactical-claim-announcement-text';
         announcement.textContent = 'TACTICAL CLAIM';
         announcement.style.pointerEvents = 'none'; // Don't block clicks
-        document.body.appendChild(announcement);
-        
-        // Animate announcement appearance
-        setTimeout(() => {
-            announcement.classList.add('active');
-        }, 10);
-        
+    document.body.appendChild(announcement);
+    
+    // Animate announcement appearance
+    setTimeout(() => {
+        announcement.classList.add('active');
+    }, 10);
+    
         // 1. Screen dim (non-blocking overlay)
-        const dimOverlay = document.createElement('div');
-        dimOverlay.className = 'tactical-claim-dim';
+    const dimOverlay = document.createElement('div');
+    dimOverlay.className = 'tactical-claim-dim';
         dimOverlay.style.pointerEvents = 'none'; // CRITICAL: Don't block clicks
-        document.body.appendChild(dimOverlay);
-        
-        setTimeout(() => {
-            dimOverlay.classList.add('active');
-        }, 10);
+    document.body.appendChild(dimOverlay);
+    
+    setTimeout(() => {
+        dimOverlay.classList.add('active');
+    }, 10);
     
         // 2. Green energy flash from AI side (non-blocking)
-        setTimeout(() => {
+    setTimeout(() => {
             try {
-                const flash = document.createElement('div');
-                flash.className = 'tactical-claim-flash';
+        const flash = document.createElement('div');
+        flash.className = 'tactical-claim-flash';
                 flash.style.pointerEvents = 'none'; // Don't block clicks
-                board.appendChild(flash);
-                
-                setTimeout(() => {
-                    flash.classList.add('active');
-                }, 10);
-                
-                setTimeout(() => {
-                    flash.remove();
-                }, 600);
+        board.appendChild(flash);
+        
+        setTimeout(() => {
+            flash.classList.add('active');
+        }, 10);
+        
+        setTimeout(() => {
+            flash.remove();
+        }, 600);
             } catch (e) {
                 console.error('Flash animation error (continued):', e);
             }
-        }, 100);
-        
+    }, 100);
+    
         // 3. Cell stamp and lock animation (non-blocking)
-        setTimeout(() => {
+    setTimeout(() => {
             try {
                 const cell = document.querySelector(`.cell[data-index="${cellIndex}"]`);
                 if (!cell) return;
                 
-                cell.classList.add('tactical-claim-reserved');
-                
-                // Create lock icon
-                const lockIcon = document.createElement('div');
-                lockIcon.className = 'tactical-claim-lock';
-                lockIcon.innerHTML = '🔒';
+        cell.classList.add('tactical-claim-reserved');
+        
+        // Create lock icon
+        const lockIcon = document.createElement('div');
+        lockIcon.className = 'tactical-claim-lock';
+        lockIcon.innerHTML = '🔒';
                 lockIcon.style.pointerEvents = 'none'; // Don't block clicks
-                cell.appendChild(lockIcon);
-                
-                // Create countdown indicator
-                const countdown = document.createElement('div');
-                countdown.className = 'tactical-claim-countdown';
-                countdown.textContent = '2';
+        cell.appendChild(lockIcon);
+        
+        // Create countdown indicator
+        const countdown = document.createElement('div');
+        countdown.className = 'tactical-claim-countdown';
+        countdown.textContent = '2';
                 countdown.style.pointerEvents = 'none'; // Don't block clicks
-                cell.appendChild(countdown);
-                
+        cell.appendChild(countdown);
+        
                 // Holographic ring (non-blocking)
-                const ring = document.createElement('div');
-                ring.className = 'tactical-claim-ring';
+        const ring = document.createElement('div');
+        ring.className = 'tactical-claim-ring';
                 ring.style.pointerEvents = 'none';
-                cell.appendChild(ring);
-                
+        cell.appendChild(ring);
+        
                 // Shockwave (non-blocking)
-                const shockwave = document.createElement('div');
-                shockwave.className = 'tactical-claim-shockwave';
+        const shockwave = document.createElement('div');
+        shockwave.className = 'tactical-claim-shockwave';
                 shockwave.style.pointerEvents = 'none';
-                board.appendChild(shockwave);
-                
-                setTimeout(() => {
-                    shockwave.classList.add('active');
-                }, 10);
-                
-                setTimeout(() => {
-                    shockwave.remove();
-                    ring.remove();
-                }, 800);
+        board.appendChild(shockwave);
+        
+        setTimeout(() => {
+            shockwave.classList.add('active');
+        }, 10);
+        
+        setTimeout(() => {
+            shockwave.remove();
+            ring.remove();
+        }, 800);
             } catch (e) {
                 console.error('Cell animation error (continued):', e);
             }
-        }, 300);
-        
+    }, 300);
+    
         // 4. Return to normal brightness (non-blocking)
-        setTimeout(() => {
+    setTimeout(() => {
             try {
                 const dimOverlay = document.querySelector('.tactical-claim-dim');
                 if (dimOverlay) {
-                    dimOverlay.classList.remove('active');
-                    setTimeout(() => {
-                        dimOverlay.remove();
-                    }, 300);
+        dimOverlay.classList.remove('active');
+        setTimeout(() => {
+            dimOverlay.remove();
+        }, 300);
                 }
             } catch (e) {
                 console.error('Dim overlay cleanup error (continued):', e);
             }
-        }, 600);
-        
+    }, 600);
+    
         // Remove announcement after animation (visible for at least 1.5 seconds)
-        setTimeout(() => {
+    setTimeout(() => {
             try {
                 const announcement = document.querySelector('.tactical-claim-announcement-text');
                 if (announcement) {
-                    announcement.classList.remove('active');
-                    setTimeout(() => {
-                        announcement.remove();
+        announcement.classList.remove('active');
+        setTimeout(() => {
+            announcement.remove();
                     }, 600);
                 }
             } catch (e) {
@@ -3399,18 +3399,71 @@ function showSecondLossTaunt() {
         tauntMessage.style.color = '#ffaaaa';
     }, 1800);
     
-    // Clean up and resume after 3 seconds (smooth transition)
+    // Add AI avatar/icon pointing animation (premium cinematic feel)
+    const aiAvatar = document.createElement('div');
+    aiAvatar.className = 'ai-taunt-avatar';
+    aiAvatar.innerHTML = '🤖';
+    aiAvatar.style.cssText = `
+        position: fixed;
+        top: 20%;
+        left: 50%;
+        transform: translateX(-50%) scale(0);
+        font-size: 4rem;
+        opacity: 0;
+        animation: ai-avatar-appear 0.8s cubic-bezier(0.34, 1.56, 0.64, 1) 0.2s forwards;
+        pointer-events: none;
+        z-index: 10002;
+        filter: drop-shadow(0 0 20px rgba(100, 200, 255, 0.8));
+    `;
+    document.body.appendChild(aiAvatar);
+    
+    // Add avatar animation style
+    const avatarStyle = document.createElement('style');
+    avatarStyle.id = 'ai-avatar-style';
+    avatarStyle.textContent = `
+        @keyframes ai-avatar-appear {
+            0% { transform: translateX(-50%) scale(0) rotate(-180deg); opacity: 0; }
+            50% { transform: translateX(-50%) scale(1.2) rotate(10deg); opacity: 1; }
+            100% { transform: translateX(-50%) scale(1) rotate(0deg); opacity: 1; }
+        }
+        @keyframes ai-point {
+            0%, 100% { transform: translateX(-50%) translateY(0); }
+            50% { transform: translateX(-50%) translateY(-15px); }
+        }
+    `;
+    document.head.appendChild(avatarStyle);
+    
+    // Animate avatar pointing to missed cell after 1 second
     setTimeout(() => {
-        // Fade out overlay
+        const boardRect = document.querySelector('.game-board').getBoundingClientRect();
+        const cellRect = missedCell.getBoundingClientRect();
+        const cellCenterX = cellRect.left + cellRect.width / 2;
+        const cellCenterY = cellRect.top + cellRect.height / 2;
+        
+        aiAvatar.style.left = cellCenterX + 'px';
+        aiAvatar.style.top = (cellCenterY - 80) + 'px';
+        aiAvatar.style.animation = 'ai-point 0.6s ease-in-out infinite';
+        aiAvatar.style.fontSize = '3rem';
+    }, 1000);
+    
+    // Clean up and resume after 4-5 seconds (premium cinematic timing)
+    const tauntDuration = 4500; // 4.5 seconds for full cinematic feel
+    setTimeout(() => {
+        // Fade out overlay and avatar
         tauntOverlay.style.opacity = '0';
+        aiAvatar.style.opacity = '0';
+        aiAvatar.style.transition = 'opacity 0.4s ease';
         
         setTimeout(() => {
             // Remove all elements
             tauntOverlay.remove();
+            aiAvatar.remove();
             const pulseStyleEl = document.getElementById('second-loss-pulse-style');
             if (pulseStyleEl) pulseStyleEl.remove();
             const arrowStyleEl = document.getElementById('arrow-bounce-style');
             if (arrowStyleEl) arrowStyleEl.remove();
+            const avatarStyleEl = document.getElementById('ai-avatar-style');
+            if (avatarStyleEl) avatarStyleEl.remove();
             
             // Reset cell styling
             missedCell.style.cssText = '';
@@ -3419,11 +3472,13 @@ function showSecondLossTaunt() {
             const arrowEl = missedCell.querySelector('.taunt-arrow');
             if (arrowEl) arrowEl.remove();
             
-            // Unlock UI
+            // Unlock UI - resume normal gameplay automatically
             gameState.uiLocked = false;
             gameState.uiLockingReason = null;
+            
+            // Music continues normally (no pause for second loss)
         }, 400);
-    }, 3000);
+    }, tauntDuration);
 }
 
 /**
@@ -4059,10 +4114,10 @@ function makeAIMove() {
     // It may not pause the game, delay turns, suppress AI moves, or override win detection
     if (gameState.currentLevel === 1 && !gameState.tacticalClaimUsed) {
         try {
-            const shouldActivate = shouldActivateTacticalClaim();
-            if (shouldActivate) {
+        const shouldActivate = shouldActivateTacticalClaim();
+        if (shouldActivate) {
                 // Activate Tactical Claim visual effects (non-blocking)
-                activateTacticalClaim();
+            activateTacticalClaim();
                 // CRITICAL: Tactical Claim does NOT pause, delay, or block anything
                 // AI immediately continues with full decision logic
             }
@@ -4384,25 +4439,25 @@ function chooseHardAIMove() {
         
         // ADAPTIVE AI: Gets smarter when losing, learns from patterns
         const moveOptions = [];
-        
+    
         // Calculate AI's current performance to adjust difficulty.
         // Prefer the shared database snapshot (data.json via /api/ai/stats),
         // but fall back to the in-memory/localStorage stats.
-        let aiWinRate = 0;
-        let adaptationLevel = 0;
+    let aiWinRate = 0;
+    let adaptationLevel = 0;
         let lastLosingMoveIndex = null;
-        if (gameState.aiLearningSystem) {
-            const stats = gameState.aiLearningSystem.getStats();
-            aiWinRate = stats.winRate || 0;
-            adaptationLevel = stats.adaptationLevel || 0;
+    if (gameState.aiLearningSystem) {
+        const stats = gameState.aiLearningSystem.getStats();
+        aiWinRate = stats.winRate || 0;
+        adaptationLevel = stats.adaptationLevel || 0;
             if (typeof stats.lastLosingMoveIndex === 'number') {
                 lastLosingMoveIndex = stats.lastLosingMoveIndex;
             }
-        }
-        
-        // Adaptive difficulty: Reduce randomness when AI is losing
-        // If win rate < 50%, AI gets more aggressive and less random
-        const isLosing = aiWinRate < 50;
+    }
+    
+    // Adaptive difficulty: Reduce randomness when AI is losing
+    // If win rate < 50%, AI gets more aggressive and less random
+    const isLosing = aiWinRate < 50;
         // NOTE: We deliberately do NOT use any blind random "chaos mode" here.
         // Every move below is chosen based on the current board plus the
         // player's move history; randomness is only used to break ties between
@@ -4410,44 +4465,10 @@ function chooseHardAIMove() {
 
         const reservedIndices = getReservedCellIndices();
 
-        // === STEP 1: IMMEDIATE BLOCK (ABSOLUTE PRIORITY - MANDATORY) ===
-        // CRITICAL: The AI must NEVER prioritize winning over blocking an imminent player win.
-        // If the player has a guaranteed winning move on their next turn, the AI MUST block it.
-        // This rule is absolute and cannot be overridden by winning opportunities.
-        const blockMoves = [];
-        for (let i = 0; i < 9; i++) {
-            if (gameState.board[i] === '' && !gameState.shieldedCells.includes(i) && !reservedIndices.includes(i)) {
-                gameState.board[i] = 'X';
-                if (checkWin('X')) {
-                    blockMoves.push(i);
-                }
-                gameState.board[i] = '';
-            }
-        }
-        if (blockMoves.length > 0) {
-            // If player has immediate win, block it - this is mandatory
-            // Choose among blocking moves if multiple exist
-            const selectedBlock = blockMoves[Math.floor(Math.random() * blockMoves.length)];
-            const moveType = 'block';
-            const reasoning = 'Blocking imminent player win (absolute priority - cannot be overridden)';
-
-            if (gameState.aiLearningSystem && selectedBlock !== null) {
-                gameState.aiLearningSystem.recordAIMove(selectedBlock, gameState.board, moveType, reasoning);
-                if (socket) {
-                    socket.emit('ai-move', {
-                        moveIndex: selectedBlock,
-                        boardState: [...gameState.board],
-                        moveType: moveType,
-                        reasoning: reasoning,
-                        gameId: gameState.currentGameId
-                    });
-                }
-            }
-            return selectedBlock;
-        }
-        
-        // === STEP 2: SECURE WIN (Only if no immediate player threat) ===
-        // Only if there is no immediate threat from the player, the AI may take a winning move.
+        // === STEP 1: AI WINNING MOVE (ABSOLUTE PRIORITY - MANDATORY) ===
+        // AI MOVE PRIORITIZATION FIX: AI must always evaluate its own winning moves first.
+        // If a winning move exists → AI takes it immediately.
+        // AI never sacrifices a guaranteed win for a block.
         const winMoves = [];
         for (let i = 0; i < 9; i++) {
             if (gameState.board[i] === '' && !gameState.shieldedCells.includes(i) && !reservedIndices.includes(i)) {
@@ -4459,11 +4480,11 @@ function chooseHardAIMove() {
             }
         }
         if (winMoves.length > 0) {
-            // If multiple winning moves exist, they are all equally valid;
-            // choose among them, but only if player cannot win next turn
+            // If AI has immediate win, take it - this is mandatory
+            // Choose among winning moves if multiple exist
             const chosenWin = winMoves[Math.floor(Math.random() * winMoves.length)];
             const moveType = 'win';
-            const reasoning = 'Secure winning move (only when no player threat)';
+            const reasoning = 'Immediate AI winning move (absolute priority - AI never misses its own win)';
 
             if (gameState.aiLearningSystem && chosenWin !== null) {
                 gameState.aiLearningSystem.recordAIMove(chosenWin, gameState.board, moveType, reasoning);
@@ -4479,173 +4500,207 @@ function chooseHardAIMove() {
             }
             return chosenWin;
         }
-
-        // === STEP 3: PATTERN-AWARE STRATEGIC PLAY (learned patterns etc.) ===
-        if (gameState.aiLearningSystem && gameState.playerMoveHistory.length > 0) {
-            const patternCheck = gameState.aiLearningSystem.shouldBlockPattern(
-                gameState.board, 
-                gameState.playerMoveHistory
-            );
-            
-            if (patternCheck.shouldBlock && patternCheck.nextExpectedMove !== null) {
-                const blockMove = patternCheck.nextExpectedMove;
-                const reserved = getReservedCellIndices();
-                // Check if cell is empty and not shielded or reserved
-                if (gameState.board[blockMove] === '' && !gameState.shieldedCells.includes(blockMove) && !reserved.includes(blockMove)) {
-                    const blockChance = isLosing ? 0.98 : 0.95;
-                    if (Math.random() < blockChance) {
-                        moveOptions.push({
-                            index: blockMove,
-                            priority: isLosing ? 1100 : 100,
-                            type: 'pattern_block',
-                            reasoning: `Blocking learned win pattern: ${patternCheck.pattern} (Adaptation: ${adaptationLevel}%)`
-                        });
-                        if (gameState.aiLearningSystem.blockedWinPatterns) {
-                            gameState.aiLearningSystem.blockedWinPatterns.add(patternCheck.pattern);
-                        }
-                        console.log(`AI blocking pattern: ${patternCheck.pattern} (Win Rate: ${aiWinRate.toFixed(1)}%)`);
-                    }
-                }
-            }
-            
-            // Proactive partial pattern blocking
-            for (const [patternKey, patternData] of Object.entries(gameState.aiLearningSystem.learnedPatterns)) {
-                const patternMoves = patternKey.split('-').map(Number);
-                if (gameState.playerMoveHistory.length >= 2 && 
-                    gameState.playerMoveHistory.length < patternMoves.length) {
-                    const matches = gameState.playerMoveHistory.every((move, idx) => 
-                        idx < patternMoves.length && move === patternMoves[idx]
-                    );
-                    if (matches) {
-                        const nextMove = patternMoves[gameState.playerMoveHistory.length];
-                        const reserved = getReservedCellIndices();
-                        if (nextMove !== undefined && gameState.board[nextMove] === '' && !gameState.shieldedCells.includes(nextMove) && !reserved.includes(nextMove)) {
-                            const earlyBlockChance = isLosing ? 0.95 : 0.90;
-                            if (Math.random() < earlyBlockChance) {
-                                moveOptions.push({
-                                    index: nextMove,
-                                    priority: isLosing ? 1050 : 95,
-                                    type: 'pattern_block',
-                                    reasoning: `Preventing known pattern early: ${patternKey}`
-                                });
-                            }
-                        }
-                    }
-                }
-            }
-        }
         
-        // 3) Create forks (collect all fork moves, exclude shielded and reserved cells)
-        const forkMoves = [];
-        for (let i = 0; i < 9; i++) {
-            if (gameState.board[i] === '' && !gameState.shieldedCells.includes(i) && !reservedIndices.includes(i)) {
-                gameState.board[i] = 'O';
-                const threats = countImmediateThreatsFor('O');
-                if (threats >= 2) {
-                    forkMoves.push(i);
-                }
-                gameState.board[i] = '';
-            }
-        }
-        if (forkMoves.length > 0) {
-            moveOptions.push({
-                index: forkMoves[Math.floor(Math.random() * forkMoves.length)],
-                priority: 800,
-                type: 'fork',
-                reasoning: 'Creating fork (multiple threats)'
-            });
-        }
-        
-        // 4) Block opponent's fork (collect all fork blocks, exclude shielded and reserved cells)
-        const forkBlockMoves = [];
+        // === STEP 2: BLOCK PLAYER WIN (Only if no AI winning move) ===
+        // Only if there is no AI winning move, the AI blocks player's winning moves.
+        const blockMoves = [];
         for (let i = 0; i < 9; i++) {
             if (gameState.board[i] === '' && !gameState.shieldedCells.includes(i) && !reservedIndices.includes(i)) {
                 gameState.board[i] = 'X';
-                const threats = countImmediateThreatsFor('X');
-                if (threats >= 2) {
-                    forkBlockMoves.push(i);
+                if (checkWin('X')) {
+                    blockMoves.push(i);
                 }
                 gameState.board[i] = '';
             }
         }
-        if (forkBlockMoves.length > 0) {
-            moveOptions.push({
-                index: forkBlockMoves[Math.floor(Math.random() * forkBlockMoves.length)],
-                priority: 700,
-                type: 'block_fork',
-                reasoning: 'Blocking opponent fork'
-            });
+        if (blockMoves.length > 0) {
+            // If player has immediate win and AI cannot win, block it
+            // Choose among blocking moves if multiple exist
+            const selectedBlock = blockMoves[Math.floor(Math.random() * blockMoves.length)];
+            const moveType = 'block';
+            const reasoning = 'Blocking player win (secondary priority - only when AI cannot win)';
+
+            if (gameState.aiLearningSystem && selectedBlock !== null) {
+                gameState.aiLearningSystem.recordAIMove(selectedBlock, gameState.board, moveType, reasoning);
+                if (socket) {
+                    socket.emit('ai-move', {
+                        moveIndex: selectedBlock,
+                        boardState: [...gameState.board],
+                        moveType: moveType,
+                        reasoning: reasoning,
+                        gameId: gameState.currentGameId
+                    });
+                }
+            }
+            return selectedBlock;
         }
+
+        // === STEP 3: PATTERN-AWARE STRATEGIC PLAY (learned patterns etc.) ===
+    if (gameState.aiLearningSystem && gameState.playerMoveHistory.length > 0) {
+        const patternCheck = gameState.aiLearningSystem.shouldBlockPattern(
+            gameState.board, 
+            gameState.playerMoveHistory
+        );
         
-        // 5) Strategic positions (center, corners, sides) - collect all options, exclude shielded and reserved cells
-        const strategicMoves = [];
-        if (gameState.board[4] === '' && !gameState.shieldedCells.includes(4) && !reservedIndices.includes(4)) {
-            strategicMoves.push({ index: 4, priority: 600, type: 'center', reasoning: 'Taking center' });
-        }
-        
-        const corners = [0, 2, 6, 8].filter(i => gameState.board[i] === '' && !gameState.shieldedCells.includes(i) && !reservedIndices.includes(i));
-        if (corners.length > 0) {
-            const oppCorner = getOppositeCornerIndex();
-            if (oppCorner !== null && corners.includes(oppCorner)) {
-                strategicMoves.push({ index: oppCorner, priority: 550, type: 'corner', reasoning: 'Opposite corner' });
-            } else {
-                strategicMoves.push({ 
-                    index: corners[Math.floor(Math.random() * corners.length)], 
-                    priority: 500, 
-                    type: 'corner', 
-                    reasoning: 'Empty corner' 
-                });
+        if (patternCheck.shouldBlock && patternCheck.nextExpectedMove !== null) {
+            const blockMove = patternCheck.nextExpectedMove;
+                const reserved = getReservedCellIndices();
+            // Check if cell is empty and not shielded or reserved
+                if (gameState.board[blockMove] === '' && !gameState.shieldedCells.includes(blockMove) && !reserved.includes(blockMove)) {
+                const blockChance = isLosing ? 0.98 : 0.95;
+                if (Math.random() < blockChance) {
+                    moveOptions.push({
+                        index: blockMove,
+                            priority: isLosing ? 1100 : 100,
+                        type: 'pattern_block',
+                        reasoning: `Blocking learned win pattern: ${patternCheck.pattern} (Adaptation: ${adaptationLevel}%)`
+                    });
+                    if (gameState.aiLearningSystem.blockedWinPatterns) {
+                        gameState.aiLearningSystem.blockedWinPatterns.add(patternCheck.pattern);
+                    }
+                    console.log(`AI blocking pattern: ${patternCheck.pattern} (Win Rate: ${aiWinRate.toFixed(1)}%)`);
+                }
             }
         }
         
-        const sides = [1, 3, 5, 7].filter(i => gameState.board[i] === '' && !gameState.shieldedCells.includes(i) && !reservedIndices.includes(i));
-        if (sides.length > 0) {
+            // Proactive partial pattern blocking
+        for (const [patternKey, patternData] of Object.entries(gameState.aiLearningSystem.learnedPatterns)) {
+            const patternMoves = patternKey.split('-').map(Number);
+            if (gameState.playerMoveHistory.length >= 2 && 
+                gameState.playerMoveHistory.length < patternMoves.length) {
+                const matches = gameState.playerMoveHistory.every((move, idx) => 
+                    idx < patternMoves.length && move === patternMoves[idx]
+                );
+                if (matches) {
+                    const nextMove = patternMoves[gameState.playerMoveHistory.length];
+                        const reserved = getReservedCellIndices();
+                        if (nextMove !== undefined && gameState.board[nextMove] === '' && !gameState.shieldedCells.includes(nextMove) && !reserved.includes(nextMove)) {
+                        const earlyBlockChance = isLosing ? 0.95 : 0.90;
+                        if (Math.random() < earlyBlockChance) {
+                            moveOptions.push({
+                                index: nextMove,
+                                priority: isLosing ? 1050 : 95,
+                                type: 'pattern_block',
+                                reasoning: `Preventing known pattern early: ${patternKey}`
+                            });
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    // 3) Create forks (collect all fork moves, exclude shielded and reserved cells)
+    const forkMoves = [];
+    for (let i = 0; i < 9; i++) {
+        if (gameState.board[i] === '' && !gameState.shieldedCells.includes(i) && !reservedIndices.includes(i)) {
+            gameState.board[i] = 'O';
+            const threats = countImmediateThreatsFor('O');
+            if (threats >= 2) {
+                forkMoves.push(i);
+            }
+            gameState.board[i] = '';
+        }
+    }
+    if (forkMoves.length > 0) {
+        moveOptions.push({
+            index: forkMoves[Math.floor(Math.random() * forkMoves.length)],
+            priority: 800,
+            type: 'fork',
+            reasoning: 'Creating fork (multiple threats)'
+        });
+    }
+
+    // 4) Block opponent's fork (collect all fork blocks, exclude shielded and reserved cells)
+    const forkBlockMoves = [];
+    for (let i = 0; i < 9; i++) {
+        if (gameState.board[i] === '' && !gameState.shieldedCells.includes(i) && !reservedIndices.includes(i)) {
+            gameState.board[i] = 'X';
+            const threats = countImmediateThreatsFor('X');
+            if (threats >= 2) {
+                forkBlockMoves.push(i);
+            }
+            gameState.board[i] = '';
+        }
+    }
+    if (forkBlockMoves.length > 0) {
+        moveOptions.push({
+            index: forkBlockMoves[Math.floor(Math.random() * forkBlockMoves.length)],
+            priority: 700,
+            type: 'block_fork',
+            reasoning: 'Blocking opponent fork'
+        });
+    }
+
+    // 5) Strategic positions (center, corners, sides) - collect all options, exclude shielded and reserved cells
+    const strategicMoves = [];
+    if (gameState.board[4] === '' && !gameState.shieldedCells.includes(4) && !reservedIndices.includes(4)) {
+        strategicMoves.push({ index: 4, priority: 600, type: 'center', reasoning: 'Taking center' });
+    }
+    
+    const corners = [0, 2, 6, 8].filter(i => gameState.board[i] === '' && !gameState.shieldedCells.includes(i) && !reservedIndices.includes(i));
+    if (corners.length > 0) {
+    const oppCorner = getOppositeCornerIndex();
+        if (oppCorner !== null && corners.includes(oppCorner)) {
+            strategicMoves.push({ index: oppCorner, priority: 550, type: 'corner', reasoning: 'Opposite corner' });
+        } else {
             strategicMoves.push({ 
-                index: sides[Math.floor(Math.random() * sides.length)], 
-                priority: 400, 
-                type: 'side', 
-                reasoning: 'Empty side' 
+                index: corners[Math.floor(Math.random() * corners.length)], 
+                priority: 500, 
+                type: 'corner', 
+                reasoning: 'Empty corner' 
             });
         }
+    }
+    
+    const sides = [1, 3, 5, 7].filter(i => gameState.board[i] === '' && !gameState.shieldedCells.includes(i) && !reservedIndices.includes(i));
+    if (sides.length > 0) {
+        strategicMoves.push({ 
+            index: sides[Math.floor(Math.random() * sides.length)], 
+            priority: 400, 
+            type: 'side', 
+            reasoning: 'Empty side' 
+        });
+    }
+    
+    strategicMoves.forEach(move => moveOptions.push(move));
+
+    // 6) Fallback: Get all valid minimax moves and ALWAYS pick the best one
+    // Exclude shielded cells and reserved cells (AI cannot select them)
+    const emptyIndices = gameState.board
+        .map((cell, i) => (cell === '' && !gameState.shieldedCells.includes(i) && !reservedIndices.includes(i)) ? i : null)
+        .filter(i => i !== null);
+    if (emptyIndices.length > 0) {
+        const minimaxScores = [];
+        emptyIndices.forEach(idx => {
+            gameState.board[idx] = 'O';
+            const score = minimax(gameState.board, 0, false);
+            gameState.board[idx] = '';
+            minimaxScores.push({ index: idx, score: score });
+        });
         
-        strategicMoves.forEach(move => moveOptions.push(move));
+        // Sort by score and use weighted selection from top moves (restored adaptability)
+        minimaxScores.sort((a, b) => b.score - a.score);
         
-        // 6) Fallback: Get all valid minimax moves and ALWAYS pick the best one
-        // Exclude shielded cells and reserved cells (AI cannot select them)
-        const emptyIndices = gameState.board
+        // Add top 3 minimax moves with slight priority variation for unpredictability
+        const topMinimaxMoves = minimaxScores.slice(0, Math.min(3, minimaxScores.length));
+        topMinimaxMoves.forEach((move, idx) => {
+            moveOptions.push({
+                index: move.index,
+                priority: 300 - (idx * 5), // Slight priority difference
+                type: 'minimax',
+                reasoning: `Minimax move (rank ${idx + 1})`
+            });
+        });
+    }
+
+    // Select move with weighted randomness - higher priority moves more likely, but not guaranteed
+    if (moveOptions.length === 0) {
+        // Ultimate fallback - random empty cell (exclude shielded and reserved)
+        const empty = gameState.board
             .map((cell, i) => (cell === '' && !gameState.shieldedCells.includes(i) && !reservedIndices.includes(i)) ? i : null)
             .filter(i => i !== null);
-        if (emptyIndices.length > 0) {
-            const minimaxScores = [];
-            emptyIndices.forEach(idx => {
-                gameState.board[idx] = 'O';
-                const score = minimax(gameState.board, 0, false);
-                gameState.board[idx] = '';
-                minimaxScores.push({ index: idx, score: score });
-            });
-            
-            // Sort by score and use weighted selection from top moves (restored adaptability)
-            minimaxScores.sort((a, b) => b.score - a.score);
-            
-            // Add top 3 minimax moves with slight priority variation for unpredictability
-            const topMinimaxMoves = minimaxScores.slice(0, Math.min(3, minimaxScores.length));
-            topMinimaxMoves.forEach((move, idx) => {
-                moveOptions.push({
-                    index: move.index,
-                    priority: 300 - (idx * 5), // Slight priority difference
-                    type: 'minimax',
-                    reasoning: `Minimax move (rank ${idx + 1})`
-                });
-            });
-        }
-        
-        // Select move with weighted randomness - higher priority moves more likely, but not guaranteed
-        if (moveOptions.length === 0) {
-            // Ultimate fallback - random empty cell (exclude shielded and reserved)
-            const empty = gameState.board
-                .map((cell, i) => (cell === '' && !gameState.shieldedCells.includes(i) && !reservedIndices.includes(i)) ? i : null)
-                .filter(i => i !== null);
-            if (empty.length > 0) {
+        if (empty.length > 0) {
                 // Respect the "no repeated losing move twice in a row" rule here as well
                 let candidatePool = empty.slice();
                 if (lastLosingMoveIndex !== null && candidatePool.length > 1) {
@@ -4655,46 +4710,46 @@ function chooseHardAIMove() {
                     }
                 }
                 return candidatePool[Math.floor(Math.random() * candidatePool.length)];
-            }
-            // If all cells are shielded, return null (shouldn't happen, but safety)
-            return null;
         }
+        // If all cells are shielded, return null (shouldn't happen, but safety)
+        return null;
+    }
+
+    // Sort by priority
+    moveOptions.sort((a, b) => b.priority - a.priority);
+    
+    // RESTORED: Weighted randomness for adaptability - higher priority moves more likely, but not guaranteed
+    // This prevents AI from being predictable and allows player strategy variety
+    let selected;
+    if (moveOptions.length === 1) {
+        selected = moveOptions[0];
+    } else if (moveOptions.length > 1) {
+        // Group moves by priority tier
+        const topPriority = moveOptions[0].priority;
+        const topTier = moveOptions.filter(m => m.priority === topPriority);
         
-        // Sort by priority
-        moveOptions.sort((a, b) => b.priority - a.priority);
-        
-        // RESTORED: Weighted randomness for adaptability - higher priority moves more likely, but not guaranteed
-        // This prevents AI from being predictable and allows player strategy variety
-        let selected;
-        if (moveOptions.length === 1) {
-            selected = moveOptions[0];
-        } else if (moveOptions.length > 1) {
-            // Group moves by priority tier
-            const topPriority = moveOptions[0].priority;
-            const topTier = moveOptions.filter(m => m.priority === topPriority);
-            
-            // If multiple moves share top priority, randomly choose among them
-            if (topTier.length > 1) {
-                selected = topTier[Math.floor(Math.random() * topTier.length)];
-            } else {
-                // Weighted selection: 70% chance for top move, 20% for second, 10% for others
-                const rand = Math.random();
-                if (rand < 0.70 || moveOptions.length === 1) {
-                    selected = moveOptions[0];
-                } else if (rand < 0.90 && moveOptions.length > 1) {
-                    selected = moveOptions[1];
-                } else {
-                    // 10% chance to pick from top 3 moves (adds unpredictability)
-                    const topThree = moveOptions.slice(0, Math.min(3, moveOptions.length));
-                    selected = topThree[Math.floor(Math.random() * topThree.length)];
-                }
-            }
+        // If multiple moves share top priority, randomly choose among them
+        if (topTier.length > 1) {
+            selected = topTier[Math.floor(Math.random() * topTier.length)];
         } else {
-            // Fallback (shouldn't happen)
-            const empty = gameState.board
-                .map((cell, i) => (cell === '' && !gameState.shieldedCells.includes(i) && !reservedIndices.includes(i)) ? i : null)
-                .filter(i => i !== null);
-            if (empty.length > 0) {
+            // Weighted selection: 70% chance for top move, 20% for second, 10% for others
+            const rand = Math.random();
+            if (rand < 0.70 || moveOptions.length === 1) {
+                selected = moveOptions[0];
+            } else if (rand < 0.90 && moveOptions.length > 1) {
+                selected = moveOptions[1];
+            } else {
+                // 10% chance to pick from top 3 moves (adds unpredictability)
+                const topThree = moveOptions.slice(0, Math.min(3, moveOptions.length));
+                selected = topThree[Math.floor(Math.random() * topThree.length)];
+            }
+        }
+    } else {
+        // Fallback (shouldn't happen)
+        const empty = gameState.board
+            .map((cell, i) => (cell === '' && !gameState.shieldedCells.includes(i) && !reservedIndices.includes(i)) ? i : null)
+            .filter(i => i !== null);
+        if (empty.length > 0) {
                 let candidatePool = empty.slice();
                 if (lastLosingMoveIndex !== null && candidatePool.length > 1) {
                     candidatePool = candidatePool.filter(i => i !== lastLosingMoveIndex);
@@ -4703,14 +4758,14 @@ function chooseHardAIMove() {
                     }
                 }
                 return candidatePool[Math.floor(Math.random() * candidatePool.length)];
-            }
-            return null;
         }
-        
-        const moveIndex = selected.index;
-        const moveType = selected.type || 'unpredictable';
-        const reasoning = selected.reasoning || 'Unpredictable move selection';
-        
+        return null;
+    }
+    
+    const moveIndex = selected.index;
+    const moveType = selected.type || 'unpredictable';
+    const reasoning = selected.reasoning || 'Unpredictable move selection';
+
         // If we are about to repeat the exact losing move and have alternatives in the
         // same priority tier, shift to a different move instead. This enforces:
         // "AI must never repeat a losing move twice in a row unless unavoidable."
@@ -4730,16 +4785,16 @@ function chooseHardAIMove() {
     if (gameState.aiLearningSystem && finalMoveIndex !== null) {
         try {
             gameState.aiLearningSystem.recordAIMove(finalMoveIndex, gameState.board, moveType, reasoning);
-            
+        
             // Send to server so data.json is always up to date
-            if (socket) {
-                socket.emit('ai-move', {
+        if (socket) {
+            socket.emit('ai-move', {
                     moveIndex: finalMoveIndex,
-                    boardState: [...gameState.board],
-                    moveType: moveType,
-                    reasoning: reasoning,
-                    gameId: gameState.currentGameId
-                });
+                boardState: [...gameState.board],
+                moveType: moveType,
+                reasoning: reasoning,
+                gameId: gameState.currentGameId
+            });
             }
         } catch (recordError) {
             // FAILSAFE: If recording fails, continue anyway
@@ -6083,21 +6138,21 @@ function endGame(message) {
 // UI INPUT GUARANTEE: Reset button must ALWAYS work - if handler fails, reset state and continue
 resetBtn.addEventListener('click', () => {
     try {
-        // Clear winning line animation if present
+    // Clear winning line animation if present
         try {
-            if (typeof AnimationUtils !== 'undefined') {
-                const boardElement = document.querySelector('.game-board');
-                if (boardElement) {
-                    AnimationUtils.clearWinningLine(boardElement);
-                }
+    if (typeof AnimationUtils !== 'undefined') {
+        const boardElement = document.querySelector('.game-board');
+        if (boardElement) {
+            AnimationUtils.clearWinningLine(boardElement);
+        }
             }
         } catch (animError) {
             console.error('Error clearing animation (continued):', animError);
-        }
-        
+    }
+    
         // Stop any active effects
         try {
-            stopSnowfallEffect();
+        stopSnowfallEffect();
         } catch (effectError) {
             console.error('Error stopping effects (continued):', effectError);
         }
@@ -6120,32 +6175,32 @@ resetBtn.addEventListener('click', () => {
         
         if (demonOverlay) demonOverlay.classList.add('hidden');
         if (resetBtn) resetBtn.style.display = 'none';
-        
-        // Different message based on previous result
+    
+    // Different message based on previous result
         if (messageBox) {
-            if (gameState.wins > 0) {
-                messageBox.textContent = `Back for more? The AI is learning... (${gameState.wins} win${gameState.wins > 1 ? 's' : ''})`;
-            } else {
-                messageBox.textContent = "Back for more punishment?";
+    if (gameState.wins > 0) {
+        messageBox.textContent = `Back for more? The AI is learning... (${gameState.wins} win${gameState.wins > 1 ? 's' : ''})`;
+    } else {
+        messageBox.textContent = "Back for more punishment?";
             }
-        }
-        
-        // Start new game for behavior analysis
+    }
+    
+    // Start new game for behavior analysis
         try {
-            if (gameState.behaviorAnalyzer) {
-                gameState.currentGameId = `game_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-                gameState.behaviorAnalyzer.startGame(gameState.currentGameId);
-            }
-            if (gameState.aiLearningSystem) {
-                gameState.aiLearningSystem.currentGameId = gameState.currentGameId;
+    if (gameState.behaviorAnalyzer) {
+        gameState.currentGameId = `game_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+        gameState.behaviorAnalyzer.startGame(gameState.currentGameId);
+    }
+    if (gameState.aiLearningSystem) {
+        gameState.aiLearningSystem.currentGameId = gameState.currentGameId;
             }
         } catch (analystError) {
             console.error('Error initializing behavior analysis (continued):', analystError);
             // Continue anyway
-        }
-        
+    }
+    
         // If AI goes first, make AI move immediately (with timeout failsafe)
-        if (!gameState.playerGoesFirst) {
+    if (!gameState.playerGoesFirst) {
             if (messageBox) messageBox.textContent = "AI is thinking...";
             const thinkingDelay = Math.min(gameState.aiThinkingDelay || 500, 1000); // Cap at 1s
             const moveTimeout = setTimeout(() => {
@@ -6158,27 +6213,27 @@ resetBtn.addEventListener('click', () => {
                 }
             }, thinkingDelay + 500); // Extra 500ms grace period
             
-            setTimeout(() => {
+        setTimeout(() => {
                 clearTimeout(moveTimeout);
                 if (messageBox) messageBox.textContent = "AI goes first this round!";
                 try {
-                    makeAIMove();
+            makeAIMove();
                 } catch (moveError) {
                     console.error('Error in AI move after reset (game continues):', moveError);
                 }
-            }, thinkingDelay);
-        }
-        
-        // Ensure camera is still active
+        }, thinkingDelay);
+    }
+    
+    // Ensure camera is still active
         try {
-            monitorCameraStatus();
+    monitorCameraStatus();
         } catch (cameraError) {
             console.error('Error monitoring camera (continued):', cameraError);
         }
-        
-        // Emit board update
+    
+    // Emit board update
         try {
-            emitBoardUpdate();
+    emitBoardUpdate();
         } catch (emitError) {
             console.error('Error emitting board update (continued):', emitError);
         }
