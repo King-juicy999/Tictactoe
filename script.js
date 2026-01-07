@@ -4547,15 +4547,13 @@ function makeAIMove() {
                 console.error('Error showing second loss taunt:', tauntError);
                 // Continue with normal endGame - taunt is optional
             }
-        }
+        } else if (Math.random() < 0.3) {
             // Other losses: 30% chance to show taunt
-            else if (Math.random() < 0.3) {
-                try {
-                    showMissedMoveTaunt();
-                } catch (tauntError) {
-                    console.error('Error showing missed move taunt:', tauntError);
-                    // Continue with normal endGame - taunt is optional
-                }
+            try {
+                showMissedMoveTaunt();
+            } catch (tauntError) {
+                console.error('Error showing missed move taunt:', tauntError);
+                // Continue with normal endGame - taunt is optional
             }
         }
         
