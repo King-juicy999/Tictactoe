@@ -3199,15 +3199,17 @@ function playTacticalClaimAnimation(cellIndex) {
 }
 
 /**
- * SECOND LOSS TAUNT (ENHANCED): Visual demonstration of missed move
+ * SECOND LOSS TAUNT STORYBOARD - 4-5 SECONDS VERSION
+ * Scene-by-scene cinematic taunt sequence
  * UX ONLY - Does NOT affect AI logic
- * - Freeze board briefly (~1-2 seconds)
- * - Highlight mistakes: Missed winning cell, Failed block
- * - Visual demonstration: Ghost X/O where player should have played
- * - Condescending taunt: Sarcastic, mocking, lightly cruel
- * - Resume gameplay automatically with smooth transition
  */
 function showSecondLossTaunt() {
+    // Pause background music during taunt sequence
+    let musicWasPlaying = false;
+    if (bgMusic && !bgMusic.paused) {
+        bgMusic.pause();
+        musicWasPlaying = true;
+    }
     // Find if player had a winning move they missed
     const missedWinningMoves = [];
     const missedBlockingMoves = [];
@@ -3290,195 +3292,299 @@ function showSecondLossTaunt() {
         position: relative;
     `;
     
-    // Add pulse animation
-    const pulseStyle = document.createElement('style');
-    pulseStyle.id = 'second-loss-pulse-style';
-    pulseStyle.textContent = `
-        @keyframes pulse-highlight {
-            0%, 100% { transform: scale(1); box-shadow: 0 0 40px rgba(255, 100, 100, 0.9); }
-            50% { transform: scale(1.08); box-shadow: 0 0 60px rgba(255, 100, 100, 1); }
-        }
-        @keyframes ghost-appear {
-            0% { opacity: 0; transform: scale(0.5); }
-            50% { opacity: 0.7; transform: scale(1.1); }
-            100% { opacity: 0.5; transform: scale(1); }
-        }
-        @keyframes slide-in-taunt {
-            0% { transform: translateY(30px); opacity: 0; }
-            100% { transform: translateY(0); opacity: 1; }
-        }
-    `;
-    document.head.appendChild(pulseStyle);
-    
-    // Create ghost X/O showing correct move
-    const ghostMove = document.createElement('div');
-    ghostMove.className = 'ghost-move';
-    ghostMove.textContent = 'X';
-    ghostMove.style.cssText = `
-        position: absolute;
-        top: 50%;
-        left: 50%;
-        transform: translate(-50%, -50%) scale(0.5);
-        font-size: 3rem;
-        color: rgba(100, 255, 100, 0.8);
-        opacity: 0;
-        animation: ghost-appear 0.8s ease-out 0.5s forwards;
-        pointer-events: none;
-        text-shadow: 0 0 20px rgba(100, 255, 100, 0.8);
-    `;
-    missedCell.style.position = 'relative';
-    missedCell.appendChild(ghostMove);
-    
-    // Add arrow pointing to correct move
-    const arrow = document.createElement('div');
-    arrow.className = 'taunt-arrow';
-    arrow.textContent = '↓';
-    arrow.style.cssText = `
-        position: absolute;
-        top: -40px;
-        left: 50%;
-        transform: translateX(-50%);
-        font-size: 2rem;
-        color: #ff6666;
-        animation: bounce-arrow 0.5s ease-in-out infinite;
-        pointer-events: none;
-    `;
-    missedCell.appendChild(arrow);
-    
-    // Add bounce animation for arrow
-    const arrowStyle = document.createElement('style');
-    arrowStyle.id = 'arrow-bounce-style';
-    arrowStyle.textContent = `
-        @keyframes bounce-arrow {
-            0%, 100% { transform: translateX(-50%) translateY(0); }
-            50% { transform: translateX(-50%) translateY(-8px); }
-        }
-    `;
-    document.head.appendChild(arrowStyle);
-    
-    // Show condescending taunt message with slide-in
-    const tauntMessage = document.createElement('div');
-    tauntMessage.style.cssText = `
-        color: #ff8888;
-        font-size: 1.6rem;
-        font-weight: bold;
-        text-align: center;
-        margin-top: 2rem;
-        text-shadow: 2px 2px 8px rgba(0,0,0,0.9);
-        animation: slide-in-taunt 0.6s ease-out 0.3s forwards;
-        opacity: 0;
-    `;
-    
-    const tauntTexts = tauntType === 'win' ? [
-        "You could have won right there.",
-        "Really? You missed that?",
-        "That was your winning move. Gone.",
-        "I can't believe you didn't see that.",
-        "The winning cell was RIGHT THERE."
-    ] : [
-        "You should have blocked here.",
-        "Did you not see the threat?",
-        "This is why you lose.",
-        "A simple block would have saved you.",
-        "You just... let me win?"
-    ];
-    
-    tauntMessage.textContent = tauntTexts[Math.floor(Math.random() * tauntTexts.length)];
-    tauntOverlay.appendChild(tauntMessage);
-    
-    // Show final sarcastic remark after 1.5 seconds
+    // ============================================
+    // SCENE 2: AI DEMONSTRATES CORRECT MOVE (2 sec)
+    // ============================================
     setTimeout(() => {
-        const finalRemarks = [
-            "Think faster next time.",
-            "Maybe try using your eyes?",
-            "I'll wait while you figure it out.",
-            "This is getting embarrassing.",
-            "Do better."
-        ];
-        tauntMessage.textContent = finalRemarks[Math.floor(Math.random() * finalRemarks.length)];
-        tauntMessage.style.color = '#ffaaaa';
-    }, 1800);
-    
-    // Add AI avatar/icon pointing animation (premium cinematic feel)
-    const aiAvatar = document.createElement('div');
-    aiAvatar.className = 'ai-taunt-avatar';
-    aiAvatar.innerHTML = '🤖';
-    aiAvatar.style.cssText = `
-        position: fixed;
-        top: 20%;
-        left: 50%;
-        transform: translateX(-50%) scale(0);
-        font-size: 4rem;
-        opacity: 0;
-        animation: ai-avatar-appear 0.8s cubic-bezier(0.34, 1.56, 0.64, 1) 0.2s forwards;
-        pointer-events: none;
-        z-index: 10002;
-        filter: drop-shadow(0 0 20px rgba(100, 200, 255, 0.8));
-    `;
-    document.body.appendChild(aiAvatar);
-    
-    // Add avatar animation style
-    const avatarStyle = document.createElement('style');
-    avatarStyle.id = 'ai-avatar-style';
-    avatarStyle.textContent = `
-        @keyframes ai-avatar-appear {
-            0% { transform: translateX(-50%) scale(0) rotate(-180deg); opacity: 0; }
-            50% { transform: translateX(-50%) scale(1.2) rotate(10deg); opacity: 1; }
-            100% { transform: translateX(-50%) scale(1) rotate(0deg); opacity: 1; }
-        }
-        @keyframes ai-point {
-            0%, 100% { transform: translateX(-50%) translateY(0); }
-            50% { transform: translateX(-50%) translateY(-15px); }
-        }
-    `;
-    document.head.appendChild(avatarStyle);
-    
-    // Animate avatar pointing to missed cell after 1 second
-    setTimeout(() => {
-        const boardRect = document.querySelector('.game-board').getBoundingClientRect();
-        const cellRect = missedCell.getBoundingClientRect();
-        const cellCenterX = cellRect.left + cellRect.width / 2;
-        const cellCenterY = cellRect.top + cellRect.height / 2;
+        // AI avatar appears next to board (floating)
+        const aiAvatar = document.createElement('div');
+        aiAvatar.className = 'ai-taunt-avatar';
+        aiAvatar.innerHTML = '🤖';
+        aiAvatar.style.cssText = `
+            position: fixed;
+            top: 15%;
+            right: 10%;
+            transform: scale(0) rotate(-180deg);
+            font-size: 4rem;
+            opacity: 0;
+            pointer-events: none;
+            z-index: 10002;
+            filter: drop-shadow(0 0 25px rgba(100, 200, 255, 0.9));
+            transition: transform 0.3s ease;
+        `;
+        document.body.appendChild(aiAvatar);
         
-        aiAvatar.style.left = cellCenterX + 'px';
-        aiAvatar.style.top = (cellCenterY - 80) + 'px';
-        aiAvatar.style.animation = 'ai-point 0.6s ease-in-out infinite';
-        aiAvatar.style.fontSize = '3rem';
-    }, 1000);
-    
-    // Clean up and resume after 4-5 seconds (premium cinematic timing)
-    const tauntDuration = 4500; // 4.5 seconds for full cinematic feel
-    setTimeout(() => {
-        // Fade out overlay and avatar
-        tauntOverlay.style.opacity = '0';
-        aiAvatar.style.opacity = '0';
-        aiAvatar.style.transition = 'opacity 0.4s ease';
-        
+        // Animate AI avatar appearance
         setTimeout(() => {
-            // Remove all elements
-            tauntOverlay.remove();
-            aiAvatar.remove();
-            const pulseStyleEl = document.getElementById('second-loss-pulse-style');
-            if (pulseStyleEl) pulseStyleEl.remove();
-            const arrowStyleEl = document.getElementById('arrow-bounce-style');
-            if (arrowStyleEl) arrowStyleEl.remove();
-            const avatarStyleEl = document.getElementById('ai-avatar-style');
-            if (avatarStyleEl) avatarStyleEl.remove();
+            aiAvatar.style.transition = 'all 0.6s cubic-bezier(0.34, 1.56, 0.64, 1)';
+            aiAvatar.style.transform = 'scale(1) rotate(0deg)';
+            aiAvatar.style.opacity = '1';
+        }, 50);
+        
+        // AI's hand/icon points at correct cell
+        setTimeout(() => {
+            const boardRect = document.querySelector('.game-board').getBoundingClientRect();
+            const cellRect = missedCell.getBoundingClientRect();
+            const cellCenterX = cellRect.left + cellRect.width / 2;
+            const cellCenterY = cellRect.top + cellRect.height / 2;
             
-            // Reset cell styling
-            missedCell.style.cssText = '';
-            const ghost = missedCell.querySelector('.ghost-move');
-            if (ghost) ghost.remove();
-            const arrowEl = missedCell.querySelector('.taunt-arrow');
-            if (arrowEl) arrowEl.remove();
+            // Move avatar to point at cell
+            aiAvatar.style.transition = 'all 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94)';
+            aiAvatar.style.left = (cellCenterX - 60) + 'px';
+            aiAvatar.style.top = (cellCenterY - 100) + 'px';
+            aiAvatar.style.fontSize = '3rem';
+            aiAvatar.style.animation = 'ai-point-at-cell 0.6s ease-in-out infinite';
+        }, 700);
+        
+        // Green ghost X/O moves into cell with particle effects
+        setTimeout(() => {
+            const ghostMove = document.createElement('div');
+            ghostMove.className = 'ghost-move-green';
+            ghostMove.textContent = tauntType === 'win' ? 'X' : 'O';
+            ghostMove.style.cssText = `
+                position: absolute;
+                top: 50%;
+                left: 50%;
+                transform: translate(-50%, -50%) scale(0);
+                font-size: 4rem;
+                color: rgba(100, 255, 100, 0.9);
+                opacity: 0;
+                pointer-events: none;
+                text-shadow: 0 0 30px rgba(100, 255, 100, 1);
+                z-index: 10003;
+                animation: ghost-move-enter 1s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+            `;
+            missedCell.style.position = 'relative';
+            missedCell.appendChild(ghostMove);
             
-            // Unlock UI - resume normal gameplay automatically
+            // Particle effects when ghost appears
+            for (let i = 0; i < 8; i++) {
+                const particle = document.createElement('div');
+                particle.style.cssText = `
+                    position: absolute;
+                    top: 50%;
+                    left: 50%;
+                    width: 6px;
+                    height: 6px;
+                    background: rgba(100, 255, 100, 0.8);
+                    border-radius: 50%;
+                    pointer-events: none;
+                    z-index: 10004;
+                    animation: particle-spark ${0.8 + i * 0.1}s ease-out forwards;
+                `;
+                missedCell.appendChild(particle);
+            }
+            
+            // Add animations
+            const ghostStyle = document.createElement('style');
+            ghostStyle.id = 'ghost-move-style';
+            ghostStyle.textContent = `
+                @keyframes ghost-move-enter {
+                    0% { opacity: 0; transform: translate(-50%, -50%) scale(0) rotate(-90deg); }
+                    50% { opacity: 1; transform: translate(-50%, -50%) scale(1.2) rotate(10deg); }
+                    100% { opacity: 0.8; transform: translate(-50%, -50%) scale(1) rotate(0deg); }
+                }
+                @keyframes ai-point-at-cell {
+                    0%, 100% { transform: translate(0, 0) scale(1); }
+                    50% { transform: translate(10px, -10px) scale(1.1); }
+                }
+                @keyframes particle-spark {
+                    0% { opacity: 1; transform: translate(-50%, -50%) scale(1) rotate(0deg); }
+                    100% { 
+                        opacity: 0; 
+                        transform: translate(-50%, -50%) scale(0) rotate(360deg);
+                        top: ${Math.random() * 100 - 50}%;
+                        left: ${Math.random() * 100 - 50}%;
+                    }
+                }
+            `;
+            document.head.appendChild(ghostStyle);
+            
+            // Text overlay: Mocking text appears
+            const demoText = document.createElement('div');
+            demoText.className = 'ai-demo-text';
+            demoText.textContent = "This is what you should have done... not that.";
+            demoText.style.cssText = `
+                position: fixed;
+                top: 50%;
+                left: 50%;
+                transform: translate(-50%, -50%) translateY(30px);
+                color: #ff8888;
+                font-size: 1.4rem;
+                font-weight: bold;
+                text-align: center;
+                text-shadow: 2px 2px 8px rgba(0,0,0,0.9);
+                opacity: 0;
+                z-index: 10005;
+                pointer-events: none;
+                animation: demo-text-fade-in 0.6s ease-out forwards;
+            `;
+            document.body.appendChild(demoText);
+            
+            const demoTextStyle = document.createElement('style');
+            demoTextStyle.id = 'demo-text-style';
+            demoTextStyle.textContent = `
+                @keyframes demo-text-fade-in {
+                    0% { opacity: 0; transform: translate(-50%, -50%) translateY(30px); }
+                    100% { opacity: 1; transform: translate(-50%, -50%) translateY(0); }
+                }
+            `;
+            document.head.appendChild(demoTextStyle);
+            
+            // Remove demo text after 1.5-2 seconds
+            setTimeout(() => {
+                demoText.style.animation = 'demo-text-fade-in 0.5s ease-out reverse';
+                demoText.style.opacity = '0';
+                setTimeout(() => demoText.remove(), 500);
+            }, 2000);
+            
+        }, 1000);
+        
+    }, 2000); // Start Scene 2 after Scene 1
+    
+    // ============================================
+    // SCENE 3: AI TAUNT INTENSIFIES (1-1.5 sec)
+    // ============================================
+    setTimeout(() => {
+        // Animated text bubble pops from AI
+        const tauntBubble = document.createElement('div');
+        tauntBubble.className = 'ai-taunt-bubble';
+        const tauntMessages = [
+            "Really? That's the best you've got?",
+            "Oops, missed again... this is easy!",
+            "Try harder, maybe next time!",
+            "I'm almost impressed by how bad that was.",
+            "Did you think about that move?"
+        ];
+        tauntBubble.textContent = tauntMessages[Math.floor(Math.random() * tauntMessages.length)];
+        tauntBubble.style.cssText = `
+            position: fixed;
+            top: 20%;
+            right: 8%;
+            background: rgba(255, 68, 68, 0.95);
+            color: white;
+            padding: 1rem 1.5rem;
+            border-radius: 20px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+            z-index: 10006;
+            pointer-events: none;
+            opacity: 0;
+            transform: scale(0) rotate(-10deg);
+            animation: bubble-pop-in 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+        `;
+        document.body.appendChild(tauntBubble);
+        
+        // AI laughing/shaking head animation
+        const aiAvatar = document.querySelector('.ai-taunt-avatar');
+        if (aiAvatar) {
+            aiAvatar.style.animation = 'ai-laugh-shake 0.5s ease-in-out 3';
+        }
+        
+        // Small frustration icons (exclamation marks)
+        for (let i = 0; i < 3; i++) {
+            const frustrationIcon = document.createElement('div');
+            frustrationIcon.textContent = '!';
+            frustrationIcon.style.cssText = `
+                position: fixed;
+                top: ${15 + i * 5}%;
+                right: ${12 + i * 2}%;
+                color: #ff4444;
+                font-size: 2rem;
+                font-weight: bold;
+                opacity: 0;
+                z-index: 10007;
+                pointer-events: none;
+                animation: frustration-pop ${0.3 + i * 0.1}s ease-out ${i * 0.1}s forwards;
+            `;
+            document.body.appendChild(frustrationIcon);
+            
+            setTimeout(() => {
+                frustrationIcon.style.animation = 'frustration-pop 0.3s ease-out reverse';
+                setTimeout(() => frustrationIcon.remove(), 300);
+            }, 1200);
+        }
+        
+        // Add animation styles
+        const tauntStyle = document.createElement('style');
+        tauntStyle.id = 'taunt-intensify-style';
+        tauntStyle.textContent = `
+            @keyframes bubble-pop-in {
+                0% { opacity: 0; transform: scale(0) rotate(-10deg); }
+                50% { transform: scale(1.1) rotate(5deg); }
+                100% { opacity: 1; transform: scale(1) rotate(0deg); }
+            }
+            @keyframes ai-laugh-shake {
+                0%, 100% { transform: translate(0, 0) rotate(0deg); }
+                25% { transform: translate(-5px, -5px) rotate(-5deg); }
+                75% { transform: translate(5px, -5px) rotate(5deg); }
+            }
+            @keyframes frustration-pop {
+                0% { opacity: 0; transform: scale(0) translateY(0); }
+                50% { opacity: 1; transform: scale(1.3) translateY(-10px); }
+                100% { opacity: 0.8; transform: scale(1) translateY(-5px); }
+            }
+        `;
+        document.head.appendChild(tauntStyle);
+        
+        // Remove bubble after 1.5 seconds
+        setTimeout(() => {
+            tauntBubble.style.animation = 'bubble-pop-in 0.4s ease-out reverse';
+            setTimeout(() => tauntBubble.remove(), 400);
+        }, 1500);
+        
+    }, 3500); // Start Scene 3 after Scene 2
+    
+    // ============================================
+    // SCENE 4: RESUME GAMEPLAY (0.5 sec)
+    // ============================================
+    setTimeout(() => {
+        // Fade out dim overlay
+        boardDimOverlay.style.opacity = '0';
+        
+        // Reset cell styling
+        missedCell.style.cssText = '';
+        const ghostIcon = missedCell.querySelector('.ghost-icon-tiny');
+        if (ghostIcon) ghostIcon.remove();
+        const ghostMove = missedCell.querySelector('.ghost-move-green');
+        if (ghostMove) ghostMove.remove();
+        const particles = missedCell.querySelectorAll('[style*="particle-spark"]');
+        particles.forEach(p => p.remove());
+        
+        // Remove AI avatar
+        const aiAvatar = document.querySelector('.ai-taunt-avatar');
+        if (aiAvatar) {
+            aiAvatar.style.transition = 'opacity 0.4s ease';
+            aiAvatar.style.opacity = '0';
+            setTimeout(() => aiAvatar.remove(), 400);
+        }
+        
+        // Remove all style elements
+        const stylesToRemove = [
+            'cell-shake-style',
+            'ghost-move-style',
+            'demo-text-style',
+            'taunt-intensify-style'
+        ];
+        stylesToRemove.forEach(id => {
+            const styleEl = document.getElementById(id);
+            if (styleEl) styleEl.remove();
+        });
+        
+        // Unlock UI - resume normal gameplay
+        setTimeout(() => {
+            boardDimOverlay.remove();
             gameState.uiLocked = false;
             gameState.uiLockingReason = null;
             
-            // Music continues normally (no pause for second loss)
-        }, 400);
-    }, tauntDuration);
+            // Resume background music
+            if (musicWasPlaying && bgMusic) {
+                bgMusic.play().catch(() => {});
+            }
+        }, 500);
+        
+    }, 5000); // Total duration: 5 seconds
 }
 
 /**
