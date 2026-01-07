@@ -3199,6 +3199,377 @@ function playTacticalClaimAnimation(cellIndex) {
 }
 
 /**
+ * SECOND LOSS TAUNT (ENHANCED): Visual demonstration of missed move
+ * UX ONLY - Does NOT affect AI logic
+ * - Freeze board briefly (~1-2 seconds)
+ * - Highlight mistakes: Missed winning cell, Failed block
+ * - Visual demonstration: Ghost X/O where player should have played
+ * - Condescending taunt: Sarcastic, mocking, lightly cruel
+ * - Resume gameplay automatically with smooth transition
+ */
+function showSecondLossTaunt() {
+    // Find if player had a winning move they missed
+    const missedWinningMoves = [];
+    const missedBlockingMoves = [];
+    
+    // Check for missed winning moves
+    for (let i = 0; i < 9; i++) {
+        if (gameState.board[i] === '') {
+            const testBoard = [...gameState.board];
+            testBoard[i] = 'X';
+            const testWinningCombo = winningCombos.find(combo => 
+                combo.every(idx => testBoard[idx] === 'X')
+            );
+            if (testWinningCombo) {
+                missedWinningMoves.push({ index: i, combo: testWinningCombo });
+            }
+            
+            // Check for missed blocks
+            testBoard[i] = 'O';
+            const aiWinCombo = winningCombos.find(combo => 
+                combo.every(idx => testBoard[idx] === 'O')
+            );
+            if (aiWinCombo) {
+                missedBlockingMoves.push({ index: i, combo: aiWinCombo });
+            }
+        }
+    }
+    
+    let missedMove = null;
+    let tauntType = 'none';
+    
+    if (missedWinningMoves.length > 0) {
+        missedMove = missedWinningMoves[0];
+        tauntType = 'win';
+    } else if (missedBlockingMoves.length > 0) {
+        missedMove = missedBlockingMoves[0];
+        tauntType = 'block';
+    }
+    
+    if (!missedMove || tauntType === 'none') {
+        return; // No clear missed move
+    }
+    
+    // Freeze board
+    gameState.uiLocked = true;
+    const missedCell = cells[missedMove.index];
+    if (!missedCell) return;
+    
+    // Create premium taunt overlay with slide-in animation
+    const tauntOverlay = document.createElement('div');
+    tauntOverlay.className = 'second-loss-taunt-overlay';
+    tauntOverlay.style.cssText = `
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.75);
+        z-index: 10000;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        opacity: 0;
+        transition: opacity 0.4s ease;
+        pointer-events: none;
+    `;
+    document.body.appendChild(tauntOverlay);
+    
+    // Animate overlay in
+    setTimeout(() => {
+        tauntOverlay.style.opacity = '1';
+    }, 50);
+    
+    // Highlight the missed cell with glowing outline
+    missedCell.style.cssText += `
+        box-shadow: 0 0 40px rgba(255, 100, 100, 0.9), inset 0 0 20px rgba(255, 100, 100, 0.5) !important;
+        border: 3px solid #ff6666 !important;
+        animation: pulse-highlight 0.6s ease-in-out infinite;
+        z-index: 10001;
+        position: relative;
+    `;
+    
+    // Add pulse animation
+    const pulseStyle = document.createElement('style');
+    pulseStyle.id = 'second-loss-pulse-style';
+    pulseStyle.textContent = `
+        @keyframes pulse-highlight {
+            0%, 100% { transform: scale(1); box-shadow: 0 0 40px rgba(255, 100, 100, 0.9); }
+            50% { transform: scale(1.08); box-shadow: 0 0 60px rgba(255, 100, 100, 1); }
+        }
+        @keyframes ghost-appear {
+            0% { opacity: 0; transform: scale(0.5); }
+            50% { opacity: 0.7; transform: scale(1.1); }
+            100% { opacity: 0.5; transform: scale(1); }
+        }
+        @keyframes slide-in-taunt {
+            0% { transform: translateY(30px); opacity: 0; }
+            100% { transform: translateY(0); opacity: 1; }
+        }
+    `;
+    document.head.appendChild(pulseStyle);
+    
+    // Create ghost X/O showing correct move
+    const ghostMove = document.createElement('div');
+    ghostMove.className = 'ghost-move';
+    ghostMove.textContent = 'X';
+    ghostMove.style.cssText = `
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%) scale(0.5);
+        font-size: 3rem;
+        color: rgba(100, 255, 100, 0.8);
+        opacity: 0;
+        animation: ghost-appear 0.8s ease-out 0.5s forwards;
+        pointer-events: none;
+        text-shadow: 0 0 20px rgba(100, 255, 100, 0.8);
+    `;
+    missedCell.style.position = 'relative';
+    missedCell.appendChild(ghostMove);
+    
+    // Add arrow pointing to correct move
+    const arrow = document.createElement('div');
+    arrow.className = 'taunt-arrow';
+    arrow.textContent = '↓';
+    arrow.style.cssText = `
+        position: absolute;
+        top: -40px;
+        left: 50%;
+        transform: translateX(-50%);
+        font-size: 2rem;
+        color: #ff6666;
+        animation: bounce-arrow 0.5s ease-in-out infinite;
+        pointer-events: none;
+    `;
+    missedCell.appendChild(arrow);
+    
+    // Add bounce animation for arrow
+    const arrowStyle = document.createElement('style');
+    arrowStyle.id = 'arrow-bounce-style';
+    arrowStyle.textContent = `
+        @keyframes bounce-arrow {
+            0%, 100% { transform: translateX(-50%) translateY(0); }
+            50% { transform: translateX(-50%) translateY(-8px); }
+        }
+    `;
+    document.head.appendChild(arrowStyle);
+    
+    // Show condescending taunt message with slide-in
+    const tauntMessage = document.createElement('div');
+    tauntMessage.style.cssText = `
+        color: #ff8888;
+        font-size: 1.6rem;
+        font-weight: bold;
+        text-align: center;
+        margin-top: 2rem;
+        text-shadow: 2px 2px 8px rgba(0,0,0,0.9);
+        animation: slide-in-taunt 0.6s ease-out 0.3s forwards;
+        opacity: 0;
+    `;
+    
+    const tauntTexts = tauntType === 'win' ? [
+        "You could have won right there.",
+        "Really? You missed that?",
+        "That was your winning move. Gone.",
+        "I can't believe you didn't see that.",
+        "The winning cell was RIGHT THERE."
+    ] : [
+        "You should have blocked here.",
+        "Did you not see the threat?",
+        "This is why you lose.",
+        "A simple block would have saved you.",
+        "You just... let me win?"
+    ];
+    
+    tauntMessage.textContent = tauntTexts[Math.floor(Math.random() * tauntTexts.length)];
+    tauntOverlay.appendChild(tauntMessage);
+    
+    // Show final sarcastic remark after 1.5 seconds
+    setTimeout(() => {
+        const finalRemarks = [
+            "Think faster next time.",
+            "Maybe try using your eyes?",
+            "I'll wait while you figure it out.",
+            "This is getting embarrassing.",
+            "Do better."
+        ];
+        tauntMessage.textContent = finalRemarks[Math.floor(Math.random() * finalRemarks.length)];
+        tauntMessage.style.color = '#ffaaaa';
+    }, 1800);
+    
+    // Clean up and resume after 3 seconds (smooth transition)
+    setTimeout(() => {
+        // Fade out overlay
+        tauntOverlay.style.opacity = '0';
+        
+        setTimeout(() => {
+            // Remove all elements
+            tauntOverlay.remove();
+            const pulseStyleEl = document.getElementById('second-loss-pulse-style');
+            if (pulseStyleEl) pulseStyleEl.remove();
+            const arrowStyleEl = document.getElementById('arrow-bounce-style');
+            if (arrowStyleEl) arrowStyleEl.remove();
+            
+            // Reset cell styling
+            missedCell.style.cssText = '';
+            const ghost = missedCell.querySelector('.ghost-move');
+            if (ghost) ghost.remove();
+            const arrowEl = missedCell.querySelector('.taunt-arrow');
+            if (arrowEl) arrowEl.remove();
+            
+            // Unlock UI
+            gameState.uiLocked = false;
+            gameState.uiLockingReason = null;
+        }, 400);
+    }, 3000);
+}
+
+/**
+ * Generic missed move taunt (for losses other than 2nd)
+ * UX ONLY - Does NOT affect AI logic
+ */
+function showMissedMoveTaunt() {
+    // Find if player had a winning move they missed
+    const missedWinningMoves = [];
+    const missedBlockingMoves = [];
+    
+    for (let i = 0; i < 9; i++) {
+        if (gameState.board[i] === '') {
+            const testBoard = [...gameState.board];
+            testBoard[i] = 'X';
+            const testWinningCombo = winningCombos.find(combo => 
+                combo.every(idx => testBoard[idx] === 'X')
+            );
+            if (testWinningCombo) {
+                missedWinningMoves.push(i);
+            }
+            
+            testBoard[i] = 'O';
+            const aiWinCombo = winningCombos.find(combo => 
+                combo.every(idx => testBoard[idx] === 'O')
+            );
+            if (aiWinCombo) {
+                missedBlockingMoves.push(i);
+            }
+        }
+    }
+    
+    let missedCellIndex = null;
+    let tauntType = 'none';
+    
+    if (missedWinningMoves.length > 0) {
+        missedCellIndex = missedWinningMoves[0];
+        tauntType = 'win';
+    } else if (missedBlockingMoves.length > 0) {
+        missedCellIndex = missedBlockingMoves[0];
+        tauntType = 'block';
+    }
+    
+    if (!missedCellIndex || tauntType === 'none') {
+        return;
+    }
+    
+    gameState.uiLocked = true;
+    const missedCell = cells[missedCellIndex];
+    if (!missedCell) return;
+    
+    // Create overlay
+    const tauntOverlay = document.createElement('div');
+    tauntOverlay.className = 'missed-move-taunt';
+    tauntOverlay.style.cssText = `
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.7);
+        z-index: 10000;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        opacity: 0;
+        transition: opacity 0.3s ease;
+        pointer-events: none;
+    `;
+    document.body.appendChild(tauntOverlay);
+    
+    setTimeout(() => {
+        tauntOverlay.style.opacity = '1';
+    }, 50);
+    
+    // Highlight missed cell
+    missedCell.style.cssText += `
+        box-shadow: 0 0 30px rgba(255, 0, 0, 0.8) !important;
+        border: 3px solid #ff0000 !important;
+        animation: pulse-red 0.5s ease-in-out 3;
+        z-index: 10001;
+        position: relative;
+    `;
+    
+    const style = document.createElement('style');
+    style.id = 'missed-move-pulse-style';
+    style.textContent = `
+        @keyframes pulse-red {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+    `;
+    document.head.appendChild(style);
+    
+    // Show message
+    const tauntMessage = document.createElement('div');
+    tauntMessage.style.cssText = `
+        color: #ff4444;
+        font-size: 1.4rem;
+        font-weight: bold;
+        text-align: center;
+        margin-top: 2rem;
+        text-shadow: 2px 2px 4px rgba(0,0,0,0.8);
+        opacity: 0;
+        transition: opacity 0.3s ease;
+    `;
+    
+    tauntMessage.textContent = tauntType === 'win' 
+        ? "You could have won here. But you didn't."
+        : "You should have blocked here. But you didn't.";
+    
+    tauntOverlay.appendChild(tauntMessage);
+    
+    setTimeout(() => {
+        tauntMessage.style.opacity = '1';
+    }, 300);
+    
+    setTimeout(() => {
+        const insults = [
+            "How predictable.",
+            "Maybe think next time?",
+            "I knew you'd miss that.",
+            "Thanks for the free win.",
+            "That was embarrassingly obvious."
+        ];
+        tauntMessage.textContent = insults[Math.floor(Math.random() * insults.length)];
+        tauntMessage.style.color = '#ff6666';
+    }, 1800);
+    
+    // Clean up after 2.5 seconds
+    setTimeout(() => {
+        tauntOverlay.style.opacity = '0';
+        setTimeout(() => {
+            tauntOverlay.remove();
+            const styleEl = document.getElementById('missed-move-pulse-style');
+            if (styleEl) styleEl.remove();
+        }, 300);
+        
+        missedCell.style.cssText = '';
+        gameState.uiLocked = false;
+        gameState.uiLockingReason = null;
+    }, 2500);
+}
+
+/**
  * Show Tactical Claim announcement
  */
 function showTacticalClaimAnnouncement() {
@@ -3807,16 +4178,25 @@ function makeAIMove() {
         lossesDisplay.textContent = gameState.losses;
         
         // ADVANCED TAUNT TYPE: "SHOW YOU HOW STUPID YOU WERE"
-        // When player loses in a clearly avoidable way:
-        // - Freeze the board briefly
-        // - Highlight the missed winning or blocking cell
-        // - Animate the correct move
-        // - Explain visually what should have been done
-        // This is NOT a tutorial - it's an insult disguised as instruction
+        // SECOND LOSS (ENHANCED): Show visual demonstration of missed move
+        // - Freeze the board briefly (~1-2 seconds)
+        // - Highlight mistake(s): Missed winning cell, Failed block
+        // - Visual demonstration: Animate ghost X/O where player should have played
+        // - Condescending taunt: Sarcastic, mocking, lightly cruel
+        // - Resume gameplay automatically with smooth transition
         // UX ONLY - does NOT affect AI logic
         if (!gameState.isKingWilliam && !isSarah() && gameState.playerMoveHistory.length > 0) {
-            // Check if player had a winning move they missed (30% chance to show taunt)
-            if (Math.random() < 0.3) {
+            // SECOND LOSS: Always show visual demonstration (enhanced)
+            if (gameState.losses === 2) {
+                try {
+                    showSecondLossTaunt();
+                } catch (tauntError) {
+                    console.error('Error showing second loss taunt:', tauntError);
+                    // Continue with normal endGame - taunt is optional
+                }
+            }
+            // Other losses: 30% chance to show taunt
+            else if (Math.random() < 0.3) {
                 try {
                     showMissedMoveTaunt();
                 } catch (tauntError) {
@@ -3839,16 +4219,31 @@ function makeAIMove() {
         }
         // CRITICAL: AI intelligence persists - never reset or degrade after wins
         
-        // 3rd loss - trigger interactive mock sequence (disco, insults, mock song)
+        // THIRD LOSS (SPECIAL STATE): Trigger full taunt sequence with music pause
+        // - Immediately stop background music
+        // - Trigger the taunt sequence: Stronger insults, Slower pacing, Clear dominance tone
+        // - Display taunt UI with animation: Slide-in or pop-in, no sudden appearance
+        // - Only after taunt sequence finishes: Resume background music, Smooth transition back
         // Now works for all players including Sarah (with respectful messages for Sarah)
         if (gameState.losses === 3 && !gameState.inTsukuyomi && !gameState.inInteractiveMode) {
             try {
+                // MUSIC RULE: Pause music on third loss
+                if (bgMusic && !bgMusic.paused) {
+                    bgMusic.pause();
+                    gameState.musicPausedForTaunt = true;
+                }
+                
                 // Activate the interactive AI mock sequence which handles pausing the game,
-                // stopping bg music, showing disco lights, syncing dance, and showing the Yes/No card.
+                // showing disco lights, syncing dance, and showing the Yes/No card.
+                // Music will resume after taunt finishes
                 activateInteractiveAIMock();
             } catch (e) {
                 console.error('Error activating interactive AI mock on loss #3:', e);
-                // Fallback: simple endGame
+                // Fallback: simple endGame and resume music
+                if (gameState.musicPausedForTaunt && bgMusic) {
+                    bgMusic.play().catch(() => {});
+                    gameState.musicPausedForTaunt = false;
+                }
                 if (isSarah()) {
                     endGame("The AI has won this round, Miss Sarah. Shall we try again?");
                 } else {
@@ -4598,8 +4993,9 @@ function activateInteractiveAIMock() {
         });
     }
     
-    // MUSIC CONTINUITY: Background music continues even during interactive sequences
-    // Music is global ambience and should not stop
+    // THIRD LOSS MUSIC RULE: Background music is paused during third-loss taunt
+    // Music was already paused before calling this function (in makeAIMove)
+    // Music will resume after taunt sequence finishes
     
     // Show wait message - different for Sarah
     if (isSarah()) {
@@ -4715,6 +5111,13 @@ function activateInteractiveAIMock() {
             setTimeout(() => {
                 document.getElementById('ai-mock-buttons').style.opacity = '1';
                 document.getElementById('ai-mock-buttons').style.transform = 'scale(1)';
+                
+                // THIRD LOSS MUSIC RULE: Resume background music after taunt sequence finishes
+                // Music was paused at start of third loss, now resume it
+                if (gameState.musicPausedForTaunt && bgMusic) {
+                    bgMusic.play().catch(e => console.log('Could not resume background music:', e));
+                    gameState.musicPausedForTaunt = false;
+                }
             }, 500);
             
         }, 13000); // 13 seconds for the song
