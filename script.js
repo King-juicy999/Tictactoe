@@ -44,7 +44,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }, 100);
     }
     
-    // Continue button - BULLETPROOF FIX
+    // Continue button - MVP FLOW: Ready → Theme → Name
     let buttonTransitioned = false;
     
     const handleContinueClick = (e) => {
@@ -55,33 +55,51 @@ document.addEventListener('DOMContentLoaded', () => {
                 return;
             }
             
-            console.log('[Continue] === BUTTON CLICKED ===');
+            console.log('[Continue] === BUTTON CLICKED - Showing Theme Selector ===');
             
             // Mark as transitioned immediately to prevent double-clicks
             buttonTransitioned = true;
             
-            // Hide pre-welcome overlay
+            // Hide pre-welcome overlay with smooth animation
             const overlay = document.getElementById('pre-welcome-overlay');
             if (overlay) {
-                overlay.style.display = 'none';
-                overlay.style.visibility = 'hidden';
                 overlay.style.opacity = '0';
-                overlay.style.pointerEvents = 'none';
-                overlay.classList.add('hiding');
-                console.log('[Continue] Overlay hidden');
+                overlay.style.transition = 'opacity 0.4s ease-out';
+                setTimeout(() => {
+                    overlay.style.display = 'none';
+                    overlay.style.visibility = 'hidden';
+                    overlay.style.pointerEvents = 'none';
+                    overlay.classList.add('hiding');
+                }, 400);
+                console.log('[Continue] Pre-welcome overlay hidden');
             }
             
-            // Show welcome screen (name input & camera enable)
-            const welcomeScreen = document.getElementById('welcome-screen');
-            if (welcomeScreen) {
-                welcomeScreen.classList.add('active');
-                welcomeScreen.style.display = 'block';
-                welcomeScreen.style.visibility = 'visible';
-                welcomeScreen.style.opacity = '1';
-                welcomeScreen.style.zIndex = '1';
-                console.log('[Continue] Welcome screen shown');
+            // Show theme selection overlay FIRST (MVP requirement)
+            if (themeSelectionOverlay) {
+                // Set default theme if none selected
+                if (!selectedTheme) {
+                    selectedTheme = (typeof ThemeManager !== 'undefined' && ThemeManager.getCurrentTheme()) 
+                        ? ThemeManager.getCurrentTheme() 
+                        : 'light';
+                    updateThemePreviewSelection();
+                }
+                
+                // Animate theme selector onto screen smoothly
+                themeSelectionOverlay.style.display = 'flex';
+                themeSelectionOverlay.style.opacity = '0';
+                setTimeout(() => {
+                    themeSelectionOverlay.classList.add('active');
+                    themeSelectionOverlay.style.opacity = '1';
+                }, 100);
+                console.log('[Continue] Theme selection overlay shown');
             } else {
-                console.error('[Continue] Welcome screen not found!');
+                console.error('[Continue] Theme selection overlay not found!');
+                // Fallback: show welcome screen directly
+                const welcomeScreen = document.getElementById('welcome-screen');
+                if (welcomeScreen) {
+                    welcomeScreen.classList.add('active');
+                    welcomeScreen.style.display = 'block';
+                }
             }
             
             // Re-enable inputs
@@ -92,13 +110,19 @@ document.addEventListener('DOMContentLoaded', () => {
             
         } catch (error) {
             console.error('[Continue] Error in handleContinueClick:', error);
-            // Even if there's an error, try to show welcome screen
-            const welcomeScreen = document.getElementById('welcome-screen');
+            // Fallback: try to show theme selector or welcome screen
             const overlay = document.getElementById('pre-welcome-overlay');
             if (overlay) overlay.style.display = 'none';
-            if (welcomeScreen) {
-                welcomeScreen.classList.add('active');
-                welcomeScreen.style.display = 'block';
+            
+            if (themeSelectionOverlay) {
+                themeSelectionOverlay.style.display = 'flex';
+                themeSelectionOverlay.classList.add('active');
+            } else {
+                const welcomeScreen = document.getElementById('welcome-screen');
+                if (welcomeScreen) {
+                    welcomeScreen.classList.add('active');
+                    welcomeScreen.style.display = 'block';
+                }
             }
         }
     };
@@ -177,24 +201,64 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
     
-    // Confirm theme selection
+    // Confirm theme selection - MVP FLOW: Theme → Name Input
     if (themeConfirmBtn) {
         themeConfirmBtn.addEventListener('click', () => {
-            if (selectedTheme && typeof ThemeManager !== 'undefined') {
-                ThemeManager.applyTheme(selectedTheme);
-                welcomeFlowState.themeSelected = true;
-                
-                // Hide theme selection overlay
+            try {
+                if (selectedTheme && typeof ThemeManager !== 'undefined') {
+                    ThemeManager.applyTheme(selectedTheme);
+                    welcomeFlowState.themeSelected = true;
+                    
+                    console.log('[Theme] Theme confirmed:', selectedTheme);
+                    
+                    // Hide theme selection overlay with smooth animation
+                    if (themeSelectionOverlay) {
+                        themeSelectionOverlay.style.opacity = '0';
+                        themeSelectionOverlay.style.transition = 'opacity 0.4s ease-out';
+                        setTimeout(() => {
+                            themeSelectionOverlay.classList.remove('active');
+                            themeSelectionOverlay.style.display = 'none';
+                            themeSelectionOverlay.style.pointerEvents = 'none';
+                        }, 400);
+                    }
+                    
+                    // Show welcome screen (name input & camera enable) - MVP requirement
+                    const welcomeScreen = document.getElementById('welcome-screen');
+                    if (welcomeScreen) {
+                        welcomeScreen.style.opacity = '0';
+                        welcomeScreen.style.display = 'block';
+                        welcomeScreen.style.visibility = 'visible';
+                        welcomeScreen.classList.add('active');
+                        welcomeScreen.style.transition = 'opacity 0.4s ease-in';
+                        setTimeout(() => {
+                            welcomeScreen.style.opacity = '1';
+                        }, 100);
+                        console.log('[Theme] Welcome screen (name input) shown');
+                    } else {
+                        console.error('[Theme] Welcome screen not found!');
+                    }
+                    
+                    // Show AI presence during gameplay
+                    if (aiPresenceGameplay) {
+                        setTimeout(() => {
+                            aiPresenceGameplay.classList.remove('hidden');
+                            aiPresenceGameplay.classList.add('active');
+                        }, 500);
+                    }
+                } else {
+                    console.warn('[Theme] No theme selected or ThemeManager not available');
+                }
+            } catch (error) {
+                console.error('[Theme] Error confirming theme selection:', error);
+                // Fallback: hide theme selector and show welcome screen
                 if (themeSelectionOverlay) {
+                    themeSelectionOverlay.style.display = 'none';
                     themeSelectionOverlay.classList.remove('active');
                 }
-                
-                // Show AI presence during gameplay
-                if (aiPresenceGameplay) {
-                    setTimeout(() => {
-                        aiPresenceGameplay.classList.remove('hidden');
-                        aiPresenceGameplay.classList.add('active');
-                    }, 500);
+                const welcomeScreen = document.getElementById('welcome-screen');
+                if (welcomeScreen) {
+                    welcomeScreen.classList.add('active');
+                    welcomeScreen.style.display = 'block';
                 }
             }
         });
@@ -307,7 +371,9 @@ const gameState = {
     // Tactical Claim (Level 1 only)
     tacticalClaimUsed: false, // Track if Tactical Claim was used this match
     reservedCells: [], // Array of {cellIndex, turnsRemaining} for Tactical Claim
-    turnCount: 0 // Track turns for Tactical Claim unlock timing
+    turnCount: 0, // Track turns for Tactical Claim unlock timing
+    // MVP: Taunt system flags to prevent infinite loops
+    secondLossTauntShown: false // Track if second loss taunt has been shown (prevents loops)
 };
 
 /**
@@ -3209,6 +3275,12 @@ function playTacticalClaimAnimation(cellIndex) {
  */
 function showSecondLossTaunt() {
     try {
+        // MVP: Prevent infinite loops - only show once per session per round
+        if (gameState.secondLossTauntShown) {
+            console.log('[Taunt] Second loss taunt already shown this session, skipping');
+            return;
+        }
+        
         // VALIDATION: Ensure we're in the right state
         if (!gameState || gameState.currentLevel !== 1 || gameState.level1Losses !== 2) {
             console.warn('Second loss taunt skipped: Invalid state', {
@@ -3218,6 +3290,9 @@ function showSecondLossTaunt() {
             });
             return;
         }
+        
+        // Mark as shown to prevent loops
+        gameState.secondLossTauntShown = true;
         
         // VALIDATION: Ensure board and cells exist
         if (!gameState.board || !Array.isArray(gameState.board) || gameState.board.length !== 9) {
@@ -6093,6 +6168,7 @@ function resetToLanding() {
         gameState.wins = 0;
         gameState.aiLosses = 0;
         gameState.level1Losses = 0; // Reset level-specific loss count
+        gameState.secondLossTauntShown = false; // MVP: Reset taunt flag to allow taunt on next session
         gameState.gameActive = true;
         gameState.inInteractiveMode = false;
         gameState.playerMoveHistory = [];
