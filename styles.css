@@ -90,10 +90,16 @@ body.theme-retro {
 .screen {
     display: none;
     text-align: center;
+    /* MVP: Ensure no extra spacing */
+    margin: 0;
+    padding: 0;
 }
 
 .screen.active {
     display: block;
+    /* MVP: Minimal top spacing, top-aligned */
+    margin-top: 0;
+    padding-top: clamp(10px, 2vw, 20px);
 }
 
 .title {
@@ -413,7 +419,7 @@ button:disabled:hover {
 
 .message {
     font-size: 2rem;
-    margin: 1rem 0;
+    margin: clamp(0.5rem, 2vw, 1rem) 0; /* MVP: Minimal spacing */
     min-height: 3rem;
     color: var(--text-secondary);
     text-shadow: 0 0 10px var(--glow-color);
@@ -3325,17 +3331,17 @@ body.theme-retro .powerup-sidebar {
 }
 
 .level-progress-container {
-    margin-top: 1.5rem;
+    margin-top: clamp(0.5rem, 2vw, 1rem); /* MVP: Minimal spacing */
 }
 
 .level-progress-visual {
-    margin-bottom: 1rem;
+    margin-bottom: clamp(0.5rem, 2vw, 1rem); /* MVP: Minimal spacing */
 }
 
 .level-progress-dots {
     display: flex;
     justify-content: space-between;
-    margin-bottom: 1rem;
+    margin-bottom: clamp(0.5rem, 2vw, 1rem); /* MVP: Minimal spacing */
     gap: 0.5rem;
 }
 

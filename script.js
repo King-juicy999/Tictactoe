@@ -2685,34 +2685,50 @@ function hidePowerUpGuide() {
         guideOverlay.classList.add('hidden');
         
         // MVP: Smooth scroll to game board immediately after guidebook closes
+        // Ensure board is visible with minimal gap
         try {
             const gameBoard = document.querySelector('.game-board');
             const gameScreen = document.getElementById('game-screen');
             
             if (gameBoard && gameScreen && gameScreen.classList.contains('active')) {
-                // Scroll to board smoothly (0.3-0.5 seconds as requested)
-                gameBoard.scrollIntoView({ 
-                    behavior: 'smooth', 
-                    block: 'start',
-                    inline: 'nearest'
-                });
-                
-                // Alternative: Use window.scrollTo for better control
+                // MVP: Scroll to board smoothly (0.3-0.5 seconds) with minimal offset
                 setTimeout(() => {
                     const boardRect = gameBoard.getBoundingClientRect();
                     const scrollOffset = window.pageYOffset || document.documentElement.scrollTop;
-                    const targetY = boardRect.top + scrollOffset - 20; // 20px top padding
+                    // MVP: Minimal top spacing (10-20px) - no huge gap
+                    const topPadding = Math.max(10, Math.min(20, window.innerWidth > 768 ? 20 : 10));
+                    const targetY = boardRect.top + scrollOffset - topPadding;
                     
                     window.scrollTo({
                         top: Math.max(0, targetY),
                         behavior: 'smooth'
                     });
-                }, 50);
-                
-                console.log('[Guide] Scrolled to game board');
+                    
+                    console.log('[Guide] Scrolled to game board with minimal gap');
+                }, 100); // Small delay to ensure DOM is ready
             }
         } catch (scrollError) {
             console.warn('[Guide] Scroll to board failed (non-critical):', scrollError);
+        }
+        
+        // MVP: Ensure no large gaps - reset any scroll position if needed
+        try {
+            // If page was scrolled down during guidebook, reset to top of game screen
+            const gameScreen = document.getElementById('game-screen');
+            if (gameScreen && gameScreen.classList.contains('active')) {
+                // Only scroll if we're way down the page
+                if (window.scrollY > 200) {
+                    setTimeout(() => {
+                        gameScreen.scrollIntoView({ 
+                            behavior: 'smooth', 
+                            block: 'start',
+                            inline: 'nearest'
+                        });
+                    }, 200);
+                }
+            }
+        } catch (resetError) {
+            console.warn('[Guide] Scroll reset failed (non-critical):', resetError);
         }
         
         // CRITICAL: Re-enable all inputs immediately after guide closes
@@ -3312,18 +3328,22 @@ function showSecondLossTaunt() {
             return;
         }
         
-        // VALIDATION: Ensure we're in the right state
-        if (!gameState || gameState.currentLevel !== 1 || gameState.level1Losses !== 2) {
-            console.warn('Second loss taunt skipped: Invalid state', {
+        // VALIDATION: Ensure we're in the right state - EXACTLY second loss in Level 1
+        if (!gameState || 
+            gameState.currentLevel !== 1 || 
+            gameState.level1Losses !== 2) {
+            console.warn('[Taunt] Second loss taunt skipped: Invalid state', {
                 currentLevel: gameState?.currentLevel,
                 level1Losses: gameState?.level1Losses,
-                totalLosses: gameState?.losses
+                totalLosses: gameState?.losses,
+                tauntShown: gameState?.secondLossTauntShown
             });
             return;
         }
         
-        // Mark as shown to prevent loops
+        // MVP: Mark as shown IMMEDIATELY to prevent any loops or double-triggers
         gameState.secondLossTauntShown = true;
+        console.log('[Taunt] Second loss taunt triggered - flag set to prevent loops');
         
         // VALIDATION: Ensure board and cells exist
         if (!gameState.board || !Array.isArray(gameState.board) || gameState.board.length !== 9) {
@@ -4681,20 +4701,23 @@ function makeAIMove() {
             gameState.level1Losses = (gameState.level1Losses || 0) + 1;
         }
         
-        // SECOND LOSS IN LEVEL 1: Always show visual demonstration (enhanced)
-        if (gameState.currentLevel === 1 && gameState.level1Losses === 2 && !gameState.isKingWilliam && !isSarah() && gameState.playerMoveHistory.length > 0) {
+        // MVP: SECOND LOSS IN LEVEL 1 - Trigger exactly once when level1Losses === 2
+        // Check BEFORE other taunt logic to ensure it triggers correctly
+        if (gameState.currentLevel === 1 && 
+            gameState.level1Losses === 2 && 
+            !gameState.isKingWilliam && 
+            !isSarah() && 
+            gameState.playerMoveHistory.length > 0 &&
+            !gameState.secondLossTauntShown) { // MVP: Additional check to prevent loops
             try {
-                // Validate loss count before triggering
-                if (gameState.losses >= 2 && gameState.level1Losses === 2) {
-                    showSecondLossTaunt();
-                } else {
-                    console.warn('Second loss sequence skipped: loss count mismatch', {
-                        totalLosses: gameState.losses,
-                        level1Losses: gameState.level1Losses
-                    });
-                }
+                console.log('[Taunt] Second loss detected - triggering taunt', {
+                    totalLosses: gameState.losses,
+                    level1Losses: gameState.level1Losses,
+                    tauntShown: gameState.secondLossTauntShown
+                });
+                showSecondLossTaunt();
             } catch (tauntError) {
-                console.error('Error showing second loss taunt:', tauntError);
+                console.error('[Taunt] Error showing second loss taunt:', tauntError);
                 // Continue with normal endGame - taunt is optional
             }
         } else if (Math.random() < 0.3) {
