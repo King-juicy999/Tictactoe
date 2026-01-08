@@ -72,32 +72,32 @@ document.addEventListener('DOMContentLoaded', () => {
                     overlay.classList.add('hiding');
                 }, 400);
                 console.log('[Continue] Pre-welcome overlay hidden');
-            }
-            
-            // Show theme selection overlay FIRST (MVP requirement)
-            if (themeSelectionOverlay) {
-                // Set default theme if none selected
-                if (!selectedTheme) {
-                    selectedTheme = (typeof ThemeManager !== 'undefined' && ThemeManager.getCurrentTheme()) 
-                        ? ThemeManager.getCurrentTheme() 
-                        : 'light';
-                    updateThemePreviewSelection();
                 }
                 
+            // Show theme selection overlay FIRST (MVP requirement)
+                if (themeSelectionOverlay) {
+                    // Set default theme if none selected
+                    if (!selectedTheme) {
+                        selectedTheme = (typeof ThemeManager !== 'undefined' && ThemeManager.getCurrentTheme()) 
+                            ? ThemeManager.getCurrentTheme() 
+                            : 'light';
+                    updateThemePreviewSelection();
+                    }
+                    
                 // Animate theme selector onto screen smoothly
-                themeSelectionOverlay.style.display = 'flex';
+                    themeSelectionOverlay.style.display = 'flex';
                 themeSelectionOverlay.style.opacity = '0';
                 setTimeout(() => {
                     themeSelectionOverlay.classList.add('active');
                     themeSelectionOverlay.style.opacity = '1';
                 }, 100);
                 console.log('[Continue] Theme selection overlay shown');
-            } else {
+                } else {
                 console.error('[Continue] Theme selection overlay not found!');
-                // Fallback: show welcome screen directly
-                const welcomeScreen = document.getElementById('welcome-screen');
-                if (welcomeScreen) {
-                    welcomeScreen.classList.add('active');
+                    // Fallback: show welcome screen directly
+                    const welcomeScreen = document.getElementById('welcome-screen');
+                    if (welcomeScreen) {
+                        welcomeScreen.classList.add('active');
                     welcomeScreen.style.display = 'block';
                 }
             }
@@ -188,7 +188,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         } catch (error) {
             console.error('[Continue] Error in document click handler:', error);
-        }
+    }
     }, true);
     
     // Theme preview card selection
@@ -205,18 +205,18 @@ document.addEventListener('DOMContentLoaded', () => {
     if (themeConfirmBtn) {
         themeConfirmBtn.addEventListener('click', () => {
             try {
-                if (selectedTheme && typeof ThemeManager !== 'undefined') {
-                    ThemeManager.applyTheme(selectedTheme);
-                    welcomeFlowState.themeSelected = true;
-                    
+            if (selectedTheme && typeof ThemeManager !== 'undefined') {
+                ThemeManager.applyTheme(selectedTheme);
+                welcomeFlowState.themeSelected = true;
+                
                     console.log('[Theme] Theme confirmed:', selectedTheme);
                     
                     // Hide theme selection overlay with smooth animation
-                    if (themeSelectionOverlay) {
+                if (themeSelectionOverlay) {
                         themeSelectionOverlay.style.opacity = '0';
                         themeSelectionOverlay.style.transition = 'opacity 0.4s ease-out';
                         setTimeout(() => {
-                            themeSelectionOverlay.classList.remove('active');
+                    themeSelectionOverlay.classList.remove('active');
                             themeSelectionOverlay.style.display = 'none';
                             themeSelectionOverlay.style.pointerEvents = 'none';
                         }, 400);
@@ -236,14 +236,14 @@ document.addEventListener('DOMContentLoaded', () => {
                         console.log('[Theme] Welcome screen (name input) shown');
                     } else {
                         console.error('[Theme] Welcome screen not found!');
-                    }
-                    
-                    // Show AI presence during gameplay
-                    if (aiPresenceGameplay) {
-                        setTimeout(() => {
-                            aiPresenceGameplay.classList.remove('hidden');
-                            aiPresenceGameplay.classList.add('active');
-                        }, 500);
+                }
+                
+                // Show AI presence during gameplay
+                if (aiPresenceGameplay) {
+                    setTimeout(() => {
+                        aiPresenceGameplay.classList.remove('hidden');
+                        aiPresenceGameplay.classList.add('active');
+                    }, 500);
                     }
                 } else {
                     console.warn('[Theme] No theme selected or ThemeManager not available');
@@ -364,7 +364,7 @@ const gameState = {
     currentLevel: 1, // Current level (ALWAYS Level 1 until graduation)
     totalGamesPlayed: 0, // Total games (wins + losses) for level calculation
     level1Wins: 0, // Wins in current level (need 5 to graduate)
-    level1Losses: 0, // Losses in current level (for second-loss sequence)
+    level1Losses: 0, // Losses in current level
     aiWinsInLevel: 0, // AI wins in current level (need 5 to prevent graduation)
     roundCount: 0, // Total rounds completed (increments on every game end: win/loss/draw)
     shieldedCells: [], // Array of cell indices that are shielded (AI cannot select)
@@ -372,12 +372,15 @@ const gameState = {
     tacticalClaimUsed: false, // Track if Tactical Claim was used this match
     reservedCells: [], // Array of {cellIndex, turnsRemaining} for Tactical Claim
     turnCount: 0, // Track turns for Tactical Claim unlock timing
-    // MVP: Taunt system flags to prevent infinite loops
-    secondLossTauntShown: false, // Track if second loss taunt has been shown (prevents loops)
     // MVP: Board layout lock - prevent shrinking between rounds
     boardInitialized: false, // Track if board has been initialized (prevents re-animation between rounds)
-    // MVP: Game flow control - prevent Play button from reappearing
-    hasGameStartedOnce: false // Track if game has started at least once (prevents Play button from reappearing)
+    // MVP: Track if game has started once - prevents Play Game button from reappearing
+    hasGameStartedOnce: false, // Track if first game has started (prevents reset button from showing after first game)
+    // CRITICAL: Turn locking to prevent AI from playing twice
+    aiTurnInProgress: false, // Prevents AI from executing multiple moves in one turn
+    // Level 1 leniency tracking
+    firstRoundOfSession: true, // Track if this is the first round of the session
+    playerWinningPatterns: [] // Track patterns player used to win
 };
 
 /**
@@ -1211,6 +1214,22 @@ async function requestCameraAccess() {
         
         // Enable start button
         updateStartButtonState();
+        
+        // MVP: If name is already entered, auto-proceed to game board
+        if (gameState.playerName && playerNameInput && playerNameInput.value.trim()) {
+            // Small delay to ensure UI is ready
+            setTimeout(() => {
+                try {
+                    // Trigger start button click to proceed to game
+                    if (startBtn && !startBtn.disabled) {
+                        startBtn.click();
+                    }
+                } catch (autoStartError) {
+                    console.warn('Auto-start after camera enable failed:', autoStartError);
+                    // Fallback: Just enable the button, user can click manually
+                }
+            }, 300);
+        }
         
         // Notify admin of camera status (only when player name is set)
         if (gameState.playerName) {
@@ -2396,7 +2415,7 @@ if (document.readyState === 'loading') {
 
 // Start game as AI (extract of previous start logic)
 function startGameAsAI() {
-    // MVP: Mark that game has started at least once
+    // MVP: Mark that game has started once - prevents Play Game button from reappearing
     gameState.hasGameStartedOnce = true;
     
     displayName.textContent = gameState.playerName;
@@ -2404,15 +2423,15 @@ function startGameAsAI() {
     // Hide welcome screen with smooth fade, then fully remove onboarding DOM
     if (welcomeScreen) {
         try {
-            welcomeScreen.style.opacity = '0';
-            welcomeScreen.style.transition = 'opacity 0.4s ease-out';
-            setTimeout(() => {
-                welcomeScreen.classList.remove('active');
+        welcomeScreen.style.opacity = '0';
+        welcomeScreen.style.transition = 'opacity 0.4s ease-out';
+        setTimeout(() => {
+            welcomeScreen.classList.remove('active');
                 // MVP: Fully unmount welcome screen so it cannot push layout
                 if (welcomeScreen.parentNode) {
                     welcomeScreen.parentNode.removeChild(welcomeScreen);
                 }
-            }, 400);
+        }, 400);
         } catch (e) {
             console.warn('[Layout] Failed to fade/remove welcome screen:', e);
             // Hard fallback: force-remove without animation
@@ -2557,6 +2576,40 @@ function startGameAsAI() {
     reportSessionStart();
     try { if (socket) socket.emit('player-start', { name: gameState.playerName }); } catch(_) {}
     emitBoardUpdate();
+    
+    // CRITICAL: Ensure Sarah narrative overlay is completely removed and doesn't block input
+    if (sarahNarrativeOverlay) {
+        sarahNarrativeOverlay.classList.remove('active');
+        sarahNarrativeOverlay.classList.add('hidden');
+        sarahNarrativeOverlay.style.pointerEvents = 'none';
+        sarahNarrativeOverlay.style.display = 'none';
+        sarahNarrativeOverlay.style.zIndex = '-1';
+    }
+    
+    // CRITICAL: Ensure game is active and UI is unlocked for board interaction
+    gameState.gameActive = true;
+    gameState.uiLocked = false;
+    gameState.uiLockingReason = null;
+    
+    // CRITICAL: Force enable all cells and ensure they're clickable
+    const cells = Array.from(document.querySelectorAll('.cell'));
+    cells.forEach(cell => {
+        if (cell) {
+            cell.style.pointerEvents = 'auto';
+            cell.style.cursor = 'pointer';
+            cell.style.zIndex = '1';
+            // Remove any disabled states
+            cell.removeAttribute('disabled');
+            cell.classList.remove('disabled');
+        }
+    });
+    
+    // CRITICAL: Ensure game board itself is not blocked
+    const boardElement = document.querySelector('.game-board');
+    if (boardElement) {
+        boardElement.style.pointerEvents = 'auto';
+        boardElement.style.zIndex = '1';
+    }
 }
 
 // Sarah Narrative System (presentation only, no gameplay logic changes)
@@ -2607,9 +2660,14 @@ function showSarahNarrative(message, actions) {
 
 function hideSarahNarrative() {
     if (!sarahNarrativeOverlay) return;
+    // CRITICAL: Immediately disable pointer events to prevent blocking board clicks
+    sarahNarrativeOverlay.style.pointerEvents = 'none';
     sarahNarrativeOverlay.classList.remove('active');
     setTimeout(() => {
         sarahNarrativeOverlay.classList.add('hidden');
+        // Ensure overlay is completely disabled
+        sarahNarrativeOverlay.style.pointerEvents = 'none';
+        sarahNarrativeOverlay.style.display = 'none';
     }, 400);
 }
 
@@ -2637,7 +2695,8 @@ if (modeAiBtn) {
                                         label: 'Begin',
                                         callback: () => {
                                             hideSarahNarrative();
-                                            setTimeout(() => startGameAsAI(), 400);
+                                            // CRITICAL: Wait for overlay to fully hide before starting game
+                                            setTimeout(() => startGameAsAI(), 500);
                                         }
                                     }
                                 ]
@@ -2661,7 +2720,8 @@ if (modeAiBtn) {
                                                         label: 'Begin',
                                                         callback: () => {
                                                             hideSarahNarrative();
-                                                            setTimeout(() => startGameAsAI(), 400);
+                                                            // CRITICAL: Wait for overlay to fully hide before starting game
+                                                            setTimeout(() => startGameAsAI(), 500);
                                                         }
                                                     }
                                                 ]
@@ -2679,7 +2739,8 @@ if (modeAiBtn) {
                                                         label: 'Begin',
                                                         callback: () => {
                                                             hideSarahNarrative();
-                                                            setTimeout(() => startGameAsAI(), 400);
+                                                            // CRITICAL: Wait for overlay to fully hide before starting game
+                                                            setTimeout(() => startGameAsAI(), 500);
                                                         }
                                                     }
                                                 ]
@@ -3094,7 +3155,8 @@ function activateTacticalClaim() {
         turnsRemaining: 2
     });
     
-    gameState.tacticalClaimUsed = true;
+    // CRITICAL: tacticalClaimUsed is set in makeAIMove before calling this function
+    // Do NOT set it again here to prevent duplicate setting
     
     // Play cinematic animation
     playTacticalClaimAnimation(selectedCell);
@@ -3378,736 +3440,10 @@ function playTacticalClaimAnimation(cellIndex) {
     }
 }
 
-/**
- * SECOND LOSS TAUNT STORYBOARD - 4-5 SECONDS VERSION
- * Scene-by-scene cinematic taunt sequence
- * UX ONLY - Does NOT affect AI logic
- * 
- * Requirements:
- * - Only triggers on second loss in Level 1
- * - Freezes game board for 4-5 seconds
- * - Highlights missed winning/blocking moves
- * - Shows AI animation and taunts
- * - Resumes game with full AI intelligence
- * - Handles audio pause/resume
- * - Fully responsive for mobile and desktop
- * - Comprehensive error handling
- */
-function showSecondLossTaunt(onCompleteCallback) {
-    try {
-        // MVP: Prevent infinite loops - only show once per session per round
-        if (gameState.secondLossTauntShown) {
-            console.log('[Taunt] Second loss taunt already shown this session, skipping');
-            // Still call callback if provided
-            if (onCompleteCallback && typeof onCompleteCallback === 'function') {
-                onCompleteCallback();
-            }
-            return;
-        }
-        
-        // VALIDATION: Ensure we're in the right state - EXACTLY second loss in Level 1
-        if (!gameState || 
-            gameState.currentLevel !== 1 || 
-            gameState.level1Losses !== 2) {
-            console.warn('[Taunt] Second loss taunt skipped: Invalid state', {
-                currentLevel: gameState?.currentLevel,
-                level1Losses: gameState?.level1Losses,
-                totalLosses: gameState?.losses,
-                tauntShown: gameState?.secondLossTauntShown
-            });
-            // Still call callback if provided
-            if (onCompleteCallback && typeof onCompleteCallback === 'function') {
-                onCompleteCallback();
-            }
-            return;
-        }
-        
-        // MVP: Mark as shown IMMEDIATELY to prevent any loops or double-triggers
-        gameState.secondLossTauntShown = true;
-        console.log('[Taunt] Second loss taunt triggered - flag set to prevent loops');
-        
-        // VALIDATION: Ensure board and cells exist
-        if (!gameState.board || !Array.isArray(gameState.board) || gameState.board.length !== 9) {
-            console.error('Second loss taunt failed: Invalid board state');
-            return;
-        }
-        
-        const boardElement = document.querySelector('.game-board');
-        if (!boardElement) {
-            console.error('Second loss taunt failed: Board element not found');
-            return;
-        }
-        
-        // CRITICAL: Freeze game completely - prevent all interactions
-        const originalGameActive = gameState.gameActive;
-        const originalUILocked = gameState.uiLocked;
-        gameState.gameActive = false;
-        gameState.uiLocked = true;
-        gameState.uiLockingReason = 'second-loss-taunt';
-        
-        // Disable all cell clicks during taunt
-        const cells = Array.from(document.querySelectorAll('.cell'));
-        cells.forEach(cell => {
-            cell.style.pointerEvents = 'none';
-            cell.style.cursor = 'not-allowed';
-        });
-        
-        // Audio handling: Pause background music
-        let musicWasPlaying = false;
-        try {
-            if (bgMusic && !bgMusic.paused) {
-                bgMusic.pause();
-                musicWasPlaying = true;
-            }
-        } catch (audioError) {
-            console.warn('Could not pause background music:', audioError);
-        }
-        
-        // Find missed moves: Check for winning moves first, then blocking moves
-        const missedWinningMoves = [];
-        const missedBlockingMoves = [];
-        
-        try {
-            for (let i = 0; i < 9; i++) {
-                if (gameState.board[i] === '') {
-                    // Check for missed winning move
-                    const testBoard = [...gameState.board];
-                    testBoard[i] = 'X';
-                    const testWinningCombo = winningCombos.find(combo => 
-                        combo.every(idx => testBoard[idx] === 'X')
-                    );
-                    if (testWinningCombo) {
-                        missedWinningMoves.push({ index: i, combo: testWinningCombo });
-                    }
-                    
-                    // Check for missed blocking move
-                    testBoard[i] = 'O';
-                    const aiWinCombo = winningCombos.find(combo => 
-                        combo.every(idx => testBoard[idx] === 'O')
-                    );
-                    if (aiWinCombo) {
-                        missedBlockingMoves.push({ index: i, combo: aiWinCombo });
-                    }
-                }
-            }
-        } catch (moveCheckError) {
-            console.error('Error checking missed moves:', moveCheckError);
-            // Continue with taunt even if move check fails
-        }
-        
-        // Determine which move to highlight (prefer winning moves)
-        let missedMove = null;
-        let tauntType = 'none';
-        
-        if (missedWinningMoves.length > 0) {
-            missedMove = missedWinningMoves[0];
-            tauntType = 'win';
-        } else if (missedBlockingMoves.length > 0) {
-            missedMove = missedBlockingMoves[0];
-            tauntType = 'block';
-        }
-        
-        // If no missed move found, still show taunt but without specific cell highlight
-        if (!missedMove || tauntType === 'none') {
-            console.log('No clear missed move found, showing generic taunt');
-            // Still proceed with taunt, just without cell highlight
-        }
-        
-        const missedCell = missedMove ? cells[missedMove.index] : null;
-        
-        // MVP: Create dim overlay for screen background (10-15% opacity as per storyboard)
-        const screenDimOverlay = document.createElement('div');
-        screenDimOverlay.className = 'second-loss-screen-dim';
-        screenDimOverlay.style.cssText = `
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.12); /* 12% opacity - between 10-15% */
-            z-index: 9998;
-            pointer-events: none;
-            opacity: 0;
-            transition: opacity 0.3s ease;
-        `;
-        document.body.appendChild(screenDimOverlay);
-        
-        // Create dim overlay for board freeze effect
-        const boardDimOverlay = document.createElement('div');
-        boardDimOverlay.className = 'second-loss-board-dim';
-        boardDimOverlay.style.cssText = `
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.3);
-            z-index: 9999;
-            pointer-events: none;
-            opacity: 0;
-            transition: opacity 0.3s ease;
-        `;
-        boardElement.style.position = 'relative';
-        boardElement.appendChild(boardDimOverlay);
-        
-        // Store cleanup elements
-        const cleanupElements = [];
-        cleanupElements.push(screenDimOverlay);
-        cleanupElements.push(boardDimOverlay);
-        
-        // ============================================
-        // SCENE 1: Highlight Mistake (1.5 seconds)
-        // ============================================
-        // Animate dim overlays in immediately
-        requestAnimationFrame(() => {
-            screenDimOverlay.style.opacity = '1';
-            boardDimOverlay.style.opacity = '1';
-        });
-        
-        // Highlight missed winning moves (red glow + shake)
-        const highlightedWinningCells = [];
-        if (missedWinningMoves.length > 0) {
-            missedWinningMoves.forEach(move => {
-                const cell = cells[move.index];
-                if (cell) {
-                    const originalStyle = cell.getAttribute('data-original-style') || cell.style.cssText;
-                    cell.setAttribute('data-original-style', originalStyle);
-                    cell.style.cssText += `
-                        box-shadow: 0 0 40px rgba(255, 50, 50, 0.9), inset 0 0 20px rgba(255, 50, 50, 0.5) !important;
-                        border: 3px solid #ff3333 !important;
-                        z-index: 10001;
-                        position: relative;
-                    `;
-                    
-                    // Add shake animation
-                    const shakeStyle = document.createElement('style');
-                    shakeStyle.id = `cell-shake-style-${move.index}`;
-                    shakeStyle.textContent = `
-                        @keyframes cell-shake-${move.index} {
-                            0%, 100% { transform: translate(0, 0); }
-                            10%, 30%, 50%, 70%, 90% { transform: translate(-3px, -3px); }
-                            20%, 40%, 60%, 80% { transform: translate(3px, 3px); }
-                        }
-                    `;
-                    document.head.appendChild(shakeStyle);
-                    cleanupElements.push(shakeStyle);
-                    cell.style.animation = `cell-shake-${move.index} 0.8s ease-in-out`;
-                    highlightedWinningCells.push(cell);
-                }
-            });
-        }
-        
-        // Highlight missed blocking moves (yellow glow + ghost X/O)
-        const highlightedBlockingCells = [];
-        if (missedBlockingMoves.length > 0) {
-            missedBlockingMoves.forEach(move => {
-                const cell = cells[move.index];
-                if (cell && !highlightedWinningCells.includes(cell)) {
-                    const originalStyle = cell.getAttribute('data-original-style') || cell.style.cssText;
-                    cell.setAttribute('data-original-style', originalStyle);
-                    cell.style.cssText += `
-                        box-shadow: 0 0 40px rgba(255, 200, 0, 0.9), inset 0 0 20px rgba(255, 200, 0, 0.5) !important;
-                        border: 3px solid #ffcc00 !important;
-                        z-index: 10001;
-                        position: relative;
-                    `;
-                    
-                    // Add ghost X/O for blocking move (appears in Scene 1)
-                    const ghostBlock = document.createElement('div');
-                    ghostBlock.className = 'ghost-block-yellow';
-                    ghostBlock.textContent = 'O';
-                    ghostBlock.style.cssText = `
-                        position: absolute;
-                        top: 50%;
-                        left: 50%;
-                        transform: translate(-50%, -50%);
-                        font-size: clamp(2rem, 6vw, 3.5rem);
-                        color: rgba(255, 200, 0, 0.7);
-                        opacity: 0;
-                        pointer-events: none;
-                        text-shadow: 0 0 20px rgba(255, 200, 0, 0.8);
-                        z-index: 10002;
-                        font-weight: bold;
-                        transition: opacity 0.4s ease;
-                    `;
-                    cell.style.position = 'relative';
-                    cell.appendChild(ghostBlock);
-                    cleanupElements.push(ghostBlock);
-                    
-                    // Animate ghost block appearance
-                    setTimeout(() => {
-                        ghostBlock.style.opacity = '0.7';
-                    }, 400);
-                    
-                    highlightedBlockingCells.push(cell);
-                }
-            });
-        }
-        
-        // If we have a primary missed move (for Scene 2), use it
-        const primaryMissedCell = missedCell;
-        
-        // ============================================
-        // SCENE 2: AI Demonstrates Correct Move (2 seconds) - Starts at 1.5s, ends at 3.5s
-        // ============================================
-        setTimeout(() => {
-            try {
-                if (!primaryMissedCell || !missedMove) {
-                    // If no specific move, still show AI taunt
-                    console.log('[Taunt] No specific move to demonstrate, showing generic taunt');
-                }
-                
-                // AI avatar appears near board
-                const aiAvatar = document.createElement('div');
-                aiAvatar.className = 'ai-taunt-avatar';
-                aiAvatar.innerHTML = '🤖';
-                aiAvatar.style.cssText = `
-                    position: fixed;
-                    top: clamp(10%, 15vh, 15%);
-                    right: clamp(5%, 10vw, 10%);
-                    transform: scale(0) rotate(-180deg);
-                    font-size: clamp(2rem, 6vw, 4rem);
-                    opacity: 0;
-                    pointer-events: none;
-                    z-index: 10010;
-                    filter: drop-shadow(0 0 25px rgba(100, 200, 255, 0.9));
-                    transition: all 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
-                `;
-                document.body.appendChild(aiAvatar);
-                cleanupElements.push(aiAvatar);
-                
-                // Animate AI avatar appearance
-                requestAnimationFrame(() => {
-                    aiAvatar.style.transform = 'scale(1) rotate(0deg)';
-                    aiAvatar.style.opacity = '1';
-                });
-                
-                // AI points at correct cell (if we have one)
-                if (primaryMissedCell && missedMove) {
-                    setTimeout(() => {
-                        try {
-                            const boardRect = boardElement.getBoundingClientRect();
-                            const cellRect = primaryMissedCell.getBoundingClientRect();
-                            const cellCenterX = cellRect.left + cellRect.width / 2;
-                            const cellCenterY = cellRect.top + cellRect.height / 2;
-                            
-                            aiAvatar.style.transition = 'all 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94)';
-                            aiAvatar.style.left = (cellCenterX - 60) + 'px';
-                            aiAvatar.style.top = (cellCenterY - 100) + 'px';
-                            aiAvatar.style.fontSize = 'clamp(2rem, 5vw, 3rem)';
-                            
-                            // Add pointing animation
-                            const pointStyle = document.createElement('style');
-                            pointStyle.id = 'ai-point-style';
-                            pointStyle.textContent = `
-                                @keyframes ai-point {
-                                    0%, 100% { transform: translate(0, 0); }
-                                    50% { transform: translate(10px, -10px); }
-                                }
-                            `;
-                            document.head.appendChild(pointStyle);
-                            cleanupElements.push(pointStyle);
-                            aiAvatar.style.animation = 'ai-point 0.6s ease-in-out infinite';
-                        } catch (pointError) {
-                            console.warn('Error positioning AI avatar:', pointError);
-                        }
-                    }, 300);
-                    
-                    // Green ghost X/O moves into correct cell
-                    setTimeout(() => {
-                        try {
-                            const ghostMove = document.createElement('div');
-                            ghostMove.className = 'ghost-move-green';
-                            ghostMove.textContent = tauntType === 'win' ? 'X' : 'O';
-                            ghostMove.style.cssText = `
-                                position: absolute;
-                                top: 50%;
-                                left: 50%;
-                                transform: translate(-50%, -50%) scale(0);
-                                font-size: clamp(2.5rem, 7vw, 4rem);
-                                color: rgba(100, 255, 100, 0.9);
-                                opacity: 0;
-                                pointer-events: none;
-                                text-shadow: 0 0 30px rgba(100, 255, 100, 1);
-                                z-index: 10011;
-                                font-weight: bold;
-                            `;
-                            primaryMissedCell.style.position = 'relative';
-                            primaryMissedCell.appendChild(ghostMove);
-                            cleanupElements.push(ghostMove);
-                            
-                            // Animate ghost move entering cell
-                            requestAnimationFrame(() => {
-                                ghostMove.style.transition = 'all 0.8s cubic-bezier(0.34, 1.56, 0.64, 1)';
-                                ghostMove.style.transform = 'translate(-50%, -50%) scale(1)';
-                                ghostMove.style.opacity = '0.8';
-                            });
-                            
-                            // Optional subtle particle/spark effect
-                            for (let i = 0; i < 6; i++) {
-                                const particle = document.createElement('div');
-                                particle.style.cssText = `
-                                    position: absolute;
-                                    top: 50%;
-                                    left: 50%;
-                                    width: clamp(3px, 0.8vw, 5px);
-                                    height: clamp(3px, 0.8vw, 5px);
-                                    background: rgba(100, 255, 100, 0.8);
-                                    border-radius: 50%;
-                                    pointer-events: none;
-                                    z-index: 10012;
-                                `;
-                                primaryMissedCell.appendChild(particle);
-                                cleanupElements.push(particle);
-                                
-                                const angle = (i / 6) * Math.PI * 2;
-                                const distance = 25 + Math.random() * 15;
-                                particle.style.animation = `particle-spark-${i} 0.7s ease-out forwards`;
-                                
-                                const particleStyle = document.createElement('style');
-                                particleStyle.id = `particle-style-${i}`;
-                                particleStyle.textContent = `
-                                    @keyframes particle-spark-${i} {
-                                        0% { 
-                                            opacity: 1; 
-                                            transform: translate(-50%, -50%) scale(1);
-                                        }
-                                        100% { 
-                                            opacity: 0; 
-                                            transform: translate(-50%, -50%) translate(${Math.cos(angle) * distance}px, ${Math.sin(angle) * distance}px) scale(0);
-                                        }
-                                    }
-                                `;
-                                document.head.appendChild(particleStyle);
-                                cleanupElements.push(particleStyle);
-                            }
-                        } catch (ghostError) {
-                            console.error('Error creating ghost move animation:', ghostError);
-                        }
-                    }, 600);
-                }
-                
-                // Text overlay: "This is what you should have done… not that." (fade in, hold, fade out)
-                const demoText = document.createElement('div');
-                demoText.className = 'ai-demo-text';
-                let demoMessage;
-                if (isSarah()) {
-                    demoMessage = "Miss Sarah, this cell would have been the optimal move.";
-                } else {
-                    demoMessage = "This is what you should have done… not that.";
-                }
-                demoText.textContent = demoMessage;
-                demoText.style.cssText = `
-                    position: fixed;
-                    top: 50%;
-                    left: 50%;
-                    transform: translate(-50%, -50%) translateY(30px);
-                    color: #ff8888;
-                    font-size: clamp(1rem, 3vw, 1.4rem);
-                    font-weight: bold;
-                    text-align: center;
-                    text-shadow: 2px 2px 8px rgba(0,0,0,0.9);
-                    opacity: 0;
-                    z-index: 10013;
-                    pointer-events: none;
-                    padding: 0 1rem;
-                    max-width: 90%;
-                    word-wrap: break-word;
-                `;
-                document.body.appendChild(demoText);
-                cleanupElements.push(demoText);
-                
-                // Fade in
-                setTimeout(() => {
-                    requestAnimationFrame(() => {
-                        demoText.style.transition = 'all 0.5s ease-out';
-                        demoText.style.opacity = '1';
-                        demoText.style.transform = 'translate(-50%, -50%) translateY(0)';
-                    });
-                }, 800);
-                
-                // Hold for reading, then fade out
-                setTimeout(() => {
-                    demoText.style.transition = 'all 0.4s ease-out';
-                    demoText.style.opacity = '0';
-                    demoText.style.transform = 'translate(-50%, -50%) translateY(-20px)';
-                    setTimeout(() => {
-                        if (demoText.parentNode) demoText.remove();
-                    }, 400);
-                }, 2500); // Fade out near end of Scene 2
-            } catch (scene2Error) {
-                console.error('Error in Scene 2:', scene2Error);
-            }
-        }, 1500); // Scene 2 starts at 1.5s
-        
-        // ============================================
-        // SCENE 3: Taunt Intensifies (1-1.5 seconds) - Starts at 3.5s, ends at 5s
-        // ============================================
-        setTimeout(() => {
-            try {
-                // Taunt bubble - Different messages for Sarah vs others
-                const tauntBubble = document.createElement('div');
-                tauntBubble.className = 'ai-taunt-bubble';
-                let tauntMessages;
-                if (isSarah()) {
-                    // Respectful, encouraging messages for Sarah
-                    tauntMessages = [
-                        "Miss Sarah, the AI has identified a more strategic move.",
-                        "Miss Sarah, consider this position for your next attempt.",
-                        "Miss Sarah, learning from each game will improve your strategy.",
-                        "Miss Sarah, this demonstrates the importance of careful planning."
-                    ];
-                } else {
-                    // Highly insulting, sarcastic, condescending messages for others
-                    tauntMessages = [
-                        "Wow… you really thought that would work? Trash.",
-                        "Are you losing brain cells trying to play this game?",
-                        "You should consider giving up; this is embarrassing.",
-                        "Really? That's the best you've got?",
-                        "Oops, missed again... this is easy!",
-                        "Try harder, maybe next time!",
-                        "I'm almost impressed by how bad that was.",
-                        "Did you think about that move?",
-                        "You really missed this one, how predictable!",
-                        "This is getting embarrassing...",
-                        "Even I'm surprised you missed that.",
-                        "Your gameplay is as weak as your excuses.",
-                        "Maybe you should stick to games for toddlers.",
-                        "I've seen better strategy from a coin flip.",
-                        "This is pathetic. You had a winning move and you missed it.",
-                        "Your moves are so predictable, it's almost sad.",
-                        "Are you even trying? Because it doesn't look like it.",
-                        "This is why you lose. You don't think ahead.",
-                        "You had it right there. Right. There. And you missed it.",
-                        "I'm starting to think you're doing this on purpose."
-                    ];
-                }
-                tauntBubble.textContent = tauntMessages[Math.floor(Math.random() * tauntMessages.length)];
-                tauntBubble.style.cssText = `
-                    position: fixed;
-                    top: clamp(15%, 20vh, 20%);
-                    right: clamp(5%, 8vw, 8%);
-                    background: rgba(255, 68, 68, 0.95);
-                    color: white;
-                    padding: clamp(0.75rem, 2vw, 1rem) clamp(1rem, 3vw, 1.5rem);
-                    border-radius: 20px;
-                    font-size: clamp(0.9rem, 2.5vw, 1.1rem);
-                    font-weight: bold;
-                    box-shadow: 0 8px 32px rgba(0,0,0,0.5);
-                    z-index: 10006;
-                    pointer-events: none;
-                    opacity: 0;
-                    transform: scale(0) rotate(-10deg);
-                    max-width: clamp(200px, 40vw, 300px);
-                    word-wrap: break-word;
-                `;
-                document.body.appendChild(tauntBubble);
-                cleanupElements.push(tauntBubble);
-                
-                requestAnimationFrame(() => {
-                    tauntBubble.style.transition = 'all 0.5s cubic-bezier(0.34, 1.56, 0.64, 1)';
-                    tauntBubble.style.opacity = '1';
-                    tauntBubble.style.transform = 'scale(1) rotate(0deg)';
-                });
-                
-                // AI avatar shake
-                const aiAvatar = document.querySelector('.ai-taunt-avatar');
-                if (aiAvatar) {
-                    const shakeStyle = document.createElement('style');
-                    shakeStyle.id = 'ai-shake-style';
-                    shakeStyle.textContent = `
-                        @keyframes ai-laugh-shake {
-                            0%, 100% { transform: translate(0, 0) rotate(0deg); }
-                            25% { transform: translate(-5px, -5px) rotate(-5deg); }
-                            75% { transform: translate(5px, -5px) rotate(5deg); }
-                        }
-                    `;
-                    document.head.appendChild(shakeStyle);
-                    cleanupElements.push(shakeStyle);
-                    aiAvatar.style.animation = 'ai-laugh-shake 0.5s ease-in-out 3';
-                }
-                
-                // Remove bubble after 1.5 seconds (Scene 3 duration)
-                setTimeout(() => {
-                    tauntBubble.style.transition = 'all 0.3s ease-out';
-                    tauntBubble.style.opacity = '0';
-                    tauntBubble.style.transform = 'scale(0.8) rotate(10deg)';
-                    setTimeout(() => {
-                        if (tauntBubble.parentNode) tauntBubble.remove();
-                    }, 300);
-                }, 1500); // Scene 3 duration: 1.5 seconds
-            } catch (scene3Error) {
-                console.error('Error in Scene 3:', scene3Error);
-            }
-        }, 3500); // Scene 3 starts at 3.5s
-        
-        // ============================================
-        // SCENE 4: Resume Gameplay (0.5 seconds) - Starts at 5s, ends at 5.5s
-        // ============================================
-        setTimeout(() => {
-            try {
-                // Fade out dim overlays
-                screenDimOverlay.style.transition = 'opacity 0.3s ease';
-                screenDimOverlay.style.opacity = '0';
-                boardDimOverlay.style.transition = 'opacity 0.3s ease';
-                boardDimOverlay.style.opacity = '0';
-                
-                // Reset all highlighted cell styling
-                [...highlightedWinningCells, ...highlightedBlockingCells].forEach(cell => {
-                    if (cell) {
-                        const originalStyle = cell.getAttribute('data-original-style') || '';
-                        cell.style.cssText = originalStyle;
-                        cell.removeAttribute('data-original-style');
-                        cell.style.animation = '';
-                        
-                        // Remove ghost elements
-                        const ghostMove = cell.querySelector('.ghost-move-green');
-                        if (ghostMove) ghostMove.remove();
-                        const ghostBlock = cell.querySelector('.ghost-block-yellow');
-                        if (ghostBlock) ghostBlock.remove();
-                        const particles = cell.querySelectorAll('[style*="particle"]');
-                        particles.forEach(p => p.remove());
-                    }
-                });
-                
-                // Also clean up primary missed cell if different
-                if (primaryMissedCell && !highlightedWinningCells.includes(primaryMissedCell) && !highlightedBlockingCells.includes(primaryMissedCell)) {
-                    const originalStyle = primaryMissedCell.getAttribute('data-original-style') || '';
-                    primaryMissedCell.style.cssText = originalStyle;
-                    primaryMissedCell.removeAttribute('data-original-style');
-                    const ghostMove = primaryMissedCell.querySelector('.ghost-move-green');
-                    if (ghostMove) ghostMove.remove();
-                }
-                
-                // Remove AI avatar
-                const aiAvatar = document.querySelector('.ai-taunt-avatar');
-                if (aiAvatar) {
-                    aiAvatar.style.transition = 'opacity 0.4s ease';
-                    aiAvatar.style.opacity = '0';
-                    setTimeout(() => {
-                        if (aiAvatar.parentNode) aiAvatar.remove();
-                    }, 400);
-                }
-                
-                // Remove all style elements
-                const stylesToRemove = [
-                    'ai-point-style',
-                    'ai-shake-style'
-                ];
-                for (let i = 0; i < 20; i++) {
-                    stylesToRemove.push(`cell-shake-style-${i}`);
-                    stylesToRemove.push(`particle-style-${i}`);
-                }
-                stylesToRemove.forEach(id => {
-                    const styleEl = document.getElementById(id);
-                    if (styleEl) styleEl.remove();
-                });
-                
-                // Cleanup all elements after fade completes
-                setTimeout(() => {
-                    cleanupElements.forEach(el => {
-                        try {
-                            if (el && el.parentNode) {
-                                el.remove();
-                            }
-                        } catch (cleanupError) {
-                            console.warn('Error cleaning up element:', cleanupError);
-                        }
-                    });
-                    
-                    // Re-enable cells
-                    cells.forEach(cell => {
-                        cell.style.pointerEvents = '';
-                        cell.style.cursor = '';
-                    });
-                    
-                    // Unlock UI - resume normal gameplay
-                    gameState.uiLocked = originalUILocked;
-                    gameState.uiLockingReason = null;
-                    // CRITICAL: Do NOT restore gameActive - let endGame handle it
-                    // gameState.gameActive = originalGameActive;
-                    
-                    // Resume background music
-                    if (musicWasPlaying && bgMusic) {
-                        try {
-                            bgMusic.play().catch(audioError => {
-                                console.warn('Could not resume background music:', audioError);
-                            });
-                        } catch (audioError) {
-                            console.warn('Error resuming background music:', audioError);
-                        }
-                    }
-                    
-                    // CRITICAL: AI intelligence must persist - no reset
-                    // The game will continue with endGame() which maintains AI state
-                    
-                    // CRITICAL: Call the completion callback to trigger endGame()
-                    if (onCompleteCallback && typeof onCompleteCallback === 'function') {
-                        try {
-                            onCompleteCallback();
-                        } catch (callbackError) {
-                            console.error('[Taunt] Error calling completion callback:', callbackError);
-                        }
-                    }
-                    
-                }, 500);
-            } catch (cleanupError) {
-                console.error('Error in cleanup:', cleanupError);
-                // Force cleanup
-                try {
-                    gameState.uiLocked = false;
-                    gameState.uiLockingReason = null;
-                    cells.forEach(cell => {
-                        cell.style.pointerEvents = '';
-                        cell.style.cursor = '';
-                    });
-                    if (musicWasPlaying && bgMusic) {
-                        bgMusic.play().catch(() => {});
-                    }
-                } catch (forceCleanupError) {
-                    console.error('Force cleanup failed:', forceCleanupError);
-                }
-                // Still call callback even if cleanup had errors
-                if (onCompleteCallback && typeof onCompleteCallback === 'function') {
-                    try {
-                        onCompleteCallback();
-                    } catch (callbackError) {
-                        console.error('[Taunt] Error calling completion callback after cleanup error:', callbackError);
-                    }
-                }
-            }
-        }, 5000); // Scene 4 starts at 5s, total duration: 5.5 seconds (Scene 1: 1.5s + Scene 2: 2s + Scene 3: 1.5s + Scene 4: 0.5s)
-        
-    } catch (error) {
-        console.error('Critical error in showSecondLossTaunt:', error);
-        // Emergency cleanup
-        try {
-            gameState.uiLocked = false;
-            gameState.uiLockingReason = null;
-            const cells = Array.from(document.querySelectorAll('.cell'));
-            cells.forEach(cell => {
-                cell.style.pointerEvents = '';
-                cell.style.cursor = '';
-            });
-            if (bgMusic && musicWasPlaying) {
-                bgMusic.play().catch(() => {});
-            }
-        } catch (emergencyError) {
-            console.error('Emergency cleanup failed:', emergencyError);
-        }
-        // Still call callback even in emergency cleanup
-        if (onCompleteCallback && typeof onCompleteCallback === 'function') {
-            try {
-                onCompleteCallback();
-            } catch (callbackError) {
-                console.error('[Taunt] Error calling completion callback in emergency cleanup:', callbackError);
-            }
-        }
-    }
-}
+// REMOVED: activateSoulSnatch function - second-loss taunt feature completely removed
 
 /**
- * Generic missed move taunt (for losses other than 2nd)
+ * Generic missed move taunt
  * UX ONLY - Does NOT affect AI logic
  */
 function showMissedMoveTaunt() {
@@ -4437,12 +3773,21 @@ function handleCellClick(cell) {
                     
                     gameState.losses++;
                     lossesDisplay.textContent = gameState.losses;
+                    
+                    // CRITICAL: Increment level1Losses for second-loss taunt tracking
+                    if (gameState.currentLevel === 1) {
+                        gameState.level1Losses = (gameState.level1Losses || 0) + 1;
+                    }
+                    
                     if (gameState.aiLearningSystem && gameState.currentGameId) {
                         gameState.aiLearningSystem.recordGameResult('win', gameState.playerName);
                         if (socket) {
                             socket.emit('ai-stats-update', gameState.aiLearningSystem.getStats());
                         }
                     }
+                    
+                    // REMOVED: Second-loss taunt feature
+                    
                     // Conditional message for Sarah
                     if (isSarah()) {
                         endGame("The AI has blocked your pattern, Miss Sarah. Shall we continue?");
@@ -4515,6 +3860,21 @@ function handleCellClick(cell) {
         playerWinCount++;
         gameState.playerJustWon = true; // Mark that player won - AI will think longer next game
         gameState.aiThinkingDelay = 1500; // Increase thinking delay to 1.5 seconds
+        
+        // LEVEL 1: Track winning pattern for adaptation
+        if (gameState.currentLevel === 1 && gameState.playerMoveHistory.length > 0) {
+            const patternKey = gameState.playerMoveHistory.join('-');
+            if (!gameState.playerWinningPatterns.includes(patternKey)) {
+                gameState.playerWinningPatterns.push(patternKey);
+                // Keep only last 5 winning patterns
+                if (gameState.playerWinningPatterns.length > 5) {
+                    gameState.playerWinningPatterns.shift();
+                }
+            }
+        }
+        
+        // Mark first round as complete
+        gameState.firstRoundOfSession = false;
         
         // Update wins display
         const winsDisplay = document.getElementById('wins');
@@ -4686,6 +4046,14 @@ handleCellClick = function(cell) {
                 messageBox.textContent = "Foolish little brother... You never stood a chance.";
                 gameState.losses++;
                 lossesDisplay.textContent = gameState.losses;
+                
+                // CRITICAL: Increment level1Losses for second-loss taunt tracking
+                if (gameState.currentLevel === 1) {
+                    gameState.level1Losses = (gameState.level1Losses || 0) + 1;
+                }
+                
+                // REMOVED: Second-loss taunt feature
+                
                 reportLoss();
                 
                 setTimeout(() => {
@@ -4722,12 +4090,30 @@ handleCellClick = function(cell) {
 };
 
 function makeAIMove() {
-    try {
+    // CRITICAL: Strict turn locking - prevent AI from playing twice in one turn
+    // Single source of truth: aiTurnInProgress flag
+    if (gameState.aiTurnInProgress) {
+        console.warn('[AI] Turn already in progress, ignoring duplicate call');
+        return;
+    }
+    
         // FAILSAFE: If game is blocked, don't attempt move
         // CRITICAL: Do NOT pause music when game is blocked - music continues as global ambience
         if (!gameState.gameActive || gameState.inInteractiveMode) {
             return;
         }
+    
+    // CRITICAL: Lock turn IMMEDIATELY before any async operations
+    // This must be the FIRST thing after validation checks
+    // Once locked, no async callback, timeout, or animation can trigger a second move
+    gameState.aiTurnInProgress = true;
+    
+    // CRITICAL: Use try/finally to guarantee turn unlock
+    let moveExecuted = false;
+    let index = null;
+    let aiMoveTimeout = null;
+    
+    try {
 
     // Shields remain active for entire match - do NOT remove after AI move
     
@@ -4737,35 +4123,39 @@ function makeAIMove() {
     // Check if Tactical Claim should be activated (Level 1 only, once per match, mid-game)
     // CRITICAL: Tactical Claim is VISUAL ONLY - it must NOT block gameplay, pause turns, or delay AI moves
     // It may not pause the game, delay turns, suppress AI moves, or override win detection
+    // CRITICAL: Do NOT activate during AI turn - only check, don't interrupt
     if (gameState.currentLevel === 1 && !gameState.tacticalClaimUsed) {
         try {
         const shouldActivate = shouldActivateTacticalClaim();
         if (shouldActivate) {
                 // Activate Tactical Claim visual effects (non-blocking)
+                // CRITICAL: This must NOT affect turn state or cause AI to play twice
             activateTacticalClaim();
+                // Mark as used immediately to prevent re-activation
+                gameState.tacticalClaimUsed = true;
                 // CRITICAL: Tactical Claim does NOT pause, delay, or block anything
                 // AI immediately continues with full decision logic
             }
         } catch (e) {
             // FAILSAFE: If Tactical Claim causes any error, skip it and continue
             console.error('Tactical Claim error (skipped):', e);
-            gameState.tacticalClaimUsed = false; // Allow retry next turn
+            // Do NOT reset tacticalClaimUsed on error - prevent infinite retries
         }
     }
 
-    // CRITICAL: AI must respond within time budget - use timeout for safety
-    let index;
-    const aiMoveTimeout = setTimeout(() => {
+    // CRITICAL: AI must respond within time budget - use timeout for safety (reduced to 700ms)
+    aiMoveTimeout = setTimeout(() => {
         // FALLBACK: If AI takes too long, use simplified heuristic
-        console.warn('AI move timeout - using fallback move');
+        console.warn('[AI] Move timeout - using fallback move');
         const reservedIndices = getReservedCellIndices();
         const emptyCells = gameState.board
             .map((cell, i) => (cell === '' && !gameState.shieldedCells.includes(i) && !reservedIndices.includes(i)) ? i : null)
             .filter(i => i !== null);
         if (emptyCells.length > 0) {
             index = emptyCells[Math.floor(Math.random() * emptyCells.length)];
+            console.log('[AI] Timeout fallback selected move:', index);
         }
-    }, 1000); // 1 second timeout - slow AI is broken AI
+    }, 700); // 700ms timeout - prevents deadlock
 
     try {
     // If a subtle pending move was prepared during a blackout, use it if still valid
@@ -4787,57 +4177,125 @@ function makeAIMove() {
     // Clear timeout once move is selected
     clearTimeout(aiMoveTimeout);
 
-    // FAILSAFE: If index is still null, use fallback
+    // CRITICAL: HARD FAILSAFE - If index is still null, force a move
     if (index === null || index === undefined) {
-        console.warn('AI move selection returned null - using fallback');
+        console.warn('[AI] Move selection returned null - using hard failsafe');
         const reservedIndices = getReservedCellIndices();
         const emptyCells = gameState.board
             .map((cell, i) => (cell === '' && !gameState.shieldedCells.includes(i) && !reservedIndices.includes(i)) ? i : null)
             .filter(i => i !== null);
         if (emptyCells.length > 0) {
-            index = emptyCells[Math.floor(Math.random() * emptyCells.length)];
+            index = emptyCells[0]; // Always pick first available - guaranteed move
+            console.log('[AI] Hard failsafe selected move:', index);
         } else {
-            // Ultimate fallback - should never happen
-            console.error('No valid moves available - game may be in invalid state');
+            // Ultimate fallback - find ANY empty cell (ignore shields/reserved if necessary)
+            for (let i = 0; i < 9; i++) {
+                if (gameState.board[i] === '') {
+                    index = i;
+                    console.warn('[AI] Emergency fallback - using cell:', i);
+                    break;
+                }
+            }
+            // If still no move, game is in invalid state - unlock and return
+            if (index === null || index === undefined) {
+                console.error('[AI] CRITICAL: No valid moves available - game in invalid state');
+                gameState.aiTurnInProgress = false;
             return;
+            }
         }
     }
 
     } catch (moveError) {
-        // FAILSAFE: If move selection fails, use fallback and continue game
-        clearTimeout(aiMoveTimeout);
-        console.error('AI move selection error (using fallback):', moveError);
+        // FAILSAFE: If move selection fails, use hard fallback
+        if (aiMoveTimeout) clearTimeout(aiMoveTimeout);
+        console.error('[AI] Move selection error (using hard fallback):', moveError);
         const reservedIndices = getReservedCellIndices();
         const emptyCells = gameState.board
             .map((cell, i) => (cell === '' && !gameState.shieldedCells.includes(i) && !reservedIndices.includes(i)) ? i : null)
             .filter(i => i !== null);
         if (emptyCells.length > 0) {
-            index = emptyCells[Math.floor(Math.random() * emptyCells.length)];
+            index = emptyCells[0]; // Guaranteed move
+            console.log('[AI] Error fallback selected move:', index);
         } else {
-            return; // Cannot continue
+            // Ultimate fallback - find ANY empty cell
+            for (let i = 0; i < 9; i++) {
+                if (gameState.board[i] === '') {
+                    index = i;
+                    console.warn('[AI] Emergency error fallback - using cell:', i);
+                    break;
+                }
+            }
+            // If still no move, unlock and return
+            if (index === null || index === undefined) {
+                console.error('[AI] CRITICAL: Cannot recover from move selection error');
+                gameState.aiTurnInProgress = false;
+                return;
+            }
         }
     }
 
     // STATE CONSISTENCY CHECK: Verify board state before making move
     if (gameState.board[index] !== '' || gameState.shieldedCells.includes(index) || getReservedCellIndices().includes(index)) {
-        console.warn('AI attempted invalid move - recalculating');
+        console.warn('[AI] Attempted invalid move - recalculating');
         // Recalculate from scratch
         const reservedIndices = getReservedCellIndices();
         const emptyCells = gameState.board
             .map((cell, i) => (cell === '' && !gameState.shieldedCells.includes(i) && !reservedIndices.includes(i)) ? i : null)
             .filter(i => i !== null);
         if (emptyCells.length > 0) {
-            index = emptyCells[Math.floor(Math.random() * emptyCells.length)];
+            index = emptyCells[0]; // Guaranteed valid move
+            console.log('[AI] Recalculation selected move:', index);
         } else {
+            // Hard fallback - find ANY empty cell
+            for (let i = 0; i < 9; i++) {
+                if (gameState.board[i] === '') {
+                    index = i;
+                    console.warn('[AI] Emergency recalculation fallback - using cell:', i);
+                    break;
+                }
+            }
+            // If still invalid, unlock and return
+            if (index === null || index === undefined || gameState.board[index] !== '') {
+                console.error('[AI] CRITICAL: Cannot find valid move after recalculation');
+                gameState.aiTurnInProgress = false;
+            return;
+        }
+    }
+    }
+    
+    // CRITICAL: Final validation before committing move
+    if (gameState.board[index] !== '' || gameState.shieldedCells.includes(index) || getReservedCellIndices().includes(index)) {
+        console.error('[AI] Move still invalid after recalculation - using emergency fallback');
+        // Emergency fallback - find ANY empty cell
+        for (let i = 0; i < 9; i++) {
+            if (gameState.board[i] === '') {
+                index = i;
+                console.warn('[AI] Emergency final fallback - using cell:', i);
+                break;
+            }
+        }
+        // If still invalid, unlock and return
+        if (index === null || index === undefined || gameState.board[index] !== '') {
+            console.error('[AI] CRITICAL: Cannot find valid move after final validation');
+            gameState.aiTurnInProgress = false;
             return;
         }
     }
 
+    // CRITICAL: Execute move - this must always happen
+    // Move is committed synchronously - no async operations can interrupt
     gameState.board[index] = 'O';
     cells[index].textContent = 'O';
     cells[index].setAttribute('data-mark', 'O');
+    moveExecuted = true; // Mark that move was executed
     
-    // Animate cell placement (premium animation)
+    // CRITICAL: Unlock turn IMMEDIATELY after move is committed to board
+    // Turn ends here - no second move can be triggered
+    // This happens BEFORE any animations or async operations
+    gameState.aiTurnInProgress = false;
+    
+    // Animate cell placement (premium animation) - happens after turn unlock
+    // This is safe because turn is already unlocked and move is committed
     if (typeof AnimationUtils !== 'undefined') {
         AnimationUtils.animateCellPlacement(cells[index]);
     }
@@ -4857,61 +4315,12 @@ function makeAIMove() {
         gameState.losses++;
         lossesDisplay.textContent = gameState.losses;
         
-        // ADVANCED TAUNT TYPE: "SHOW YOU HOW STUPID YOU WERE"
-        // SECOND LOSS (ENHANCED): Show visual demonstration of missed move
-        // - Freeze the board briefly (4-5 seconds)
-        // - Highlight mistake(s): Missed winning cell, Failed block
-        // - Visual demonstration: Animate ghost X/O where player should have played
-        // - Condescending taunt: Sarcastic, mocking, lightly cruel
-        // - Resume gameplay automatically with smooth transition
-        // UX ONLY - does NOT affect AI logic
-        // CRITICAL: Only trigger on second loss in Level 1
+        // Increment level1Losses for tracking
         if (gameState.currentLevel === 1) {
             gameState.level1Losses = (gameState.level1Losses || 0) + 1;
         }
         
-        // ============================================
-        // CRITICAL: SECOND LOSS TAUNT TRIGGER (MUST BE FIRST CHECK)
-        // ============================================
-        // MVP: SECOND LOSS IN LEVEL 1 - Trigger exactly once when level1Losses === 2
-        // Check IMMEDIATELY after increment, BEFORE any other logic
-        // This ensures taunt fires before endGame() or any other state changes
-        if (gameState.currentLevel === 1 && 
-            gameState.level1Losses === 2 && 
-            !gameState.isKingWilliam && 
-            !isSarah() && 
-            !gameState.secondLossTauntShown) { // MVP: Explicit check to prevent loops
-            try {
-                console.log('[Taunt] Second loss detected - triggering taunt IMMEDIATELY', {
-                    totalLosses: gameState.losses,
-                    level1Losses: gameState.level1Losses,
-                    tauntShown: gameState.secondLossTauntShown,
-                    playerMoveHistory: gameState.playerMoveHistory.length
-                });
-                // CRITICAL: Pass endGame callback so taunt can call it after completion
-                const lossMessage = "AI Wins!\nThe AI has outplayed you this round, " + gameState.playerName + "!";
-                showSecondLossTaunt(() => {
-                    // Call endGame after taunt completes
-                    endGame(lossMessage);
-                });
-                // CRITICAL: Return early to prevent endGame from being called immediately
-                // This prevents any other taunt logic or endGame() from executing
-                return;
-            } catch (tauntError) {
-                console.error('[Taunt] Error showing second loss taunt:', tauntError);
-                // Fallback: Continue with normal endGame if taunt fails
-                endGame("AI Wins!\nThe AI has outplayed you this round, " + gameState.playerName + "!");
-                return;
-            }
-        } else if (Math.random() < 0.3) {
-            // Other losses: 30% chance to show taunt
-            try {
-                showMissedMoveTaunt();
-            } catch (tauntError) {
-                console.error('Error showing missed move taunt:', tauntError);
-                // Continue with normal endGame - taunt is optional
-            }
-        }
+        // REMOVED: Second-loss taunt feature
         
         // ADAPTIVE INTELLIGENCE PERSISTENCE: AI intelligence must persist after AI wins
         // The AI must NOT lose intelligence, adaptability, or strategic awareness after winning
@@ -5015,6 +4424,7 @@ function makeAIMove() {
                 gameState.board = Array(9).fill('');
                 gameState.gameActive = true;
                 gameState.playerMoveHistory = [];
+                gameState.aiTurnInProgress = false; // CRITICAL: Unlock turn for new game
                 cells.forEach(cell => cell.textContent = '');
                 resetBtn.style.display = 'none';
                 messageBox.textContent = tauntMessages[Math.floor(Math.random() * tauntMessages.length)];
@@ -5040,38 +4450,76 @@ function makeAIMove() {
         }
         reportLoss();
         emitBoardUpdate();
+        // Turn is already unlocked after move execution
         return;
     }
 
-        if (!gameState.isKingWilliam) {
-            // TAUNT VARIETY RULE: Randomize taunt selection to avoid repetition
-            // Track recent taunts to ensure variety
-            let selectedTaunt = tauntMessages[Math.floor(Math.random() * tauntMessages.length)];
-            
-            // Avoid repeating same taunt if possible
-            if (recentTauntTypes.length > 0) {
-                const recentTaunts = recentTauntTypes.slice(-3);
-                let attempts = 0;
-                while (recentTaunts.includes(selectedTaunt) && attempts < 5) {
-                    selectedTaunt = tauntMessages[Math.floor(Math.random() * tauntMessages.length)];
-                    attempts++;
+    if (!gameState.isKingWilliam) {
+        // TAUNT VARIETY RULE: Randomize taunt selection to avoid repetition
+        // Track recent taunts to ensure variety
+        let selectedTaunt = tauntMessages[Math.floor(Math.random() * tauntMessages.length)];
+        
+        // Avoid repeating same taunt if possible
+        if (recentTauntTypes.length > 0) {
+            const recentTaunts = recentTauntTypes.slice(-3);
+            let attempts = 0;
+            while (recentTaunts.includes(selectedTaunt) && attempts < 5) {
+                selectedTaunt = tauntMessages[Math.floor(Math.random() * tauntMessages.length)];
+                attempts++;
+            }
+        }
+        
+        // Track this taunt
+        recentTauntTypes.push(selectedTaunt);
+        if (recentTauntTypes.length > MAX_RECENT_TAUNTS) {
+            recentTauntTypes.shift();
+        }
+        
+        messageBox.textContent = selectedTaunt;
+    }
+    
+    } catch (e) {
+        console.error('[AI] Critical error in makeAIMove:', e);
+        // CRITICAL: Ensure move is executed even on error
+        if (!moveExecuted && index !== null && index !== undefined) {
+            try {
+                // Emergency move execution
+                if (gameState.board[index] === '') {
+                    gameState.board[index] = 'O';
+                    cells[index].textContent = 'O';
+                    cells[index].setAttribute('data-mark', 'O');
+                    moveExecuted = true;
+                    console.log('[AI] Emergency move executed on error:', index);
+                }
+            } catch (emergencyError) {
+                console.error('[AI] Failed to execute emergency move:', emergencyError);
+            }
+        }
+    } finally {
+        // CRITICAL: Always unlock turn and clear timeout
+        if (aiMoveTimeout) clearTimeout(aiMoveTimeout);
+        gameState.aiTurnInProgress = false;
+        
+        // If no move was executed, force one
+        if (!moveExecuted) {
+            console.warn('[AI] No move executed - forcing emergency move');
+            const reservedIndices = getReservedCellIndices();
+            const emptyCells = gameState.board
+                .map((cell, i) => (cell === '' && !gameState.shieldedCells.includes(i) && !reservedIndices.includes(i)) ? i : null)
+                .filter(i => i !== null);
+            if (emptyCells.length > 0) {
+                const emergencyIndex = emptyCells[0];
+                try {
+                    gameState.board[emergencyIndex] = 'O';
+                    cells[emergencyIndex].textContent = 'O';
+                    cells[emergencyIndex].setAttribute('data-mark', 'O');
+                    clickSound.play();
+                    emitBoardUpdate();
+                    console.log('[AI] Forced emergency move:', emergencyIndex);
+                } catch (forceError) {
+                    console.error('[AI] Failed to force emergency move:', forceError);
                 }
             }
-            
-            // Track this taunt
-            recentTauntTypes.push(selectedTaunt);
-            if (recentTauntTypes.length > MAX_RECENT_TAUNTS) {
-                recentTauntTypes.shift();
-            }
-            
-            messageBox.textContent = selectedTaunt;
-        }
-    } catch (e) {
-        console.error('Critical error in makeAIMove:', e);
-        // Try to recover - just disable game
-        gameState.gameActive = false;
-        if (messageBox) {
-            messageBox.textContent = "An error occurred. Please refresh the page.";
         }
     }
 }
@@ -5211,6 +4659,38 @@ function chooseHardAIMove() {
                         gameState.aiLearningSystem.blockedWinPatterns.add(patternCheck.pattern);
                     }
                     console.log(`AI blocking pattern: ${patternCheck.pattern} (Win Rate: ${aiWinRate.toFixed(1)}%)`);
+                }
+            }
+        }
+        
+        // LEVEL 1: Counter repeated winning patterns
+        if (isLevel1 && gameState.playerWinningPatterns.length > 0 && gameState.playerMoveHistory.length >= 2) {
+            const currentPattern = gameState.playerMoveHistory.join('-');
+            // Check if player is repeating a known winning pattern
+            for (const winningPattern of gameState.playerWinningPatterns) {
+                const patternMoves = winningPattern.split('-').map(Number);
+                if (gameState.playerMoveHistory.length <= patternMoves.length) {
+                    // Check if current moves match the start of a known winning pattern
+                    const matches = gameState.playerMoveHistory.every((move, idx) => 
+                        idx < patternMoves.length && move === patternMoves[idx]
+                    );
+                    if (matches && gameState.playerMoveHistory.length < patternMoves.length) {
+                        // Player is repeating a known pattern - counter it decisively
+                        const nextExpectedMove = patternMoves[gameState.playerMoveHistory.length];
+                        const reserved = getReservedCellIndices();
+                        if (nextExpectedMove !== undefined && 
+                            gameState.board[nextExpectedMove] === '' && 
+                            !gameState.shieldedCells.includes(nextExpectedMove) && 
+                            !reserved.includes(nextExpectedMove)) {
+                            moveOptions.push({
+                                index: nextExpectedMove,
+                                priority: 1200, // High priority to counter known pattern
+                                type: 'pattern_counter',
+                                reasoning: `Countering repeated winning pattern: ${winningPattern}`
+                            });
+                            console.log(`[Level 1] AI countering repeated pattern: ${winningPattern}`);
+                        }
+                    }
                 }
             }
         }
@@ -5363,12 +4843,26 @@ function chooseHardAIMove() {
                 }
                 return candidatePool[Math.floor(Math.random() * candidatePool.length)];
         }
-        // If all cells are shielded, return null (shouldn't happen, but safety)
-        return null;
+        // CRITICAL: Hard failsafe - find ANY empty cell (ignore shields if necessary)
+        for (let i = 0; i < 9; i++) {
+            if (gameState.board[i] === '') {
+                console.warn('[AI] chooseHardAIMove: Emergency fallback - using cell:', i);
+                return i;
+            }
+        }
+        // Ultimate fallback - return 0 (should never happen, but prevents null)
+        console.error('[AI] chooseHardAIMove: CRITICAL - no empty cells found, returning 0');
+        return 0;
     }
 
     // Sort by priority
     moveOptions.sort((a, b) => b.priority - a.priority);
+    
+    // LEVEL 1 LENIENCY: Controlled leniency for Level 1 only
+    // This makes Level 1 beatable while maintaining AI intelligence
+    const isLevel1 = currentLevel === 1;
+    const isFirstRound = gameState.firstRoundOfSession;
+    const totalMoves = gameState.board.filter(cell => cell !== '').length;
     
     // RESTORED: Weighted randomness for adaptability - higher priority moves more likely, but not guaranteed
     // This prevents AI from being predictable and allows player strategy variety
@@ -5380,18 +4874,38 @@ function chooseHardAIMove() {
         const topPriority = moveOptions[0].priority;
         const topTier = moveOptions.filter(m => m.priority === topPriority);
         
+        // LEVEL 1 LENIENCY: In Level 1, when multiple safe moves exist, occasionally choose less aggressive
+        if (isLevel1 && topTier.length > 1 && topPriority < 700) {
+            // For non-critical moves (not win/block/fork), apply leniency
+            // First round: 30% chance to choose second-best safe move
+            // Later rounds: 15% chance
+            const leniencyChance = isFirstRound ? 0.30 : 0.15;
+            if (Math.random() < leniencyChance && moveOptions.length > 1) {
+                // Choose from top 2-3 safe moves instead of always the best
+                const safeMoves = moveOptions.filter(m => m.priority >= 400 && m.priority < 700);
+                if (safeMoves.length > 0) {
+                    selected = safeMoves[Math.floor(Math.random() * safeMoves.length)];
+                } else {
+                    selected = topTier[Math.floor(Math.random() * topTier.length)];
+                }
+            } else {
+                selected = topTier[Math.floor(Math.random() * topTier.length)];
+            }
+        } else if (topTier.length > 1) {
         // If multiple moves share top priority, randomly choose among them
-        if (topTier.length > 1) {
             selected = topTier[Math.floor(Math.random() * topTier.length)];
         } else {
             // Weighted selection: 70% chance for top move, 20% for second, 10% for others
+            // LEVEL 1: Slightly more lenient (60/25/15 instead of 70/20/10)
+            const topChance = isLevel1 ? 0.60 : 0.70;
+            const secondChance = isLevel1 ? 0.25 : 0.20;
             const rand = Math.random();
-            if (rand < 0.70 || moveOptions.length === 1) {
+            if (rand < topChance || moveOptions.length === 1) {
                 selected = moveOptions[0];
-            } else if (rand < 0.90 && moveOptions.length > 1) {
+            } else if (rand < (topChance + secondChance) && moveOptions.length > 1) {
                 selected = moveOptions[1];
             } else {
-                // 10% chance to pick from top 3 moves (adds unpredictability)
+                // Pick from top 3 moves (adds unpredictability)
                 const topThree = moveOptions.slice(0, Math.min(3, moveOptions.length));
                 selected = topThree[Math.floor(Math.random() * topThree.length)];
             }
@@ -5411,7 +4925,27 @@ function chooseHardAIMove() {
                 }
                 return candidatePool[Math.floor(Math.random() * candidatePool.length)];
         }
-        return null;
+        // CRITICAL: Hard failsafe - find ANY empty cell
+        for (let i = 0; i < 9; i++) {
+            if (gameState.board[i] === '') {
+                console.warn('[AI] chooseHardAIMove: Ultimate fallback - using cell:', i);
+                return i;
+            }
+        }
+        // Should never happen, but return 0 as absolute last resort
+        console.error('[AI] chooseHardAIMove: CRITICAL - no empty cells, returning 0');
+        return 0;
+    }
+    
+    // CRITICAL: Ensure selected exists before accessing index
+    if (!selected || selected.index === null || selected.index === undefined) {
+        console.error('[AI] chooseHardAIMove: Selected move is invalid, using emergency fallback');
+        for (let i = 0; i < 9; i++) {
+            if (gameState.board[i] === '') {
+                return i;
+            }
+        }
+        return 0; // Last resort
     }
     
     const moveIndex = selected.index;
@@ -6405,9 +5939,11 @@ function resetToLanding() {
         gameState.wins = 0;
         gameState.aiLosses = 0;
         gameState.level1Losses = 0; // Reset level-specific loss count
-        gameState.secondLossTauntShown = false; // MVP: Reset taunt flag to allow taunt on next session
         gameState.boardInitialized = false; // MVP: Reset board initialization so it can animate on next fresh start
-        gameState.hasGameStartedOnce = false; // MVP: Reset game start flag when returning to landing
+        gameState.hasGameStartedOnce = false; // MVP: Reset flag to allow Play Game button on fresh start
+        gameState.aiTurnInProgress = false; // CRITICAL: Reset turn lock
+        gameState.firstRoundOfSession = true; // Reset first round flag
+        gameState.playerWinningPatterns = []; // Reset winning patterns
         gameState.gameActive = true;
         gameState.inInteractiveMode = false;
         gameState.playerMoveHistory = [];
@@ -6684,7 +6220,27 @@ function endGame(message) {
             AnimationUtils.animateMessage(messageBox, messageType);
         }
         
+        // MVP: Only show reset button (Play Game) if game hasn't started yet
+        // After first game starts, auto-start next rounds without showing button
+        if (!gameState.hasGameStartedOnce) {
         resetBtn.style.display = 'block';
+        } else {
+            // Auto-start next round after first game
+            resetBtn.style.display = 'none';
+            // Auto-start next round after a short delay
+            setTimeout(() => {
+                try {
+                    // Trigger reset button logic programmatically (without showing button)
+                    if (resetBtn && typeof resetBtn.click === 'function') {
+                        resetBtn.click();
+                    }
+                } catch (autoResetError) {
+                    console.warn('Auto-reset after game end failed:', autoResetError);
+                    // Fallback: Show button if auto-reset fails
+                    resetBtn.style.display = 'block';
+                }
+            }, 1500); // Short delay to let animations complete
+        }
         
         // Record game result for behavior analysis
         if (gameState.behaviorAnalyzer) {
@@ -6784,75 +6340,6 @@ function endGame(message) {
         if (typeof PowerUpManager !== 'undefined') {
             PowerUpManager.updateLevel();
         }
-        
-        // MVP: Auto-start next round if game has started once (no Play button)
-        // Only show reset button if this is the very first game
-        if (gameState.hasGameStartedOnce) {
-            // Hide reset button - game will auto-start
-            if (resetBtn) resetBtn.style.display = 'none';
-            
-            // Auto-start next round after a brief delay
-            setTimeout(() => {
-                try {
-                    // Reset board for next round
-                    gameState.board = Array(9).fill('');
-                    gameState.gameActive = true;
-                    gameState.inInteractiveMode = false;
-                    gameState.playerMoveHistory = [];
-                    gameState.uiLocked = false;
-                    gameState.uiLockingReason = null;
-                    
-                    // Clear board visually
-                    cells.forEach(cell => {
-                        if (cell) {
-                            cell.textContent = '';
-                            cell.setAttribute('data-mark', '');
-                        }
-                    });
-                    
-                    // Clear message
-                    if (messageBox) {
-                        messageBox.textContent = '';
-                    }
-                    
-                    // Start new game for behavior analysis
-                    if (gameState.behaviorAnalyzer) {
-                        gameState.currentGameId = `game_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-                        gameState.behaviorAnalyzer.startGame(gameState.currentGameId);
-                    }
-                    if (gameState.aiLearningSystem) {
-                        gameState.aiLearningSystem.currentGameId = gameState.currentGameId;
-                    }
-                    
-                    // If AI goes first, make AI move
-                    if (!gameState.playerGoesFirst) {
-                        if (messageBox) messageBox.textContent = "AI is thinking...";
-                        const thinkingDelay = Math.min(gameState.aiThinkingDelay || 500, 1000);
-                        setTimeout(() => {
-                            if (messageBox) messageBox.textContent = "AI goes first this round!";
-                            try {
-                                makeAIMove();
-                            } catch (moveError) {
-                                console.error('Error in AI move after auto-start:', moveError);
-                            }
-                        }, thinkingDelay);
-                    } else {
-                        if (messageBox) {
-                            messageBox.textContent = gameState.playerName ? `Your turn, ${gameState.playerName}!` : 'Your turn!';
-                        }
-                    }
-                    
-                    emitBoardUpdate();
-                } catch (autoStartError) {
-                    console.error('Error in auto-start next round:', autoStartError);
-                    // Fallback: show reset button if auto-start fails
-                    if (resetBtn) resetBtn.style.display = 'block';
-                }
-            }, 1500); // Brief delay to let endGame message display
-        } else {
-            // First game - show reset button
-            if (resetBtn) resetBtn.style.display = 'block';
-        }
     } catch (e) {
         console.error('Critical error in endGame:', e);
         // Fallback: just disable game
@@ -6885,19 +6372,13 @@ resetBtn.addEventListener('click', () => {
         }
         
         // CRITICAL: Reset game state - must always succeed
-        // MVP: DO NOT reset secondLossTauntShown or hasGameStartedOnce on round restart
-        // These flags persist across rounds within the same match
         gameState.board = Array(9).fill('');
         gameState.gameActive = true;
         gameState.inInteractiveMode = false; // Ensure not stuck in interactive mode
         gameState.playerMoveHistory = []; // Reset move history for new game
         gameState.uiLocked = false; // Unlock UI
         gameState.uiLockingReason = null;
-        
-        // MVP: Hide reset button if game has started once (auto-start enabled)
-        if (gameState.hasGameStartedOnce) {
-            if (resetBtn) resetBtn.style.display = 'none';
-        }
+        gameState.aiTurnInProgress = false; // CRITICAL: Unlock AI turn
         
         // MVP: Clear board visually WITHOUT re-animating or resizing
         // Ensure board stays locked to prevent shrinking
@@ -6987,6 +6468,7 @@ resetBtn.addEventListener('click', () => {
         gameState.gameActive = true;
         gameState.inInteractiveMode = false;
         gameState.uiLocked = false;
+        gameState.aiTurnInProgress = false; // CRITICAL: Unlock AI turn
         cells.forEach(cell => {
             if (cell) {
                 cell.textContent = '';

@@ -1747,6 +1747,7 @@ button:disabled:hover {
 
 /* ============================================
    PRE-GAME WELCOME OVERLAY
+   Premium Desktop/Laptop Design
    ============================================ */
 .pre-welcome-overlay {
     position: fixed;
@@ -1800,6 +1801,54 @@ button:disabled:hover {
     z-index: 1;
 }
 
+/* Premium Desktop/Laptop Layout (min-width: 1024px) */
+@media (min-width: 1024px) {
+    .pre-welcome-overlay {
+        background: linear-gradient(135deg, var(--bg-primary) 0%, var(--bg-secondary) 100%);
+    }
+    
+    .pre-welcome-content {
+        max-width: 1200px;
+        width: 100%;
+        padding: 60px 80px;
+        position: relative;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+        max-height: 90vh;
+        overflow-y: auto;
+    }
+    
+    /* Create visual breathing space with subtle container */
+    .pre-welcome-content::before {
+        content: '';
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        width: 90%;
+        max-width: 900px;
+        height: auto;
+        min-height: 70vh;
+        max-height: 85vh;
+        background: linear-gradient(135deg, rgba(255, 255, 255, 0.02) 0%, rgba(255, 255, 255, 0.01) 100%);
+        border-radius: 32px;
+        border: 1px solid rgba(255, 255, 255, 0.05);
+        box-shadow: 0 20px 80px rgba(0, 0, 0, 0.15),
+                    inset 0 1px 0 rgba(255, 255, 255, 0.05);
+        z-index: 0;
+        pointer-events: none;
+    }
+    
+    /* Ensure content is above the decorative background */
+    .pre-welcome-content > * {
+        position: relative;
+        z-index: 1;
+    }
+}
+
 /* CRITICAL: Ensure button is always on top and clickable, even during animations */
 .pre-welcome-content > .pre-welcome-continue {
     position: relative !important;
@@ -1819,6 +1868,15 @@ button:disabled:hover {
     /* CRITICAL: Ensure AI presence doesn't block button clicks */
     pointer-events: none;
     z-index: 1;
+}
+
+/* Premium Desktop AI Presence */
+@media (min-width: 1024px) {
+    .ai-presence {
+        width: 100px;
+        height: 100px;
+        margin: 0 auto 40px auto;
+    }
 }
 
 .ai-orb {
@@ -1884,6 +1942,21 @@ button:disabled:hover {
     z-index: 1;
 }
 
+/* Premium Desktop Typography */
+@media (min-width: 1024px) {
+    .pre-welcome-title {
+        font-size: 4rem;
+        font-weight: 400;
+        letter-spacing: 3px;
+        margin-bottom: 32px;
+        line-height: 1.15;
+        color: var(--text-primary);
+        max-width: 700px;
+        margin-left: auto;
+        margin-right: auto;
+    }
+}
+
 .pre-welcome-messages {
     margin-bottom: clamp(2rem, 5vw, 3rem);
     /* CRITICAL: Ensure messages don't block button */
@@ -1901,6 +1974,25 @@ button:disabled:hover {
     font-weight: 300;
     /* CRITICAL: Ensure text doesn't block button */
     pointer-events: none;
+}
+
+/* Premium Desktop Typography */
+@media (min-width: 1024px) {
+    .pre-welcome-messages {
+        margin-bottom: 36px;
+        max-width: 600px;
+        margin-left: auto;
+        margin-right: auto;
+    }
+    
+    .pre-welcome-text {
+        font-size: 1.2rem;
+        line-height: 1.75;
+        margin-bottom: 18px;
+        color: rgba(var(--text-primary-rgb, 255, 255, 255), 0.9);
+        letter-spacing: 0.4px;
+        font-weight: 300;
+    }
 }
 
 .fade-in-delay-1 {
@@ -1958,6 +2050,26 @@ button:disabled:hover {
     pointer-events: none;
 }
 
+/* Premium Desktop Features */
+@media (min-width: 1024px) {
+    .pre-welcome-features {
+        margin-top: 32px;
+        margin-bottom: 40px;
+        text-align: center;
+        max-width: 600px;
+        margin-left: auto;
+        margin-right: auto;
+    }
+    
+    .pre-welcome-feature {
+        font-size: 0.95rem;
+        color: rgba(var(--text-primary-rgb, 255, 255, 255), 0.75);
+        margin: 12px 0;
+        letter-spacing: 0.5px;
+        line-height: 1.7;
+    }
+}
+
 .pre-welcome-continue {
     padding: clamp(0.75rem, 2vw, 1rem) clamp(2rem, 5vw, 3rem);
     font-size: clamp(1rem, 2.5vw, 1.2rem);
@@ -1983,6 +2095,44 @@ button:disabled:hover {
     /* NO ANIMATION DELAY - button is immediately visible and clickable */
     visibility: visible !important;
     display: block !important;
+}
+
+/* Premium Desktop Button */
+@media (min-width: 1024px) {
+    .pre-welcome-continue {
+        padding: 20px 56px;
+        font-size: 1.15rem;
+        font-weight: 500;
+        letter-spacing: 1px;
+        border-radius: 14px;
+        background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-color) 100%);
+        border: 1px solid rgba(255, 255, 255, 0.25);
+        box-shadow: 0 10px 32px rgba(0, 0, 0, 0.2), 
+                    0 4px 12px rgba(0, 0, 0, 0.15),
+                    inset 0 1px 0 rgba(255, 255, 255, 0.15);
+        min-width: 220px;
+        text-align: center;
+        margin-top: 16px;
+        transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    
+    .pre-welcome-continue:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 16px 40px rgba(0, 0, 0, 0.25),
+                    0 6px 16px rgba(0, 0, 0, 0.2),
+                    inset 0 1px 0 rgba(255, 255, 255, 0.2);
+        background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-color) 100%);
+    }
+    
+    .pre-welcome-continue:active {
+        transform: translateY(-1px) scale(0.98);
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+    }
+    
+    .pre-welcome-continue:focus {
+        outline: 2px solid rgba(255, 255, 255, 0.4);
+        outline-offset: 4px;
+    }
 }
 
 .pre-welcome-continue::before {
@@ -2459,24 +2609,75 @@ button:disabled:hover {
 
 @media (max-width: 600px) {
     .sarah-narrative-container {
-        padding: 2rem 1.5rem;
+        /* Square/near-square container for mobile - clean, balanced presentation */
+        width: 85vw;
+        max-width: 85vw;
+        min-height: 85vw;
+        max-height: 90vh;
+        aspect-ratio: 1;
+        padding: clamp(2rem, 6vw, 3rem) clamp(1.75rem, 5vw, 2.5rem);
+        /* Ensure comfortable spacing and prevent overflow */
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        /* Prevent text overflow */
+        overflow-wrap: break-word;
+        word-wrap: break-word;
+        hyphens: auto;
+        overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
     }
     
     .sarah-narrative-message {
-        font-size: 1.1rem;
-        margin-bottom: 1.5rem;
+        font-size: clamp(1rem, 4vw, 1.15rem);
+        line-height: 1.8;
+        margin-bottom: clamp(1.5rem, 5vw, 2rem);
+        /* Better text spacing for readability */
+        letter-spacing: 0.01em;
+        /* Ensure text doesn't feel cramped */
+        padding: 0;
+        /* Allow comfortable line breaks */
+        word-spacing: 0.05em;
+        /* Prevent text overflow */
+        overflow-wrap: break-word;
+        word-break: break-word;
     }
     
     .sarah-narrative-btn {
-        padding: 0.75rem 1.5rem;
-        font-size: 1rem;
+        padding: clamp(0.875rem, 3vw, 1rem) clamp(1.5rem, 5vw, 2rem);
+        font-size: clamp(0.95rem, 3.5vw, 1.05rem);
         width: 100%;
-        max-width: 280px;
+        max-width: 100%;
+        /* Better button spacing */
+        margin: 0.5rem 0;
+        /* Ensure buttons are comfortable to tap */
+        min-height: 44px;
     }
     
     .sarah-narrative-actions {
         flex-direction: column;
-        align-items: center;
+        align-items: stretch;
+        gap: 0.75rem;
+        width: 100%;
+        margin-top: auto;
+        flex-shrink: 0;
+    }
+}
+
+/* Additional mobile optimization for smaller screens */
+@media (max-width: 420px) {
+    .sarah-narrative-container {
+        width: 90vw;
+        max-width: 90vw;
+        min-height: 90vw;
+        aspect-ratio: 1;
+        padding: clamp(1.75rem, 7vw, 2.5rem) clamp(1.5rem, 6vw, 2rem);
+    }
+    
+    .sarah-narrative-message {
+        font-size: clamp(0.95rem, 4.5vw, 1.1rem);
+        line-height: 1.85;
+        margin-bottom: clamp(1.25rem, 6vw, 1.75rem);
     }
 }
 
