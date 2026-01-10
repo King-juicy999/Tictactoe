@@ -210,15 +210,15 @@
                             <div class="guide-powerup-name">Hint Pulse</div>
                             <p class="guide-powerup-desc">Briefly shows a recommended move</p>
                         </div>
-                        <div class="guide-powerup-card" data-powerup="shieldGuard">
-                            <div class="guide-powerup-icon">🛡️</div>
-                            <div class="guide-powerup-name">Shield Guard</div>
-                            <p class="guide-powerup-desc">Locks one cell from AI</p>
+                        <div class="guide-powerup-card" data-powerup="boardShake">
+                            <div class="guide-powerup-icon">🌊</div>
+                            <div class="guide-powerup-name">Board Shake</div>
+                            <p class="guide-powerup-desc">Reindexes cell positions</p>
                         </div>
-                        <div class="guide-powerup-card" data-powerup="focusAura">
-                            <div class="guide-powerup-icon">🌀</div>
-                            <div class="guide-powerup-name">Focus Aura</div>
-                            <p class="guide-powerup-desc">PvP mode only</p>
+                        <div class="guide-powerup-card" data-powerup="lastStand">
+                            <div class="guide-powerup-icon">⚡</div>
+                            <div class="guide-powerup-name">Last Stand</div>
+                            <p class="guide-powerup-desc">Extra move when one from losing</p>
                         </div>
                     </div>
                 </div>
@@ -246,42 +246,47 @@
                     </div>
                 </div>
                 
-                <!-- Page 5: Shield Guard -->
+                <!-- Page 5: Board Shake -->
                 <div class="guide-page" data-page="5">
-                    <h2 class="guide-title">Shield Guard</h2>
+                    <h2 class="guide-title">Board Shake</h2>
                     <div class="guide-powerup-demo">
                         <div class="guide-demo-board">
+                            <div class="guide-demo-cell">X</div>
                             <div class="guide-demo-cell"></div>
+                            <div class="guide-demo-cell">O</div>
                             <div class="guide-demo-cell"></div>
+                            <div class="guide-demo-cell guide-board-shake-demo">🌊</div>
                             <div class="guide-demo-cell"></div>
+                            <div class="guide-demo-cell">O</div>
                             <div class="guide-demo-cell"></div>
-                            <div class="guide-demo-cell guide-shield-demo">
-                                <div class="guide-shield-icon">🛡️</div>
-                            </div>
-                            <div class="guide-demo-cell"></div>
-                            <div class="guide-demo-cell"></div>
-                            <div class="guide-demo-cell"></div>
-                            <div class="guide-demo-cell"></div>
+                            <div class="guide-demo-cell">X</div>
                         </div>
                     </div>
-                    <p class="guide-text"><strong>Shield Guard</strong><br>Locks one cell for the entire match. Neither you nor the AI can play there. Use wisely.</p>
+                    <p class="guide-text"><strong>Board Shake</strong><br>Reindexes all cell positions once. All existing marks remain, but their logical positions are remapped. The AI must recalculate after remap.</p>
                     <div class="guide-notes">
-                        <p>• Locks cell for the entire match</p>
-                        <p>• Does not count as your move</p>
-                        <p>• Usable once per level</p>
-                        <p>• Both you and AI are blocked</p>
+                        <p>• All marks remain on board</p>
+                        <p>• Positions are randomly remapped</p>
+                        <p>• Usable once per game</p>
+                        <p>• Level 1 only</p>
                     </div>
                 </div>
                 
-                <!-- Page 6: Focus Aura -->
+                <!-- Page 6: Last Stand -->
                 <div class="guide-page" data-page="6">
-                    <h2 class="guide-title">Focus Aura</h2>
+                    <h2 class="guide-title">Last Stand</h2>
                     <div class="guide-powerup-demo">
-                        <div class="guide-aura-demo">
-                            <div class="guide-aura-icon">🌀</div>
+                        <div class="guide-last-stand-demo">
+                            <div class="guide-last-stand-icon">⚡</div>
+                            <div class="guide-last-stand-text">LAST STAND ACTIVATED</div>
                         </div>
                     </div>
-                    <p class="guide-text"><strong>Focus Aura</strong><br>Reserved for player vs player mode. Visual only in this mode.</p>
+                    <p class="guide-text"><strong>Last Stand</strong><br>Automatically triggers when you are one move away from losing. Immediately grants one extra player move. AI turn is delayed, not skipped.</p>
+                    <div class="guide-notes">
+                        <p>• Triggers automatically</p>
+                        <p>• One-time use per game</p>
+                        <p>• Does not guarantee a win</p>
+                        <p>• Level 1 only</p>
+                    </div>
                 </div>
                 
                 <!-- Page 7: Tactical Claim (AI Power-Up) -->
