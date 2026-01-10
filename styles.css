@@ -3515,21 +3515,21 @@ body.theme-dark .powerup-sidebar {
     background: rgba(45, 45, 45, 0.95);
 }
 
-/* Last Stand Deployment UI */
+/* Last Stand Deployment UI - CINEMATIC */
 .laststand-deployment-overlay {
     position: fixed;
     top: 0;
     left: 0;
     right: 0;
     bottom: 0;
-    background: rgba(0, 0, 0, 0.7);
-    backdrop-filter: blur(4px);
+    background: rgba(0, 0, 0, 0.75);
+    backdrop-filter: blur(6px);
     z-index: 10000;
     display: flex;
     align-items: center;
     justify-content: center;
     opacity: 0;
-    transition: opacity 0.3s ease;
+    transition: opacity 0.4s ease;
     pointer-events: none;
 }
 
@@ -3538,42 +3538,121 @@ body.theme-dark .powerup-sidebar {
     pointer-events: all;
 }
 
-.laststand-deployment-content {
-    background: var(--cell-bg);
-    border: 2px solid var(--cell-border);
-    border-radius: 16px;
-    padding: 2rem;
-    max-width: 400px;
-    width: 90%;
-    box-shadow: 0 8px 32px var(--shadow);
-    text-align: center;
+.laststand-deployment-overlay.cinematic-overlay {
+    animation: cinematicFadeIn 0.4s ease-out;
 }
 
-.laststand-deployment-content h3 {
+@keyframes cinematicFadeIn {
+    from {
+        opacity: 0;
+        backdrop-filter: blur(0px);
+    }
+    to {
+        opacity: 1;
+        backdrop-filter: blur(6px);
+    }
+}
+
+/* Dim background when overlay is active */
+#game-screen.dimmed-for-overlay {
+    opacity: 0.85;
+    filter: brightness(0.9);
+    transition: opacity 0.3s ease, filter 0.3s ease;
+}
+
+.laststand-deployment-content {
+    background: linear-gradient(135deg, var(--cell-bg) 0%, rgba(255, 255, 255, 0.95) 100%);
+    border: 3px solid var(--cell-border);
+    border-radius: 20px;
+    padding: 2.5rem;
+    max-width: 450px;
+    width: 90%;
+    box-shadow: 
+        0 12px 48px rgba(0, 0, 0, 0.3),
+        0 0 40px rgba(255, 215, 0, 0.2);
+    text-align: center;
+    transform: scale(0.9);
+    transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.laststand-deployment-overlay.active .laststand-deployment-content {
+    transform: scale(1);
+}
+
+.laststand-deployment-content.cinematic-content {
+    animation: cinematicSlideIn 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes cinematicSlideIn {
+    from {
+        transform: translateY(-30px) scale(0.9);
+        opacity: 0;
+    }
+    to {
+        transform: translateY(0) scale(1);
+        opacity: 1;
+    }
+}
+
+.cinematic-header {
+    margin-bottom: 1rem;
+}
+
+.cinematic-title {
     color: var(--text-primary);
-    font-size: 1.5rem;
+    font-size: 1.75rem;
+    font-weight: 700;
     margin-bottom: 0.5rem;
+    letter-spacing: 0.05em;
+    text-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    animation: cinematicTextGlow 2s ease-in-out infinite;
+}
+
+@keyframes cinematicTextGlow {
+    0%, 100% {
+        text-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    }
+    50% {
+        text-shadow: 0 2px 12px rgba(255, 215, 0, 0.3);
+    }
 }
 
 .laststand-deployment-subtitle {
     color: var(--text-secondary);
-    font-size: 0.95rem;
-    margin-bottom: 1.5rem;
+    font-size: 1rem;
+    margin-bottom: 2rem;
+    line-height: 1.5;
 }
 
 .laststand-level-options {
     display: flex;
     flex-direction: column;
-    gap: 0.75rem;
+    gap: 1rem;
     margin-bottom: 1.5rem;
 }
 
+.laststand-level-options.cinematic-options {
+    animation: cinematicOptionsFadeIn 0.6s ease-out 0.2s both;
+}
+
+@keyframes cinematicOptionsFadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
 .laststand-level-btn {
-    background: var(--cell-bg);
+    background: linear-gradient(135deg, var(--cell-bg) 0%, rgba(255, 255, 255, 0.9) 100%);
     border: 2px solid var(--cell-border);
-    border-radius: 8px;
-    padding: 0.75rem 1.5rem;
-    font-size: 1rem;
+    border-radius: 12px;
+    padding: 1rem 1.5rem;
+    font-size: 1.1rem;
+    font-weight: 600;
     color: var(--text-primary);
     cursor: pointer;
     transition: all 0.2s ease;

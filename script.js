@@ -463,13 +463,7 @@ const PowerUpManager = {
         });
         // Note: activeEffects and shields are cleared when new game starts, not when level changes
         
-        // CRITICAL: If Last Stand is available and not scheduled, prompt for scheduling
-        if (this.quantities['lastStand'] > 0 && gameState.lastStandScheduledForPlay === null) {
-            // Small delay to ensure UI is ready
-            setTimeout(() => {
-                this.scheduleLastStandDeployment();
-            }, 500);
-        }
+        // REMOVED: Auto-prompt on level reset - Last Stand now schedules on click only
     },
     
     /**
@@ -644,37 +638,50 @@ const PowerUpManager = {
     },
     
     /**
-     * Show UI for Last Stand deployment play count selection
+     * Show UI for Last Stand deployment play count selection (CINEMATIC)
      */
     showLastStandDeploymentUI() {
-        // Create overlay for play count selection
+        // CINEMATIC: Pause gameplay input
+        const wasGameActive = gameState.gameActive;
+        gameState.gameActive = false;
+        gameState.uiLocked = true;
+        
+        // Create cinematic overlay with dimming
         const overlay = document.createElement('div');
         overlay.id = 'laststand-deployment-overlay';
-        overlay.className = 'laststand-deployment-overlay';
+        overlay.className = 'laststand-deployment-overlay cinematic-overlay';
         
         const currentPlay = gameState.currentPlayCount || 0;
         const maxPlay = 5; // Maximum play count
         
-        let content = '<div class="laststand-deployment-content">';
-        content += '<h3>When do you want to deploy Last Stand?</h3>';
-        content += `<p class="laststand-deployment-subtitle">Select a future play count (${currentPlay + 1} - ${maxPlay} only)</p>`;
-        content += '<div class="laststand-level-options">';
+        let content = '<div class="laststand-deployment-content cinematic-content">';
+        content += '<div class="cinematic-header">';
+        content += '<h3 class="cinematic-title">You are choosing a moment in the future...</h3>';
+        content += '</div>';
+        content += `<p class="laststand-deployment-subtitle">Select when Last Stand will activate (Play #${currentPlay + 1} - ${maxPlay} only)</p>`;
+        content += '<div class="laststand-level-options cinematic-options">';
         
         // Show only future play counts (forward-only)
         for (let play = currentPlay + 1; play <= maxPlay; play++) {
-            content += `<button class="laststand-level-btn" data-play="${play}">`;
+            content += `<button class="laststand-level-btn cinematic-btn" data-play="${play}">`;
             content += `Play #${play}`;
             content += '</button>';
         }
         
         content += '</div>';
-        content += '<button class="laststand-cancel-btn">Cancel</button>';
+        content += '<button class="laststand-cancel-btn cinematic-cancel">Cancel</button>';
         content += '</div>';
         
         overlay.innerHTML = content;
         document.body.appendChild(overlay);
         
-        // Animate in
+        // CINEMATIC: Dim background
+        const gameScreen = document.getElementById('game-screen');
+        if (gameScreen) {
+            gameScreen.classList.add('dimmed-for-overlay');
+        }
+        
+        // Animate in with fade
         setTimeout(() => {
             overlay.classList.add('active');
         }, 10);
@@ -683,14 +690,24 @@ const PowerUpManager = {
         overlay.querySelectorAll('.laststand-level-btn').forEach(btn => {
             btn.addEventListener('click', (e) => {
                 const playCount = parseInt(e.target.dataset.play);
-                this.confirmLastStandDeployment(playCount);
+                this.confirmLastStandDeployment(playCount, wasGameActive);
                 overlay.classList.remove('active');
+                // Remove dimming
+                if (gameScreen) {
+                    gameScreen.classList.remove('dimmed-for-overlay');
+                }
                 setTimeout(() => overlay.remove(), 300);
             });
         });
         
         overlay.querySelector('.laststand-cancel-btn').addEventListener('click', () => {
             overlay.classList.remove('active');
+            // Remove dimming and resume gameplay
+            if (gameScreen) {
+                gameScreen.classList.remove('dimmed-for-overlay');
+            }
+            gameState.gameActive = wasGameActive;
+            gameState.uiLocked = false;
             setTimeout(() => overlay.remove(), 300);
         });
     },
@@ -698,12 +715,18 @@ const PowerUpManager = {
     /**
      * Confirm Last Stand deployment for selected play count
      */
-    confirmLastStandDeployment(playCount) {
+    confirmLastStandDeployment(playCount, resumeGameplay = true) {
         gameState.lastStandScheduledForPlay = playCount;
         
         // Consume the power-up
         this.quantities['lastStand'] = Math.max(0, (this.quantities['lastStand'] || 0) - 1);
         this.renderSidebar();
+        
+        // CINEMATIC: Resume gameplay after selection
+        if (resumeGameplay) {
+            gameState.gameActive = true;
+            gameState.uiLocked = false;
+        }
         
         // Show confirmation
         const messageBox = document.getElementById('message-box');
@@ -4309,6 +4332,16 @@ function handleCellClick(cell) {
         setTimeout(() => {
             // Now trigger AI move after thinking delay
             setTimeout(() => {
+                // CRITICAL: Single-source-of-truth check - aiMoveInProgress is authoritative
+                if (gameState.aiMoveInProgress) {
+                    console.warn('[AI] Move already in progress (aiMoveInProgress=true), skipping scheduled move');
+                    return;
+                }
+                // Secondary check
+                if (gameState.aiTurnInProgress) {
+                    console.warn('[AI] Turn already in progress (aiTurnInProgress=true), skipping scheduled move');
+                    return;
+                }
                 // Lock UI again before AI move
                 gameState.uiLocked = true;
                 makeAIMove();
@@ -4398,25 +4431,33 @@ handleCellClick = function(cell) {
 };
 
 function makeAIMove() {
-    // CRITICAL: Strict turn locking - prevent AI from playing twice in one turn
-    // Double-check both locks to prevent any possibility of double moves
-    if (gameState.aiTurnInProgress || gameState.aiMoveInProgress) {
-        console.warn('[AI] Turn already in progress, ignoring duplicate call');
+    // CRITICAL: Single-source-of-truth turn lock - prevent AI from playing twice
+    // ENFORCE: AI move may ONLY start if aiMoveInProgress === false
+    // This is the authoritative check - all other checks are secondary
+    if (gameState.aiMoveInProgress) {
+        console.warn('[AI] Move already in progress (aiMoveInProgress=true), ignoring duplicate call');
         return;
     }
     
-        // FAILSAFE: If game is blocked, don't attempt move
-        // CRITICAL: Do NOT pause music when game is blocked - music continues as global ambience
-        if (!gameState.gameActive || gameState.inInteractiveMode) {
-            return;
-        }
+    // Secondary check for additional safety
+    if (gameState.aiTurnInProgress) {
+        console.warn('[AI] Turn already in progress (aiTurnInProgress=true), ignoring duplicate call');
+        return;
+    }
+    
+    // FAILSAFE: If game is blocked, don't attempt move
+    // CRITICAL: Do NOT pause music when game is blocked - music continues as global ambience
+    if (!gameState.gameActive || gameState.inInteractiveMode) {
+        return;
+    }
     
     // CRITICAL: Lock turn IMMEDIATELY before any async operations
     // Set BOTH locks to prevent any possibility of double moves
     // This must be the FIRST thing after validation checks
     // Once locked, no async callback, timeout, or animation can trigger a second move
-    gameState.aiTurnInProgress = true;
+    // aiMoveInProgress is the single source of truth
     gameState.aiMoveInProgress = true;
+    gameState.aiTurnInProgress = true;
     
     // CRITICAL: AI Strategy Recalculation Trigger
     // If power-up changed board state, invalidate previous evaluation and recompute
@@ -6210,12 +6251,27 @@ function closeInteractiveMode() {
     
     // If AI goes first, make AI move immediately (with thinking delay if player won)
     if (!gameState.playerGoesFirst) {
+        // CRITICAL: Check turn lock before scheduling AI move
+        if (gameState.aiMoveInProgress || gameState.aiTurnInProgress) {
+            console.warn('[AI] Turn already in progress, skipping AI-first move');
+            return;
+        }
         messageBox.textContent = "AI is thinking...";
         const thinkingDelay = gameState.aiThinkingDelay || 500;
-        setTimeout(() => {
-            messageBox.textContent = "AI goes first this round!";
-            makeAIMove();
-        }, thinkingDelay);
+            setTimeout(() => {
+                // CRITICAL: Single-source-of-truth check - aiMoveInProgress is authoritative
+                if (gameState.aiMoveInProgress) {
+                    console.warn('[AI] Move already in progress (aiMoveInProgress=true), aborting AI-first move');
+                    return;
+                }
+                // Secondary check
+                if (gameState.aiTurnInProgress) {
+                    console.warn('[AI] Turn lock active (aiTurnInProgress=true), aborting AI-first move');
+                    return;
+                }
+                messageBox.textContent = "AI goes first this round!";
+                makeAIMove();
+            }, thinkingDelay);
     }
 }
 
@@ -6486,8 +6542,23 @@ function activateSeventhLossTeasing() {
             
             // If AI goes first
             if (!gameState.playerGoesFirst) {
+                // CRITICAL: Check turn lock before scheduling AI move
+                if (gameState.aiMoveInProgress || gameState.aiTurnInProgress) {
+                    console.warn('[AI] Turn already in progress, skipping AI-first move');
+                    return;
+                }
                 messageBox.textContent = "AI is thinking...";
                 setTimeout(() => {
+                    // CRITICAL: Single-source-of-truth check - aiMoveInProgress is authoritative
+                    if (gameState.aiMoveInProgress) {
+                        console.warn('[AI] Move already in progress (aiMoveInProgress=true), aborting AI-first move');
+                        return;
+                    }
+                    // Secondary check
+                    if (gameState.aiTurnInProgress) {
+                        console.warn('[AI] Turn lock active (aiTurnInProgress=true), aborting AI-first move');
+                        return;
+                    }
                     messageBox.textContent = "AI goes first this round!";
                     makeAIMove();
                 }, 800);
@@ -6574,6 +6645,15 @@ function finalizeRoundAndStartNext() {
                 messageBox.textContent = "AI is thinking...";
             }
             setTimeout(() => {
+                // CRITICAL: Single-source-of-truth check before AI move
+                if (gameState.aiMoveInProgress) {
+                    console.warn('[AI] Move already in progress (aiMoveInProgress=true), skipping AI-first move');
+                    return;
+                }
+                if (gameState.aiTurnInProgress) {
+                    console.warn('[AI] Turn lock active (aiTurnInProgress=true), skipping AI-first move');
+                    return;
+                }
                 if (messageBox) {
                     messageBox.textContent = "AI goes first this round!";
                 }
@@ -6859,10 +6939,15 @@ resetBtn.addEventListener('click', () => {
             if (messageBox) messageBox.textContent = "AI is thinking...";
             const thinkingDelay = Math.min(gameState.aiThinkingDelay || 500, 1000); // Cap at 1s
             const moveTimeout = setTimeout(() => {
-                // FAILSAFE: If AI doesn't move, force it
+                // FAILSAFE: If AI doesn't move, force it (but check lock first)
                 console.warn('AI move timeout in reset - forcing move');
                 try {
-                    makeAIMove();
+                    // CRITICAL: Check lock before forcing move
+                    if (!gameState.aiMoveInProgress && !gameState.aiTurnInProgress) {
+                        makeAIMove();
+                    } else {
+                        console.warn('[AI] Turn lock active, cannot force move');
+                    }
                 } catch (moveError) {
                     console.error('Error forcing AI move (game continues):', moveError);
                 }
@@ -6870,9 +6955,18 @@ resetBtn.addEventListener('click', () => {
             
         setTimeout(() => {
                 clearTimeout(moveTimeout);
+                // CRITICAL: Single-source-of-truth check before AI move
+                if (gameState.aiMoveInProgress) {
+                    console.warn('[AI] Move already in progress (aiMoveInProgress=true), skipping AI-first move');
+                    return;
+                }
+                if (gameState.aiTurnInProgress) {
+                    console.warn('[AI] Turn lock active (aiTurnInProgress=true), skipping AI-first move');
+                    return;
+                }
                 if (messageBox) messageBox.textContent = "AI goes first this round!";
                 try {
-            makeAIMove();
+                    makeAIMove();
                 } catch (moveError) {
                     console.error('Error in AI move after reset (game continues):', moveError);
                 }
