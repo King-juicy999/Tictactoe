@@ -459,6 +459,14 @@ const PowerUpManager = {
             this.quantities[powerUpId] = 1; // 1 free power-up per level
         });
         // Note: activeEffects and shields are cleared when new game starts, not when level changes
+        
+        // CRITICAL: If Last Stand is available and not scheduled, prompt for scheduling
+        if (this.quantities['lastStand'] > 0 && gameState.lastStandDeploymentLevel === null) {
+            // Small delay to ensure UI is ready
+            setTimeout(() => {
+                this.scheduleLastStandDeployment();
+            }, 500);
+        }
     },
     
     /**
