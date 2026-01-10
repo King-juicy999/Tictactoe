@@ -421,7 +421,7 @@ const PowerUpManager = {
             id: 'lastStand',
             name: 'Last Stand',
             icon: '⚡',
-            description: 'Schedule deployment for a level. Auto-triggers when about to lose on that level.',
+            description: 'Schedule deployment for a future play count (1-5). Auto-triggers when about to lose on that play.',
             duration: 600, // Animation duration
             audioType: 'chime',
             requiresTarget: false,
