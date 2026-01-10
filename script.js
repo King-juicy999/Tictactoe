@@ -526,10 +526,16 @@ const PowerUpManager = {
             item.className = 'powerup-item';
             item.dataset.powerupId = powerUp.id;
             
-            const quantity = this.quantities[powerUp.id] || 0;
+            // CRITICAL: Power-up persistence - each power-up has independent state
+            // Read quantity directly from quantities object - do NOT modify other power-ups
+            const quantity = this.quantities[powerUp.id] !== undefined ? this.quantities[powerUp.id] : 0;
             const isActive = this.activeEffects[powerUp.id] ? true : false;
             const isDisabled = quantity === 0 || isActive;
             const isPvpOnly = powerUp.pvpOnly && gameState.mode !== 'pvp';
+            
+            // CRITICAL: Only hide power-ups that have quantity 0 AND are not active
+            // Do NOT filter out power-ups that still have quantity > 0
+            // Each power-up's visibility is independent
             
             // CRITICAL: No permanent names/labels - icons only for clean UI
             item.innerHTML = `
@@ -589,10 +595,12 @@ const PowerUpManager = {
         
         // No power-ups require cell selection anymore (Shield Guard removed)
         
-        // Decrease quantity
+        // CRITICAL: Power-up consumption - ONLY decrease THIS power-up's quantity
+        // Do NOT modify other power-ups' quantities or states
+        // Each power-up has independent state that persists until individually consumed
         this.quantities[powerUpId] = Math.max(0, quantity - 1);
         
-        // Mark as active
+        // Mark as active - ONLY this power-up
         this.activeEffects[powerUpId] = true;
         
         // Play audio cue
@@ -1143,13 +1151,28 @@ const PowerUpManager = {
         }
         
         // MOBILE: Tap sidebar symbol to open panel
-        if (sidebar && window.innerWidth <= 768) {
-            sidebar.addEventListener('click', (e) => {
-                // Only toggle if clicking the symbol itself, not a power-up button
-                if (e.target === sidebar || e.target.closest('.powerup-sidebar') === sidebar && !e.target.closest('.powerup-button')) {
-                    sidebar.classList.toggle('mobile-expanded');
+        // CRITICAL: Use both touch and pointer events for reliable mobile input
+        // Attach listener regardless of initial screen size - check at event time
+        if (sidebar) {
+            // Handle touch/pointer events for mobile
+            const handleMobileToggle = (e) => {
+                // Only process if on mobile viewport
+                if (window.innerWidth <= 768) {
+                    // Prevent event from bubbling to power-up buttons
+                    e.stopPropagation();
+                    
+                    // Only toggle if clicking the sidebar container itself, not a power-up button
+                    const clickedButton = e.target.closest('.powerup-button');
+                    if (!clickedButton) {
+                        sidebar.classList.toggle('mobile-expanded');
+                    }
                 }
-            });
+            };
+            
+            // Support multiple input methods for mobile compatibility
+            sidebar.addEventListener('click', handleMobileToggle);
+            sidebar.addEventListener('touchstart', handleMobileToggle, { passive: true });
+            sidebar.addEventListener('pointerdown', handleMobileToggle);
         }
     }
 };
