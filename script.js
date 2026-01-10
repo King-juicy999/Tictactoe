@@ -4026,6 +4026,22 @@ function updateLevelProgress() {
     }
 }
 
+/**
+ * Show checkpoints briefly after a win, then hide them
+ */
+function showCheckpointsAfterWin() {
+    const container = document.querySelector('.level-progress-container');
+    if (!container) return;
+    
+    // Show checkpoints
+    container.classList.add('show-after-win');
+    
+    // Hide after 3 seconds
+    setTimeout(() => {
+        container.classList.remove('show-after-win');
+    }, 3000);
+}
+
 if (modePlayerBtn) {
     modePlayerBtn.addEventListener('click', () => {
         const modeSelect = document.getElementById('mode-select');
@@ -4249,8 +4265,9 @@ function handleCellClick(cell) {
             winsDisplay.textContent = gameState.wins;
         }
         
-        // Update level progress
+        // Update level progress and show checkpoints briefly after win
         updateLevelProgress();
+        showCheckpointsAfterWin();
         
         // Check if level completed (5 wins)
         if (gameState.level1Wins >= 5) {

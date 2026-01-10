@@ -3966,6 +3966,18 @@ body.theme-retro .powerup-sidebar {
 .level-progress-container {
     margin-top: clamp(0.25rem, 1.5vw, 0.5rem); /* MVP: Ultra-minimal spacing - no scrolling */
     margin-bottom: clamp(0.25rem, 1.5vw, 0.5rem);
+    /* CRITICAL: Hidden during gameplay, only shown after wins */
+    opacity: 0;
+    max-height: 0;
+    overflow: hidden;
+    transition: opacity 0.3s ease, max-height 0.3s ease;
+    pointer-events: none;
+}
+
+.level-progress-container.show-after-win {
+    opacity: 1;
+    max-height: 200px;
+    pointer-events: all;
 }
 
 .level-progress-visual {
