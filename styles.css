@@ -3023,6 +3023,80 @@ button:disabled:hover {
         transform: scale(0.8);
         opacity: 0;
     }
+}
+
+/* Power-Up Activation Banner - Prominent on-screen notification */
+.powerup-activation-banner {
+    position: fixed;
+    top: 20%;
+    left: 50%;
+    transform: translateX(-50%) translateY(-20px);
+    z-index: 10001;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s ease, transform 0.3s ease;
+}
+
+.powerup-activation-banner.visible {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+}
+
+.powerup-banner-content {
+    background: linear-gradient(135deg, rgba(255, 215, 0, 0.95) 0%, rgba(255, 200, 0, 0.95) 100%);
+    border: 3px solid var(--primary-color);
+    border-radius: 16px;
+    padding: 1rem 2rem;
+    box-shadow: 
+        0 8px 32px rgba(0, 0, 0, 0.3),
+        0 0 40px rgba(255, 215, 0, 0.4);
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    animation: bannerSlideIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes bannerSlideIn {
+    0% {
+        transform: translateY(-30px) scale(0.9);
+        opacity: 0;
+    }
+    100% {
+        transform: translateY(0) scale(1);
+        opacity: 1;
+    }
+}
+
+.powerup-banner-icon {
+    font-size: 2rem;
+    line-height: 1;
+}
+
+.powerup-banner-text {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    text-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+    letter-spacing: 0.05em;
+}
+
+@media (max-width: 768px) {
+    .powerup-activation-banner {
+        top: 15%;
+    }
+    
+    .powerup-banner-content {
+        padding: 0.75rem 1.5rem;
+    }
+    
+    .powerup-banner-icon {
+        font-size: 1.5rem;
+    }
+    
+    .powerup-banner-text {
+        font-size: 1.25rem;
+    }
+}
     50% {
         transform: scale(1.1);
     }

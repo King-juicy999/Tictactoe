@@ -602,16 +602,28 @@ const PowerUpManager = {
         // Apply visual effect
         this.applyVisualEffect(powerUpId);
         
-        // CRITICAL: Trigger AI recalculation for power-ups that affect board state
-        if (powerUpId === 'boardShake') {
+        // CRITICAL: Trigger AI recalculation for ALL power-ups that affect gameplay
+        // This ensures AI re-evaluates board state after any power-up activation
+        // Power-ups that affect gameplay: boardShake (remaps board), hintPulse (visual only but may affect player strategy)
+        // Note: This is NOT an intelligence change - just a recalculation trigger
+        if (powerUpId === 'boardShake' || powerUpId === 'hintPulse') {
             gameState.aiRecalculationNeeded = true;
         }
         
+        // CRITICAL: Power-up state isolation - only update THIS power-up's state
+        // Do NOT modify other power-ups' quantities, activeEffects, or render state
+        // Each power-up tracks its own state independently
+        
         // Update sidebar with activation highlight
         this.highlightPowerUpButton(powerUpId);
+        // CRITICAL: renderSidebar() rebuilds UI but preserves all power-up states
+        // It reads from quantities and activeEffects - these are not modified for other power-ups
         this.renderSidebar();
         
-        // Show activation message
+        // Show prominent activation feedback banner
+        this.showPowerUpActivationBanner(powerUp);
+        
+        // Show activation message (legacy - kept for compatibility)
         this.showActivationMessage(powerUp);
         
         // Deactivate after duration
@@ -999,14 +1011,18 @@ const PowerUpManager = {
      * Deactivate power-up effect
      */
     deactivatePowerUp(powerUpId) {
+        // CRITICAL: Power-up state isolation - only deactivate THIS power-up
+        // Do NOT modify other power-ups' states
         if (!this.activeEffects[powerUpId]) return;
         
         const effectData = this.activeEffects[powerUpId];
+        // CRITICAL: Only delete THIS power-up's active effect
         delete this.activeEffects[powerUpId];
         
         const cells = document.querySelectorAll('.cell');
         
         // Remove visual effects based on power-up type
+        // CRITICAL: Only remove visual effects for THIS power-up
         switch(powerUpId) {
             case 'hintPulse':
                 cells.forEach(cell => {
@@ -1031,12 +1047,52 @@ const PowerUpManager = {
                 break;
         }
         
-        // Update sidebar
+        // CRITICAL: Update sidebar - this rebuilds UI but preserves all power-up states
+        // renderSidebar() reads from quantities and activeEffects - these remain unchanged for other power-ups
         this.renderSidebar();
     },
     
     /**
-     * Show activation message
+     * Show prominent activation feedback banner (unmissable but non-blocking)
+     */
+    showPowerUpActivationBanner(powerUp) {
+        // Remove any existing banner first
+        const existingBanner = document.getElementById('powerup-activation-banner');
+        if (existingBanner) {
+            existingBanner.remove();
+        }
+        
+        // Create banner element
+        const banner = document.createElement('div');
+        banner.id = 'powerup-activation-banner';
+        banner.className = 'powerup-activation-banner';
+        banner.innerHTML = `
+            <div class="powerup-banner-content">
+                <span class="powerup-banner-icon">${powerUp.icon}</span>
+                <span class="powerup-banner-text">${powerUp.name} Activated</span>
+            </div>
+        `;
+        
+        document.body.appendChild(banner);
+        
+        // Animate in
+        setTimeout(() => {
+            banner.classList.add('visible');
+        }, 10);
+        
+        // Fade out and remove after 2 seconds
+        setTimeout(() => {
+            banner.classList.remove('visible');
+            setTimeout(() => {
+                if (banner.parentNode) {
+                    banner.remove();
+                }
+            }, 300);
+        }, 2000);
+    },
+    
+    /**
+     * Show activation message (legacy - kept for compatibility)
      */
     showActivationMessage(powerUp, isError = false) {
         const messageBox = document.getElementById('message-box');
@@ -4695,27 +4751,10 @@ function makeAIMove() {
         gameState.uiLockingReason = null;
     }, aiMoveAnimationDuration + pacingDelay);
 
-    // CRITICAL: Check for draw after AI move (board full, no winner)
-    if (!gameState.board.includes('')) {
-        // Draw detected after AI move - clear state and end round
-        gameState.aiTurnInProgress = false;
-        gameState.aiMoveInProgress = false;
-        gameState.uiLocked = false;
-        gameState.uiLockingReason = null;
-        
-        // Record draw for AI learning
-        if (gameState.aiLearningSystem && gameState.currentGameId) {
-            gameState.aiLearningSystem.recordGameResult('draw', gameState.playerName);
-            if (socket) {
-                socket.emit('ai-stats-update', gameState.aiLearningSystem.getStats());
-            }
-        }
-        
-        // End game - will trigger unified round transition
-        endGame("It's a draw!");
-        return;
-    }
-
+    // CRITICAL: Check win conditions FIRST, then draw
+    // Resolution order: AI win → Player win → Draw
+    // This prevents AI wins from being misclassified as draws
+    
     if (checkWin('O')) {
         // AI wins - record it properly
         gameState.losses++;
@@ -4833,6 +4872,28 @@ function makeAIMove() {
         reportLoss();
         emitBoardUpdate();
         // Turn is already unlocked after move execution
+        return;
+    }
+    
+    // CRITICAL: Check for draw AFTER win checks (AI win already checked above)
+    // Resolution order: AI win → Player win → Draw
+    if (!gameState.board.includes('')) {
+        // Draw detected after AI move - clear state and end round
+        gameState.aiTurnInProgress = false;
+        gameState.aiMoveInProgress = false;
+        gameState.uiLocked = false;
+        gameState.uiLockingReason = null;
+        
+        // Record draw for AI learning
+        if (gameState.aiLearningSystem && gameState.currentGameId) {
+            gameState.aiLearningSystem.recordGameResult('draw', gameState.playerName);
+            if (socket) {
+                socket.emit('ai-stats-update', gameState.aiLearningSystem.getStats());
+            }
+        }
+        
+        // End game - will trigger unified round transition
+        endGame("It's a draw!");
         return;
     }
 
