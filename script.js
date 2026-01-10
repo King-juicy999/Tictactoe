@@ -384,9 +384,12 @@ const gameState = {
     playerWinningPatterns: [], // Track patterns player used to win
     // Last Stand power-up tracking
     lastStandUsed: false, // Track if Last Stand was used this game
-    lastStandDeploymentLevel: null, // Track which level Last Stand is scheduled for (null = not scheduled)
+    lastStandScheduledForPlay: null, // Track which play count (1-5) Last Stand is scheduled for (null = not scheduled)
+    currentPlayCount: 0, // Track current play count (1-5) - increments each game
     // AI recalculation trigger (set to true when power-up changes board state)
-    aiRecalculationNeeded: false
+    aiRecalculationNeeded: false,
+    // Additional AI turn lock for double-move prevention
+    aiMoveInProgress: false // Secondary lock to prevent double moves
 };
 
 /**
@@ -461,7 +464,7 @@ const PowerUpManager = {
         // Note: activeEffects and shields are cleared when new game starts, not when level changes
         
         // CRITICAL: If Last Stand is available and not scheduled, prompt for scheduling
-        if (this.quantities['lastStand'] > 0 && gameState.lastStandDeploymentLevel === null) {
+        if (this.quantities['lastStand'] > 0 && gameState.lastStandScheduledForPlay === null) {
             // Small delay to ensure UI is ready
             setTimeout(() => {
                 this.scheduleLastStandDeployment();
@@ -585,6 +588,12 @@ const PowerUpManager = {
             return;
         }
         
+        // CRITICAL: Last Stand requires forward-scheduling (not instant activation)
+        if (powerUpId === 'lastStand') {
+            this.scheduleLastStandDeployment();
+            return; // Don't activate immediately - wait for scheduling
+        }
+        
         // No power-ups require cell selection anymore (Shield Guard removed)
         
         // Decrease quantity
@@ -599,6 +608,11 @@ const PowerUpManager = {
         // Apply visual effect
         this.applyVisualEffect(powerUpId);
         
+        // CRITICAL: Trigger AI recalculation for power-ups that affect board state
+        if (powerUpId === 'boardShake') {
+            gameState.aiRecalculationNeeded = true;
+        }
+        
         // Update sidebar with activation highlight
         this.highlightPowerUpButton(powerUpId);
         this.renderSidebar();
@@ -610,6 +624,97 @@ const PowerUpManager = {
         setTimeout(() => {
             this.deactivatePowerUp(powerUpId);
         }, powerUp.duration);
+    },
+    
+    /**
+     * Schedule Last Stand deployment - player chooses future play count (1-5)
+     */
+    scheduleLastStandDeployment() {
+        // Check if already scheduled
+        if (gameState.lastStandScheduledForPlay !== null) {
+            const messageBox = document.getElementById('message-box');
+            if (messageBox) {
+                messageBox.textContent = `Last Stand already scheduled for Play #${gameState.lastStandScheduledForPlay}`;
+            }
+            return;
+        }
+        
+        // Show deployment play count selection UI
+        this.showLastStandDeploymentUI();
+    },
+    
+    /**
+     * Show UI for Last Stand deployment play count selection
+     */
+    showLastStandDeploymentUI() {
+        // Create overlay for play count selection
+        const overlay = document.createElement('div');
+        overlay.id = 'laststand-deployment-overlay';
+        overlay.className = 'laststand-deployment-overlay';
+        
+        const currentPlay = gameState.currentPlayCount || 0;
+        const maxPlay = 5; // Maximum play count
+        
+        let content = '<div class="laststand-deployment-content">';
+        content += '<h3>When do you want to deploy Last Stand?</h3>';
+        content += `<p class="laststand-deployment-subtitle">Select a future play count (${currentPlay + 1} - ${maxPlay} only)</p>`;
+        content += '<div class="laststand-level-options">';
+        
+        // Show only future play counts (forward-only)
+        for (let play = currentPlay + 1; play <= maxPlay; play++) {
+            content += `<button class="laststand-level-btn" data-play="${play}">`;
+            content += `Play #${play}`;
+            content += '</button>';
+        }
+        
+        content += '</div>';
+        content += '<button class="laststand-cancel-btn">Cancel</button>';
+        content += '</div>';
+        
+        overlay.innerHTML = content;
+        document.body.appendChild(overlay);
+        
+        // Animate in
+        setTimeout(() => {
+            overlay.classList.add('active');
+        }, 10);
+        
+        // Attach event listeners
+        overlay.querySelectorAll('.laststand-level-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const playCount = parseInt(e.target.dataset.play);
+                this.confirmLastStandDeployment(playCount);
+                overlay.classList.remove('active');
+                setTimeout(() => overlay.remove(), 300);
+            });
+        });
+        
+        overlay.querySelector('.laststand-cancel-btn').addEventListener('click', () => {
+            overlay.classList.remove('active');
+            setTimeout(() => overlay.remove(), 300);
+        });
+    },
+    
+    /**
+     * Confirm Last Stand deployment for selected play count
+     */
+    confirmLastStandDeployment(playCount) {
+        gameState.lastStandScheduledForPlay = playCount;
+        
+        // Consume the power-up
+        this.quantities['lastStand'] = Math.max(0, (this.quantities['lastStand'] || 0) - 1);
+        this.renderSidebar();
+        
+        // Show confirmation
+        const messageBox = document.getElementById('message-box');
+        if (messageBox) {
+            messageBox.textContent = `⚡ Last Stand scheduled for Play #${playCount}`;
+            setTimeout(() => {
+                if (messageBox.textContent.includes('Last Stand scheduled')) {
+                    messageBox.textContent = gameState.playerName ? `Your turn, ${gameState.playerName}!` : 'Your turn!';
+                }
+            }, 3000);
+        }
     },
     
     
@@ -831,6 +936,13 @@ const PowerUpManager = {
         
         // Mark as used for this game
         gameState.lastStandUsed = true;
+        
+        // CRITICAL: Trigger AI recalculation - Last Stand activated
+        gameState.aiRecalculationNeeded = true;
+        
+        // CRITICAL: Power-up isolation - Last Stand does NOT affect other power-ups
+        // Board Shake, Hint Pulse remain fully functional
+        // No shared cleanup or reset functions called
         
         // CRITICAL: Trigger AI recalculation - Last Stand activated, board state may change
         gameState.aiRecalculationNeeded = true;
@@ -4138,11 +4250,11 @@ function handleCellClick(cell) {
 
     // LAST STAND: Forward-only deployment - check if scheduled and conditions met
     // Only trigger if:
-    // 1. Last Stand is scheduled for current level
+    // 1. Last Stand is scheduled for current play count
     // 2. Player is one move away from losing
     // 3. Last Stand hasn't been used this game
-    if (gameState.lastStandDeploymentLevel !== null && 
-        gameState.currentLevel === gameState.lastStandDeploymentLevel &&
+    if (gameState.lastStandScheduledForPlay !== null && 
+        gameState.currentPlayCount === gameState.lastStandScheduledForPlay &&
         !gameState.lastStandUsed && 
         !checkWin('X') && 
         !checkWin('O') && 
@@ -4161,7 +4273,7 @@ function handleCellClick(cell) {
             }
         }
         
-        // Trigger Last Stand if AI can win and deployment level matches
+        // Trigger Last Stand if AI can win and scheduled play count matches
         if (aiCanWin) {
             PowerUpManager.activeEffects['lastStand'] = true;
             PowerUpManager.createLastStand();
@@ -4169,36 +4281,45 @@ function handleCellClick(cell) {
             // CRITICAL: Trigger AI recalculation - Last Stand activated
             gameState.aiRecalculationNeeded = true;
             
+            // Mark as used and clear scheduled value
+            gameState.lastStandUsed = true;
+            gameState.lastStandScheduledForPlay = null;
+            
             // Grant extra move - player can move again immediately
             gameState.uiLocked = false;
             return; // Exit early - player gets another turn
         }
     }
     
-    // AI thinking delay - longer if player just won
-    const thinkingDelay = gameState.aiThinkingDelay || 500;
+    // PACING: AI thinking delay with smooth transitions
+    // Longer if player just won, but ensure minimum pacing
+    const thinkingDelay = Math.max(300, gameState.aiThinkingDelay || 500); // Minimum 300ms for pacing
     messageBox.textContent = "AI is thinking...";
     
-    // Lock UI during player move animation (150ms for cell animation)
+    // Lock UI during player move animation
     gameState.uiLocked = true;
     const cellAnimationDuration = 180; // Match CSS animation duration
+    const pacingDelayAfterMove = 100; // Small delay after move for pacing
     
-    // Wait for cell animation to complete, then AI thinking delay
+    // Wait for cell animation + pacing delay, then AI thinking delay
     setTimeout(() => {
         gameState.uiLocked = false;
         
-        // Now trigger AI move after thinking delay
+        // PACING: Small delay before showing "AI is thinking" for smoothness
         setTimeout(() => {
-            // Lock UI again before AI move
-            gameState.uiLocked = true;
-            makeAIMove();
-            
-            // Reset thinking delay after move (but keep it slightly longer if player won)
-            if (gameState.playerJustWon) {
-                gameState.aiThinkingDelay = 800; // Keep it at 800ms for a few moves
-            }
-        }, thinkingDelay);
-    }, cellAnimationDuration);
+            // Now trigger AI move after thinking delay
+            setTimeout(() => {
+                // Lock UI again before AI move
+                gameState.uiLocked = true;
+                makeAIMove();
+                
+                // Reset thinking delay after move (but keep it slightly longer if player won)
+                if (gameState.playerJustWon) {
+                    gameState.aiThinkingDelay = 800; // Keep it at 800ms for a few moves
+                }
+            }, thinkingDelay);
+        }, pacingDelayAfterMove);
+    }, cellAnimationDuration + pacingDelayAfterMove);
     
     emitBoardUpdate();
     } catch (e) {
@@ -4278,8 +4399,8 @@ handleCellClick = function(cell) {
 
 function makeAIMove() {
     // CRITICAL: Strict turn locking - prevent AI from playing twice in one turn
-    // Single source of truth: aiTurnInProgress flag
-    if (gameState.aiTurnInProgress) {
+    // Double-check both locks to prevent any possibility of double moves
+    if (gameState.aiTurnInProgress || gameState.aiMoveInProgress) {
         console.warn('[AI] Turn already in progress, ignoring duplicate call');
         return;
     }
@@ -4291,9 +4412,11 @@ function makeAIMove() {
         }
     
     // CRITICAL: Lock turn IMMEDIATELY before any async operations
+    // Set BOTH locks to prevent any possibility of double moves
     // This must be the FIRST thing after validation checks
     // Once locked, no async callback, timeout, or animation can trigger a second move
     gameState.aiTurnInProgress = true;
+    gameState.aiMoveInProgress = true;
     
     // CRITICAL: AI Strategy Recalculation Trigger
     // If power-up changed board state, invalidate previous evaluation and recompute
@@ -4338,7 +4461,8 @@ function makeAIMove() {
         }
     }
 
-    // CRITICAL: AI must respond within time budget - use timeout for safety (reduced to 700ms)
+    // CRITICAL: AI must respond within time budget - use timeout for safety (reduced to 500ms)
+    // This prevents AI thinking freeze and ensures smooth gameplay
     aiMoveTimeout = setTimeout(() => {
         // FALLBACK: If AI takes too long, use simplified heuristic
         console.warn('[AI] Move timeout - using fallback move');
@@ -4350,7 +4474,7 @@ function makeAIMove() {
             index = emptyCells[Math.floor(Math.random() * emptyCells.length)];
             console.log('[AI] Timeout fallback selected move:', index);
         }
-    }, 700); // 700ms timeout - prevents deadlock
+    }, 500); // 500ms timeout - prevents deadlock and ensures smooth pacing
 
     try {
     // If a subtle pending move was prepared during a blackout, use it if still valid
@@ -4424,6 +4548,7 @@ function makeAIMove() {
             if (index === null || index === undefined) {
                 console.error('[AI] CRITICAL: Cannot recover from move selection error');
                 gameState.aiTurnInProgress = false;
+                gameState.aiMoveInProgress = false;
                 return;
             }
         }
@@ -4453,6 +4578,7 @@ function makeAIMove() {
             if (index === null || index === undefined || gameState.board[index] !== '') {
                 console.error('[AI] CRITICAL: Cannot find valid move after recalculation');
                 gameState.aiTurnInProgress = false;
+                gameState.aiMoveInProgress = false;
             return;
         }
     }
@@ -4473,6 +4599,7 @@ function makeAIMove() {
         if (index === null || index === undefined || gameState.board[index] !== '') {
             console.error('[AI] CRITICAL: Cannot find valid move after final validation');
             gameState.aiTurnInProgress = false;
+            gameState.aiMoveInProgress = false;
             return;
         }
     }
@@ -4487,7 +4614,9 @@ function makeAIMove() {
     // CRITICAL: Unlock turn IMMEDIATELY after move is committed to board
     // Turn ends here - no second move can be triggered
     // This happens BEFORE any animations or async operations
+    // Unlock BOTH locks to ensure clean state
     gameState.aiTurnInProgress = false;
+    gameState.aiMoveInProgress = false;
     
     // Animate cell placement (premium animation) - happens after turn unlock
     // This is safe because turn is already unlocked and move is committed
@@ -4498,17 +4627,20 @@ function makeAIMove() {
     clickSound.play();
     emitBoardUpdate();
     
-    // Unlock UI after AI move animation completes (180ms)
+    // PACING: Unlock UI after AI move animation completes with smooth delay
+    // Add small delay for pacing - prevents instant cascades
     const aiMoveAnimationDuration = 180;
+    const pacingDelay = 150; // Additional delay for smooth pacing
     setTimeout(() => {
         gameState.uiLocked = false;
         gameState.uiLockingReason = null;
-    }, aiMoveAnimationDuration);
+    }, aiMoveAnimationDuration + pacingDelay);
 
     // CRITICAL: Check for draw after AI move (board full, no winner)
     if (!gameState.board.includes('')) {
         // Draw detected after AI move - clear state and end round
         gameState.aiTurnInProgress = false;
+        gameState.aiMoveInProgress = false;
         gameState.uiLocked = false;
         gameState.uiLockingReason = null;
         
@@ -4688,8 +4820,10 @@ function makeAIMove() {
         }
     } finally {
         // CRITICAL: Always unlock turn and clear timeout
+        // Reset BOTH locks to ensure clean state and prevent double moves
         if (aiMoveTimeout) clearTimeout(aiMoveTimeout);
         gameState.aiTurnInProgress = false;
+        gameState.aiMoveInProgress = false;
         
         // If no move was executed, force one
         if (!moveExecuted) {
@@ -6388,9 +6522,16 @@ function finalizeRoundAndStartNext() {
         // Reset board state
         gameState.board = Array(9).fill('');
         gameState.playerMoveHistory = [];
+        // CRITICAL: Power-up isolation - only reset Last Stand if it was used
+        // Other power-ups (Board Shake, Hint Pulse) remain unaffected
+        const wasLastStandUsed = gameState.lastStandUsed;
         gameState.lastStandUsed = false; // Reset Last Stand for new game
-        gameState.lastStandDeploymentLevel = null; // Reset deployment level for new game
+        // Only clear scheduled play count if Last Stand was actually used
+        if (wasLastStandUsed) {
+            gameState.lastStandScheduledForPlay = null;
+        }
         gameState.aiRecalculationNeeded = false; // Reset recalculation flag
+        gameState.aiMoveInProgress = false; // Reset AI move lock
         
         // Clear visual board
         const cells = document.querySelectorAll('.cell');
@@ -6477,6 +6618,9 @@ function endGame(message) {
         // CRITICAL: Increment round count on EVERY game end (win/loss/draw)
         // Round count must never stay at zero once gameplay begins
         gameState.roundCount = (gameState.roundCount || 0) + 1;
+        
+        // CRITICAL: Increment play count (1-5, cycles)
+        gameState.currentPlayCount = ((gameState.currentPlayCount || 0) % 5) + 1;
         
         // Track AI wins in level (AI wins when player loses)
         if (message.includes('AI Wins') || message.includes('AI has outplayed')) {
@@ -6658,11 +6802,13 @@ resetBtn.addEventListener('click', () => {
         gameState.uiLocked = false; // Unlock UI
         gameState.uiLockingReason = null;
         gameState.aiTurnInProgress = false; // CRITICAL: Unlock AI turn
+        gameState.aiMoveInProgress = false; // Reset AI move lock
+        // CRITICAL: Power-up isolation - only reset Last Stand if it was used
+        const wasLastStandUsed = gameState.lastStandUsed;
         gameState.lastStandUsed = false; // Reset Last Stand
-        gameState.lastStandDeploymentLevel = null; // Reset deployment level
-        gameState.aiRecalculationNeeded = false; // Reset recalculation flag
-        gameState.lastStandUsed = false; // Reset Last Stand
-        gameState.lastStandDeploymentLevel = null; // Reset deployment level
+        if (wasLastStandUsed) {
+            gameState.lastStandScheduledForPlay = null; // Only reset if used
+        }
         gameState.aiRecalculationNeeded = false; // Reset recalculation flag
         
         // MVP: Clear board visually WITHOUT re-animating or resizing

@@ -81,10 +81,10 @@
       "life": ""
     },
     "ATHENA": {
-      "losses": 12,
+      "losses": 13,
       "wins": 1,
-      "plays": 25,
-      "lastActive": 1767815310377,
+      "plays": 28,
+      "lastActive": 1768049217941,
       "matricNumber": "",
       "life": ""
     },
@@ -4589,86 +4589,34 @@
       "type": "start",
       "name": "hmmm",
       "time": 1768046910723
+    },
+    {
+      "type": "start",
+      "name": "ATHENA",
+      "time": 1768049139235
+    },
+    {
+      "type": "start",
+      "name": "ATHENA",
+      "time": 1768049204982
+    },
+    {
+      "type": "start",
+      "name": "ATHENA",
+      "time": 1768049205025
+    },
+    {
+      "type": "loss",
+      "name": "ATHENA",
+      "time": 1768049217941
     }
   ],
   "ai": {
-    "wins": 116,
-    "losses": 100,
+    "wins": 117,
+    "losses": 101,
     "draws": 66,
-    "totalGames": 282,
+    "totalGames": 284,
     "moveHistory": [
-      {
-        "moveIndex": 7,
-        "boardState": [
-          "",
-          "X",
-          "O",
-          "",
-          "X",
-          "",
-          "",
-          "",
-          ""
-        ],
-        "moveType": "block",
-        "reasoning": "Blocking opponent win",
-        "gameId": "game_1767021388159_0002hhei7",
-        "timestamp": 1767021396670
-      },
-      {
-        "moveIndex": 3,
-        "boardState": [
-          "",
-          "X",
-          "O",
-          "",
-          "X",
-          "X",
-          "",
-          "O",
-          ""
-        ],
-        "moveType": "block",
-        "reasoning": "Blocking opponent win",
-        "gameId": "game_1767021388159_0002hhei7",
-        "timestamp": 1767021399844
-      },
-      {
-        "moveIndex": 0,
-        "boardState": [
-          "",
-          "X",
-          "O",
-          "O",
-          "X",
-          "X",
-          "",
-          "O",
-          "X"
-        ],
-        "moveType": "block",
-        "reasoning": "Blocking opponent win",
-        "gameId": "game_1767021388159_0002hhei7",
-        "timestamp": 1767021404046
-      },
-      {
-        "moveIndex": 4,
-        "boardState": [
-          "",
-          "",
-          "",
-          "",
-          "",
-          "",
-          "",
-          "",
-          ""
-        ],
-        "moveType": "center",
-        "reasoning": "Taking center",
-        "gameId": "game_1767021407112_8tph7ejmv",
-        "timestamp": 1767021409573
-      },
       {
         "moveIndex": 2,
         "boardState": [
@@ -22596,6 +22544,78 @@
         "reasoning": "Taking center",
         "gameId": "game_1768046838399_vakcrzj8j",
         "timestamp": 1768046839349
+      },
+      {
+        "moveIndex": 2,
+        "boardState": [
+          "X",
+          "X",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "O"
+        ],
+        "moveType": "block",
+        "reasoning": "Blocking player win (secondary priority - only when AI cannot win)",
+        "gameId": "game_1768049204873_sg2ewd2nn",
+        "timestamp": 1768049215909
+      },
+      {
+        "moveIndex": 5,
+        "boardState": [
+          "X",
+          "X",
+          "O",
+          "",
+          "X",
+          "",
+          "",
+          "",
+          "O"
+        ],
+        "moveType": "win",
+        "reasoning": "Immediate AI winning move (absolute priority - AI never misses its own win)",
+        "gameId": "game_1768049204873_sg2ewd2nn",
+        "timestamp": 1768049217789
+      },
+      {
+        "moveIndex": 4,
+        "boardState": [
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          ""
+        ],
+        "moveType": "center",
+        "reasoning": "Taking center",
+        "gameId": "game_1768049219277_8lbofyf2c",
+        "timestamp": 1768049220059
+      },
+      {
+        "moveIndex": 8,
+        "boardState": [
+          "",
+          "",
+          "",
+          "",
+          "O",
+          "",
+          "",
+          "",
+          ""
+        ],
+        "moveType": "corner",
+        "reasoning": "Empty corner",
+        "gameId": "game_1768049219277_8lbofyf2c",
+        "timestamp": 1768049220148
       }
     ],
     "learnedPatterns": 185,
@@ -23070,7 +23090,7 @@
         ]
       },
       "0-1": {
-        "count": 41,
+        "count": 42,
         "players": [
           "sammy",
           "Jerry",
@@ -23085,7 +23105,7 @@
           "Am good",
           "Fara"
         ],
-        "lastSeen": 1767995855374,
+        "lastSeen": 1768049217782,
         "firstSeen": 1765022724409,
         "isBlocked": false,
         "moves": [
@@ -24730,11 +24750,11 @@
         ]
       },
       "0-1-4": {
-        "count": 3,
+        "count": 6,
         "players": [
           "ATHENA"
         ],
-        "lastSeen": 1767995414257,
+        "lastSeen": 1768049217789,
         "firstSeen": 1767815300301,
         "isBlocked": false,
         "moves": [
@@ -25389,6 +25409,6 @@
         ]
       }
     },
-    "lastLosingMoveIndex": 2
+    "lastLosingMoveIndex": 5
   }
 }
