@@ -563,9 +563,24 @@ const PowerUpManager = {
                 const powerUpId = btn.dataset.powerupId;
                 if (powerUpId) {
                     this.activatePowerUp(powerUpId);
+                    
+                    // MOBILE: Close panel immediately after selection
+                    if (window.innerWidth <= 768) {
+                        this.closeMobilePanel();
+                    }
                 }
             });
         });
+    },
+    
+    /**
+     * Close mobile power-up panel after selection
+     */
+    closeMobilePanel() {
+        const sidebar = document.getElementById('powerup-sidebar');
+        if (sidebar) {
+            sidebar.classList.remove('mobile-expanded');
+        }
     },
     
     /**
