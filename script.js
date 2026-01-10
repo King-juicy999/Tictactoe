@@ -4366,15 +4366,7 @@ function handleCellClick(cell) {
     }
     
     // Shield Guard removed - no shielded cell check
-    
-    // Prevent player from clicking reserved cells (Tactical Claim)
-    const reservedIndices = getReservedCellIndices();
-    if (reservedIndices.includes(parseInt(index))) {
-        gameState.uiLocked = false;
-        gameState.uiLockingReason = null;
-        messageBox.textContent = "This cell is temporarily reserved.";
-        return;
-    }
+    // CRITICAL: Tactical Claim does NOT block cells - player can always play any cell
 
     clickSound.play();
     gameState.board[index] = 'X';
