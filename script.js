@@ -3124,8 +3124,26 @@ function startLastStandDemo() {
     const runDemo = () => {
         resetBoard();
         
-        // Wait, then highlight losing line
+        // Step 1: Show "Click Last Chance" prompt
         setTimeout(() => {
+            caption.textContent = 'Click Last Chance → Choose the future';
+            caption.classList.add('visible');
+            board.classList.add('scheduled');
+        }, 500);
+        
+        // Step 2: Show selection (Play #3 scheduled)
+        setTimeout(() => {
+            caption.textContent = 'Scheduled for Play #3';
+            const cells = board.querySelectorAll('.guide-demo-cell');
+            // Show visual indicator that it's scheduled
+            if (cells[4]) {
+                cells[4].classList.add('scheduled-indicator');
+            }
+        }, 2000);
+        
+        // Step 3: Fast forward to Play #3 - show threat
+        setTimeout(() => {
+            resetBoard();
             const cells = board.querySelectorAll('.guide-demo-cell');
             // Highlight the losing line (cells 0, 1, 2 - AI can win)
             [0, 1, 2].forEach(idx => {
@@ -3133,10 +3151,10 @@ function startLastStandDemo() {
                     cells[idx].classList.add('losing-line');
                 }
             });
-            caption.textContent = 'AI is about to win...';
+            caption.textContent = 'Play #3: AI is about to win...';
             caption.classList.add('visible');
             
-            // After showing the threat, trigger Last Stand
+            // Step 4: Trigger Last Stand (scheduled activation)
             setTimeout(() => {
                 board.classList.add('pulsing');
                 caption.textContent = '⚡ LAST STAND ACTIVATED';
@@ -3152,11 +3170,11 @@ function startLastStandDemo() {
                     caption.textContent = 'Second chance granted - extra move available';
                 }, 600);
             }, 2000);
-        }, 500);
+        }, 3500);
     };
     
     runDemo(); // Run immediately
-    guideDemoIntervals.lastStand = setInterval(runDemo, 6000); // Loop every 6 seconds
+    guideDemoIntervals.lastStand = setInterval(runDemo, 8000); // Loop every 8 seconds (longer for full flow)
 }
 
 /**
