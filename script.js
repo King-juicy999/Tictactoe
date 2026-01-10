@@ -6720,6 +6720,12 @@ function finalizeRoundAndStartNext() {
         gameState.aiRecalculationNeeded = false; // Reset recalculation flag
         gameState.aiMoveInProgress = false; // Reset AI move lock
         
+        // Hide checkpoints during gameplay
+        const checkpointContainer = document.querySelector('.level-progress-container');
+        if (checkpointContainer) {
+            checkpointContainer.classList.remove('show-after-win');
+        }
+        
         // Clear visual board
         const cells = document.querySelectorAll('.cell');
         if (cells) {
