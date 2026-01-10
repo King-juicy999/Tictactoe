@@ -2784,14 +2784,236 @@ function hidePowerUpGuide() {
         console.log('[Guide] Guide closed - all inputs re-enabled');
     }, 400);
     
+    // Stop all demo animations when guide closes
+    stopAllGuideDemos();
+    
     // Don't mark guide as seen - allow it to show again if needed
     // localStorage.setItem('powerupGuideSeen', 'true'); // Removed - guide always available
+}
+
+// Guidebook demo animation intervals (for cleanup)
+let guideDemoIntervals = {
+    hint: null,
+    boardShake: null,
+    lastStand: null
+};
+
+/**
+ * Stop all guidebook demo animations
+ */
+function stopAllGuideDemos() {
+    Object.keys(guideDemoIntervals).forEach(key => {
+        if (guideDemoIntervals[key]) {
+            clearInterval(guideDemoIntervals[key]);
+            guideDemoIntervals[key] = null;
+        }
+    });
+}
+
+/**
+ * Guidebook Demo: Hint Pulse
+ */
+function startHintPulseDemo() {
+    const board = document.getElementById('guide-hint-demo-board');
+    const caption = document.getElementById('guide-hint-caption');
+    if (!board || !caption) return;
+    
+    let cycleCount = 0;
+    
+    const runDemo = () => {
+        cycleCount++;
+        const cells = board.querySelectorAll('.guide-demo-cell');
+        
+        // Reset all cells
+        cells.forEach(cell => {
+            cell.classList.remove('guide-hint-pulse-demo');
+        });
+        
+        // Highlight the best move (center cell - index 4)
+        const hintCell = cells[4];
+        if (hintCell) {
+            hintCell.classList.add('guide-hint-pulse-demo');
+            caption.textContent = 'Highlighting best move...';
+            caption.classList.add('visible');
+        }
+        
+        // After 2 seconds, show usage limit message
+        setTimeout(() => {
+            if (cycleCount % 2 === 0) {
+                caption.textContent = 'Can be used twice per run. Locks after two uses until next run.';
+            } else {
+                caption.textContent = 'Highlighting best move...';
+            }
+        }, 2000);
+    };
+    
+    runDemo(); // Run immediately
+    guideDemoIntervals.hint = setInterval(runDemo, 4000); // Loop every 4 seconds
+}
+
+/**
+ * Guidebook Demo: Board Shake
+ */
+function startBoardShakeDemo() {
+    const board = document.getElementById('guide-board-shake-demo');
+    const caption = document.getElementById('guide-shake-caption');
+    if (!board || !caption) return;
+    
+    // Original state
+    const originalState = [
+        { mark: 'X', index: 0 },
+        { mark: '', index: 1 },
+        { mark: 'O', index: 2 },
+        { mark: '', index: 3 },
+        { mark: 'X', index: 4 },
+        { mark: 'O', index: 5 },
+        { mark: '', index: 6 },
+        { mark: 'X', index: 7 },
+        { mark: '', index: 8 }
+    ];
+    
+    const resetBoard = () => {
+        const cells = board.querySelectorAll('.guide-demo-cell');
+        originalState.forEach((state, i) => {
+            if (cells[i]) {
+                cells[i].textContent = state.mark;
+                cells[i].setAttribute('data-mark', state.mark);
+                cells[i].setAttribute('data-index', state.index.toString());
+            }
+        });
+    };
+    
+    const runDemo = () => {
+        resetBoard();
+        caption.textContent = '';
+        caption.classList.remove('visible');
+        
+        // Wait a moment, then shake
+        setTimeout(() => {
+            board.classList.add('shaking');
+            caption.textContent = 'Shaking board...';
+            caption.classList.add('visible');
+            
+            // After shake animation, remap
+            setTimeout(() => {
+                const cells = board.querySelectorAll('.guide-demo-cell');
+                
+                // Create random permutation
+                const indices = [0, 1, 2, 3, 4, 5, 6, 7, 8];
+                for (let i = indices.length - 1; i > 0; i--) {
+                    const j = Math.floor(Math.random() * (i + 1));
+                    [indices[i], indices[j]] = [indices[j], indices[i]];
+                }
+                
+                // Mark cells as remapping
+                cells.forEach(cell => {
+                    cell.classList.add('remapping');
+                });
+                
+                // Remap after brief delay
+                setTimeout(() => {
+                    const newMarks = Array(9).fill(null);
+                    originalState.forEach((state, oldIndex) => {
+                        newMarks[indices[oldIndex]] = state.mark;
+                    });
+                    
+                    cells.forEach((cell, newIndex) => {
+                        const mark = newMarks[newIndex];
+                        cell.textContent = mark;
+                        cell.setAttribute('data-mark', mark);
+                        cell.classList.remove('remapping');
+                    });
+                    
+                    board.classList.remove('shaking');
+                    caption.textContent = 'Board positions have been reshuffled. All marks remain.';
+                }, 300);
+            }, 200);
+        }, 1000);
+    };
+    
+    runDemo(); // Run immediately
+    guideDemoIntervals.boardShake = setInterval(runDemo, 5000); // Loop every 5 seconds
+}
+
+/**
+ * Guidebook Demo: Last Stand
+ */
+function startLastStandDemo() {
+    const board = document.getElementById('guide-last-stand-demo');
+    const caption = document.getElementById('guide-laststand-caption');
+    if (!board || !caption) return;
+    
+    const originalState = [
+        { mark: 'O', index: 0 },
+        { mark: 'O', index: 1 },
+        { mark: '', index: 2 }, // AI can win here
+        { mark: 'X', index: 3 },
+        { mark: 'X', index: 4 },
+        { mark: '', index: 5 },
+        { mark: '', index: 6 },
+        { mark: '', index: 7 },
+        { mark: '', index: 8 }
+    ];
+    
+    const resetBoard = () => {
+        const cells = board.querySelectorAll('.guide-demo-cell');
+        originalState.forEach((state, i) => {
+            if (cells[i]) {
+                cells[i].textContent = state.mark;
+                cells[i].setAttribute('data-mark', state.mark);
+                cells[i].classList.remove('losing-line', 'laststand-granted');
+            }
+        });
+        board.classList.remove('pulsing');
+        caption.textContent = '';
+        caption.classList.remove('visible');
+    };
+    
+    const runDemo = () => {
+        resetBoard();
+        
+        // Wait, then highlight losing line
+        setTimeout(() => {
+            const cells = board.querySelectorAll('.guide-demo-cell');
+            // Highlight the losing line (cells 0, 1, 2 - AI can win)
+            [0, 1, 2].forEach(idx => {
+                if (cells[idx]) {
+                    cells[idx].classList.add('losing-line');
+                }
+            });
+            caption.textContent = 'AI is about to win...';
+            caption.classList.add('visible');
+            
+            // After showing the threat, trigger Last Stand
+            setTimeout(() => {
+                board.classList.add('pulsing');
+                caption.textContent = '⚡ LAST STAND ACTIVATED';
+                
+                // Show extra move granted
+                setTimeout(() => {
+                    const cells = board.querySelectorAll('.guide-demo-cell');
+                    // Highlight a cell where player can block
+                    if (cells[2]) {
+                        cells[2].classList.add('laststand-granted');
+                        cells[2].textContent = 'X';
+                    }
+                    caption.textContent = 'Second chance granted - extra move available';
+                }, 600);
+            }, 2000);
+        }, 500);
+    };
+    
+    runDemo(); // Run immediately
+    guideDemoIntervals.lastStand = setInterval(runDemo, 6000); // Loop every 6 seconds
 }
 
 /**
  * Update current guide page display
  */
 function updateGuidePage() {
+    // Stop all demos when changing pages
+    stopAllGuideDemos();
+    
     // Hide all pages
     document.querySelectorAll('.guide-page').forEach(page => {
         page.classList.remove('active');
@@ -2801,6 +3023,17 @@ function updateGuidePage() {
     const currentPage = document.querySelector(`.guide-page[data-page="${currentGuidePage}"]`);
     if (currentPage) {
         currentPage.classList.add('active');
+        
+        // Start appropriate demo based on page
+        setTimeout(() => {
+            if (currentGuidePage === 4) {
+                startHintPulseDemo();
+            } else if (currentGuidePage === 5) {
+                startBoardShakeDemo();
+            } else if (currentGuidePage === 6) {
+                startLastStandDemo();
+            }
+        }, 300); // Small delay to ensure page is visible
     }
     
     // Update page indicator

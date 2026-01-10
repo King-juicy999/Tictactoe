@@ -227,22 +227,25 @@
                 <div class="guide-page" data-page="4">
                     <h2 class="guide-title">Hint Pulse</h2>
                     <div class="guide-powerup-demo">
-                        <div class="guide-demo-board">
-                            <div class="guide-demo-cell guide-hint-pulse-demo"></div>
-                            <div class="guide-demo-cell"></div>
-                            <div class="guide-demo-cell"></div>
-                            <div class="guide-demo-cell"></div>
-                            <div class="guide-demo-cell"></div>
-                            <div class="guide-demo-cell"></div>
-                            <div class="guide-demo-cell"></div>
-                            <div class="guide-demo-cell"></div>
-                            <div class="guide-demo-cell"></div>
+                        <div class="guide-demo-board" id="guide-hint-demo-board">
+                            <div class="guide-demo-cell" data-index="0">X</div>
+                            <div class="guide-demo-cell" data-index="1">O</div>
+                            <div class="guide-demo-cell" data-index="2"></div>
+                            <div class="guide-demo-cell" data-index="3">X</div>
+                            <div class="guide-demo-cell guide-hint-pulse-demo" data-index="4"></div>
+                            <div class="guide-demo-cell" data-index="5">O</div>
+                            <div class="guide-demo-cell" data-index="6"></div>
+                            <div class="guide-demo-cell" data-index="7">X</div>
+                            <div class="guide-demo-cell" data-index="8">O</div>
                         </div>
+                        <div class="guide-demo-caption" id="guide-hint-caption">Highlighting best move...</div>
                     </div>
                     <p class="guide-text"><strong>Hint Pulse</strong><br>Briefly shows a recommended move for 2 seconds. Use it when you are unsure.</p>
                     <div class="guide-notes">
                         <p>• Does not play for you</p>
                         <p>• Does not pause the AI</p>
+                        <p>• Can be used twice per run</p>
+                        <p>• Locks after two uses until next run</p>
                     </div>
                 </div>
                 
@@ -250,17 +253,18 @@
                 <div class="guide-page" data-page="5">
                     <h2 class="guide-title">Board Shake</h2>
                     <div class="guide-powerup-demo">
-                        <div class="guide-demo-board">
-                            <div class="guide-demo-cell">X</div>
-                            <div class="guide-demo-cell"></div>
-                            <div class="guide-demo-cell">O</div>
-                            <div class="guide-demo-cell"></div>
-                            <div class="guide-demo-cell guide-board-shake-demo">🌊</div>
-                            <div class="guide-demo-cell"></div>
-                            <div class="guide-demo-cell">O</div>
-                            <div class="guide-demo-cell"></div>
-                            <div class="guide-demo-cell">X</div>
+                        <div class="guide-demo-board guide-board-shake-container" id="guide-board-shake-demo">
+                            <div class="guide-demo-cell" data-index="0" data-mark="X">X</div>
+                            <div class="guide-demo-cell" data-index="1" data-mark=""></div>
+                            <div class="guide-demo-cell" data-index="2" data-mark="O">O</div>
+                            <div class="guide-demo-cell" data-index="3" data-mark=""></div>
+                            <div class="guide-demo-cell" data-index="4" data-mark="X">X</div>
+                            <div class="guide-demo-cell" data-index="5" data-mark="O">O</div>
+                            <div class="guide-demo-cell" data-index="6" data-mark=""></div>
+                            <div class="guide-demo-cell" data-index="7" data-mark="X">X</div>
+                            <div class="guide-demo-cell" data-index="8" data-mark=""></div>
                         </div>
+                        <div class="guide-demo-caption" id="guide-shake-caption"></div>
                     </div>
                     <p class="guide-text"><strong>Board Shake</strong><br>Reindexes all cell positions once. All existing marks remain, but their logical positions are remapped. The AI must recalculate after remap.</p>
                     <div class="guide-notes">
@@ -275,10 +279,18 @@
                 <div class="guide-page" data-page="6">
                     <h2 class="guide-title">Last Stand</h2>
                     <div class="guide-powerup-demo">
-                        <div class="guide-last-stand-demo">
-                            <div class="guide-last-stand-icon">⚡</div>
-                            <div class="guide-last-stand-text">LAST STAND ACTIVATED</div>
+                        <div class="guide-demo-board guide-last-stand-board" id="guide-last-stand-demo">
+                            <div class="guide-demo-cell" data-index="0" data-mark="O">O</div>
+                            <div class="guide-demo-cell" data-index="1" data-mark="O">O</div>
+                            <div class="guide-demo-cell" data-index="2" data-mark=""></div>
+                            <div class="guide-demo-cell" data-index="3" data-mark="X">X</div>
+                            <div class="guide-demo-cell" data-index="4" data-mark="X">X</div>
+                            <div class="guide-demo-cell" data-index="5" data-mark=""></div>
+                            <div class="guide-demo-cell" data-index="6" data-mark=""></div>
+                            <div class="guide-demo-cell" data-index="7" data-mark=""></div>
+                            <div class="guide-demo-cell" data-index="8" data-mark=""></div>
                         </div>
+                        <div class="guide-demo-caption" id="guide-laststand-caption"></div>
                     </div>
                     <p class="guide-text"><strong>Last Stand</strong><br>Automatically triggers when you are one move away from losing. Immediately grants one extra player move. AI turn is delayed, not skipped.</p>
                     <div class="guide-notes">

@@ -4462,6 +4462,104 @@ button:disabled::after {
     }
 }
 
+.guide-demo-caption {
+    margin-top: 1rem;
+    text-align: center;
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+    min-height: 1.5rem;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.guide-demo-caption.visible {
+    opacity: 1;
+}
+
+/* Board Shake Demo */
+.guide-board-shake-container {
+    position: relative;
+}
+
+.guide-board-shake-container.shaking {
+    animation: guideBoardShake 0.2s ease-in-out;
+}
+
+@keyframes guideBoardShake {
+    0%, 100% { transform: translate(0, 0) rotate(0deg); }
+    10% { transform: translate(-3px, -3px) rotate(-0.5deg); }
+    20% { transform: translate(3px, 3px) rotate(0.5deg); }
+    30% { transform: translate(-3px, 3px) rotate(-0.5deg); }
+    40% { transform: translate(3px, -3px) rotate(0.5deg); }
+    50% { transform: translate(-2px, 2px) rotate(-0.3deg); }
+    60% { transform: translate(2px, -2px) rotate(0.3deg); }
+    70% { transform: translate(-1px, -1px) rotate(-0.2deg); }
+    80% { transform: translate(1px, 1px) rotate(0.2deg); }
+    90% { transform: translate(0, 0) rotate(0deg); }
+}
+
+.guide-demo-cell.remapping {
+    transition: transform 0.3s ease, opacity 0.2s ease;
+    opacity: 0.7;
+}
+
+/* Last Stand Demo */
+.guide-last-stand-board {
+    position: relative;
+}
+
+.guide-last-stand-board.pulsing {
+    animation: guideLastStandPulse 0.6s ease-out;
+}
+
+@keyframes guideLastStandPulse {
+    0% {
+        transform: scale(1);
+        box-shadow: 0 0 0 0 rgba(255, 215, 0, 0.7);
+    }
+    50% {
+        transform: scale(1.02);
+        box-shadow: 0 0 30px 10px rgba(255, 215, 0, 0.5);
+    }
+    100% {
+        transform: scale(1);
+        box-shadow: 0 0 0 0 rgba(255, 215, 0, 0);
+    }
+}
+
+.guide-demo-cell.losing-line {
+    background: rgba(255, 0, 0, 0.2);
+    border-color: rgba(255, 0, 0, 0.6);
+    animation: guideLosingLineGlow 1.5s ease-in-out infinite;
+}
+
+@keyframes guideLosingLineGlow {
+    0%, 100% {
+        box-shadow: 0 0 5px rgba(255, 0, 0, 0.3);
+    }
+    50% {
+        box-shadow: 0 0 15px rgba(255, 0, 0, 0.6);
+    }
+}
+
+.guide-demo-cell.laststand-granted {
+    background: rgba(255, 215, 0, 0.2);
+    border-color: rgba(255, 215, 0, 0.8);
+    animation: guideLastStandGranted 0.5s ease-out;
+}
+
+@keyframes guideLastStandGranted {
+    0% {
+        transform: scale(1);
+    }
+    50% {
+        transform: scale(1.1);
+    }
+    100% {
+        transform: scale(1);
+    }
+}
+
 /* Shield Demo */
 .guide-shield-demo {
     background: var(--cell-bg);

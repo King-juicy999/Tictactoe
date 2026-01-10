@@ -10,9 +10,9 @@
     },
     "hmmm": {
       "losses": 59,
-      "wins": 2,
-      "plays": 87,
-      "lastActive": 1767907806322,
+      "wins": 3,
+      "plays": 91,
+      "lastActive": 1768046910723,
       "matricNumber": "",
       "life": ""
     },
@@ -4564,86 +4564,39 @@
       "type": "start",
       "name": "sammy",
       "time": 1767996991591
+    },
+    {
+      "type": "start",
+      "name": "hmmm",
+      "time": 1768046743735
+    },
+    {
+      "type": "start",
+      "name": "hmmm",
+      "time": 1768046822311
+    },
+    {
+      "type": "start",
+      "name": "hmmm",
+      "time": 1768046822344
+    },
+    {
+      "type": "win",
+      "name": "hmmm",
+      "time": 1768046836907
+    },
+    {
+      "type": "start",
+      "name": "hmmm",
+      "time": 1768046910723
     }
   ],
   "ai": {
     "wins": 116,
-    "losses": 99,
+    "losses": 100,
     "draws": 66,
-    "totalGames": 281,
+    "totalGames": 282,
     "moveHistory": [
-      {
-        "moveIndex": 2,
-        "boardState": [
-          "",
-          "",
-          "",
-          "",
-          "O",
-          "X",
-          "",
-          "",
-          ""
-        ],
-        "moveType": "corner",
-        "reasoning": "Empty corner",
-        "gameId": "game_1767021362546_q28na5mmz",
-        "timestamp": 1767021379771
-      },
-      {
-        "moveIndex": 0,
-        "boardState": [
-          "",
-          "",
-          "O",
-          "",
-          "O",
-          "X",
-          "X",
-          "",
-          ""
-        ],
-        "moveType": "fork",
-        "reasoning": "Creating fork (multiple threats)",
-        "gameId": "game_1767021362546_q28na5mmz",
-        "timestamp": 1767021386424
-      },
-      {
-        "moveIndex": 1,
-        "boardState": [
-          "O",
-          "",
-          "O",
-          "",
-          "O",
-          "X",
-          "X",
-          "",
-          "X"
-        ],
-        "moveType": "win",
-        "reasoning": "Immediate winning move",
-        "gameId": "game_1767021362546_q28na5mmz",
-        "timestamp": 1767021388202
-      },
-      {
-        "moveIndex": 2,
-        "boardState": [
-          "",
-          "",
-          "",
-          "",
-          "X",
-          "",
-          "",
-          "",
-          ""
-        ],
-        "moveType": "corner",
-        "reasoning": "Empty corner",
-        "gameId": "game_1767021388159_0002hhei7",
-        "timestamp": 1767021394211
-      },
       {
         "moveIndex": 7,
         "boardState": [
@@ -22571,9 +22524,81 @@
         "reasoning": "Immediate AI winning move (absolute priority - AI never misses its own win)",
         "gameId": "game_1767996991559_ma7i82vlu",
         "timestamp": 1767997002529
+      },
+      {
+        "moveIndex": 8,
+        "boardState": [
+          "X",
+          "O",
+          "",
+          "",
+          "X",
+          "",
+          "",
+          "",
+          ""
+        ],
+        "moveType": "block",
+        "reasoning": "Blocking player win (secondary priority - only when AI cannot win)",
+        "gameId": "game_1768046822073_2wbit5bw7",
+        "timestamp": 1768046832480
+      },
+      {
+        "moveIndex": 3,
+        "boardState": [
+          "X",
+          "O",
+          "",
+          "",
+          "X",
+          "",
+          "X",
+          "",
+          "O"
+        ],
+        "moveType": "block",
+        "reasoning": "Blocking player win (secondary priority - only when AI cannot win)",
+        "gameId": "game_1768046822073_2wbit5bw7",
+        "timestamp": 1768046834054
+      },
+      {
+        "moveIndex": 2,
+        "boardState": [
+          "X",
+          "O",
+          "",
+          "O",
+          "X",
+          "",
+          "X",
+          "",
+          "O"
+        ],
+        "moveType": "block",
+        "reasoning": "Blocking player win (secondary priority - only when AI cannot win)",
+        "gameId": "game_1768046822073_2wbit5bw7",
+        "timestamp": 1768046835631
+      },
+      {
+        "moveIndex": 4,
+        "boardState": [
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          ""
+        ],
+        "moveType": "center",
+        "reasoning": "Taking center",
+        "gameId": "game_1768046838399_vakcrzj8j",
+        "timestamp": 1768046839349
       }
     ],
-    "learnedPatterns": 184,
+    "learnedPatterns": 185,
     "blockedWinPatterns": [],
     "adaptationLevel": 52,
     "patternsData": {
@@ -24589,14 +24614,15 @@
         ]
       },
       "0-4": {
-        "count": 5,
+        "count": 6,
         "players": [
           "sammy",
           "Am good",
           "Skol",
-          "Fara"
+          "Fara",
+          "hmmm"
         ],
-        "lastSeen": 1767995747838,
+        "lastSeen": 1768046836900,
         "firstSeen": 1767790696524,
         "isBlocked": false,
         "moves": [
@@ -24989,7 +25015,7 @@
         "players": [
           "Fara"
         ],
-        "lastSeen": 1767995435751,
+        "lastSeen": 1768046822157,
         "firstSeen": 1767995435748,
         "isBlocked": false,
         "moves": [
@@ -25003,7 +25029,7 @@
         "players": [
           "Fara"
         ],
-        "lastSeen": 1767995471098,
+        "lastSeen": 1768046822157,
         "firstSeen": 1767995471098,
         "isBlocked": false,
         "moves": [
@@ -25018,7 +25044,7 @@
         "players": [
           "Fara"
         ],
-        "lastSeen": 1767995483511,
+        "lastSeen": 1768046822157,
         "firstSeen": 1767995483507,
         "isBlocked": false,
         "moves": [
@@ -25033,7 +25059,7 @@
         "players": [
           "Fara"
         ],
-        "lastSeen": 1767995503128,
+        "lastSeen": 1768046822157,
         "firstSeen": 1767995503124,
         "isBlocked": false,
         "moves": [
@@ -25049,7 +25075,7 @@
         "players": [
           "Fara"
         ],
-        "lastSeen": 1767995519175,
+        "lastSeen": 1768046822157,
         "firstSeen": 1767995519166,
         "isBlocked": false,
         "moves": [
@@ -25065,7 +25091,7 @@
         "players": [
           "Fara"
         ],
-        "lastSeen": 1767995532382,
+        "lastSeen": 1768046822157,
         "firstSeen": 1767995532382,
         "isBlocked": false,
         "moves": [
@@ -25078,7 +25104,7 @@
         "players": [
           "Fara"
         ],
-        "lastSeen": 1767995532383,
+        "lastSeen": 1768046822157,
         "firstSeen": 1767995532383,
         "isBlocked": false,
         "moves": [
@@ -25093,7 +25119,7 @@
         "players": [
           "Fara"
         ],
-        "lastSeen": 1767995557872,
+        "lastSeen": 1768046822157,
         "firstSeen": 1767995557872,
         "isBlocked": false,
         "moves": [
@@ -25108,7 +25134,7 @@
         "players": [
           "Fara"
         ],
-        "lastSeen": 1767995570654,
+        "lastSeen": 1768046822157,
         "firstSeen": 1767995570645,
         "isBlocked": false,
         "moves": [
@@ -25124,7 +25150,7 @@
         "players": [
           "Fara"
         ],
-        "lastSeen": 1767995583291,
+        "lastSeen": 1768046822157,
         "firstSeen": 1767995583291,
         "isBlocked": false,
         "moves": [
@@ -25139,7 +25165,7 @@
         "players": [
           "Fara"
         ],
-        "lastSeen": 1767995598230,
+        "lastSeen": 1768046822157,
         "firstSeen": 1767995598222,
         "isBlocked": false,
         "moves": [
@@ -25155,7 +25181,7 @@
         "players": [
           "Fara"
         ],
-        "lastSeen": 1767995612209,
+        "lastSeen": 1768046822157,
         "firstSeen": 1767995612209,
         "isBlocked": false,
         "moves": [
@@ -25170,7 +25196,7 @@
         "players": [
           "Fara"
         ],
-        "lastSeen": 1767995627087,
+        "lastSeen": 1768046822157,
         "firstSeen": 1767995627078,
         "isBlocked": false,
         "moves": [
@@ -25186,7 +25212,7 @@
         "players": [
           "Fara"
         ],
-        "lastSeen": 1767995643653,
+        "lastSeen": 1768046822157,
         "firstSeen": 1767995643653,
         "isBlocked": false,
         "moves": [
@@ -25201,7 +25227,7 @@
         "players": [
           "Fara"
         ],
-        "lastSeen": 1767995663799,
+        "lastSeen": 1768046822157,
         "firstSeen": 1767995663799,
         "isBlocked": false,
         "moves": [
@@ -25215,7 +25241,7 @@
         "players": [
           "Fara"
         ],
-        "lastSeen": 1767995697401,
+        "lastSeen": 1768046822157,
         "firstSeen": 1767995697401,
         "isBlocked": false,
         "moves": [
@@ -25230,7 +25256,7 @@
         "players": [
           "Fara"
         ],
-        "lastSeen": 1767995711234,
+        "lastSeen": 1768046822157,
         "firstSeen": 1767995711230,
         "isBlocked": false,
         "moves": [
@@ -25245,7 +25271,7 @@
         "players": [
           "Fara"
         ],
-        "lastSeen": 1767995724981,
+        "lastSeen": 1768046822157,
         "firstSeen": 1767995724981,
         "isBlocked": false,
         "moves": [
@@ -25260,7 +25286,7 @@
         "players": [
           "Fara"
         ],
-        "lastSeen": 1767995776617,
+        "lastSeen": 1768046822157,
         "firstSeen": 1767995776614,
         "isBlocked": false,
         "moves": [
@@ -25275,7 +25301,7 @@
         "players": [
           "Fara"
         ],
-        "lastSeen": 1767995797585,
+        "lastSeen": 1768046822157,
         "firstSeen": 1767995797579,
         "isBlocked": false,
         "moves": [
@@ -25291,7 +25317,7 @@
         "players": [
           "Fara"
         ],
-        "lastSeen": 1767995816510,
+        "lastSeen": 1768046822157,
         "firstSeen": 1767995816510,
         "isBlocked": false,
         "moves": [
@@ -25306,7 +25332,7 @@
         "players": [
           "Fara"
         ],
-        "lastSeen": 1767995832502,
+        "lastSeen": 1768046822157,
         "firstSeen": 1767995832499,
         "isBlocked": false,
         "moves": [
@@ -25321,7 +25347,7 @@
         "players": [
           "Fara"
         ],
-        "lastSeen": 1767995855376,
+        "lastSeen": 1768046822157,
         "firstSeen": 1767995855376,
         "isBlocked": false,
         "moves": [
@@ -25336,7 +25362,7 @@
         "players": [
           "Fara"
         ],
-        "lastSeen": 1767995872424,
+        "lastSeen": 1768046822157,
         "firstSeen": 1767995872415,
         "isBlocked": false,
         "moves": [
@@ -25346,8 +25372,23 @@
           6,
           1
         ]
+      },
+      "0-4-6-2": {
+        "count": 3,
+        "players": [
+          "hmmm"
+        ],
+        "lastSeen": 1768046836902,
+        "firstSeen": 1768046836899,
+        "isBlocked": false,
+        "moves": [
+          0,
+          4,
+          6,
+          2
+        ]
       }
     },
-    "lastLosingMoveIndex": 3
+    "lastLosingMoveIndex": 2
   }
 }
