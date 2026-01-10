@@ -3515,6 +3515,115 @@ body.theme-dark .powerup-sidebar {
     background: rgba(45, 45, 45, 0.95);
 }
 
+/* Last Stand Deployment UI */
+.laststand-deployment-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.7);
+    backdrop-filter: blur(4px);
+    z-index: 10000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    pointer-events: none;
+}
+
+.laststand-deployment-overlay.active {
+    opacity: 1;
+    pointer-events: all;
+}
+
+.laststand-deployment-content {
+    background: var(--cell-bg);
+    border: 2px solid var(--cell-border);
+    border-radius: 16px;
+    padding: 2rem;
+    max-width: 400px;
+    width: 90%;
+    box-shadow: 0 8px 32px var(--shadow);
+    text-align: center;
+}
+
+.laststand-deployment-content h3 {
+    color: var(--text-primary);
+    font-size: 1.5rem;
+    margin-bottom: 0.5rem;
+}
+
+.laststand-deployment-subtitle {
+    color: var(--text-secondary);
+    font-size: 0.95rem;
+    margin-bottom: 1.5rem;
+}
+
+.laststand-level-options {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    margin-bottom: 1.5rem;
+}
+
+.laststand-level-btn {
+    background: var(--cell-bg);
+    border: 2px solid var(--cell-border);
+    border-radius: 8px;
+    padding: 0.75rem 1.5rem;
+    font-size: 1rem;
+    color: var(--text-primary);
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-weight: 500;
+}
+
+.laststand-level-btn:hover {
+    background: var(--cell-hover);
+    border-color: var(--primary-color);
+    transform: scale(1.02);
+}
+
+.laststand-level-btn.current {
+    border-color: var(--primary-color);
+    background: rgba(255, 215, 0, 0.1);
+    font-weight: 600;
+}
+
+.laststand-cancel-btn {
+    background: transparent;
+    border: 1px solid var(--text-secondary);
+    border-radius: 8px;
+    padding: 0.5rem 1rem;
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.laststand-cancel-btn:hover {
+    border-color: var(--primary-color);
+    color: var(--primary-color);
+}
+
+@media (max-width: 768px) {
+    .laststand-deployment-content {
+        padding: 1.5rem;
+        max-width: 90%;
+    }
+    
+    .laststand-deployment-content h3 {
+        font-size: 1.25rem;
+    }
+    
+    .laststand-level-btn {
+        padding: 0.625rem 1.25rem;
+        font-size: 0.95rem;
+    }
+}
+
 body.theme-neon .powerup-button.active {
     box-shadow: 0 0 25px var(--primary-color), 0 0 50px var(--primary-color);
 }

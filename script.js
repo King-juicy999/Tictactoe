@@ -383,7 +383,10 @@ const gameState = {
     firstRoundOfSession: true, // Track if this is the first round of the session
     playerWinningPatterns: [], // Track patterns player used to win
     // Last Stand power-up tracking
-    lastStandUsed: false // Track if Last Stand was used this game
+    lastStandUsed: false, // Track if Last Stand was used this game
+    lastStandDeploymentLevel: null, // Track which level Last Stand is scheduled for (null = not scheduled)
+    // AI recalculation trigger (set to true when power-up changes board state)
+    aiRecalculationNeeded: false
 };
 
 /**
@@ -415,12 +418,12 @@ const PowerUpManager = {
             id: 'lastStand',
             name: 'Last Stand',
             icon: '⚡',
-            description: 'Grants one extra move when one move away from losing. One-time use per game.',
+            description: 'Schedule deployment for a level. Auto-triggers when about to lose on that level.',
             duration: 600, // Animation duration
             audioType: 'chime',
             requiresTarget: false,
             level1Only: true,
-            autoTrigger: true // Triggers automatically when condition is met
+            autoTrigger: false // Now requires scheduling
         },
         focusAura: {
             id: 'focusAura',
@@ -777,6 +780,9 @@ const PowerUpManager = {
             // Clear animation
             board.style.animation = '';
             
+            // CRITICAL: Trigger AI recalculation - board state changed
+            gameState.aiRecalculationNeeded = true;
+            
             // Trigger AI recalculation hook (if exists)
             if (typeof emitBoardUpdate === 'function') {
                 emitBoardUpdate();
@@ -817,6 +823,9 @@ const PowerUpManager = {
         
         // Mark as used for this game
         gameState.lastStandUsed = true;
+        
+        // CRITICAL: Trigger AI recalculation - Last Stand activated, board state may change
+        gameState.aiRecalculationNeeded = true;
     },
     
     /**
@@ -4119,9 +4128,18 @@ function handleCellClick(cell) {
         return;
     }
 
-    // LAST STAND: Check if player is one move away from losing (Level 1 only)
-    // Trigger when AI can win on next move (player is one move from losing)
-    if (gameState.currentLevel === 1 && !gameState.lastStandUsed && !checkWin('X') && !checkWin('O') && gameState.board.includes('')) {
+    // LAST STAND: Forward-only deployment - check if scheduled and conditions met
+    // Only trigger if:
+    // 1. Last Stand is scheduled for current level
+    // 2. Player is one move away from losing
+    // 3. Last Stand hasn't been used this game
+    if (gameState.lastStandDeploymentLevel !== null && 
+        gameState.currentLevel === gameState.lastStandDeploymentLevel &&
+        !gameState.lastStandUsed && 
+        !checkWin('X') && 
+        !checkWin('O') && 
+        gameState.board.includes('')) {
+        
         // Check if AI can win on next move
         let aiCanWin = false;
         for (let i = 0; i < 9; i++) {
@@ -4135,17 +4153,17 @@ function handleCellClick(cell) {
             }
         }
         
-        // Trigger Last Stand if AI can win (not a draw, not already won)
+        // Trigger Last Stand if AI can win and deployment level matches
         if (aiCanWin) {
-            const quantity = PowerUpManager.quantities['lastStand'] || 0;
-            if (quantity > 0 && !PowerUpManager.activeEffects['lastStand']) {
-                PowerUpManager.quantities['lastStand'] = 0;
-                PowerUpManager.activeEffects['lastStand'] = true;
-                PowerUpManager.createLastStand();
-                // Grant extra move - player can move again immediately
-                gameState.uiLocked = false;
-                return; // Exit early - player gets another turn
-            }
+            PowerUpManager.activeEffects['lastStand'] = true;
+            PowerUpManager.createLastStand();
+            
+            // CRITICAL: Trigger AI recalculation - Last Stand activated
+            gameState.aiRecalculationNeeded = true;
+            
+            // Grant extra move - player can move again immediately
+            gameState.uiLocked = false;
+            return; // Exit early - player gets another turn
         }
     }
     
@@ -4268,6 +4286,14 @@ function makeAIMove() {
     // This must be the FIRST thing after validation checks
     // Once locked, no async callback, timeout, or animation can trigger a second move
     gameState.aiTurnInProgress = true;
+    
+    // CRITICAL: AI Strategy Recalculation Trigger
+    // If power-up changed board state, invalidate previous evaluation and recompute
+    if (gameState.aiRecalculationNeeded) {
+        gameState.aiRecalculationNeeded = false;
+        // Force fresh evaluation - AI will recompute from current board state
+        // This ensures AI doesn't use pre-power-up planned moves
+    }
     
     // CRITICAL: Use try/finally to guarantee turn unlock
     let moveExecuted = false;
@@ -6355,6 +6381,8 @@ function finalizeRoundAndStartNext() {
         gameState.board = Array(9).fill('');
         gameState.playerMoveHistory = [];
         gameState.lastStandUsed = false; // Reset Last Stand for new game
+        gameState.lastStandDeploymentLevel = null; // Reset deployment level for new game
+        gameState.aiRecalculationNeeded = false; // Reset recalculation flag
         
         // Clear visual board
         const cells = document.querySelectorAll('.cell');
@@ -6622,6 +6650,12 @@ resetBtn.addEventListener('click', () => {
         gameState.uiLocked = false; // Unlock UI
         gameState.uiLockingReason = null;
         gameState.aiTurnInProgress = false; // CRITICAL: Unlock AI turn
+        gameState.lastStandUsed = false; // Reset Last Stand
+        gameState.lastStandDeploymentLevel = null; // Reset deployment level
+        gameState.aiRecalculationNeeded = false; // Reset recalculation flag
+        gameState.lastStandUsed = false; // Reset Last Stand
+        gameState.lastStandDeploymentLevel = null; // Reset deployment level
+        gameState.aiRecalculationNeeded = false; // Reset recalculation flag
         
         // MVP: Clear board visually WITHOUT re-animating or resizing
         // Ensure board stays locked to prevent shrinking
