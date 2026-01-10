@@ -531,14 +531,13 @@ const PowerUpManager = {
             const isDisabled = quantity === 0 || isActive;
             const isPvpOnly = powerUp.pvpOnly && gameState.mode !== 'pvp';
             
-            // Add name for mobile horizontal layout
+            // CRITICAL: No permanent names/labels - icons only for clean UI
             item.innerHTML = `
                 <button class="powerup-button ${isDisabled ? 'disabled' : ''} ${isActive ? 'active' : ''}" 
                         data-powerup-id="${powerUp.id}"
                         ${isDisabled ? 'disabled' : ''}
                         aria-label="${powerUp.name}">
                     <span class="powerup-icon">${powerUp.icon}</span>
-                    <span class="powerup-name">${powerUp.name}</span>
                     <span class="powerup-quantity">${quantity}</span>
                 </button>
                 <div class="powerup-tooltip">
@@ -1053,16 +1052,23 @@ const PowerUpManager = {
     },
     
     /**
-     * Show prominent activation feedback banner (unmissable but non-blocking)
+     * Show brief cinematic flash for power-up activation
+     * Fast, non-intrusive, with background darkening
      */
     showPowerUpActivationBanner(powerUp) {
-        // Remove any existing banner first
+        // Remove any existing banner/darkening first
         const existingBanner = document.getElementById('powerup-activation-banner');
-        if (existingBanner) {
-            existingBanner.remove();
-        }
+        const existingDarken = document.getElementById('powerup-activation-darken');
+        if (existingBanner) existingBanner.remove();
+        if (existingDarken) existingDarken.remove();
         
-        // Create banner element
+        // Create background darkening overlay
+        const darken = document.createElement('div');
+        darken.id = 'powerup-activation-darken';
+        darken.className = 'powerup-activation-darken';
+        document.body.appendChild(darken);
+        
+        // Create small centered card
         const banner = document.createElement('div');
         banner.id = 'powerup-activation-banner';
         banner.className = 'powerup-activation-banner';
@@ -1077,16 +1083,17 @@ const PowerUpManager = {
         
         // Animate in
         setTimeout(() => {
+            darken.classList.add('visible');
             banner.classList.add('visible');
         }, 10);
         
-        // Fade out and remove after 2 seconds
+        // Fade out and remove after ~2 seconds total
         setTimeout(() => {
+            darken.classList.remove('visible');
             banner.classList.remove('visible');
             setTimeout(() => {
-                if (banner.parentNode) {
-                    banner.remove();
-                }
+                if (banner.parentNode) banner.remove();
+                if (darken.parentNode) darken.remove();
             }, 300);
         }, 2000);
     },
@@ -1124,10 +1131,23 @@ const PowerUpManager = {
         
         if (toggle && sidebar) {
             toggle.addEventListener('click', () => {
-                sidebar.classList.toggle('collapsed');
-                const icon = toggle.querySelector('.powerup-toggle-icon');
-                if (icon) {
-                    icon.textContent = sidebar.classList.contains('collapsed') ? '▲' : '▼';
+                // Desktop: toggle collapsed state
+                if (window.innerWidth > 768) {
+                    sidebar.classList.toggle('collapsed');
+                    const icon = toggle.querySelector('.powerup-toggle-icon');
+                    if (icon) {
+                        icon.textContent = sidebar.classList.contains('collapsed') ? '▲' : '▼';
+                    }
+                }
+            });
+        }
+        
+        // MOBILE: Tap sidebar symbol to open panel
+        if (sidebar && window.innerWidth <= 768) {
+            sidebar.addEventListener('click', (e) => {
+                // Only toggle if clicking the symbol itself, not a power-up button
+                if (e.target === sidebar || e.target.closest('.powerup-sidebar') === sidebar && !e.target.closest('.powerup-button')) {
+                    sidebar.classList.toggle('mobile-expanded');
                 }
             });
         }

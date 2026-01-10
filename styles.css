@@ -3026,11 +3026,29 @@ button:disabled:hover {
 }
 
 /* Power-Up Activation Banner - Prominent on-screen notification */
+/* Background darkening for power-up activation flash */
+.powerup-activation-darken {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.3);
+    z-index: 10000;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s ease;
+}
+
+.powerup-activation-darken.visible {
+    opacity: 1;
+}
+
 .powerup-activation-banner {
     position: fixed;
-    top: 20%;
+    top: 50%;
     left: 50%;
-    transform: translateX(-50%) translateY(-20px);
+    transform: translate(-50%, -50%) scale(0.9);
     z-index: 10001;
     opacity: 0;
     pointer-events: none;
@@ -3039,62 +3057,111 @@ button:disabled:hover {
 
 .powerup-activation-banner.visible {
     opacity: 1;
-    transform: translateX(-50%) translateY(0);
+    transform: translate(-50%, -50%) scale(1);
 }
 
 .powerup-banner-content {
     background: linear-gradient(135deg, rgba(255, 215, 0, 0.95) 0%, rgba(255, 200, 0, 0.95) 100%);
-    border: 3px solid var(--primary-color);
-    border-radius: 16px;
-    padding: 1rem 2rem;
+    border: 2px solid var(--primary-color);
+    border-radius: 12px;
+    padding: 0.75rem 1.5rem;
     box-shadow: 
-        0 8px 32px rgba(0, 0, 0, 0.3),
-        0 0 40px rgba(255, 215, 0, 0.4);
+        0 6px 24px rgba(0, 0, 0, 0.3),
+        0 0 30px rgba(255, 215, 0, 0.4);
     display: flex;
     align-items: center;
-    gap: 0.75rem;
-    animation: bannerSlideIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+    gap: 0.5rem;
+    animation: bannerFlashIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
-@keyframes bannerSlideIn {
+@keyframes bannerFlashIn {
     0% {
-        transform: translateY(-30px) scale(0.9);
+        transform: scale(0.8);
         opacity: 0;
     }
+    50% {
+        transform: scale(1.05);
+    }
     100% {
-        transform: translateY(0) scale(1);
+        transform: scale(1);
         opacity: 1;
     }
 }
 
 .powerup-banner-icon {
-    font-size: 2rem;
+    font-size: 1.5rem;
     line-height: 1;
 }
 
 .powerup-banner-text {
-    font-size: 1.5rem;
+    font-size: 1.1rem;
     font-weight: 700;
     color: var(--text-primary);
     text-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
-    letter-spacing: 0.05em;
+    letter-spacing: 0.03em;
 }
 
+/* MOBILE: Power-up sidebar - single symbol by default, panel opens on tap */
 @media (max-width: 768px) {
+    .powerup-sidebar {
+        width: 60px;
+        height: 60px;
+        right: 1rem;
+        top: auto;
+        bottom: 1rem;
+        transform: none;
+        padding: 0.5rem;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    
+    .powerup-sidebar-header,
+    .powerup-list {
+        display: none;
+    }
+    
+    /* Show power-up symbol icon */
+    .powerup-sidebar::before {
+        content: '⚡';
+        font-size: 2rem;
+        line-height: 1;
+    }
+    
+    /* Expanded state - show panel */
+    .powerup-sidebar.mobile-expanded {
+        width: 200px;
+        height: auto;
+        max-height: 70vh;
+        border-radius: 16px;
+        padding: 1rem;
+        flex-direction: column;
+    }
+    
+    .powerup-sidebar.mobile-expanded::before {
+        display: none;
+    }
+    
+    .powerup-sidebar.mobile-expanded .powerup-sidebar-header,
+    .powerup-sidebar.mobile-expanded .powerup-list {
+        display: flex;
+    }
+    
     .powerup-activation-banner {
-        top: 15%;
+        top: 50%;
     }
     
     .powerup-banner-content {
-        padding: 0.75rem 1.5rem;
+        padding: 0.6rem 1.2rem;
     }
     
     .powerup-banner-icon {
-        font-size: 1.5rem;
+        font-size: 1.2rem;
     }
     
     .powerup-banner-text {
-        font-size: 1.25rem;
+        font-size: 0.95rem;
     }
 }
     50% {
@@ -3106,15 +3173,9 @@ button:disabled:hover {
     }
 }
 
-/* Power-up name (for mobile horizontal layout) */
+/* Power-up name - REMOVED: No permanent names/labels, icons only */
 .powerup-name {
-    display: none; /* Hidden on desktop */
-    font-size: 0.7rem;
-    font-weight: 600;
-    color: var(--text-primary);
-    margin-top: 0.2rem;
-    text-align: center;
-    line-height: 1.2;
+    display: none !important; /* Never show names - icons only */
 }
 
 /* Hint Pulse Animation */
