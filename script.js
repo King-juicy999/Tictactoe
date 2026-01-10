@@ -369,10 +369,14 @@ const gameState = {
     roundCount: 0, // Total rounds completed (increments on every game end: win/loss/draw)
     // Shield Guard removed - shieldedCells no longer used
     shieldedCells: [], // Kept for compatibility but not used (all checks removed from AI logic)
-    // Tactical Claim (Level 1 only)
-    tacticalClaimUsed: false, // Track if Tactical Claim was used this match
-    reservedCells: [], // Array of {cellIndex, turnsRemaining} for Tactical Claim
-    turnCount: 0, // Track turns for Tactical Claim unlock timing
+    // Tactical Claim (AI-only strategic power-up - Level 1+)
+    tacticalClaim: {
+        active: false, // Whether Tactical Claim is currently active
+        claimedCell: null, // Cell index that AI is strategically prioritizing (NOT blocked)
+        aiTurnsRemaining: 0, // Number of AI turns until claim expires (starts at 2)
+        lastAITurnUsed: false, // Track if Tactical Claim was used on last AI turn (prevents consecutive use)
+        cooldown: false // Prevents stacking - only one active at a time
+    },
     // MVP: Board layout lock - prevent shrinking between rounds
     boardInitialized: false, // Track if board has been initialized (prevents re-animation between rounds)
     // MVP: Track if game has started once - prevents Play Game button from reappearing
@@ -630,6 +634,12 @@ const PowerUpManager = {
         // Note: This is NOT an intelligence change - just a recalculation trigger
         if (powerUpId === 'boardShake' || powerUpId === 'hintPulse') {
             gameState.aiRecalculationNeeded = true;
+        }
+        
+        // CRITICAL: Trigger Tactical Claim activation check when player uses power-up
+        // This is one of the trigger conditions for Tactical Claim
+        if (gameState.currentLevel >= 1) {
+            checkAndActivateTacticalClaim('player_powerup');
         }
         
         // CRITICAL: Power-up state isolation - only update THIS power-up's state
@@ -956,6 +966,12 @@ const PowerUpManager = {
             // Trigger AI recalculation hook (if exists)
             if (typeof emitBoardUpdate === 'function') {
                 emitBoardUpdate();
+            }
+            
+            // CRITICAL: Trigger Tactical Claim activation check when Board Shake occurs
+            // This is one of the trigger conditions for Tactical Claim
+            if (gameState.currentLevel >= 1) {
+                checkAndActivateTacticalClaim('board_shake');
             }
         }, 200);
     },
@@ -3437,6 +3453,240 @@ function animateLevelCircles() {
  */
 
 /**
+ * CRITICAL: New Tactical Claim System - Strategic Evaluation Only
+ * This power-up does NOT block cells - it only influences AI evaluation
+ * No visual indicators, no UI, completely invisible to player
+ */
+
+/**
+ * Check and activate Tactical Claim based on trigger conditions
+ * @param {string} triggerType - Type of trigger: 'player_powerup', 'board_shake', 'fork_detected', 'ai_losing'
+ */
+function checkAndActivateTacticalClaim(triggerType) {
+    // Must be Level 1 or higher
+    if (gameState.currentLevel < 1) return;
+    
+    // Cannot activate if already active or on cooldown
+    if (gameState.tacticalClaim.active || gameState.tacticalClaim.cooldown) return;
+    
+    // Cannot activate on consecutive AI turns
+    if (gameState.tacticalClaim.lastAITurnUsed) return;
+    
+    // Check if conditions are met for activation
+    const shouldActivate = evaluateTacticalClaimTrigger(triggerType);
+    
+    if (shouldActivate) {
+        activateTacticalClaimStrategic();
+    }
+}
+
+/**
+ * Evaluate if Tactical Claim should activate based on trigger type
+ */
+function evaluateTacticalClaimTrigger(triggerType) {
+    // Player power-up activation - always triggers
+    if (triggerType === 'player_powerup') {
+        return true;
+    }
+    
+    // Board Shake - always triggers
+    if (triggerType === 'board_shake') {
+        return true;
+    }
+    
+    // Fork detection - check if player or AI has fork potential
+    if (triggerType === 'fork_detected') {
+        return detectForkThreat();
+    }
+    
+    // AI one move from losing - check if player can win next turn
+    if (triggerType === 'ai_losing') {
+        return isAIOneMoveFromLosing();
+    }
+    
+    return false;
+}
+
+/**
+ * Check if there's a fork threat (player or AI can create fork)
+ */
+function detectForkThreat() {
+    // Check if player can create fork
+    for (let i = 0; i < 9; i++) {
+        if (gameState.board[i] === '') {
+            gameState.board[i] = 'X';
+            const threats = countImmediateThreatsFor('X');
+            gameState.board[i] = '';
+            if (threats >= 2) return true;
+        }
+    }
+    
+    // Check if AI can create fork
+    for (let i = 0; i < 9; i++) {
+        if (gameState.board[i] === '') {
+            gameState.board[i] = 'O';
+            const threats = countImmediateThreatsFor('O');
+            gameState.board[i] = '';
+            if (threats >= 2) return true;
+        }
+    }
+    
+    return false;
+}
+
+/**
+ * Check if AI is one move away from losing
+ */
+function isAIOneMoveFromLosing() {
+    // Check if player has a winning move available
+    for (let i = 0; i < 9; i++) {
+        if (gameState.board[i] === '') {
+            gameState.board[i] = 'X';
+            if (checkWin('X')) {
+                gameState.board[i] = '';
+                return true;
+            }
+            gameState.board[i] = '';
+        }
+    }
+    return false;
+}
+
+/**
+ * Activate Tactical Claim - strategic evaluation only (no blocking)
+ */
+function activateTacticalClaimStrategic() {
+    // Find best cell to claim based on strategic value
+    const claimedCell = selectTacticalClaimCell();
+    
+    if (claimedCell === null) {
+        // No suitable cell found - don't activate
+        return;
+    }
+    
+    // Activate Tactical Claim
+    gameState.tacticalClaim.active = true;
+    gameState.tacticalClaim.claimedCell = claimedCell;
+    gameState.tacticalClaim.aiTurnsRemaining = 2; // Lasts exactly 2 AI turns
+    gameState.tacticalClaim.lastAITurnUsed = true; // Prevent consecutive use
+    gameState.tacticalClaim.cooldown = false; // Not on cooldown yet
+    
+    // CRITICAL: No visual indicators, no UI, no animations
+    // This is completely invisible to the player
+}
+
+/**
+ * Select the best cell for Tactical Claim based on strategic value
+ */
+function selectTacticalClaimCell() {
+    const emptyCells = [];
+    
+    // Evaluate all empty cells
+    for (let i = 0; i < 9; i++) {
+        if (gameState.board[i] === '') {
+            const strategicValue = evaluateCellStrategicValue(i);
+            emptyCells.push({ index: i, value: strategicValue });
+        }
+    }
+    
+    if (emptyCells.length === 0) return null;
+    
+    // Sort by strategic value (highest first)
+    emptyCells.sort((a, b) => b.value - a.value);
+    
+    // Select top strategic cell
+    return emptyCells[0].index;
+}
+
+/**
+ * Evaluate strategic value of a cell for Tactical Claim
+ */
+function evaluateCellStrategicValue(cellIndex) {
+    let value = 0;
+    
+    // Center is highly valuable
+    if (cellIndex === 4) value += 10;
+    
+    // Corners are valuable
+    if ([0, 2, 6, 8].includes(cellIndex)) value += 5;
+    
+    // Check fork potential for AI
+    gameState.board[cellIndex] = 'O';
+    const aiThreats = countImmediateThreatsFor('O');
+    gameState.board[cellIndex] = '';
+    if (aiThreats >= 2) value += 15; // High value for fork creation
+    
+    // Check defensive importance (blocking player fork)
+    gameState.board[cellIndex] = 'X';
+    const playerThreats = countImmediateThreatsFor('X');
+    gameState.board[cellIndex] = '';
+    if (playerThreats >= 2) value += 12; // High value for blocking player fork
+    
+    // Check win prevention (blocking player win)
+    gameState.board[cellIndex] = 'X';
+    if (checkWin('X')) {
+        value += 20; // Critical defensive value
+    }
+    gameState.board[cellIndex] = '';
+    
+    return value;
+}
+
+/**
+ * Update Tactical Claim state (decrement AI turns, expire if needed)
+ */
+function updateTacticalClaimState() {
+    if (!gameState.tacticalClaim.active) return;
+    
+    // Decrement AI turns remaining
+    gameState.tacticalClaim.aiTurnsRemaining--;
+    
+    // Check if expired
+    if (gameState.tacticalClaim.aiTurnsRemaining <= 0) {
+        // Expire Tactical Claim
+        gameState.tacticalClaim.active = false;
+        gameState.tacticalClaim.claimedCell = null;
+        gameState.tacticalClaim.aiTurnsRemaining = 0;
+        gameState.tacticalClaim.lastAITurnUsed = false; // Reset for next use
+        gameState.tacticalClaim.cooldown = false; // Reset cooldown
+    } else {
+        // Still active - reset lastAITurnUsed flag after one turn
+        gameState.tacticalClaim.lastAITurnUsed = false;
+    }
+}
+
+/**
+ * Check Tactical Claim trigger conditions during AI move selection
+ */
+function checkTacticalClaimTriggers() {
+    // Check for fork detection
+    if (detectForkThreat()) {
+        checkAndActivateTacticalClaim('fork_detected');
+        return;
+    }
+    
+    // Check if AI is one move from losing
+    if (isAIOneMoveFromLosing()) {
+        checkAndActivateTacticalClaim('ai_losing');
+        return;
+    }
+}
+
+/**
+ * Get Tactical Claim evaluation bonus for a cell
+ * This is used in AI evaluation to weight the claimed cell
+ */
+function getTacticalClaimBonus(cellIndex) {
+    if (!gameState.tacticalClaim.active) return 0;
+    if (gameState.tacticalClaim.claimedCell !== cellIndex) return 0;
+    
+    // Return bonus weight for claimed cell
+    // Higher bonus = AI more likely to prioritize this cell
+    return 50; // Significant but not overwhelming bonus
+}
+
+/**
+ * OLD Tactical Claim functions - DEPRECATED (kept for reference, will be removed)
  * Check if Tactical Claim should be activated
  */
 function shouldActivateTacticalClaim() {
@@ -4229,6 +4479,14 @@ function handleCellClick(cell) {
         }
     }
     
+    // CRITICAL: Check if player played the Tactical Claim cell
+    // If so, AI must re-strategize (Tactical Claim adapts but remains active)
+    if (gameState.tacticalClaim.active && gameState.tacticalClaim.claimedCell === index) {
+        // Player disrupted the claim - AI must re-evaluate
+        gameState.aiRecalculationNeeded = true;
+        // Tactical Claim remains active but AI will adapt its strategy
+    }
+    
     // Record move for behavior analysis
     if (gameState.behaviorAnalyzer) {
         const isWinningMove = checkWin('X');
@@ -4625,31 +4883,9 @@ function makeAIMove() {
 
     // Shields remain active for entire match - do NOT remove after AI move
     
-    // Update Tactical Claim reserved cells (decrement turns, unlock if needed)
-    updateTacticalClaimReservations();
-    
-    // Check if Tactical Claim should be activated (Level 1 only, once per match, mid-game)
-    // CRITICAL: Tactical Claim is VISUAL ONLY - it must NOT block gameplay, pause turns, or delay AI moves
-    // It may not pause the game, delay turns, suppress AI moves, or override win detection
-    // CRITICAL: Do NOT activate during AI turn - only check, don't interrupt
-    if (gameState.currentLevel === 1 && !gameState.tacticalClaimUsed) {
-        try {
-        const shouldActivate = shouldActivateTacticalClaim();
-        if (shouldActivate) {
-                // Activate Tactical Claim visual effects (non-blocking)
-                // CRITICAL: This must NOT affect turn state or cause AI to play twice
-            activateTacticalClaim();
-                // Mark as used immediately to prevent re-activation
-                gameState.tacticalClaimUsed = true;
-                // CRITICAL: Tactical Claim does NOT pause, delay, or block anything
-                // AI immediately continues with full decision logic
-            }
-        } catch (e) {
-            // FAILSAFE: If Tactical Claim causes any error, skip it and continue
-            console.error('Tactical Claim error (skipped):', e);
-            // Do NOT reset tacticalClaimUsed on error - prevent infinite retries
-        }
-    }
+    // CRITICAL: Update Tactical Claim state (decrement AI turns, expire if needed)
+    // This is called BEFORE AI move selection to ensure proper turn tracking
+    updateTacticalClaimState();
 
     // CRITICAL: AI must respond within time budget - use timeout for safety (reduced to 500ms)
     // This prevents AI thinking freeze and ensures smooth gameplay
@@ -5242,75 +5478,114 @@ function chooseHardAIMove() {
     }
 
     // 3) Create forks (collect all fork moves, exclude shielded and reserved cells)
+    // CRITICAL: Apply Tactical Claim bonus to fork moves
     const forkMoves = [];
     for (let i = 0; i < 9; i++) {
         if (gameState.board[i] === '' && !gameState.shieldedCells.includes(i) && !reservedIndices.includes(i)) {
             gameState.board[i] = 'O';
             const threats = countImmediateThreatsFor('O');
             if (threats >= 2) {
-                forkMoves.push(i);
+                let priority = 800;
+                const tacticalBonus = getTacticalClaimBonus(i);
+                if (tacticalBonus > 0) priority += tacticalBonus;
+                forkMoves.push({ index: i, priority: priority });
             }
             gameState.board[i] = '';
         }
     }
     if (forkMoves.length > 0) {
+        // Sort by priority (including Tactical Claim bonus)
+        forkMoves.sort((a, b) => b.priority - a.priority);
+        const selectedFork = forkMoves[0];
         moveOptions.push({
-            index: forkMoves[Math.floor(Math.random() * forkMoves.length)],
-            priority: 800,
+            index: selectedFork.index,
+            priority: selectedFork.priority,
             type: 'fork',
-            reasoning: 'Creating fork (multiple threats)'
+            reasoning: getTacticalClaimBonus(selectedFork.index) > 0 ? 'Creating fork (multiple threats) - Tactical Claim priority' : 'Creating fork (multiple threats)'
         });
     }
 
     // 4) Block opponent's fork (collect all fork blocks, exclude shielded and reserved cells)
+    // CRITICAL: Apply Tactical Claim bonus to fork block moves
     const forkBlockMoves = [];
     for (let i = 0; i < 9; i++) {
         if (gameState.board[i] === '' && !gameState.shieldedCells.includes(i) && !reservedIndices.includes(i)) {
             gameState.board[i] = 'X';
             const threats = countImmediateThreatsFor('X');
             if (threats >= 2) {
-                forkBlockMoves.push(i);
+                let priority = 700;
+                const tacticalBonus = getTacticalClaimBonus(i);
+                if (tacticalBonus > 0) priority += tacticalBonus;
+                forkBlockMoves.push({ index: i, priority: priority });
             }
             gameState.board[i] = '';
         }
     }
     if (forkBlockMoves.length > 0) {
+        // Sort by priority (including Tactical Claim bonus)
+        forkBlockMoves.sort((a, b) => b.priority - a.priority);
+        const selectedBlock = forkBlockMoves[0];
         moveOptions.push({
-            index: forkBlockMoves[Math.floor(Math.random() * forkBlockMoves.length)],
-            priority: 700,
+            index: selectedBlock.index,
+            priority: selectedBlock.priority,
             type: 'block_fork',
-            reasoning: 'Blocking opponent fork'
+            reasoning: getTacticalClaimBonus(selectedBlock.index) > 0 ? 'Blocking opponent fork - Tactical Claim priority' : 'Blocking opponent fork'
         });
     }
 
     // 5) Strategic positions (center, corners, sides) - collect all options, exclude shielded and reserved cells
+    // CRITICAL: Apply Tactical Claim bonus to strategic moves
     const strategicMoves = [];
     if (gameState.board[4] === '' && !reservedIndices.includes(4)) {
-        strategicMoves.push({ index: 4, priority: 600, type: 'center', reasoning: 'Taking center' });
+        let priority = 600;
+        const tacticalBonus = getTacticalClaimBonus(4);
+        if (tacticalBonus > 0) priority += tacticalBonus;
+        strategicMoves.push({ 
+            index: 4, 
+            priority: priority, 
+            type: 'center', 
+            reasoning: tacticalBonus > 0 ? 'Taking center - Tactical Claim priority' : 'Taking center' 
+        });
     }
     
     const corners = [0, 2, 6, 8].filter(i => gameState.board[i] === '' && !reservedIndices.includes(i));
     if (corners.length > 0) {
     const oppCorner = getOppositeCornerIndex();
         if (oppCorner !== null && corners.includes(oppCorner)) {
-            strategicMoves.push({ index: oppCorner, priority: 550, type: 'corner', reasoning: 'Opposite corner' });
-        } else {
+            let priority = 550;
+            const tacticalBonus = getTacticalClaimBonus(oppCorner);
+            if (tacticalBonus > 0) priority += tacticalBonus;
             strategicMoves.push({ 
-                index: corners[Math.floor(Math.random() * corners.length)], 
-                priority: 500, 
+                index: oppCorner, 
+                priority: priority, 
                 type: 'corner', 
-                reasoning: 'Empty corner' 
+                reasoning: tacticalBonus > 0 ? 'Opposite corner - Tactical Claim priority' : 'Opposite corner' 
+            });
+        } else {
+            const selectedCorner = corners[Math.floor(Math.random() * corners.length)];
+            let priority = 500;
+            const tacticalBonus = getTacticalClaimBonus(selectedCorner);
+            if (tacticalBonus > 0) priority += tacticalBonus;
+            strategicMoves.push({ 
+                index: selectedCorner, 
+                priority: priority, 
+                type: 'corner', 
+                reasoning: tacticalBonus > 0 ? 'Empty corner - Tactical Claim priority' : 'Empty corner' 
             });
         }
     }
     
     const sides = [1, 3, 5, 7].filter(i => gameState.board[i] === '' && !reservedIndices.includes(i));
     if (sides.length > 0) {
+        const selectedSide = sides[Math.floor(Math.random() * sides.length)];
+        let priority = 400;
+        const tacticalBonus = getTacticalClaimBonus(selectedSide);
+        if (tacticalBonus > 0) priority += tacticalBonus;
         strategicMoves.push({ 
-            index: sides[Math.floor(Math.random() * sides.length)], 
-            priority: 400, 
+            index: selectedSide, 
+            priority: priority, 
             type: 'side', 
-            reasoning: 'Empty side' 
+            reasoning: tacticalBonus > 0 ? 'Empty side - Tactical Claim priority' : 'Empty side' 
         });
     }
     
@@ -6757,6 +7032,13 @@ function finalizeRoundAndStartNext() {
         }
         gameState.aiRecalculationNeeded = false; // Reset recalculation flag
         gameState.aiMoveInProgress = false; // Reset AI move lock
+        
+        // CRITICAL: Reset Tactical Claim on round end
+        gameState.tacticalClaim.active = false;
+        gameState.tacticalClaim.claimedCell = null;
+        gameState.tacticalClaim.aiTurnsRemaining = 0;
+        gameState.tacticalClaim.lastAITurnUsed = false;
+        gameState.tacticalClaim.cooldown = false;
         
         // Hide checkpoints during gameplay
         const checkpointContainer = document.querySelector('.level-progress-container');

@@ -1,42 +1,18 @@
 {
   "players": {
-    "899": {
-      "losses": 0,
-      "wins": 2,
-      "plays": 3,
-      "lastActive": 1767635461571,
-      "matricNumber": "",
-      "life": ""
-    },
     "hmmm": {
-      "losses": 62,
-      "wins": 3,
-      "plays": 94,
-      "lastActive": 1768050512630,
+      "losses": 64,
+      "wins": 10,
+      "plays": 97,
+      "lastActive": 1768057058027,
       "matricNumber": "",
       "life": ""
     },
     "sammy": {
       "losses": 92,
       "wins": 17,
-      "plays": 140,
-      "lastActive": 1768055817001,
-      "matricNumber": "",
-      "life": ""
-    },
-    "Gidhsf": {
-      "losses": 2,
-      "wins": 5,
-      "plays": 1,
-      "lastActive": 1764880775255,
-      "matricNumber": "",
-      "life": ""
-    },
-    "ug8iuibk": {
-      "losses": 0,
-      "wins": 2,
-      "plays": 2,
-      "lastActive": 1764881671472,
+      "plays": 141,
+      "lastActive": 1768081081915,
       "matricNumber": "",
       "life": ""
     },
@@ -45,22 +21,6 @@
       "wins": 1,
       "plays": 2,
       "lastActive": 1764971945779,
-      "matricNumber": "",
-      "life": ""
-    },
-    "df": {
-      "losses": 3,
-      "wins": 2,
-      "plays": 2,
-      "lastActive": 1765021040259,
-      "matricNumber": "",
-      "life": ""
-    },
-    "gh": {
-      "losses": 0,
-      "wins": 1,
-      "plays": 2,
-      "lastActive": 1765021144416,
       "matricNumber": "",
       "life": ""
     },
@@ -88,14 +48,6 @@
       "matricNumber": "",
       "life": ""
     },
-    "Mark": {
-      "losses": 0,
-      "wins": 1,
-      "plays": 2,
-      "lastActive": 1766260540659,
-      "matricNumber": "",
-      "life": ""
-    },
     "David Shekinah": {
       "losses": 4,
       "wins": 0,
@@ -112,43 +64,11 @@
       "matricNumber": "",
       "life": ""
     },
-    "Yw": {
-      "losses": 16,
-      "wins": 0,
-      "plays": 33,
-      "lastActive": 1767818937122,
-      "matricNumber": "",
-      "life": ""
-    },
-    "Y": {
-      "losses": 0,
-      "wins": 1,
-      "plays": 3,
-      "lastActive": 1766424808170,
-      "matricNumber": "",
-      "life": ""
-    },
     "william": {
-      "losses": 0,
+      "losses": 2,
       "wins": 0,
-      "plays": 3,
-      "lastActive": 1766655161630,
-      "matricNumber": "",
-      "life": ""
-    },
-    "w": {
-      "losses": 0,
-      "wins": 0,
-      "plays": 3,
-      "lastActive": 1766668321002,
-      "matricNumber": "",
-      "life": ""
-    },
-    "Hdhf": {
-      "losses": 0,
-      "wins": 0,
-      "plays": 3,
-      "lastActive": 1766679590712,
+      "plays": 6,
+      "lastActive": 1768056460897,
       "matricNumber": "",
       "life": ""
     },
@@ -216,14 +136,6 @@
       "matricNumber": "",
       "life": ""
     },
-    "P": {
-      "losses": 6,
-      "wins": 0,
-      "plays": 3,
-      "lastActive": 1767305730724,
-      "matricNumber": "",
-      "life": ""
-    },
     "Sunshine": {
       "losses": 5,
       "wins": 0,
@@ -274,9 +186,9 @@
     },
     "Am good": {
       "losses": 9,
-      "wins": 4,
-      "plays": 34,
-      "lastActive": 1768055791573,
+      "wins": 5,
+      "plays": 37,
+      "lastActive": 1768056455587,
       "matricNumber": "",
       "life": ""
     },
@@ -437,46 +349,6 @@
     },
     {
       "type": "start",
-      "name": "Gidhsf",
-      "time": 1764880661862
-    },
-    {
-      "type": "win",
-      "name": "Gidhsf",
-      "time": 1764880661866
-    },
-    {
-      "type": "win",
-      "name": "Gidhsf",
-      "time": 1764880669898
-    },
-    {
-      "type": "loss",
-      "name": "Gidhsf",
-      "time": 1764880771070
-    },
-    {
-      "type": "win",
-      "name": "Gidhsf",
-      "time": 1764880771087
-    },
-    {
-      "type": "loss",
-      "name": "Gidhsf",
-      "time": 1764880771921
-    },
-    {
-      "type": "win",
-      "name": "Gidhsf",
-      "time": 1764880771931
-    },
-    {
-      "type": "win",
-      "name": "Gidhsf",
-      "time": 1764880775255
-    },
-    {
-      "type": "start",
       "name": "hmmm",
       "time": 1764880926115
     },
@@ -504,26 +376,6 @@
       "type": "loss",
       "name": "hmmm",
       "time": 1764880980185
-    },
-    {
-      "type": "start",
-      "name": "ug8iuibk",
-      "time": 1764881638212
-    },
-    {
-      "type": "start",
-      "name": "ug8iuibk",
-      "time": 1764881638216
-    },
-    {
-      "type": "win",
-      "name": "ug8iuibk",
-      "time": 1764881648024
-    },
-    {
-      "type": "win",
-      "name": "ug8iuibk",
-      "time": 1764881671472
     },
     {
       "type": "start",
@@ -754,56 +606,6 @@
       "type": "loss",
       "name": "good",
       "time": 1764971945779
-    },
-    {
-      "type": "start",
-      "name": "df",
-      "time": 1765020964966
-    },
-    {
-      "type": "start",
-      "name": "df",
-      "time": 1765020964979
-    },
-    {
-      "type": "win",
-      "name": "df",
-      "time": 1765020973288
-    },
-    {
-      "type": "loss",
-      "name": "df",
-      "time": 1765020984861
-    },
-    {
-      "type": "win",
-      "name": "df",
-      "time": 1765020995903
-    },
-    {
-      "type": "loss",
-      "name": "df",
-      "time": 1765021016485
-    },
-    {
-      "type": "loss",
-      "name": "df",
-      "time": 1765021040259
-    },
-    {
-      "type": "start",
-      "name": "gh",
-      "time": 1765021136594
-    },
-    {
-      "type": "start",
-      "name": "gh",
-      "time": 1765021136601
-    },
-    {
-      "type": "win",
-      "name": "gh",
-      "time": 1765021144416
     },
     {
       "type": "start",
@@ -1157,21 +959,6 @@
     },
     {
       "type": "start",
-      "name": "Mark",
-      "time": 1766260521729
-    },
-    {
-      "type": "start",
-      "name": "Mark",
-      "time": 1766260523576
-    },
-    {
-      "type": "win",
-      "name": "Mark",
-      "time": 1766260540659
-    },
-    {
-      "type": "start",
       "name": "David Shekinah",
       "time": 1766360829195
     },
@@ -1322,36 +1109,6 @@
     },
     {
       "type": "start",
-      "name": "Yw",
-      "time": 1766365563829
-    },
-    {
-      "type": "start",
-      "name": "Yw",
-      "time": 1766365590687
-    },
-    {
-      "type": "start",
-      "name": "Yw",
-      "time": 1766365592050
-    },
-    {
-      "type": "start",
-      "name": "Yw",
-      "time": 1766365592145
-    },
-    {
-      "type": "loss",
-      "name": "Yw",
-      "time": 1766365643606
-    },
-    {
-      "type": "loss",
-      "name": "Yw",
-      "time": 1766365652232
-    },
-    {
-      "type": "start",
       "name": "Daniella",
       "time": 1766365707266
     },
@@ -1487,26 +1244,6 @@
     },
     {
       "type": "start",
-      "name": "Y",
-      "time": 1766424802774
-    },
-    {
-      "type": "start",
-      "name": "Y",
-      "time": 1766424803882
-    },
-    {
-      "type": "start",
-      "name": "Y",
-      "time": 1766424803890
-    },
-    {
-      "type": "win",
-      "name": "Y",
-      "time": 1766424808170
-    },
-    {
-      "type": "start",
       "name": "hmmm",
       "time": 1766653092419
     },
@@ -1587,21 +1324,6 @@
     },
     {
       "type": "start",
-      "name": "w",
-      "time": 1766668318449
-    },
-    {
-      "type": "start",
-      "name": "w",
-      "time": 1766668320960
-    },
-    {
-      "type": "start",
-      "name": "w",
-      "time": 1766668321002
-    },
-    {
-      "type": "start",
       "name": "hmmm",
       "time": 1766678823530
     },
@@ -1614,21 +1336,6 @@
       "type": "start",
       "name": "hmmm",
       "time": 1766678824618
-    },
-    {
-      "type": "start",
-      "name": "Hdhf",
-      "time": 1766679584672
-    },
-    {
-      "type": "start",
-      "name": "Hdhf",
-      "time": 1766679590558
-    },
-    {
-      "type": "start",
-      "name": "Hdhf",
-      "time": 1766679590712
     },
     {
       "type": "start",
@@ -2152,51 +1859,6 @@
     },
     {
       "type": "start",
-      "name": "P",
-      "time": 1767305558241
-    },
-    {
-      "type": "start",
-      "name": "P",
-      "time": 1767305563031
-    },
-    {
-      "type": "start",
-      "name": "P",
-      "time": 1767305563134
-    },
-    {
-      "type": "loss",
-      "name": "P",
-      "time": 1767305601009
-    },
-    {
-      "type": "loss",
-      "name": "P",
-      "time": 1767305625010
-    },
-    {
-      "type": "loss",
-      "name": "P",
-      "time": 1767305639464
-    },
-    {
-      "type": "loss",
-      "name": "P",
-      "time": 1767305677098
-    },
-    {
-      "type": "loss",
-      "name": "P",
-      "time": 1767305717236
-    },
-    {
-      "type": "loss",
-      "name": "P",
-      "time": 1767305730724
-    },
-    {
-      "type": "start",
       "name": "Sunshine",
       "time": 1767554698132
     },
@@ -2264,126 +1926,6 @@
       "type": "start",
       "name": "Dee",
       "time": 1767556236936
-    },
-    {
-      "type": "start",
-      "name": "Yw",
-      "time": 1767572114654
-    },
-    {
-      "type": "start",
-      "name": "Yw",
-      "time": 1767572117922
-    },
-    {
-      "type": "start",
-      "name": "Yw",
-      "time": 1767572118036
-    },
-    {
-      "type": "loss",
-      "name": "Yw",
-      "time": 1767572136325
-    },
-    {
-      "type": "loss",
-      "name": "Yw",
-      "time": 1767572140439
-    },
-    {
-      "type": "loss",
-      "name": "Yw",
-      "time": 1767572145906
-    },
-    {
-      "type": "start",
-      "name": "Yw",
-      "time": 1767572421966
-    },
-    {
-      "type": "start",
-      "name": "Yw",
-      "time": 1767572425611
-    },
-    {
-      "type": "start",
-      "name": "Yw",
-      "time": 1767572425625
-    },
-    {
-      "type": "start",
-      "name": "Yw",
-      "time": 1767572453843
-    },
-    {
-      "type": "start",
-      "name": "Yw",
-      "time": 1767572454874
-    },
-    {
-      "type": "start",
-      "name": "Yw",
-      "time": 1767572454894
-    },
-    {
-      "type": "start",
-      "name": "Yw",
-      "time": 1767573689886
-    },
-    {
-      "type": "start",
-      "name": "Yw",
-      "time": 1767573692181
-    },
-    {
-      "type": "start",
-      "name": "Yw",
-      "time": 1767573692200
-    },
-    {
-      "type": "start",
-      "name": "Yw",
-      "time": 1767575108266
-    },
-    {
-      "type": "start",
-      "name": "Yw",
-      "time": 1767575110078
-    },
-    {
-      "type": "start",
-      "name": "Yw",
-      "time": 1767575110086
-    },
-    {
-      "type": "loss",
-      "name": "Yw",
-      "time": 1767575116725
-    },
-    {
-      "type": "loss",
-      "name": "Yw",
-      "time": 1767575123573
-    },
-    {
-      "type": "loss",
-      "name": "Yw",
-      "time": 1767575133536
-    },
-    {
-      "type": "loss",
-      "name": "Yw",
-      "time": 1767575159976
-    },
-    {
-      "type": "loss",
-      "name": "Yw",
-      "time": 1767575165920
-    },
-    {
-      "type": "loss",
-      "name": "Yw",
-      "time": 1767575173116
     },
     {
       "type": "start",
@@ -2502,36 +2044,6 @@
     },
     {
       "type": "start",
-      "name": "Yw",
-      "time": 1767635047756
-    },
-    {
-      "type": "start",
-      "name": "Yw",
-      "time": 1767635049744
-    },
-    {
-      "type": "start",
-      "name": "Yw",
-      "time": 1767635049751
-    },
-    {
-      "type": "loss",
-      "name": "Yw",
-      "time": 1767635068052
-    },
-    {
-      "type": "loss",
-      "name": "Yw",
-      "time": 1767635075215
-    },
-    {
-      "type": "loss",
-      "name": "Yw",
-      "time": 1767635080631
-    },
-    {
-      "type": "start",
       "name": "ATHENA",
       "time": 1767635425670
     },
@@ -2544,31 +2056,6 @@
       "type": "start",
       "name": "ATHENA",
       "time": 1767635426797
-    },
-    {
-      "type": "start",
-      "name": "899",
-      "time": 1767635441886
-    },
-    {
-      "type": "start",
-      "name": "899",
-      "time": 1767635443231
-    },
-    {
-      "type": "start",
-      "name": "899",
-      "time": 1767635443239
-    },
-    {
-      "type": "win",
-      "name": "899",
-      "time": 1767635446903
-    },
-    {
-      "type": "win",
-      "name": "899",
-      "time": 1767635461571
     },
     {
       "type": "start",
@@ -3109,31 +2596,6 @@
       "type": "loss",
       "name": "hmmm",
       "time": 1767696394599
-    },
-    {
-      "type": "start",
-      "name": "Yw",
-      "time": 1767697631241
-    },
-    {
-      "type": "start",
-      "name": "Yw",
-      "time": 1767697641830
-    },
-    {
-      "type": "start",
-      "name": "Yw",
-      "time": 1767697642561
-    },
-    {
-      "type": "start",
-      "name": "Yw",
-      "time": 1767697655132
-    },
-    {
-      "type": "start",
-      "name": "Yw",
-      "time": 1767697655454
     },
     {
       "type": "start",
@@ -3702,31 +3164,6 @@
     },
     {
       "type": "start",
-      "name": "Yw",
-      "time": 1767755647589
-    },
-    {
-      "type": "start",
-      "name": "Yw",
-      "time": 1767755651505
-    },
-    {
-      "type": "start",
-      "name": "Yw",
-      "time": 1767755651523
-    },
-    {
-      "type": "loss",
-      "name": "Yw",
-      "time": 1767755669772
-    },
-    {
-      "type": "loss",
-      "name": "Yw",
-      "time": 1767755676011
-    },
-    {
-      "type": "start",
       "name": "Sarah",
       "time": 1767755771277
     },
@@ -4189,21 +3626,6 @@
       "type": "loss",
       "name": "hmmm",
       "time": 1767818097758
-    },
-    {
-      "type": "start",
-      "name": "Yw",
-      "time": 1767818929240
-    },
-    {
-      "type": "start",
-      "name": "Yw",
-      "time": 1767818937105
-    },
-    {
-      "type": "start",
-      "name": "Yw",
-      "time": 1767818937122
     },
     {
       "type": "start",
@@ -4759,860 +4181,124 @@
       "type": "win",
       "name": "sammy",
       "time": 1768055817001
+    },
+    {
+      "type": "start",
+      "name": "william",
+      "time": 1768056401719
+    },
+    {
+      "type": "start",
+      "name": "Am good",
+      "time": 1768056404230
+    },
+    {
+      "type": "start",
+      "name": "Am good",
+      "time": 1768056410110
+    },
+    {
+      "type": "start",
+      "name": "Am good",
+      "time": 1768056410138
+    },
+    {
+      "type": "start",
+      "name": "william",
+      "time": 1768056412108
+    },
+    {
+      "type": "start",
+      "name": "william",
+      "time": 1768056412138
+    },
+    {
+      "type": "loss",
+      "name": "william",
+      "time": 1768056455157
+    },
+    {
+      "type": "win",
+      "name": "Am good",
+      "time": 1768056455587
+    },
+    {
+      "type": "loss",
+      "name": "william",
+      "time": 1768056460897
+    },
+    {
+      "type": "start",
+      "name": "hmmm",
+      "time": 1768056566379
+    },
+    {
+      "type": "start",
+      "name": "hmmm",
+      "time": 1768056570378
+    },
+    {
+      "type": "start",
+      "name": "hmmm",
+      "time": 1768056570499
+    },
+    {
+      "type": "win",
+      "name": "hmmm",
+      "time": 1768056600958
+    },
+    {
+      "type": "win",
+      "name": "hmmm",
+      "time": 1768056646835
+    },
+    {
+      "type": "win",
+      "name": "hmmm",
+      "time": 1768056706577
+    },
+    {
+      "type": "loss",
+      "name": "hmmm",
+      "time": 1768056760311
+    },
+    {
+      "type": "win",
+      "name": "hmmm",
+      "time": 1768056863182
+    },
+    {
+      "type": "win",
+      "name": "hmmm",
+      "time": 1768056938298
+    },
+    {
+      "type": "loss",
+      "name": "hmmm",
+      "time": 1768056983450
+    },
+    {
+      "type": "win",
+      "name": "hmmm",
+      "time": 1768057004656
+    },
+    {
+      "type": "win",
+      "name": "hmmm",
+      "time": 1768057058027
+    },
+    {
+      "type": "start",
+      "name": "sammy",
+      "time": 1768081081915
     }
   ],
   "ai": {
-    "wins": 125,
-    "losses": 110,
-    "draws": 72,
-    "totalGames": 307,
+    "wins": 129,
+    "losses": 121,
+    "draws": 86,
+    "totalGames": 336,
     "moveHistory": [
-      {
-        "moveIndex": 1,
-        "boardState": [
-          "",
-          "",
-          "",
-          "",
-          "X",
-          "",
-          "O",
-          "X",
-          ""
-        ],
-        "moveType": "block",
-        "reasoning": "Blocking opponent win",
-        "gameId": "game_1767190559952_ht6vooloq",
-        "timestamp": 1767190574250
-      },
-      {
-        "moveIndex": 5,
-        "boardState": [
-          "",
-          "O",
-          "X",
-          "",
-          "X",
-          "",
-          "O",
-          "X",
-          ""
-        ],
-        "moveType": "block_fork",
-        "reasoning": "Blocking opponent fork",
-        "gameId": "game_1767190559952_ht6vooloq",
-        "timestamp": 1767190576567
-      },
-      {
-        "moveIndex": 0,
-        "boardState": [
-          "",
-          "O",
-          "X",
-          "",
-          "X",
-          "O",
-          "O",
-          "X",
-          "X"
-        ],
-        "moveType": "block",
-        "reasoning": "Blocking opponent win",
-        "gameId": "game_1767190559952_ht6vooloq",
-        "timestamp": 1767190582151
-      },
-      {
-        "moveIndex": 4,
-        "boardState": [
-          "",
-          "",
-          "",
-          "",
-          "",
-          "",
-          "",
-          "",
-          ""
-        ],
-        "moveType": "center",
-        "reasoning": "Taking center",
-        "gameId": "game_1767190584664_8jpcjaaer",
-        "timestamp": 1767190587099
-      },
-      {
-        "moveIndex": 2,
-        "boardState": [
-          "",
-          "",
-          "",
-          "",
-          "O",
-          "",
-          "X",
-          "",
-          ""
-        ],
-        "moveType": "corner",
-        "reasoning": "Opposite corner",
-        "gameId": "game_1767190584664_8jpcjaaer",
-        "timestamp": 1767190590720
-      },
-      {
-        "moveIndex": 7,
-        "boardState": [
-          "",
-          "",
-          "O",
-          "",
-          "O",
-          "",
-          "X",
-          "",
-          "X"
-        ],
-        "moveType": "block",
-        "reasoning": "Blocking opponent win",
-        "gameId": "game_1767190584664_8jpcjaaer",
-        "timestamp": 1767190594115
-      },
-      {
-        "moveIndex": 0,
-        "boardState": [
-          "",
-          "X",
-          "O",
-          "",
-          "O",
-          "",
-          "X",
-          "O",
-          "X"
-        ],
-        "moveType": "corner",
-        "reasoning": "Opposite corner",
-        "gameId": "game_1767190584664_8jpcjaaer",
-        "timestamp": 1767190595641
-      },
-      {
-        "moveIndex": 3,
-        "boardState": [
-          "O",
-          "X",
-          "O",
-          "",
-          "O",
-          "X",
-          "X",
-          "O",
-          "X"
-        ],
-        "moveType": "side",
-        "reasoning": "Empty side",
-        "gameId": "game_1767190584664_8jpcjaaer",
-        "timestamp": 1767190599059
-      },
-      {
-        "moveIndex": 4,
-        "boardState": [
-          "",
-          "X",
-          "",
-          "",
-          "",
-          "",
-          "",
-          "",
-          ""
-        ],
-        "moveType": "center",
-        "reasoning": "Taking center",
-        "gameId": "game_1767193790448_y8a7m5evb",
-        "timestamp": 1767193792180
-      },
-      {
-        "moveIndex": 4,
-        "boardState": [
-          "X",
-          "",
-          "",
-          "",
-          "",
-          "",
-          "",
-          "",
-          ""
-        ],
-        "moveType": "center",
-        "reasoning": "Taking center",
-        "gameId": "game_1767305562065_g95jbx41e",
-        "timestamp": 1767305575017
-      },
-      {
-        "moveIndex": 6,
-        "boardState": [
-          "X",
-          "",
-          "",
-          "X",
-          "O",
-          "",
-          "",
-          "",
-          ""
-        ],
-        "moveType": "block",
-        "reasoning": "Blocking opponent win",
-        "gameId": "game_1767305562065_g95jbx41e",
-        "timestamp": 1767305578064
-      },
-      {
-        "moveIndex": 1,
-        "boardState": [
-          "X",
-          "",
-          "X",
-          "X",
-          "O",
-          "",
-          "O",
-          "",
-          ""
-        ],
-        "moveType": "block",
-        "reasoning": "Blocking opponent win",
-        "gameId": "game_1767305562065_g95jbx41e",
-        "timestamp": 1767305580248
-      },
-      {
-        "moveIndex": 8,
-        "boardState": [
-          "X",
-          "O",
-          "X",
-          "X",
-          "O",
-          "",
-          "O",
-          "X",
-          ""
-        ],
-        "moveType": "corner",
-        "reasoning": "Opposite corner",
-        "gameId": "game_1767305562065_g95jbx41e",
-        "timestamp": 1767305582072
-      },
-      {
-        "moveIndex": 4,
-        "boardState": [
-          "",
-          "",
-          "",
-          "",
-          "",
-          "",
-          "",
-          "",
-          ""
-        ],
-        "moveType": "center",
-        "reasoning": "Taking center",
-        "gameId": "game_1767305588879_vd5qeayzy",
-        "timestamp": 1767305590532
-      },
-      {
-        "moveIndex": 6,
-        "boardState": [
-          "",
-          "",
-          "",
-          "X",
-          "O",
-          "",
-          "",
-          "",
-          ""
-        ],
-        "moveType": "corner",
-        "reasoning": "Empty corner",
-        "gameId": "game_1767305588879_vd5qeayzy",
-        "timestamp": 1767305596100
-      },
-      {
-        "moveIndex": 7,
-        "boardState": [
-          "",
-          "",
-          "X",
-          "X",
-          "O",
-          "",
-          "O",
-          "",
-          ""
-        ],
-        "moveType": "fork",
-        "reasoning": "Creating fork (multiple threats)",
-        "gameId": "game_1767305588879_vd5qeayzy",
-        "timestamp": 1767305598042
-      },
-      {
-        "moveIndex": 1,
-        "boardState": [
-          "",
-          "",
-          "X",
-          "X",
-          "O",
-          "",
-          "O",
-          "O",
-          "X"
-        ],
-        "moveType": "win",
-        "reasoning": "Immediate winning move",
-        "gameId": "game_1767305588879_vd5qeayzy",
-        "timestamp": 1767305600914
-      },
-      {
-        "moveIndex": 4,
-        "boardState": [
-          "",
-          "",
-          "X",
-          "",
-          "",
-          "",
-          "",
-          "",
-          ""
-        ],
-        "moveType": "center",
-        "reasoning": "Taking center",
-        "gameId": "game_1767305600791_8r6cgdfef",
-        "timestamp": 1767305607551
-      },
-      {
-        "moveIndex": 0,
-        "boardState": [
-          "",
-          "",
-          "X",
-          "",
-          "O",
-          "",
-          "X",
-          "",
-          ""
-        ],
-        "moveType": "block_fork",
-        "reasoning": "Blocking opponent fork",
-        "gameId": "game_1767305600791_8r6cgdfef",
-        "timestamp": 1767305609505
-      },
-      {
-        "moveIndex": 5,
-        "boardState": [
-          "O",
-          "",
-          "X",
-          "",
-          "O",
-          "",
-          "X",
-          "",
-          "X"
-        ],
-        "moveType": "block",
-        "reasoning": "Blocking opponent win",
-        "gameId": "game_1767305600791_8r6cgdfef",
-        "timestamp": 1767305611645
-      },
-      {
-        "moveIndex": 7,
-        "boardState": [
-          "O",
-          "",
-          "X",
-          "X",
-          "O",
-          "O",
-          "X",
-          "",
-          "X"
-        ],
-        "moveType": "block",
-        "reasoning": "Blocking opponent win",
-        "gameId": "game_1767305600791_8r6cgdfef",
-        "timestamp": 1767305612688
-      },
-      {
-        "moveIndex": 4,
-        "boardState": [
-          "",
-          "",
-          "",
-          "",
-          "",
-          "",
-          "",
-          "",
-          ""
-        ],
-        "moveType": "center",
-        "reasoning": "Taking center",
-        "gameId": "game_1767305616008_e9xh9jhdz",
-        "timestamp": 1767305617690
-      },
-      {
-        "moveIndex": 0,
-        "boardState": [
-          "",
-          "X",
-          "",
-          "",
-          "O",
-          "",
-          "",
-          "",
-          ""
-        ],
-        "moveType": "corner",
-        "reasoning": "Empty corner",
-        "gameId": "game_1767305616008_e9xh9jhdz",
-        "timestamp": 1767305621081
-      },
-      {
-        "moveIndex": 6,
-        "boardState": [
-          "O",
-          "X",
-          "",
-          "",
-          "O",
-          "",
-          "",
-          "",
-          "X"
-        ],
-        "moveType": "fork",
-        "reasoning": "Creating fork (multiple threats)",
-        "gameId": "game_1767305616008_e9xh9jhdz",
-        "timestamp": 1767305623129
-      },
-      {
-        "moveIndex": 3,
-        "boardState": [
-          "O",
-          "X",
-          "X",
-          "",
-          "O",
-          "",
-          "O",
-          "",
-          "X"
-        ],
-        "moveType": "win",
-        "reasoning": "Immediate winning move",
-        "gameId": "game_1767305616008_e9xh9jhdz",
-        "timestamp": 1767305624794
-      },
-      {
-        "moveIndex": 8,
-        "boardState": [
-          "",
-          "",
-          "",
-          "",
-          "X",
-          "",
-          "",
-          "",
-          ""
-        ],
-        "moveType": "corner",
-        "reasoning": "Empty corner",
-        "gameId": "game_1767305624922_yfp71pogi",
-        "timestamp": 1767305634645
-      },
-      {
-        "moveIndex": 2,
-        "boardState": [
-          "",
-          "",
-          "",
-          "",
-          "X",
-          "",
-          "X",
-          "",
-          "O"
-        ],
-        "moveType": "block",
-        "reasoning": "Blocking opponent win",
-        "gameId": "game_1767305624922_yfp71pogi",
-        "timestamp": 1767305637463
-      },
-      {
-        "moveIndex": 5,
-        "boardState": [
-          "X",
-          "",
-          "O",
-          "",
-          "X",
-          "",
-          "X",
-          "",
-          "O"
-        ],
-        "moveType": "win",
-        "reasoning": "Immediate winning move",
-        "gameId": "game_1767305624922_yfp71pogi",
-        "timestamp": 1767305639411
-      },
-      {
-        "moveIndex": 4,
-        "boardState": [
-          "",
-          "",
-          "",
-          "",
-          "",
-          "",
-          "",
-          "",
-          ""
-        ],
-        "moveType": "center",
-        "reasoning": "Taking center",
-        "gameId": "game_1767305663402_izb6n4hfj",
-        "timestamp": 1767305665210
-      },
-      {
-        "moveIndex": 4,
-        "boardState": [
-          "",
-          "",
-          "",
-          "",
-          "",
-          "",
-          "",
-          "",
-          ""
-        ],
-        "moveType": "center",
-        "reasoning": "Taking center",
-        "gameId": "game_1767305666368_rpy02fujv",
-        "timestamp": 1767305668180
-      },
-      {
-        "moveIndex": 6,
-        "boardState": [
-          "",
-          "",
-          "X",
-          "",
-          "O",
-          "",
-          "",
-          "",
-          ""
-        ],
-        "moveType": "corner",
-        "reasoning": "Opposite corner",
-        "gameId": "game_1767305666368_rpy02fujv",
-        "timestamp": 1767305672071
-      },
-      {
-        "moveIndex": 0,
-        "boardState": [
-          "",
-          "",
-          "X",
-          "",
-          "O",
-          "",
-          "O",
-          "X",
-          ""
-        ],
-        "moveType": "fork",
-        "reasoning": "Creating fork (multiple threats)",
-        "gameId": "game_1767305666368_rpy02fujv",
-        "timestamp": 1767305674886
-      },
-      {
-        "moveIndex": 3,
-        "boardState": [
-          "O",
-          "",
-          "X",
-          "",
-          "O",
-          "",
-          "O",
-          "X",
-          "X"
-        ],
-        "moveType": "win",
-        "reasoning": "Immediate winning move",
-        "gameId": "game_1767305666368_rpy02fujv",
-        "timestamp": 1767305676791
-      },
-      {
-        "moveIndex": 4,
-        "boardState": [
-          "",
-          "",
-          "",
-          "X",
-          "",
-          "",
-          "",
-          "",
-          ""
-        ],
-        "moveType": "center",
-        "reasoning": "Taking center",
-        "gameId": "game_1767305676800_1smqs2vc4",
-        "timestamp": 1767305684097
-      },
-      {
-        "moveIndex": 0,
-        "boardState": [
-          "",
-          "",
-          "X",
-          "X",
-          "O",
-          "",
-          "",
-          "",
-          ""
-        ],
-        "moveType": "block_fork",
-        "reasoning": "Blocking opponent fork",
-        "gameId": "game_1767305676800_1smqs2vc4",
-        "timestamp": 1767305687329
-      },
-      {
-        "moveIndex": 5,
-        "boardState": [
-          "O",
-          "",
-          "X",
-          "X",
-          "O",
-          "",
-          "",
-          "",
-          "X"
-        ],
-        "moveType": "block",
-        "reasoning": "Blocking opponent win",
-        "gameId": "game_1767305676800_1smqs2vc4",
-        "timestamp": 1767305689991
-      },
-      {
-        "moveIndex": 6,
-        "boardState": [
-          "O",
-          "",
-          "X",
-          "X",
-          "O",
-          "O",
-          "",
-          "X",
-          "X"
-        ],
-        "moveType": "block",
-        "reasoning": "Blocking opponent win",
-        "gameId": "game_1767305676800_1smqs2vc4",
-        "timestamp": 1767305698493
-      },
-      {
-        "moveIndex": 4,
-        "boardState": [
-          "",
-          "",
-          "",
-          "",
-          "",
-          "",
-          "",
-          "",
-          ""
-        ],
-        "moveType": "center",
-        "reasoning": "Taking center",
-        "gameId": "game_1767305703537_ss2oztown",
-        "timestamp": 1767305705250
-      },
-      {
-        "moveIndex": 6,
-        "boardState": [
-          "",
-          "",
-          "X",
-          "",
-          "O",
-          "",
-          "",
-          "",
-          ""
-        ],
-        "moveType": "corner",
-        "reasoning": "Opposite corner",
-        "gameId": "game_1767305703537_ss2oztown",
-        "timestamp": 1767305710372
-      },
-      {
-        "moveIndex": 7,
-        "boardState": [
-          "",
-          "",
-          "X",
-          "X",
-          "O",
-          "",
-          "O",
-          "",
-          ""
-        ],
-        "moveType": "fork",
-        "reasoning": "Creating fork (multiple threats)",
-        "gameId": "game_1767305703537_ss2oztown",
-        "timestamp": 1767305714561
-      },
-      {
-        "moveIndex": 1,
-        "boardState": [
-          "",
-          "",
-          "X",
-          "X",
-          "O",
-          "",
-          "O",
-          "O",
-          "X"
-        ],
-        "moveType": "win",
-        "reasoning": "Immediate winning move",
-        "gameId": "game_1767305703537_ss2oztown",
-        "timestamp": 1767305717026
-      },
-      {
-        "moveIndex": 4,
-        "boardState": [
-          "",
-          "X",
-          "",
-          "",
-          "",
-          "",
-          "",
-          "",
-          ""
-        ],
-        "moveType": "center",
-        "reasoning": "Taking center",
-        "gameId": "game_1767305717115_f4vkan7n9",
-        "timestamp": 1767305727159
-      },
-      {
-        "moveIndex": 2,
-        "boardState": [
-          "X",
-          "X",
-          "",
-          "",
-          "O",
-          "",
-          "",
-          "",
-          ""
-        ],
-        "moveType": "block",
-        "reasoning": "Blocking opponent win",
-        "gameId": "game_1767305717115_f4vkan7n9",
-        "timestamp": 1767305728490
-      },
-      {
-        "moveIndex": 6,
-        "boardState": [
-          "X",
-          "X",
-          "O",
-          "X",
-          "O",
-          "",
-          "",
-          "",
-          ""
-        ],
-        "moveType": "win",
-        "reasoning": "Immediate winning move",
-        "gameId": "game_1767305717115_f4vkan7n9",
-        "timestamp": 1767305730232
-      },
-      {
-        "moveIndex": 4,
-        "boardState": [
-          "",
-          "",
-          "",
-          "",
-          "",
-          "",
-          "",
-          "",
-          ""
-        ],
-        "moveType": "center",
-        "reasoning": "Taking center",
-        "gameId": "game_1767305743985_u2zy4844n",
-        "timestamp": 1767305745670
-      },
-      {
-        "moveIndex": 4,
-        "boardState": [
-          "",
-          "",
-          "X",
-          "",
-          "",
-          "",
-          "",
-          "",
-          ""
-        ],
-        "moveType": "center",
-        "reasoning": "Taking center",
-        "gameId": "game_1767554700049_f1pn2cm0r",
-        "timestamp": 1767554717307
-      },
-      {
-        "moveIndex": 0,
-        "boardState": [
-          "",
-          "X",
-          "X",
-          "",
-          "O",
-          "",
-          "",
-          "",
-          ""
-        ],
-        "moveType": "block",
-        "reasoning": "Blocking opponent win",
-        "gameId": "game_1767554700049_f1pn2cm0r",
-        "timestamp": 1767554723209
-      },
       {
         "moveIndex": 5,
         "boardState": [
@@ -22766,9 +21452,855 @@
         "reasoning": "Taking center",
         "gameId": "game_1768055818468_3cwh8brqe",
         "timestamp": 1768055819759
+      },
+      {
+        "moveIndex": 1,
+        "boardState": [
+          "X",
+          "",
+          "X",
+          "",
+          "",
+          "",
+          "O",
+          "",
+          ""
+        ],
+        "moveType": "block",
+        "reasoning": "Blocking player win (secondary priority - only when AI cannot win)",
+        "gameId": "game_1768056412054_j5aenobe2",
+        "timestamp": 1768056430657
+      },
+      {
+        "moveIndex": 3,
+        "boardState": [
+          "X",
+          "",
+          "O",
+          "",
+          "",
+          "",
+          "X",
+          "",
+          ""
+        ],
+        "moveType": "block",
+        "reasoning": "Blocking player win (secondary priority - only when AI cannot win)",
+        "gameId": "game_1768056409426_tpinrfjtu",
+        "timestamp": 1768056431794
+      },
+      {
+        "moveIndex": 8,
+        "boardState": [
+          "X",
+          "O",
+          "O",
+          "O",
+          "",
+          "X",
+          "X",
+          "X",
+          ""
+        ],
+        "moveType": "block",
+        "reasoning": "Blocking player win (secondary priority - only when AI cannot win)",
+        "gameId": "game_1768056409426_tpinrfjtu",
+        "timestamp": 1768056438235
+      },
+      {
+        "moveIndex": 4,
+        "boardState": [
+          "X",
+          "O",
+          "X",
+          "X",
+          "",
+          "",
+          "O",
+          "O",
+          ""
+        ],
+        "moveType": "win",
+        "reasoning": "Immediate AI winning move (absolute priority - AI never misses its own win)",
+        "gameId": "game_1768056412054_j5aenobe2",
+        "timestamp": 1768056451172
+      },
+      {
+        "moveIndex": 8,
+        "boardState": [
+          "X",
+          "O",
+          "X",
+          "X",
+          "X",
+          "",
+          "O",
+          "O",
+          ""
+        ],
+        "moveType": "win",
+        "reasoning": "Immediate AI winning move (absolute priority - AI never misses its own win)",
+        "gameId": "game_1768056412054_j5aenobe2",
+        "timestamp": 1768056454985
+      },
+      {
+        "moveIndex": 4,
+        "boardState": [
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          ""
+        ],
+        "moveType": "center",
+        "reasoning": "Taking center",
+        "gameId": "game_1768056456479_5fzj38a4a",
+        "timestamp": 1768056457292
+      },
+      {
+        "moveIndex": 2,
+        "boardState": [
+          "",
+          "",
+          "",
+          "",
+          "O",
+          "",
+          "",
+          "",
+          ""
+        ],
+        "moveType": "corner",
+        "reasoning": "Empty corner",
+        "gameId": "game_1768056456479_5fzj38a4a",
+        "timestamp": 1768056457364
+      },
+      {
+        "moveIndex": 5,
+        "boardState": [
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          ""
+        ],
+        "moveType": "side",
+        "reasoning": "Empty side",
+        "gameId": "game_1768056456531_74tgriidh",
+        "timestamp": 1768056458631
+      },
+      {
+        "moveIndex": 6,
+        "boardState": [
+          "",
+          "X",
+          "O",
+          "",
+          "O",
+          "",
+          "",
+          "",
+          ""
+        ],
+        "moveType": "win",
+        "reasoning": "Immediate AI winning move (absolute priority - AI never misses its own win)",
+        "gameId": "game_1768056456479_5fzj38a4a",
+        "timestamp": 1768056460719
+      },
+      {
+        "moveIndex": 3,
+        "boardState": [
+          "X",
+          "O",
+          "",
+          "",
+          "",
+          "",
+          "X",
+          "",
+          ""
+        ],
+        "moveType": "block",
+        "reasoning": "Blocking player win (secondary priority - only when AI cannot win)",
+        "gameId": "game_1768056570305_d4q34cfbk",
+        "timestamp": 1768056589703
+      },
+      {
+        "moveIndex": 7,
+        "boardState": [
+          "X",
+          "O",
+          "",
+          "O",
+          "",
+          "",
+          "X",
+          "",
+          "X"
+        ],
+        "moveType": "block",
+        "reasoning": "Blocking player win (secondary priority - only when AI cannot win)",
+        "gameId": "game_1768056570305_d4q34cfbk",
+        "timestamp": 1768056598626
+      },
+      {
+        "moveIndex": 4,
+        "boardState": [
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          ""
+        ],
+        "moveType": "center",
+        "reasoning": "Taking center",
+        "gameId": "game_1768056602441_m4wnwakm3",
+        "timestamp": 1768056603506
+      },
+      {
+        "moveIndex": 8,
+        "boardState": [
+          "",
+          "O",
+          "",
+          "",
+          "O",
+          "",
+          "X",
+          "X",
+          ""
+        ],
+        "moveType": "block",
+        "reasoning": "Blocking player win (secondary priority - only when AI cannot win)",
+        "gameId": "game_1768056602441_m4wnwakm3",
+        "timestamp": 1768056613334
+      },
+      {
+        "moveIndex": 3,
+        "boardState": [
+          "X",
+          "O",
+          "",
+          "",
+          "O",
+          "",
+          "X",
+          "X",
+          "O"
+        ],
+        "moveType": "block",
+        "reasoning": "Blocking player win (secondary priority - only when AI cannot win)",
+        "gameId": "game_1768056602441_m4wnwakm3",
+        "timestamp": 1768056618820
+      },
+      {
+        "moveIndex": 4,
+        "boardState": [
+          "",
+          "",
+          "X",
+          "",
+          "",
+          "",
+          "X",
+          "",
+          "O"
+        ],
+        "moveType": "block",
+        "reasoning": "Blocking player win (secondary priority - only when AI cannot win)",
+        "gameId": "game_1768056623882_u9pniy680",
+        "timestamp": 1768056639216
+      },
+      {
+        "moveIndex": 3,
+        "boardState": [
+          "X",
+          "",
+          "X",
+          "",
+          "O",
+          "",
+          "X",
+          "",
+          "O"
+        ],
+        "moveType": "block",
+        "reasoning": "Blocking player win (secondary priority - only when AI cannot win)",
+        "gameId": "game_1768056623882_u9pniy680",
+        "timestamp": 1768056644956
+      },
+      {
+        "moveIndex": 0,
+        "boardState": [
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          ""
+        ],
+        "moveType": "corner",
+        "reasoning": "Empty corner",
+        "gameId": "game_1768056648321_yqv4c5mx1",
+        "timestamp": 1768056649293
+      },
+      {
+        "moveIndex": 6,
+        "boardState": [
+          "O",
+          "O",
+          "X",
+          "",
+          "X",
+          "",
+          "",
+          "",
+          ""
+        ],
+        "moveType": "block",
+        "reasoning": "Blocking player win (secondary priority - only when AI cannot win)",
+        "gameId": "game_1768056648321_yqv4c5mx1",
+        "timestamp": 1768056667976
+      },
+      {
+        "moveIndex": 5,
+        "boardState": [
+          "O",
+          "O",
+          "X",
+          "X",
+          "X",
+          "",
+          "O",
+          "",
+          ""
+        ],
+        "moveType": "block",
+        "reasoning": "Blocking player win (secondary priority - only when AI cannot win)",
+        "gameId": "game_1768056648321_yqv4c5mx1",
+        "timestamp": 1768056673168
+      },
+      {
+        "moveIndex": 1,
+        "boardState": [
+          "X",
+          "",
+          "X",
+          "",
+          "O",
+          "",
+          "O",
+          "",
+          "X"
+        ],
+        "moveType": "block",
+        "reasoning": "Blocking player win (secondary priority - only when AI cannot win)",
+        "gameId": "game_1768056677785_8sx4a723f",
+        "timestamp": 1768056697723
+      },
+      {
+        "moveIndex": 4,
+        "boardState": [
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          ""
+        ],
+        "moveType": "center",
+        "reasoning": "Taking center",
+        "gameId": "game_1768056708059_ztr53jnbo",
+        "timestamp": 1768056709045
+      },
+      {
+        "moveIndex": 8,
+        "boardState": [
+          "",
+          "O",
+          "",
+          "",
+          "O",
+          "",
+          "X",
+          "X",
+          ""
+        ],
+        "moveType": "block",
+        "reasoning": "Blocking player win (secondary priority - only when AI cannot win)",
+        "gameId": "game_1768056708059_ztr53jnbo",
+        "timestamp": 1768056722354
+      },
+      {
+        "moveIndex": 3,
+        "boardState": [
+          "X",
+          "O",
+          "",
+          "",
+          "O",
+          "",
+          "X",
+          "X",
+          "O"
+        ],
+        "moveType": "block",
+        "reasoning": "Blocking player win (secondary priority - only when AI cannot win)",
+        "gameId": "game_1768056708059_ztr53jnbo",
+        "timestamp": 1768056730946
+      },
+      {
+        "moveIndex": 5,
+        "boardState": [
+          "X",
+          "",
+          "O",
+          "",
+          "X",
+          "",
+          "X",
+          "",
+          "O"
+        ],
+        "moveType": "win",
+        "reasoning": "Immediate AI winning move (absolute priority - AI never misses its own win)",
+        "gameId": "game_1768056737590_chjpjlfa8",
+        "timestamp": 1768056760169
+      },
+      {
+        "moveIndex": 4,
+        "boardState": [
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          ""
+        ],
+        "moveType": "center",
+        "reasoning": "Taking center",
+        "gameId": "game_1768056761654_01wtdbp1c",
+        "timestamp": 1768056762197
+      },
+      {
+        "moveIndex": 8,
+        "boardState": [
+          "",
+          "",
+          "",
+          "",
+          "O",
+          "",
+          "",
+          "",
+          ""
+        ],
+        "moveType": "corner",
+        "reasoning": "Empty corner",
+        "gameId": "game_1768056761654_01wtdbp1c",
+        "timestamp": 1768056762504
+      },
+      {
+        "moveIndex": 0,
+        "boardState": [
+          "",
+          "",
+          "",
+          "",
+          "X",
+          "O",
+          "",
+          "",
+          "X"
+        ],
+        "moveType": "block",
+        "reasoning": "Blocking player win (secondary priority - only when AI cannot win)",
+        "gameId": "game_1768056842306_fkorqtoj2",
+        "timestamp": 1768056857300
+      },
+      {
+        "moveIndex": 2,
+        "boardState": [
+          "O",
+          "",
+          "",
+          "",
+          "X",
+          "O",
+          "X",
+          "",
+          "X"
+        ],
+        "moveType": "block",
+        "reasoning": "Blocking player win (secondary priority - only when AI cannot win)",
+        "gameId": "game_1768056842306_fkorqtoj2",
+        "timestamp": 1768056860985
+      },
+      {
+        "moveIndex": 4,
+        "boardState": [
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          ""
+        ],
+        "moveType": "center",
+        "reasoning": "Taking center",
+        "gameId": "game_1768056864652_2f7t1vx69",
+        "timestamp": 1768056865713
+      },
+      {
+        "moveIndex": 5,
+        "boardState": [
+          "",
+          "",
+          "X",
+          "",
+          "O",
+          "",
+          "O",
+          "",
+          "X"
+        ],
+        "moveType": "block",
+        "reasoning": "Blocking player win (secondary priority - only when AI cannot win)",
+        "gameId": "game_1768056864652_2f7t1vx69",
+        "timestamp": 1768056879313
+      },
+      {
+        "moveIndex": 8,
+        "boardState": [
+          "X",
+          "O",
+          "",
+          "",
+          "X",
+          "",
+          "",
+          "",
+          ""
+        ],
+        "moveType": "block",
+        "reasoning": "Blocking player win (secondary priority - only when AI cannot win)",
+        "gameId": "game_1768056889397_atolmbh4y",
+        "timestamp": 1768056930076
+      },
+      {
+        "moveIndex": 2,
+        "boardState": [
+          "X",
+          "O",
+          "",
+          "",
+          "X",
+          "",
+          "X",
+          "",
+          "O"
+        ],
+        "moveType": "block",
+        "reasoning": "Blocking player win (secondary priority - only when AI cannot win)",
+        "gameId": "game_1768056889397_atolmbh4y",
+        "timestamp": 1768056935721
+      },
+      {
+        "moveIndex": 2,
+        "boardState": [
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          ""
+        ],
+        "moveType": "corner",
+        "reasoning": "Empty corner",
+        "gameId": "game_1768056939773_j2ctd17a3",
+        "timestamp": 1768056940947
+      },
+      {
+        "moveIndex": 0,
+        "boardState": [
+          "",
+          "",
+          "O",
+          "",
+          "X",
+          "",
+          "O",
+          "",
+          "X"
+        ],
+        "moveType": "block",
+        "reasoning": "Blocking player win (secondary priority - only when AI cannot win)",
+        "gameId": "game_1768056939773_j2ctd17a3",
+        "timestamp": 1768056971092
+      },
+      {
+        "moveIndex": 1,
+        "boardState": [
+          "O",
+          "",
+          "O",
+          "X",
+          "X",
+          "",
+          "O",
+          "",
+          "X"
+        ],
+        "moveType": "win",
+        "reasoning": "Immediate AI winning move (absolute priority - AI never misses its own win)",
+        "gameId": "game_1768056939773_j2ctd17a3",
+        "timestamp": 1768056983295
+      },
+      {
+        "moveIndex": 3,
+        "boardState": [
+          "X",
+          "",
+          "",
+          "",
+          "",
+          "O",
+          "X",
+          "",
+          ""
+        ],
+        "moveType": "block",
+        "reasoning": "Blocking player win (secondary priority - only when AI cannot win)",
+        "gameId": "game_1768056984778_002i6ipl3",
+        "timestamp": 1768056996620
+      },
+      {
+        "moveIndex": 8,
+        "boardState": [
+          "X",
+          "",
+          "",
+          "O",
+          "X",
+          "O",
+          "X",
+          "",
+          ""
+        ],
+        "moveType": "block",
+        "reasoning": "Blocking player win (secondary priority - only when AI cannot win)",
+        "gameId": "game_1768056984778_002i6ipl3",
+        "timestamp": 1768057001880
+      },
+      {
+        "moveIndex": 4,
+        "boardState": [
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          ""
+        ],
+        "moveType": "center",
+        "reasoning": "Taking center",
+        "gameId": "game_1768057006128_k9sxfnbpw",
+        "timestamp": 1768057007160
+      },
+      {
+        "moveIndex": 5,
+        "boardState": [
+          "O",
+          "",
+          "X",
+          "",
+          "O",
+          "",
+          "",
+          "",
+          "X"
+        ],
+        "moveType": "block",
+        "reasoning": "Blocking player win (secondary priority - only when AI cannot win)",
+        "gameId": "game_1768057006128_k9sxfnbpw",
+        "timestamp": 1768057029279
+      },
+      {
+        "moveIndex": 1,
+        "boardState": [
+          "X",
+          "",
+          "X",
+          "",
+          "",
+          "",
+          "",
+          "O",
+          ""
+        ],
+        "moveType": "block",
+        "reasoning": "Blocking player win (secondary priority - only when AI cannot win)",
+        "gameId": "game_1768057036555_0ya5ogq7t",
+        "timestamp": 1768057049470
+      },
+      {
+        "moveIndex": 8,
+        "boardState": [
+          "X",
+          "O",
+          "X",
+          "",
+          "X",
+          "",
+          "",
+          "O",
+          ""
+        ],
+        "moveType": "block",
+        "reasoning": "Blocking player win (secondary priority - only when AI cannot win)",
+        "gameId": "game_1768057036555_0ya5ogq7t",
+        "timestamp": 1768057054511
+      },
+      {
+        "moveIndex": 4,
+        "boardState": [
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          ""
+        ],
+        "moveType": "center",
+        "reasoning": "Taking center",
+        "gameId": "game_1768057059501_2sldehbhu",
+        "timestamp": 1768057060553
+      },
+      {
+        "moveIndex": 0,
+        "boardState": [
+          "",
+          "X",
+          "X",
+          "",
+          "O",
+          "",
+          "O",
+          "O",
+          "X"
+        ],
+        "moveType": "block",
+        "reasoning": "Blocking player win (secondary priority - only when AI cannot win)",
+        "gameId": "game_1768057059501_2sldehbhu",
+        "timestamp": 1768057083677
+      },
+      {
+        "moveIndex": 5,
+        "boardState": [
+          "O",
+          "X",
+          "X",
+          "X",
+          "O",
+          "",
+          "O",
+          "O",
+          "X"
+        ],
+        "moveType": "block",
+        "reasoning": "Blocking player win (secondary priority - only when AI cannot win)",
+        "gameId": "game_1768057059501_2sldehbhu",
+        "timestamp": 1768057095316
+      },
+      {
+        "moveIndex": 6,
+        "boardState": [
+          "",
+          "",
+          "X",
+          "",
+          "X",
+          "",
+          "",
+          "",
+          "O"
+        ],
+        "moveType": "block",
+        "reasoning": "Blocking player win (secondary priority - only when AI cannot win)",
+        "gameId": "game_1768057096805_kcmirc5eg",
+        "timestamp": 1768057114110
+      },
+      {
+        "moveIndex": 1,
+        "boardState": [
+          "",
+          "",
+          "X",
+          "",
+          "X",
+          "",
+          "O",
+          "X",
+          "O"
+        ],
+        "moveType": "block",
+        "reasoning": "Blocking player win (secondary priority - only when AI cannot win)",
+        "gameId": "game_1768057096805_kcmirc5eg",
+        "timestamp": 1768057119183
+      },
+      {
+        "moveIndex": 5,
+        "boardState": [
+          "",
+          "O",
+          "X",
+          "X",
+          "X",
+          "",
+          "O",
+          "X",
+          "O"
+        ],
+        "moveType": "block",
+        "reasoning": "Blocking player win (secondary priority - only when AI cannot win)",
+        "gameId": "game_1768057096805_kcmirc5eg",
+        "timestamp": 1768057131917
       }
     ],
-    "learnedPatterns": 194,
+    "learnedPatterns": 215,
     "blockedWinPatterns": [],
     "adaptationLevel": 52,
     "patternsData": {
@@ -22779,7 +22311,7 @@
           "ATHENA",
           "Fara"
         ],
-        "lastSeen": 1767995782433,
+        "lastSeen": 1768056410393,
         "firstSeen": 1767705591480,
         "isBlocked": false,
         "moves": [
@@ -22787,11 +22319,12 @@
         ]
       },
       "1": {
-        "count": 2,
+        "count": 3,
         "players": [
-          "hmmm"
+          "hmmm",
+          "william"
         ],
-        "lastSeen": 1768050502448,
+        "lastSeen": 1768056460700,
         "firstSeen": 1765025588197,
         "isBlocked": false,
         "moves": [
@@ -22803,7 +22336,7 @@
         "players": [
           "sammy"
         ],
-        "lastSeen": 1767995414257,
+        "lastSeen": 1768056410393,
         "firstSeen": 1767791296895,
         "isBlocked": false,
         "moves": [
@@ -22815,7 +22348,7 @@
         "players": [
           "hmmm"
         ],
-        "lastSeen": 1767995414257,
+        "lastSeen": 1768056410393,
         "firstSeen": 1767824791985,
         "isBlocked": false,
         "moves": [
@@ -22827,7 +22360,7 @@
         "players": [
           "hmmm"
         ],
-        "lastSeen": 1767995414257,
+        "lastSeen": 1768056410393,
         "firstSeen": 1767826088710,
         "isBlocked": false,
         "moves": [
@@ -22842,7 +22375,7 @@
           "sammym",
           "Jerry"
         ],
-        "lastSeen": 1767995414257,
+        "lastSeen": 1768056410393,
         "firstSeen": 1765020916054,
         "isBlocked": false,
         "moves": [
@@ -22857,7 +22390,7 @@
         "players": [
           "df"
         ],
-        "lastSeen": 1767995414257,
+        "lastSeen": 1768056410393,
         "firstSeen": 1765020984843,
         "isBlocked": false,
         "moves": [
@@ -22871,7 +22404,7 @@
         "players": [
           "df"
         ],
-        "lastSeen": 1767995414257,
+        "lastSeen": 1768056410393,
         "firstSeen": 1765020995890,
         "isBlocked": false,
         "moves": [
@@ -22886,7 +22419,7 @@
         "players": [
           "df"
         ],
-        "lastSeen": 1767995414257,
+        "lastSeen": 1768056410393,
         "firstSeen": 1765021016466,
         "isBlocked": false,
         "moves": [
@@ -22900,7 +22433,7 @@
         "players": [
           "df"
         ],
-        "lastSeen": 1767995414257,
+        "lastSeen": 1768056410393,
         "firstSeen": 1765021028853,
         "isBlocked": false,
         "moves": [
@@ -22916,7 +22449,7 @@
         "players": [
           "hi"
         ],
-        "lastSeen": 1767995414257,
+        "lastSeen": 1768056410393,
         "firstSeen": 1765021098973,
         "isBlocked": false,
         "moves": [
@@ -22932,7 +22465,7 @@
         "players": [
           "gh"
         ],
-        "lastSeen": 1767995414257,
+        "lastSeen": 1768056410393,
         "firstSeen": 1765021144405,
         "isBlocked": false,
         "moves": [
@@ -22947,7 +22480,7 @@
         "players": [
           "sammy"
         ],
-        "lastSeen": 1767995414257,
+        "lastSeen": 1768056410393,
         "firstSeen": 1765021209484,
         "isBlocked": false,
         "moves": [
@@ -22962,7 +22495,7 @@
         "players": [
           "hmmm"
         ],
-        "lastSeen": 1767995414257,
+        "lastSeen": 1768056410393,
         "firstSeen": 1765021252247,
         "isBlocked": false,
         "moves": [
@@ -22982,7 +22515,7 @@
           "May",
           "Fara"
         ],
-        "lastSeen": 1767995764997,
+        "lastSeen": 1768056410393,
         "firstSeen": 1765021535740,
         "isBlocked": false,
         "moves": [
@@ -23000,7 +22533,7 @@
           "Jerry",
           "ATHENA"
         ],
-        "lastSeen": 1767995414257,
+        "lastSeen": 1768056410393,
         "firstSeen": 1765021561394,
         "isBlocked": false,
         "moves": [
@@ -23018,7 +22551,7 @@
           "Yw",
           "hmmm"
         ],
-        "lastSeen": 1768050499647,
+        "lastSeen": 1768056410393,
         "firstSeen": 1765021770380,
         "isBlocked": false,
         "moves": [
@@ -23034,7 +22567,7 @@
           "ATHENA",
           "hmmm"
         ],
-        "lastSeen": 1767995414257,
+        "lastSeen": 1768056410393,
         "firstSeen": 1765022497685,
         "isBlocked": false,
         "moves": [
@@ -23051,7 +22584,7 @@
           "sammy",
           "Yw"
         ],
-        "lastSeen": 1767995414257,
+        "lastSeen": 1768056410393,
         "firstSeen": 1765022502175,
         "isBlocked": false,
         "moves": [
@@ -23064,7 +22597,7 @@
         "players": [
           "sammy"
         ],
-        "lastSeen": 1767995414257,
+        "lastSeen": 1768056410393,
         "firstSeen": 1765022518639,
         "isBlocked": false,
         "moves": [
@@ -23088,7 +22621,7 @@
           "naynker",
           "ATHENA"
         ],
-        "lastSeen": 1768054765722,
+        "lastSeen": 1768056410395,
         "firstSeen": 1765022525707,
         "isBlocked": false,
         "moves": [
@@ -23101,7 +22634,7 @@
         "players": [
           "sammy"
         ],
-        "lastSeen": 1767995414257,
+        "lastSeen": 1768056410395,
         "firstSeen": 1765022535476,
         "isBlocked": false,
         "moves": [
@@ -23119,7 +22652,7 @@
           "KL",
           "Sarah"
         ],
-        "lastSeen": 1767995414257,
+        "lastSeen": 1768056410395,
         "firstSeen": 1765022597326,
         "isBlocked": false,
         "moves": [
@@ -23134,7 +22667,7 @@
           "sammy",
           "Fara"
         ],
-        "lastSeen": 1767995546247,
+        "lastSeen": 1768056410395,
         "firstSeen": 1765022612446,
         "isBlocked": false,
         "moves": [
@@ -23152,7 +22685,7 @@
           "Jerry",
           "Sarah"
         ],
-        "lastSeen": 1767995414257,
+        "lastSeen": 1768056410395,
         "firstSeen": 1765022668034,
         "isBlocked": false,
         "moves": [
@@ -23170,7 +22703,7 @@
           "Blessed",
           "ATHENA"
         ],
-        "lastSeen": 1768053738700,
+        "lastSeen": 1768056410395,
         "firstSeen": 1765022675871,
         "isBlocked": false,
         "moves": [
@@ -23179,13 +22712,14 @@
         ]
       },
       "4-2": {
-        "count": 7,
+        "count": 8,
         "players": [
           "sammy",
           "ATHENA",
-          "Fara"
+          "Fara",
+          "hmmm"
         ],
-        "lastSeen": 1767995663797,
+        "lastSeen": 1768056676285,
         "firstSeen": 1765022684237,
         "isBlocked": false,
         "moves": [
@@ -23198,7 +22732,7 @@
         "players": [
           "sammy"
         ],
-        "lastSeen": 1767995414257,
+        "lastSeen": 1768056410395,
         "firstSeen": 1765022684238,
         "isBlocked": false,
         "moves": [
@@ -23216,7 +22750,7 @@
           "Am good",
           "ATHENA"
         ],
-        "lastSeen": 1768054753305,
+        "lastSeen": 1768056410395,
         "firstSeen": 1765022714848,
         "isBlocked": false,
         "moves": [
@@ -23226,7 +22760,7 @@
         ]
       },
       "0-6": {
-        "count": 25,
+        "count": 28,
         "players": [
           "sammy",
           "Jerry",
@@ -23236,7 +22770,7 @@
           "naynker",
           "ATHENA"
         ],
-        "lastSeen": 1768054753304,
+        "lastSeen": 1768057004629,
         "firstSeen": 1765022714849,
         "isBlocked": false,
         "moves": [
@@ -23260,7 +22794,7 @@
           "Am good",
           "Fara"
         ],
-        "lastSeen": 1768053699356,
+        "lastSeen": 1768056410395,
         "firstSeen": 1765022724409,
         "isBlocked": false,
         "moves": [
@@ -23273,7 +22807,7 @@
         "players": [
           "sammy"
         ],
-        "lastSeen": 1767995414257,
+        "lastSeen": 1768056410395,
         "firstSeen": 1765022755979,
         "isBlocked": false,
         "moves": [
@@ -23287,7 +22821,7 @@
         "players": [
           "Jerry"
         ],
-        "lastSeen": 1767995414257,
+        "lastSeen": 1768056410395,
         "firstSeen": 1765023751480,
         "isBlocked": false,
         "moves": [
@@ -23299,16 +22833,17 @@
         ]
       },
       "2-0": {
-        "count": 9,
+        "count": 11,
         "players": [
           "Jerry",
           "sammym",
           "hmmm",
           "sammy",
           "Am good",
-          "Fara"
+          "Fara",
+          "william"
         ],
-        "lastSeen": 1768055816969,
+        "lastSeen": 1768057058002,
         "firstSeen": 1765023751481,
         "isBlocked": false,
         "moves": [
@@ -23321,7 +22856,7 @@
         "players": [
           "Jerry"
         ],
-        "lastSeen": 1767995414257,
+        "lastSeen": 1768056410395,
         "firstSeen": 1765023778811,
         "isBlocked": false,
         "moves": [
@@ -23337,7 +22872,7 @@
           "hmmm",
           "sammy"
         ],
-        "lastSeen": 1768050512592,
+        "lastSeen": 1768056410395,
         "firstSeen": 1765023784168,
         "isBlocked": false,
         "moves": [
@@ -23350,7 +22885,7 @@
         "players": [
           "Jerry"
         ],
-        "lastSeen": 1767995414257,
+        "lastSeen": 1768056410395,
         "firstSeen": 1765023815475,
         "isBlocked": false,
         "moves": [
@@ -23367,7 +22902,7 @@
           "sammy",
           "Am good"
         ],
-        "lastSeen": 1767995414257,
+        "lastSeen": 1768056410395,
         "firstSeen": 1765023823659,
         "isBlocked": false,
         "moves": [
@@ -23385,7 +22920,7 @@
           "Shekinah",
           "Fara"
         ],
-        "lastSeen": 1767995797584,
+        "lastSeen": 1768056410395,
         "firstSeen": 1765023855757,
         "isBlocked": false,
         "moves": [
@@ -23399,7 +22934,7 @@
           "hmmmmmnb",
           "Blessed"
         ],
-        "lastSeen": 1767995414257,
+        "lastSeen": 1768056410395,
         "firstSeen": 1765023973391,
         "isBlocked": false,
         "moves": [
@@ -23419,7 +22954,7 @@
           "sammy",
           "Am good"
         ],
-        "lastSeen": 1767995414257,
+        "lastSeen": 1768056410395,
         "firstSeen": 1765023973394,
         "isBlocked": false,
         "moves": [
@@ -23433,7 +22968,7 @@
           "sammym",
           "Jerry"
         ],
-        "lastSeen": 1767995414257,
+        "lastSeen": 1768056410395,
         "firstSeen": 1765024007414,
         "isBlocked": false,
         "moves": [
@@ -23451,7 +22986,7 @@
           "sammy",
           "Andrew"
         ],
-        "lastSeen": 1767995414257,
+        "lastSeen": 1768056410395,
         "firstSeen": 1765024007415,
         "isBlocked": false,
         "moves": [
@@ -23468,7 +23003,7 @@
           "sammy",
           "Fara"
         ],
-        "lastSeen": 1767995816508,
+        "lastSeen": 1768056410396,
         "firstSeen": 1765024036316,
         "isBlocked": false,
         "moves": [
@@ -23484,7 +23019,7 @@
           "KL",
           "Fara"
         ],
-        "lastSeen": 1767995583289,
+        "lastSeen": 1768056410396,
         "firstSeen": 1765024061066,
         "isBlocked": false,
         "moves": [
@@ -23497,7 +23032,7 @@
         "players": [
           "sammym"
         ],
-        "lastSeen": 1767995414257,
+        "lastSeen": 1768056410396,
         "firstSeen": 1765024061067,
         "isBlocked": false,
         "moves": [
@@ -23511,7 +23046,7 @@
         "players": [
           "sammym"
         ],
-        "lastSeen": 1767995414257,
+        "lastSeen": 1768056410396,
         "firstSeen": 1765024097647,
         "isBlocked": false,
         "moves": [
@@ -23527,7 +23062,7 @@
         "players": [
           "sammym"
         ],
-        "lastSeen": 1767995414257,
+        "lastSeen": 1768056410396,
         "firstSeen": 1765024110128,
         "isBlocked": false,
         "moves": [
@@ -23541,7 +23076,7 @@
         "players": [
           "sammym"
         ],
-        "lastSeen": 1767995414257,
+        "lastSeen": 1768056410396,
         "firstSeen": 1765024123133,
         "isBlocked": false,
         "moves": [
@@ -23555,7 +23090,7 @@
         "players": [
           "sammym"
         ],
-        "lastSeen": 1767995414257,
+        "lastSeen": 1768056410396,
         "firstSeen": 1765024123134,
         "isBlocked": false,
         "moves": [
@@ -23568,7 +23103,7 @@
         "players": [
           "Jerry"
         ],
-        "lastSeen": 1767995414257,
+        "lastSeen": 1768056410396,
         "firstSeen": 1765024192859,
         "isBlocked": false,
         "moves": [
@@ -23582,7 +23117,7 @@
         "players": [
           "Jerry"
         ],
-        "lastSeen": 1767995414257,
+        "lastSeen": 1768056410396,
         "firstSeen": 1765024192860,
         "isBlocked": false,
         "moves": [
@@ -23595,7 +23130,7 @@
         "players": [
           "Jerry"
         ],
-        "lastSeen": 1767995414257,
+        "lastSeen": 1768056410396,
         "firstSeen": 1765024207650,
         "isBlocked": false,
         "moves": [
@@ -23610,7 +23145,7 @@
           "Jerry",
           "sammy"
         ],
-        "lastSeen": 1767995414257,
+        "lastSeen": 1768056410396,
         "firstSeen": 1765024218779,
         "isBlocked": false,
         "moves": [
@@ -23623,7 +23158,7 @@
         "players": [
           "Jerry"
         ],
-        "lastSeen": 1767995414257,
+        "lastSeen": 1768056410396,
         "firstSeen": 1765024218779,
         "isBlocked": false,
         "moves": [
@@ -23637,7 +23172,7 @@
         "players": [
           "hmmm"
         ],
-        "lastSeen": 1767995414257,
+        "lastSeen": 1768056410396,
         "firstSeen": 1765025580930,
         "isBlocked": false,
         "moves": [
@@ -23647,13 +23182,13 @@
         ]
       },
       "4-6": {
-        "count": 6,
+        "count": 7,
         "players": [
           "hmmm",
           "sammy",
           "Fara"
         ],
-        "lastSeen": 1767995612208,
+        "lastSeen": 1768056760159,
         "firstSeen": 1765025596410,
         "isBlocked": false,
         "moves": [
@@ -23666,7 +23201,7 @@
         "players": [
           "hmmm"
         ],
-        "lastSeen": 1767995414257,
+        "lastSeen": 1768056410396,
         "firstSeen": 1765025596410,
         "isBlocked": false,
         "moves": [
@@ -23680,7 +23215,7 @@
         "players": [
           "sammy"
         ],
-        "lastSeen": 1767995414257,
+        "lastSeen": 1768056410396,
         "firstSeen": 1765027711112,
         "isBlocked": false,
         "moves": [
@@ -23697,7 +23232,7 @@
           "sammy",
           "Fara"
         ],
-        "lastSeen": 1767995426805,
+        "lastSeen": 1768056410396,
         "firstSeen": 1765028059641,
         "isBlocked": false,
         "moves": [
@@ -23711,7 +23246,7 @@
         "players": [
           "ATHENA"
         ],
-        "lastSeen": 1767995414257,
+        "lastSeen": 1768056410396,
         "firstSeen": 1765028080717,
         "isBlocked": false,
         "moves": [
@@ -23727,7 +23262,7 @@
         "players": [
           "Blessed"
         ],
-        "lastSeen": 1767995414257,
+        "lastSeen": 1768056410396,
         "firstSeen": 1765358198368,
         "isBlocked": false,
         "moves": [
@@ -23739,12 +23274,13 @@
         ]
       },
       "0-7": {
-        "count": 2,
+        "count": 3,
         "players": [
           "Blessed",
-          "sammy"
+          "sammy",
+          "hmmm"
         ],
-        "lastSeen": 1767995414257,
+        "lastSeen": 1768056840806,
         "firstSeen": 1765358198375,
         "isBlocked": false,
         "moves": [
@@ -23757,7 +23293,7 @@
         "players": [
           "Blessed"
         ],
-        "lastSeen": 1767995414257,
+        "lastSeen": 1768056410396,
         "firstSeen": 1765358212120,
         "isBlocked": false,
         "moves": [
@@ -23771,7 +23307,7 @@
         "players": [
           "Blessed"
         ],
-        "lastSeen": 1767995414257,
+        "lastSeen": 1768056410396,
         "firstSeen": 1765358212120,
         "isBlocked": false,
         "moves": [
@@ -23784,7 +23320,7 @@
         "players": [
           "Blessed"
         ],
-        "lastSeen": 1767995414257,
+        "lastSeen": 1768056410396,
         "firstSeen": 1765358253253,
         "isBlocked": false,
         "moves": [
@@ -23800,7 +23336,7 @@
           "Fara",
           "ATHENA"
         ],
-        "lastSeen": 1768053716865,
+        "lastSeen": 1768056410396,
         "firstSeen": 1765358253254,
         "isBlocked": false,
         "moves": [
@@ -23813,7 +23349,7 @@
         "players": [
           "Blessed"
         ],
-        "lastSeen": 1767995414257,
+        "lastSeen": 1768056410396,
         "firstSeen": 1765358274483,
         "isBlocked": false,
         "moves": [
@@ -23828,7 +23364,7 @@
         "players": [
           "Blessed"
         ],
-        "lastSeen": 1767995414257,
+        "lastSeen": 1768056410396,
         "firstSeen": 1765358274484,
         "isBlocked": false,
         "moves": [
@@ -23841,7 +23377,7 @@
         "players": [
           "Blessed"
         ],
-        "lastSeen": 1767995414257,
+        "lastSeen": 1768056410396,
         "firstSeen": 1765358338332,
         "isBlocked": false,
         "moves": [
@@ -23856,7 +23392,7 @@
         "players": [
           "Blessed"
         ],
-        "lastSeen": 1767995414257,
+        "lastSeen": 1768056410396,
         "firstSeen": 1765358349114,
         "isBlocked": false,
         "moves": [
@@ -23870,7 +23406,7 @@
         "players": [
           "Blessed"
         ],
-        "lastSeen": 1767995414257,
+        "lastSeen": 1768056410396,
         "firstSeen": 1765358379751,
         "isBlocked": false,
         "moves": [
@@ -23884,7 +23420,7 @@
         "players": [
           "Blessed"
         ],
-        "lastSeen": 1767995414257,
+        "lastSeen": 1768056410396,
         "firstSeen": 1765358379751,
         "isBlocked": false,
         "moves": [
@@ -23897,7 +23433,7 @@
         "players": [
           "Blessed"
         ],
-        "lastSeen": 1767995414257,
+        "lastSeen": 1768056410396,
         "firstSeen": 1765358399905,
         "isBlocked": false,
         "moves": [
@@ -23914,7 +23450,7 @@
           "Blessed",
           "Fara"
         ],
-        "lastSeen": 1767995872423,
+        "lastSeen": 1768056410396,
         "firstSeen": 1765358399906,
         "isBlocked": false,
         "moves": [
@@ -23927,7 +23463,7 @@
         "players": [
           "sammy"
         ],
-        "lastSeen": 1767995414257,
+        "lastSeen": 1768056410396,
         "firstSeen": 1766424745279,
         "isBlocked": false,
         "moves": [
@@ -23944,7 +23480,7 @@
           "sammy",
           "Fara"
         ],
-        "lastSeen": 1767995456941,
+        "lastSeen": 1768056410396,
         "firstSeen": 1766424775813,
         "isBlocked": false,
         "moves": [
@@ -23962,7 +23498,7 @@
           "899",
           "ATHENA"
         ],
-        "lastSeen": 1767995414257,
+        "lastSeen": 1768056410396,
         "firstSeen": 1766424808164,
         "isBlocked": false,
         "moves": [
@@ -23978,7 +23514,7 @@
           "sammy",
           "Am good"
         ],
-        "lastSeen": 1767995414257,
+        "lastSeen": 1768056410396,
         "firstSeen": 1766653142199,
         "isBlocked": false,
         "moves": [
@@ -23992,7 +23528,7 @@
         "players": [
           "hmmm"
         ],
-        "lastSeen": 1767995414257,
+        "lastSeen": 1768056410396,
         "firstSeen": 1766653157317,
         "isBlocked": false,
         "moves": [
@@ -24010,7 +23546,7 @@
           "sammy",
           "Am good"
         ],
-        "lastSeen": 1767995414257,
+        "lastSeen": 1768056410396,
         "firstSeen": 1766653157319,
         "isBlocked": false,
         "moves": [
@@ -24024,7 +23560,7 @@
           "hmmm",
           "Sarah"
         ],
-        "lastSeen": 1767995414257,
+        "lastSeen": 1768056410396,
         "firstSeen": 1766653358822,
         "isBlocked": false,
         "moves": [
@@ -24038,7 +23574,7 @@
         "players": [
           "hmmm"
         ],
-        "lastSeen": 1767995414257,
+        "lastSeen": 1768056410396,
         "firstSeen": 1766653367580,
         "isBlocked": false,
         "moves": [
@@ -24054,7 +23590,7 @@
         "players": [
           "hmmm"
         ],
-        "lastSeen": 1767995414257,
+        "lastSeen": 1768056410396,
         "firstSeen": 1766678835116,
         "isBlocked": false,
         "moves": [
@@ -24070,7 +23606,7 @@
         "players": [
           "899"
         ],
-        "lastSeen": 1767995414257,
+        "lastSeen": 1768056410396,
         "firstSeen": 1767635461564,
         "isBlocked": false,
         "moves": [
@@ -24085,7 +23621,7 @@
         "players": [
           "sammy"
         ],
-        "lastSeen": 1767995414257,
+        "lastSeen": 1768056410396,
         "firstSeen": 1767642717533,
         "isBlocked": false,
         "moves": [
@@ -24099,7 +23635,7 @@
         "players": [
           "sammy"
         ],
-        "lastSeen": 1767995414257,
+        "lastSeen": 1768056410396,
         "firstSeen": 1767642731424,
         "isBlocked": false,
         "moves": [
@@ -24114,7 +23650,7 @@
         "players": [
           "sammy"
         ],
-        "lastSeen": 1767995414257,
+        "lastSeen": 1768056410396,
         "firstSeen": 1767642750173,
         "isBlocked": false,
         "moves": [
@@ -24129,7 +23665,7 @@
           "Sarah",
           "Am good"
         ],
-        "lastSeen": 1767995414257,
+        "lastSeen": 1768056410396,
         "firstSeen": 1767642821372,
         "isBlocked": false,
         "moves": [
@@ -24143,7 +23679,7 @@
         "players": [
           "Sarah"
         ],
-        "lastSeen": 1767995414257,
+        "lastSeen": 1768056410396,
         "firstSeen": 1767642829932,
         "isBlocked": false,
         "moves": [
@@ -24157,7 +23693,7 @@
         "players": [
           "hmmm"
         ],
-        "lastSeen": 1767995414257,
+        "lastSeen": 1768056410396,
         "firstSeen": 1767645035126,
         "isBlocked": false,
         "moves": [
@@ -24172,7 +23708,7 @@
         "players": [
           "sammy"
         ],
-        "lastSeen": 1767995414257,
+        "lastSeen": 1768056410396,
         "firstSeen": 1767660835775,
         "isBlocked": false,
         "moves": [
@@ -24187,7 +23723,7 @@
         "players": [
           "sammy"
         ],
-        "lastSeen": 1767995414257,
+        "lastSeen": 1768056410396,
         "firstSeen": 1767660874753,
         "isBlocked": false,
         "moves": [
@@ -24202,7 +23738,7 @@
           "sammy",
           "Fara"
         ],
-        "lastSeen": 1767995557871,
+        "lastSeen": 1768056410396,
         "firstSeen": 1767660874753,
         "isBlocked": false,
         "moves": [
@@ -24215,7 +23751,7 @@
         "players": [
           "sammy"
         ],
-        "lastSeen": 1767995414257,
+        "lastSeen": 1768056410396,
         "firstSeen": 1767666741385,
         "isBlocked": false,
         "moves": [
@@ -24231,7 +23767,7 @@
         "players": [
           "sammy"
         ],
-        "lastSeen": 1767995414257,
+        "lastSeen": 1768056410396,
         "firstSeen": 1767666762047,
         "isBlocked": false,
         "moves": [
@@ -24243,14 +23779,14 @@
         ]
       },
       "4-0": {
-        "count": 8,
+        "count": 9,
         "players": [
           "sammy",
           "Shekinah",
           "hmmm",
           "Fara"
         ],
-        "lastSeen": 1768053400910,
+        "lastSeen": 1768056938273,
         "firstSeen": 1767666762048,
         "isBlocked": false,
         "moves": [
@@ -24263,7 +23799,7 @@
         "players": [
           "May"
         ],
-        "lastSeen": 1767995414257,
+        "lastSeen": 1768056410396,
         "firstSeen": 1767704755214,
         "isBlocked": false,
         "moves": [
@@ -24278,7 +23814,7 @@
         "players": [
           "May"
         ],
-        "lastSeen": 1767995414257,
+        "lastSeen": 1768056410396,
         "firstSeen": 1767704794253,
         "isBlocked": false,
         "moves": [
@@ -24293,7 +23829,7 @@
         "players": [
           "May"
         ],
-        "lastSeen": 1767995414257,
+        "lastSeen": 1768056410396,
         "firstSeen": 1767704794254,
         "isBlocked": false,
         "moves": [
@@ -24306,7 +23842,7 @@
         "players": [
           "May"
         ],
-        "lastSeen": 1767995414257,
+        "lastSeen": 1768056410396,
         "firstSeen": 1767704806925,
         "isBlocked": false,
         "moves": [
@@ -24320,7 +23856,7 @@
         "players": [
           "sammy"
         ],
-        "lastSeen": 1767995414257,
+        "lastSeen": 1768056410396,
         "firstSeen": 1767705548303,
         "isBlocked": false,
         "moves": [
@@ -24334,7 +23870,7 @@
         "players": [
           "Shekinah"
         ],
-        "lastSeen": 1767995414257,
+        "lastSeen": 1768056410396,
         "firstSeen": 1767721412229,
         "isBlocked": false,
         "moves": [
@@ -24349,7 +23885,7 @@
         "players": [
           "Shekinah"
         ],
-        "lastSeen": 1767995414257,
+        "lastSeen": 1768056410396,
         "firstSeen": 1767721441143,
         "isBlocked": false,
         "moves": [
@@ -24363,7 +23899,7 @@
         "players": [
           "Shekinah"
         ],
-        "lastSeen": 1767995414257,
+        "lastSeen": 1768056410396,
         "firstSeen": 1767721467327,
         "isBlocked": false,
         "moves": [
@@ -24379,7 +23915,7 @@
         "players": [
           "sammy"
         ],
-        "lastSeen": 1767995414257,
+        "lastSeen": 1768056410396,
         "firstSeen": 1767722008774,
         "isBlocked": false,
         "moves": [
@@ -24390,13 +23926,13 @@
         ]
       },
       "2-8": {
-        "count": 4,
+        "count": 5,
         "players": [
           "sammy",
           "hmmm",
           "Jerry"
         ],
-        "lastSeen": 1767995414257,
+        "lastSeen": 1768057035055,
         "firstSeen": 1767722008776,
         "isBlocked": false,
         "moves": [
@@ -24409,7 +23945,7 @@
         "players": [
           "sammy"
         ],
-        "lastSeen": 1767995414257,
+        "lastSeen": 1768056410396,
         "firstSeen": 1767722211815,
         "isBlocked": false,
         "moves": [
@@ -24425,7 +23961,7 @@
         "players": [
           "hmmm"
         ],
-        "lastSeen": 1767995414257,
+        "lastSeen": 1768056410396,
         "firstSeen": 1767722289672,
         "isBlocked": false,
         "moves": [
@@ -24441,7 +23977,7 @@
         "players": [
           "Jerry"
         ],
-        "lastSeen": 1767995414257,
+        "lastSeen": 1768056410396,
         "firstSeen": 1767722373152,
         "isBlocked": false,
         "moves": [
@@ -24456,7 +23992,7 @@
         "players": [
           "Jerry"
         ],
-        "lastSeen": 1767995414257,
+        "lastSeen": 1768056410396,
         "firstSeen": 1767722425358,
         "isBlocked": false,
         "moves": [
@@ -24471,7 +24007,7 @@
         "players": [
           "Jerry"
         ],
-        "lastSeen": 1767995414257,
+        "lastSeen": 1768056410396,
         "firstSeen": 1767722425360,
         "isBlocked": false,
         "moves": [
@@ -24484,7 +24020,7 @@
         "players": [
           "hmmm"
         ],
-        "lastSeen": 1767995414257,
+        "lastSeen": 1768056410396,
         "firstSeen": 1767722522897,
         "isBlocked": false,
         "moves": [
@@ -24498,7 +24034,7 @@
         "players": [
           "ATHENA"
         ],
-        "lastSeen": 1767995414257,
+        "lastSeen": 1768056410396,
         "firstSeen": 1767722594039,
         "isBlocked": false,
         "moves": [
@@ -24513,7 +24049,7 @@
           "ATHENA",
           "hmmm"
         ],
-        "lastSeen": 1768054745764,
+        "lastSeen": 1768056410396,
         "firstSeen": 1767722594040,
         "isBlocked": false,
         "moves": [
@@ -24526,7 +24062,7 @@
         "players": [
           "KL"
         ],
-        "lastSeen": 1767995414257,
+        "lastSeen": 1768056410396,
         "firstSeen": 1767722637050,
         "isBlocked": false,
         "moves": [
@@ -24541,7 +24077,7 @@
           "Am good",
           "sammy"
         ],
-        "lastSeen": 1767995414257,
+        "lastSeen": 1768056410396,
         "firstSeen": 1767722933916,
         "isBlocked": false,
         "moves": [
@@ -24555,7 +24091,7 @@
         "players": [
           "sammy"
         ],
-        "lastSeen": 1767995414257,
+        "lastSeen": 1768056410396,
         "firstSeen": 1767749884979,
         "isBlocked": false,
         "moves": [
@@ -24571,7 +24107,7 @@
         "players": [
           "sammy"
         ],
-        "lastSeen": 1767995414257,
+        "lastSeen": 1768056410396,
         "firstSeen": 1767750275349,
         "isBlocked": false,
         "moves": [
@@ -24586,7 +24122,7 @@
           "sammy",
           "naynker"
         ],
-        "lastSeen": 1767995414257,
+        "lastSeen": 1768056410396,
         "firstSeen": 1767750287819,
         "isBlocked": false,
         "moves": [
@@ -24601,7 +24137,7 @@
         "players": [
           "sammy"
         ],
-        "lastSeen": 1767995414257,
+        "lastSeen": 1768056410396,
         "firstSeen": 1767750931614,
         "isBlocked": false,
         "moves": [
@@ -24617,7 +24153,7 @@
         "players": [
           "sammy"
         ],
-        "lastSeen": 1767995414257,
+        "lastSeen": 1768056410396,
         "firstSeen": 1767750944079,
         "isBlocked": false,
         "moves": [
@@ -24632,7 +24168,7 @@
         "players": [
           "sammy"
         ],
-        "lastSeen": 1767995414257,
+        "lastSeen": 1768056410396,
         "firstSeen": 1767750974676,
         "isBlocked": false,
         "moves": [
@@ -24646,7 +24182,7 @@
         "players": [
           "sammy"
         ],
-        "lastSeen": 1767995414257,
+        "lastSeen": 1768056410396,
         "firstSeen": 1767750988161,
         "isBlocked": false,
         "moves": [
@@ -24658,12 +24194,13 @@
         ]
       },
       "8-0": {
-        "count": 3,
+        "count": 4,
         "players": [
           "sammy",
-          "Skol"
+          "Skol",
+          "hmmm"
         ],
-        "lastSeen": 1767995414257,
+        "lastSeen": 1768056706560,
         "firstSeen": 1767751005246,
         "isBlocked": false,
         "moves": [
@@ -24676,7 +24213,7 @@
         "players": [
           "sammy"
         ],
-        "lastSeen": 1767995414257,
+        "lastSeen": 1768056410396,
         "firstSeen": 1767753008105,
         "isBlocked": false,
         "moves": [
@@ -24691,7 +24228,7 @@
         "players": [
           "sammy"
         ],
-        "lastSeen": 1767995414257,
+        "lastSeen": 1768056410396,
         "firstSeen": 1767753045639,
         "isBlocked": false,
         "moves": [
@@ -24706,7 +24243,7 @@
         "players": [
           "hmmm"
         ],
-        "lastSeen": 1767995414257,
+        "lastSeen": 1768056410396,
         "firstSeen": 1767754179811,
         "isBlocked": false,
         "moves": [
@@ -24720,7 +24257,7 @@
         "players": [
           "hmmm"
         ],
-        "lastSeen": 1767995414257,
+        "lastSeen": 1768056410396,
         "firstSeen": 1767754202748,
         "isBlocked": false,
         "moves": [
@@ -24737,7 +24274,7 @@
           "Am good",
           "sammy"
         ],
-        "lastSeen": 1767995414257,
+        "lastSeen": 1768056410396,
         "firstSeen": 1767755281875,
         "isBlocked": false,
         "moves": [
@@ -24751,7 +24288,7 @@
         "players": [
           "hmmm"
         ],
-        "lastSeen": 1767995414257,
+        "lastSeen": 1768056410396,
         "firstSeen": 1767761992725,
         "isBlocked": false,
         "moves": [
@@ -24766,7 +24303,7 @@
         "players": [
           "sammy"
         ],
-        "lastSeen": 1767995414257,
+        "lastSeen": 1768056410396,
         "firstSeen": 1767783179532,
         "isBlocked": false,
         "moves": [
@@ -24780,7 +24317,7 @@
         "players": [
           "sammy"
         ],
-        "lastSeen": 1767995414257,
+        "lastSeen": 1768056410396,
         "firstSeen": 1767786499237,
         "isBlocked": false,
         "moves": [
@@ -24798,7 +24335,7 @@
           "Fara",
           "hmmm"
         ],
-        "lastSeen": 1768046836900,
+        "lastSeen": 1768056410396,
         "firstSeen": 1767790696524,
         "isBlocked": false,
         "moves": [
@@ -24811,7 +24348,7 @@
         "players": [
           "sammy"
         ],
-        "lastSeen": 1767995414257,
+        "lastSeen": 1768056410396,
         "firstSeen": 1767790747060,
         "isBlocked": false,
         "moves": [
@@ -24825,7 +24362,7 @@
         "players": [
           "sammy"
         ],
-        "lastSeen": 1767995414257,
+        "lastSeen": 1768056410396,
         "firstSeen": 1767790747060,
         "isBlocked": false,
         "moves": [
@@ -24838,7 +24375,7 @@
         "players": [
           "Am good"
         ],
-        "lastSeen": 1767995414257,
+        "lastSeen": 1768056410396,
         "firstSeen": 1767790817576,
         "isBlocked": false,
         "moves": [
@@ -24851,7 +24388,7 @@
         "players": [
           "Am good"
         ],
-        "lastSeen": 1767995414257,
+        "lastSeen": 1768056410396,
         "firstSeen": 1767790828572,
         "isBlocked": false,
         "moves": [
@@ -24867,7 +24404,7 @@
         "players": [
           "sammy"
         ],
-        "lastSeen": 1767995414257,
+        "lastSeen": 1768056410396,
         "firstSeen": 1767814750200,
         "isBlocked": false,
         "moves": [
@@ -24880,7 +24417,7 @@
         "players": [
           "sammy"
         ],
-        "lastSeen": 1767995414257,
+        "lastSeen": 1768056410396,
         "firstSeen": 1767814759884,
         "isBlocked": false,
         "moves": [
@@ -24896,7 +24433,7 @@
         "players": [
           "sammy"
         ],
-        "lastSeen": 1767995414257,
+        "lastSeen": 1768056410396,
         "firstSeen": 1767814767914,
         "isBlocked": false,
         "moves": [
@@ -24910,7 +24447,7 @@
         "players": [
           "ATHENA"
         ],
-        "lastSeen": 1768049217789,
+        "lastSeen": 1768056410396,
         "firstSeen": 1767815300301,
         "isBlocked": false,
         "moves": [
@@ -24924,7 +24461,7 @@
         "players": [
           "ATHENA"
         ],
-        "lastSeen": 1767995414257,
+        "lastSeen": 1768056410396,
         "firstSeen": 1767815310312,
         "isBlocked": false,
         "moves": [
@@ -24937,7 +24474,7 @@
         "players": [
           "ATHENA"
         ],
-        "lastSeen": 1767995414257,
+        "lastSeen": 1768056410396,
         "firstSeen": 1767815310314,
         "isBlocked": false,
         "moves": [
@@ -24951,7 +24488,7 @@
         "players": [
           "hmmm"
         ],
-        "lastSeen": 1767995414257,
+        "lastSeen": 1768056410396,
         "firstSeen": 1767818097716,
         "isBlocked": false,
         "moves": [
@@ -24966,7 +24503,7 @@
         "players": [
           "hmmm"
         ],
-        "lastSeen": 1767995414257,
+        "lastSeen": 1768056410396,
         "firstSeen": 1767824782829,
         "isBlocked": false,
         "moves": [
@@ -24981,7 +24518,7 @@
         "players": [
           "hmmm"
         ],
-        "lastSeen": 1767995414257,
+        "lastSeen": 1768056410396,
         "firstSeen": 1767824802488,
         "isBlocked": false,
         "moves": [
@@ -24996,7 +24533,7 @@
         "players": [
           "hmmm"
         ],
-        "lastSeen": 1767995414257,
+        "lastSeen": 1768056410396,
         "firstSeen": 1767826047170,
         "isBlocked": false,
         "moves": [
@@ -25011,7 +24548,7 @@
         "players": [
           "hmmm"
         ],
-        "lastSeen": 1767995414257,
+        "lastSeen": 1768056410396,
         "firstSeen": 1767826100737,
         "isBlocked": false,
         "moves": [
@@ -25026,7 +24563,7 @@
         "players": [
           "sammy"
         ],
-        "lastSeen": 1767995414257,
+        "lastSeen": 1768056410396,
         "firstSeen": 1767885577026,
         "isBlocked": false,
         "moves": [
@@ -25041,7 +24578,7 @@
         "players": [
           "hmmm"
         ],
-        "lastSeen": 1767995414257,
+        "lastSeen": 1768056410396,
         "firstSeen": 1767887412916,
         "isBlocked": false,
         "moves": [
@@ -25056,7 +24593,7 @@
         "players": [
           "Skol"
         ],
-        "lastSeen": 1767995414257,
+        "lastSeen": 1768056410396,
         "firstSeen": 1767907336282,
         "isBlocked": false,
         "moves": [
@@ -25067,11 +24604,12 @@
         ]
       },
       "6-2": {
-        "count": 1,
+        "count": 2,
         "players": [
-          "Skol"
+          "Skol",
+          "hmmm"
         ],
-        "lastSeen": 1767995414257,
+        "lastSeen": 1768056646822,
         "firstSeen": 1767907336284,
         "isBlocked": false,
         "moves": [
@@ -25085,7 +24623,7 @@
           "Skol",
           "Fara"
         ],
-        "lastSeen": 1767995747841,
+        "lastSeen": 1768056410396,
         "firstSeen": 1767907374730,
         "isBlocked": false,
         "moves": [
@@ -25100,7 +24638,7 @@
         "players": [
           "hmmm"
         ],
-        "lastSeen": 1767995414257,
+        "lastSeen": 1768056410396,
         "firstSeen": 1767907797495,
         "isBlocked": false,
         "moves": [
@@ -25115,7 +24653,7 @@
         "players": [
           "Andrew"
         ],
-        "lastSeen": 1767995414257,
+        "lastSeen": 1768056410396,
         "firstSeen": 1767908042809,
         "isBlocked": false,
         "moves": [
@@ -25131,7 +24669,7 @@
         "players": [
           "Cherem"
         ],
-        "lastSeen": 1767995414257,
+        "lastSeen": 1768056410396,
         "firstSeen": 1767911446079,
         "isBlocked": false,
         "moves": [
@@ -25148,7 +24686,7 @@
           "Cherem",
           "Fara"
         ],
-        "lastSeen": 1767995435749,
+        "lastSeen": 1768056410396,
         "firstSeen": 1767911446090,
         "isBlocked": false,
         "moves": [
@@ -25161,7 +24699,7 @@
         "players": [
           "naynker"
         ],
-        "lastSeen": 1767995414257,
+        "lastSeen": 1768056410396,
         "firstSeen": 1767994960643,
         "isBlocked": false,
         "moves": [
@@ -25175,7 +24713,7 @@
         "players": [
           "naynker"
         ],
-        "lastSeen": 1767995414257,
+        "lastSeen": 1768056410396,
         "firstSeen": 1767994973587,
         "isBlocked": false,
         "moves": [
@@ -25191,7 +24729,7 @@
         "players": [
           "Fara"
         ],
-        "lastSeen": 1768046822157,
+        "lastSeen": 1768056410396,
         "firstSeen": 1767995435748,
         "isBlocked": false,
         "moves": [
@@ -25205,7 +24743,7 @@
         "players": [
           "Fara"
         ],
-        "lastSeen": 1768046822157,
+        "lastSeen": 1768056410396,
         "firstSeen": 1767995471098,
         "isBlocked": false,
         "moves": [
@@ -25220,7 +24758,7 @@
         "players": [
           "Fara"
         ],
-        "lastSeen": 1768046822157,
+        "lastSeen": 1768056410396,
         "firstSeen": 1767995483507,
         "isBlocked": false,
         "moves": [
@@ -25235,7 +24773,7 @@
         "players": [
           "Fara"
         ],
-        "lastSeen": 1768046822157,
+        "lastSeen": 1768056410396,
         "firstSeen": 1767995503124,
         "isBlocked": false,
         "moves": [
@@ -25251,7 +24789,7 @@
         "players": [
           "Fara"
         ],
-        "lastSeen": 1768046822157,
+        "lastSeen": 1768056410396,
         "firstSeen": 1767995519166,
         "isBlocked": false,
         "moves": [
@@ -25267,7 +24805,7 @@
         "players": [
           "Fara"
         ],
-        "lastSeen": 1768046822157,
+        "lastSeen": 1768056410396,
         "firstSeen": 1767995532382,
         "isBlocked": false,
         "moves": [
@@ -25280,7 +24818,7 @@
         "players": [
           "Fara"
         ],
-        "lastSeen": 1768046822157,
+        "lastSeen": 1768056410396,
         "firstSeen": 1767995532383,
         "isBlocked": false,
         "moves": [
@@ -25295,7 +24833,7 @@
         "players": [
           "Fara"
         ],
-        "lastSeen": 1768046822157,
+        "lastSeen": 1768056410396,
         "firstSeen": 1767995557872,
         "isBlocked": false,
         "moves": [
@@ -25310,7 +24848,7 @@
         "players": [
           "Fara"
         ],
-        "lastSeen": 1768046822157,
+        "lastSeen": 1768056410396,
         "firstSeen": 1767995570645,
         "isBlocked": false,
         "moves": [
@@ -25326,7 +24864,7 @@
         "players": [
           "Fara"
         ],
-        "lastSeen": 1768046822157,
+        "lastSeen": 1768056410396,
         "firstSeen": 1767995583291,
         "isBlocked": false,
         "moves": [
@@ -25341,7 +24879,7 @@
         "players": [
           "Fara"
         ],
-        "lastSeen": 1768046822157,
+        "lastSeen": 1768056410396,
         "firstSeen": 1767995598222,
         "isBlocked": false,
         "moves": [
@@ -25357,7 +24895,7 @@
         "players": [
           "Fara"
         ],
-        "lastSeen": 1768046822157,
+        "lastSeen": 1768056410396,
         "firstSeen": 1767995612209,
         "isBlocked": false,
         "moves": [
@@ -25372,7 +24910,7 @@
         "players": [
           "Fara"
         ],
-        "lastSeen": 1768046822157,
+        "lastSeen": 1768056410396,
         "firstSeen": 1767995627078,
         "isBlocked": false,
         "moves": [
@@ -25388,7 +24926,7 @@
         "players": [
           "Fara"
         ],
-        "lastSeen": 1768046822157,
+        "lastSeen": 1768056410396,
         "firstSeen": 1767995643653,
         "isBlocked": false,
         "moves": [
@@ -25403,7 +24941,7 @@
         "players": [
           "Fara"
         ],
-        "lastSeen": 1768046822157,
+        "lastSeen": 1768056410396,
         "firstSeen": 1767995663799,
         "isBlocked": false,
         "moves": [
@@ -25417,7 +24955,7 @@
         "players": [
           "Fara"
         ],
-        "lastSeen": 1768046822157,
+        "lastSeen": 1768056410396,
         "firstSeen": 1767995697401,
         "isBlocked": false,
         "moves": [
@@ -25432,7 +24970,7 @@
         "players": [
           "Fara"
         ],
-        "lastSeen": 1768046822157,
+        "lastSeen": 1768056410396,
         "firstSeen": 1767995711230,
         "isBlocked": false,
         "moves": [
@@ -25447,7 +24985,7 @@
         "players": [
           "Fara"
         ],
-        "lastSeen": 1768046822157,
+        "lastSeen": 1768056410396,
         "firstSeen": 1767995724981,
         "isBlocked": false,
         "moves": [
@@ -25462,7 +25000,7 @@
         "players": [
           "Fara"
         ],
-        "lastSeen": 1768046822157,
+        "lastSeen": 1768056410396,
         "firstSeen": 1767995776614,
         "isBlocked": false,
         "moves": [
@@ -25477,7 +25015,7 @@
         "players": [
           "Fara"
         ],
-        "lastSeen": 1768046822157,
+        "lastSeen": 1768056410396,
         "firstSeen": 1767995797579,
         "isBlocked": false,
         "moves": [
@@ -25493,7 +25031,7 @@
         "players": [
           "Fara"
         ],
-        "lastSeen": 1768046822157,
+        "lastSeen": 1768056410396,
         "firstSeen": 1767995816510,
         "isBlocked": false,
         "moves": [
@@ -25508,7 +25046,7 @@
         "players": [
           "Fara"
         ],
-        "lastSeen": 1768046822157,
+        "lastSeen": 1768056410396,
         "firstSeen": 1767995832499,
         "isBlocked": false,
         "moves": [
@@ -25523,7 +25061,7 @@
         "players": [
           "Fara"
         ],
-        "lastSeen": 1768046822157,
+        "lastSeen": 1768056410396,
         "firstSeen": 1767995855376,
         "isBlocked": false,
         "moves": [
@@ -25538,7 +25076,7 @@
         "players": [
           "Fara"
         ],
-        "lastSeen": 1768046822157,
+        "lastSeen": 1768056410396,
         "firstSeen": 1767995872415,
         "isBlocked": false,
         "moves": [
@@ -25554,7 +25092,7 @@
         "players": [
           "hmmm"
         ],
-        "lastSeen": 1768046836902,
+        "lastSeen": 1768056410396,
         "firstSeen": 1768046836899,
         "isBlocked": false,
         "moves": [
@@ -25569,7 +25107,7 @@
         "players": [
           "hmmm"
         ],
-        "lastSeen": 1768050512593,
+        "lastSeen": 1768056410396,
         "firstSeen": 1768050512593,
         "isBlocked": false,
         "moves": [
@@ -25584,7 +25122,7 @@
         "players": [
           "sammy"
         ],
-        "lastSeen": 1768053384634,
+        "lastSeen": 1768056410396,
         "firstSeen": 1768053384629,
         "isBlocked": false,
         "moves": [
@@ -25600,7 +25138,7 @@
         "players": [
           "sammy"
         ],
-        "lastSeen": 1768053400911,
+        "lastSeen": 1768056410396,
         "firstSeen": 1768053400908,
         "isBlocked": false,
         "moves": [
@@ -25614,7 +25152,7 @@
         "players": [
           "ATHENA"
         ],
-        "lastSeen": 1768053699358,
+        "lastSeen": 1768056410396,
         "firstSeen": 1768053699356,
         "isBlocked": false,
         "moves": [
@@ -25629,7 +25167,7 @@
         "players": [
           "ATHENA"
         ],
-        "lastSeen": 1768053716866,
+        "lastSeen": 1768056410396,
         "firstSeen": 1768053716866,
         "isBlocked": false,
         "moves": [
@@ -25644,7 +25182,7 @@
         "players": [
           "ATHENA"
         ],
-        "lastSeen": 1768053732221,
+        "lastSeen": 1768056410396,
         "firstSeen": 1768053732219,
         "isBlocked": false,
         "moves": [
@@ -25659,7 +25197,7 @@
         "players": [
           "ATHENA"
         ],
-        "lastSeen": 1768054745765,
+        "lastSeen": 1768056410396,
         "firstSeen": 1768054745761,
         "isBlocked": false,
         "moves": [
@@ -25675,7 +25213,7 @@
         "players": [
           "ATHENA"
         ],
-        "lastSeen": 1768054765723,
+        "lastSeen": 1768056410396,
         "firstSeen": 1768054765722,
         "isBlocked": false,
         "moves": [
@@ -25690,7 +25228,7 @@
         "players": [
           "sammy"
         ],
-        "lastSeen": 1768055816978,
+        "lastSeen": 1768056410396,
         "firstSeen": 1768055816965,
         "isBlocked": false,
         "moves": [
@@ -25699,8 +25237,314 @@
           7,
           2
         ]
+      },
+      "2-0-3-4": {
+        "count": 3,
+        "players": [
+          "william"
+        ],
+        "lastSeen": 1768056454990,
+        "firstSeen": 1768056454980,
+        "isBlocked": false,
+        "moves": [
+          2,
+          0,
+          3,
+          4
+        ]
+      },
+      "0-6-5-7-2": {
+        "count": 3,
+        "players": [
+          "Am good"
+        ],
+        "lastSeen": 1768056457358,
+        "firstSeen": 1768056455015,
+        "isBlocked": false,
+        "moves": [
+          0,
+          6,
+          5,
+          7,
+          2
+        ]
+      },
+      "0-6-8-4": {
+        "count": 3,
+        "players": [
+          "hmmm"
+        ],
+        "lastSeen": 1768056600942,
+        "firstSeen": 1768056600937,
+        "isBlocked": false,
+        "moves": [
+          0,
+          6,
+          8,
+          4
+        ]
+      },
+      "6-7": {
+        "count": 2,
+        "players": [
+          "hmmm"
+        ],
+        "lastSeen": 1768056736087,
+        "firstSeen": 1768056622381,
+        "isBlocked": false,
+        "moves": [
+          6,
+          7
+        ]
+      },
+      "6-7-0-5": {
+        "count": 2,
+        "players": [
+          "hmmm"
+        ],
+        "lastSeen": 1768056736088,
+        "firstSeen": 1768056622384,
+        "isBlocked": false,
+        "moves": [
+          6,
+          7,
+          0,
+          5
+        ]
+      },
+      "6-2-0-1": {
+        "count": 3,
+        "players": [
+          "hmmm"
+        ],
+        "lastSeen": 1768056646824,
+        "firstSeen": 1768056646821,
+        "isBlocked": false,
+        "moves": [
+          6,
+          2,
+          0,
+          1
+        ]
+      },
+      "4-2-3-8": {
+        "count": 1,
+        "players": [
+          "hmmm"
+        ],
+        "lastSeen": 1768056676287,
+        "firstSeen": 1768056676287,
+        "isBlocked": false,
+        "moves": [
+          4,
+          2,
+          3,
+          8
+        ]
+      },
+      "8-0-2-5": {
+        "count": 3,
+        "players": [
+          "hmmm"
+        ],
+        "lastSeen": 1768056706562,
+        "firstSeen": 1768056706559,
+        "isBlocked": false,
+        "moves": [
+          8,
+          0,
+          2,
+          5
+        ]
+      },
+      "4-6-0": {
+        "count": 3,
+        "players": [
+          "hmmm"
+        ],
+        "lastSeen": 1768056760164,
+        "firstSeen": 1768056760154,
+        "isBlocked": false,
+        "moves": [
+          4,
+          6,
+          0
+        ]
+      },
+      "0-7-5-2": {
+        "count": 2,
+        "players": [
+          "hmmm"
+        ],
+        "lastSeen": 1768056840808,
+        "firstSeen": 1768056840800,
+        "isBlocked": false,
+        "moves": [
+          0,
+          7,
+          5,
+          2
+        ]
+      },
+      "8-4-6-7": {
+        "count": 3,
+        "players": [
+          "hmmm"
+        ],
+        "lastSeen": 1768056863156,
+        "firstSeen": 1768056863150,
+        "isBlocked": false,
+        "moves": [
+          8,
+          4,
+          6,
+          7
+        ]
+      },
+      "8-4": {
+        "count": 2,
+        "players": [
+          "hmmm"
+        ],
+        "lastSeen": 1768056983288,
+        "firstSeen": 1768056863152,
+        "isBlocked": false,
+        "moves": [
+          8,
+          4
+        ]
+      },
+      "8-2": {
+        "count": 1,
+        "players": [
+          "hmmm"
+        ],
+        "lastSeen": 1768056887897,
+        "firstSeen": 1768056887897,
+        "isBlocked": false,
+        "moves": [
+          8,
+          2
+        ]
+      },
+      "8-2-3-7": {
+        "count": 1,
+        "players": [
+          "hmmm"
+        ],
+        "lastSeen": 1768056887899,
+        "firstSeen": 1768056887899,
+        "isBlocked": false,
+        "moves": [
+          8,
+          2,
+          3,
+          7
+        ]
+      },
+      "4-0-6-3": {
+        "count": 3,
+        "players": [
+          "hmmm"
+        ],
+        "lastSeen": 1768056938280,
+        "firstSeen": 1768056938270,
+        "isBlocked": false,
+        "moves": [
+          4,
+          0,
+          6,
+          3
+        ]
+      },
+      "8-4-3": {
+        "count": 3,
+        "players": [
+          "hmmm"
+        ],
+        "lastSeen": 1768056983293,
+        "firstSeen": 1768056983279,
+        "isBlocked": false,
+        "moves": [
+          8,
+          4,
+          3
+        ]
+      },
+      "0-6-4-2": {
+        "count": 3,
+        "players": [
+          "hmmm"
+        ],
+        "lastSeen": 1768057004635,
+        "firstSeen": 1768057004627,
+        "isBlocked": false,
+        "moves": [
+          0,
+          6,
+          4,
+          2
+        ]
+      },
+      "2-8-3-1": {
+        "count": 1,
+        "players": [
+          "hmmm"
+        ],
+        "lastSeen": 1768057035056,
+        "firstSeen": 1768057035056,
+        "isBlocked": false,
+        "moves": [
+          2,
+          8,
+          3,
+          1
+        ]
+      },
+      "2-0-4-6": {
+        "count": 3,
+        "players": [
+          "hmmm"
+        ],
+        "lastSeen": 1768057058006,
+        "firstSeen": 1768057057999,
+        "isBlocked": false,
+        "moves": [
+          2,
+          0,
+          4,
+          6
+        ]
+      },
+      "8-1": {
+        "count": 1,
+        "players": [
+          "hmmm"
+        ],
+        "lastSeen": 1768057095306,
+        "firstSeen": 1768057095306,
+        "isBlocked": false,
+        "moves": [
+          8,
+          1
+        ]
+      },
+      "8-1-2-3": {
+        "count": 1,
+        "players": [
+          "hmmm"
+        ],
+        "lastSeen": 1768057095308,
+        "firstSeen": 1768057095308,
+        "isBlocked": false,
+        "moves": [
+          8,
+          1,
+          2,
+          3
+        ]
       }
     },
-    "lastLosingMoveIndex": 7
+    "lastLosingMoveIndex": 8
   }
 }
