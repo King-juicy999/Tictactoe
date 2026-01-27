@@ -1977,7 +1977,7 @@ button:disabled:hover {
 
 /* ============================================
    PRE-GAME WELCOME OVERLAY
-   Premium Desktop/Laptop Design
+   Minimal Cinematic Design
    ============================================ */
 .pre-welcome-overlay {
     position: fixed;
@@ -1985,24 +1985,27 @@ button:disabled:hover {
     left: 0;
     width: 100%;
     height: 100%;
-    background: var(--bg-primary);
+    /* Subtle background - minimal/clean */
+    background: linear-gradient(180deg, #f8fafc 0%, #f1f5f9 100%);
     display: flex;
     align-items: center;
     justify-content: center;
     z-index: 10000;
     opacity: 0;
-    animation: welcomeFadeIn 0.8s ease-out forwards;
-    transition: opacity 0.6s ease-out;
-    /* CRITICAL: Ensure overlay doesn't block button clicks */
-    pointer-events: auto;
+    animation: welcomeFadeIn 1s ease-out forwards;
+    transition: opacity 0.8s ease-out;
 }
 
-/* CRITICAL: Ensure button area is always clickable */
-.pre-welcome-overlay #continue-welcome-btn,
-.pre-welcome-overlay .pre-welcome-continue {
-    pointer-events: auto !important;
-    z-index: 10003 !important;
-    position: relative !important;
+/* Dark mode support if applicable, but enforcing the requested look */
+.theme-dark .pre-welcome-overlay,
+.theme-neon .pre-welcome-overlay {
+    background: linear-gradient(180deg, #0f172a 0%, #1e293b 100%);
+}
+
+@keyframes welcomeFadeIn {
+    to {
+        opacity: 1;
+    }
 }
 
 .pre-welcome-overlay.hiding {
@@ -2010,397 +2013,237 @@ button:disabled:hover {
     pointer-events: none;
 }
 
-@keyframes welcomeFadeIn {
-    0% {
-        opacity: 0;
-    }
-
-    100% {
-        opacity: 1;
-    }
-}
-
-.pre-welcome-content {
-    text-align: center;
-    max-width: 600px;
-    width: 90%;
-    max-width: min(600px, 90vw);
-    padding: clamp(1.5rem, 4vw, 2rem);
-    position: relative;
-    /* CRITICAL: Ensure content doesn't block button */
-    pointer-events: auto;
-    z-index: 1;
-}
-
-/* Premium Desktop/Laptop Layout (min-width: 1024px) */
-@media (min-width: 1024px) {
-    .pre-welcome-overlay {
-        background: linear-gradient(135deg, var(--bg-primary) 0%, var(--bg-secondary) 100%);
-    }
-
-    .pre-welcome-content {
-        max-width: 1200px;
-        width: 100%;
-        padding: 60px 80px;
-        position: relative;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        text-align: center;
-        max-height: 90vh;
-        overflow-y: auto;
-    }
-
-    /* Create visual breathing space with subtle container */
-    .pre-welcome-content::before {
-        content: '';
-        position: absolute;
-        top: 50%;
-        left: 50%;
-        transform: translate(-50%, -50%);
-        width: 90%;
-        max-width: 900px;
-        height: auto;
-        min-height: 70vh;
-        max-height: 85vh;
-        background: linear-gradient(135deg, rgba(255, 255, 255, 0.02) 0%, rgba(255, 255, 255, 0.01) 100%);
-        border-radius: 32px;
-        border: 1px solid rgba(255, 255, 255, 0.05);
-        box-shadow: 0 20px 80px rgba(0, 0, 0, 0.15),
-            inset 0 1px 0 rgba(255, 255, 255, 0.05);
-        z-index: 0;
-        pointer-events: none;
-    }
-
-    /* Ensure content is above the decorative background */
-    .pre-welcome-content>* {
-        position: relative;
-        z-index: 1;
-    }
-}
-
-/* CRITICAL: Ensure button is always on top and clickable, even during animations */
-.pre-welcome-content>.pre-welcome-continue {
-    position: relative !important;
-    z-index: 10002 !important;
-    pointer-events: auto !important;
-    cursor: pointer !important;
-    /* Button is clickable even if opacity animation hasn't completed */
-    /* Visual opacity is handled by animation, but pointer-events ensure clicks work */
-}
-
-/* Visual AI Presence - Decorative Only */
-.ai-presence {
-    position: relative;
-    width: 120px;
-    height: 120px;
-    margin: 0 auto 3rem;
-    /* CRITICAL: Ensure AI presence doesn't block button clicks */
-    pointer-events: none;
-    z-index: 1;
-}
-
-/* Premium Desktop AI Presence */
-@media (min-width: 1024px) {
-    .ai-presence {
-        width: 100px;
-        height: 100px;
-        margin: 0 auto 40px auto;
-    }
-}
-
-.ai-orb {
-    width: 100%;
-    height: 100%;
-    border-radius: 50%;
-    background: radial-gradient(circle at 30% 30%, var(--primary-color), transparent);
-    border: 2px solid var(--cell-border);
-    position: relative;
-    animation: aiBreath 4s ease-in-out infinite;
-    box-shadow: 0 0 40px var(--win-glow);
-    /* CRITICAL: Ensure orb doesn't block button */
-    pointer-events: none;
-}
-
-.ai-glow {
+/* Minimal Subtle Ambient Animation */
+.pre-welcome-overlay::before {
+    content: '';
     position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    width: 140%;
-    height: 140%;
-    border-radius: 50%;
-    background: radial-gradient(circle, var(--win-glow), transparent 70%);
-    opacity: 0.6;
-    animation: aiGlow 3s ease-in-out infinite;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: radial-gradient(circle at center, rgba(255, 255, 255, 0.5) 0%, rgba(255, 255, 255, 0) 60%);
+    animation: ambientPulse 12s ease-in-out infinite;
     pointer-events: none;
+    z-index: 0;
 }
 
-@keyframes aiBreath {
+.theme-dark .pre-welcome-overlay::before,
+.theme-neon .pre-welcome-overlay::before {
+    background: radial-gradient(circle at center, rgba(30, 41, 59, 0.5) 0%, rgba(15, 23, 42, 0) 60%);
+}
+
+@keyframes ambientPulse {
 
     0%,
     100% {
         transform: scale(1);
-        opacity: 0.9;
+        opacity: 0.3;
     }
 
     50% {
-        transform: scale(1.05);
-        opacity: 1;
+        transform: scale(1.1);
+        opacity: 0.1;
     }
 }
 
-@keyframes aiGlow {
-
-    0%,
-    100% {
-        opacity: 0.4;
-        transform: translate(-50%, -50%) scale(1);
-    }
-
-    50% {
-        opacity: 0.7;
-        transform: translate(-50%, -50%) scale(1.1);
-    }
-}
-
-.pre-welcome-title {
-    font-size: clamp(2rem, 6vw, 3.5rem);
-    color: var(--text-primary);
-    margin-bottom: clamp(1.5rem, 4vw, 2rem);
-    font-weight: 300;
-    letter-spacing: 2px;
-    opacity: 0;
-    animation: fadeInUp 0.6s ease-out 0.2s forwards;
-    /* CRITICAL: Ensure title doesn't block button */
-    pointer-events: none;
+.pre-welcome-content {
     position: relative;
-    z-index: 1;
+    z-index: 10;
+    text-align: center;
+    max-width: 800px;
+    width: 90%;
+    padding: 2rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
 }
 
-/* Premium Desktop Typography */
-@media (min-width: 1024px) {
-    .pre-welcome-title {
-        font-size: 4rem;
-        font-weight: 400;
-        letter-spacing: 3px;
-        margin-bottom: 32px;
-        line-height: 1.15;
-        color: var(--text-primary);
-        max-width: 700px;
-        margin-left: auto;
-        margin-right: auto;
-    }
+/* TYPOGRAPHY */
+.pre-welcome-title {
+    font-family: 'Cinzel', serif;
+    font-size: clamp(3rem, 7vw, 5rem);
+    font-weight: 700;
+    color: #0f172a;
+    /* Deep blue / near-black */
+    letter-spacing: 0.15em;
+    margin: 0 0 2rem 0;
+    padding: 0;
+    line-height: 1.1;
+    opacity: 0;
+    text-shadow: none;
+    text-transform: uppercase;
+}
+
+.theme-dark .pre-welcome-title,
+.theme-neon .pre-welcome-title {
+    color: #f8fafc;
 }
 
 .pre-welcome-messages {
-    margin-bottom: clamp(2rem, 5vw, 3rem);
-    /* CRITICAL: Ensure messages don't block button */
-    pointer-events: none;
-    position: relative;
-    z-index: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 0.8rem;
+    margin-bottom: 2rem;
+    width: 100%;
 }
 
 .pre-welcome-text {
-    font-size: clamp(1rem, 2.5vw, 1.3rem);
-    color: var(--text-secondary);
-    margin-bottom: 1rem;
-    line-height: 1.8;
+    font-family: 'Cinzel', serif;
+    font-size: clamp(1rem, 2vw, 1.25rem);
+    color: #475569;
+    /* Softer contrast */
+    font-weight: 400;
+    line-height: 1.6;
+    margin: 0;
     opacity: 0;
-    font-weight: 300;
-    /* CRITICAL: Ensure text doesn't block button */
-    pointer-events: none;
 }
 
-/* Premium Desktop Typography */
-@media (min-width: 1024px) {
-    .pre-welcome-messages {
-        margin-bottom: 36px;
-        max-width: 600px;
-        margin-left: auto;
-        margin-right: auto;
-    }
-
-    .pre-welcome-text {
-        font-size: 1.2rem;
-        line-height: 1.75;
-        margin-bottom: 18px;
-        color: rgba(var(--text-primary-rgb, 255, 255, 255), 0.9);
-        letter-spacing: 0.4px;
-        font-weight: 300;
-    }
+.theme-dark .pre-welcome-text,
+.theme-neon .pre-welcome-text {
+    color: #94a3b8;
 }
 
-.fade-in-delay-1 {
-    animation: fadeInUp 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94) 0.3s forwards;
+.pre-welcome-divider {
+    font-size: 1.2rem;
+    color: #cbd5e1;
+    letter-spacing: -2px;
+    margin: 0.5rem 0 2rem 0;
+    opacity: 0;
+    user-select: none;
 }
 
-.fade-in-delay-2 {
-    animation: fadeInUp 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94) 0.8s forwards;
+.theme-dark .pre-welcome-divider,
+.theme-neon .pre-welcome-divider {
+    color: #475569;
 }
 
-.fade-in-delay-3 {
-    animation: fadeInUp 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94) 1.5s forwards;
+.pre-welcome-features {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    margin-bottom: 3.5rem;
+    opacity: 0;
 }
 
-.fade-in-delay-4 {
-    animation: fadeInUp 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94) 2.2s forwards;
+.pre-welcome-feature {
+    font-family: 'Cinzel', serif;
+    font-size: clamp(0.9rem, 1.5vw, 1rem);
+    color: #64748b;
+    letter-spacing: 1px;
+    margin: 0;
+    font-style: italic;
 }
 
-.fade-in-delay-5 {
-    animation: fadeInUp 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94) 3s forwards;
+.theme-dark .pre-welcome-feature,
+.theme-neon .pre-welcome-feature {
+    color: #94a3b8;
 }
 
-.fade-in-delay-6 {
-    animation: fadeInUp 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94) 3.8s forwards;
+/* BUTTON */
+.pre-welcome-continue {
+    padding: 1.2rem 4rem;
+    font-family: 'Cinzel', serif;
+    font-size: 1.1rem;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    font-weight: 600;
+    color: #0f172a;
+    background: transparent;
+    border: 1px solid #cbd5e1;
+    border-radius: 999px;
+    cursor: pointer;
+    transition: all 0.4s cubic-bezier(0.2, 0.8, 0.2, 1);
+    opacity: 0;
+    pointer-events: auto;
+    box-shadow: none;
+    min-width: 200px;
+    z-index: 100;
 }
 
-@keyframes fadeInUp {
-    0% {
+.theme-dark .pre-welcome-continue,
+.theme-neon .pre-welcome-continue {
+    color: #f8fafc;
+    border-color: #475569;
+}
+
+.pre-welcome-continue:hover {
+    background: #0f172a;
+    color: #ffffff;
+    border-color: #0f172a;
+    transform: translateY(-3px);
+    box-shadow: 0 10px 30px rgba(15, 23, 42, 0.1);
+}
+
+.theme-dark .pre-welcome-continue:hover,
+.theme-neon .pre-welcome-continue:hover {
+    background: #f8fafc;
+    color: #0f172a;
+    border-color: #f8fafc;
+    box-shadow: 0 10px 30px rgba(248, 250, 252, 0.1);
+}
+
+.pre-welcome-continue:active {
+    transform: translateY(0);
+}
+
+/* ANIMATIONS */
+@keyframes smoothReveal {
+    from {
         opacity: 0;
-        transform: translateY(30px);
+        transform: translateY(20px);
     }
 
-    100% {
+    to {
         opacity: 1;
         transform: translateY(0);
     }
 }
 
-/* Pre-welcome features section */
-.pre-welcome-features {
-    opacity: 0;
-    margin-top: clamp(1rem, 3vw, 1.5rem);
-    text-align: center;
-    /* CRITICAL: Ensure features don't block button */
-    pointer-events: none;
-    position: relative;
-    z-index: 1;
+.fade-in-delay-1 {
+    animation: smoothReveal 1s cubic-bezier(0.2, 0.8, 0.2, 1) 0.2s forwards;
 }
 
-.pre-welcome-feature {
-    font-size: clamp(0.85rem, 2vw, 0.95rem);
-    color: rgba(255, 255, 255, 0.75);
-    margin: 0.4rem 0;
-    letter-spacing: 0.5px;
-    /* CRITICAL: Ensure feature text doesn't block button */
-    pointer-events: none;
+.fade-in-delay-2 {
+    animation: smoothReveal 1s cubic-bezier(0.2, 0.8, 0.2, 1) 1.0s forwards;
 }
 
-/* Premium Desktop Features */
-@media (min-width: 1024px) {
-    .pre-welcome-features {
-        margin-top: 32px;
-        margin-bottom: 40px;
-        text-align: center;
-        max-width: 600px;
-        margin-left: auto;
-        margin-right: auto;
+.fade-in-delay-3 {
+    animation: smoothReveal 1s cubic-bezier(0.2, 0.8, 0.2, 1) 1.2s forwards;
+}
+
+.fade-in-delay-4 {
+    animation: smoothReveal 1s cubic-bezier(0.2, 0.8, 0.2, 1) 1.4s forwards;
+}
+
+.fade-in-delay-5 {
+    animation: smoothReveal 1s cubic-bezier(0.2, 0.8, 0.2, 1) 1.8s forwards;
+}
+
+.fade-in-delay-6 {
+    animation: smoothReveal 1s cubic-bezier(0.2, 0.8, 0.2, 1) 2.2s forwards;
+}
+
+.fade-in-delay-7 {
+    animation: smoothReveal 1s cubic-bezier(0.2, 0.8, 0.2, 1) 2.6s forwards;
+}
+
+/* Responsive */
+@media (max-width: 600px) {
+    .pre-welcome-content {
+        padding: 1.5rem;
     }
 
-    .pre-welcome-feature {
-        font-size: 0.95rem;
-        color: rgba(var(--text-primary-rgb, 255, 255, 255), 0.75);
-        margin: 12px 0;
-        letter-spacing: 0.5px;
-        line-height: 1.7;
+    .pre-welcome-title {
+        font-size: 3rem;
+        margin-bottom: 1.5rem;
     }
-}
 
-.pre-welcome-continue {
-    padding: clamp(0.75rem, 2vw, 1rem) clamp(2rem, 5vw, 3rem);
-    font-size: clamp(1rem, 2.5vw, 1.2rem);
-    background: var(--primary-color);
-    color: var(--text-primary);
-    border: 2px solid var(--cell-border);
-    border-radius: 50px;
-    cursor: pointer;
-    font-family: inherit;
-    transition: all 0.3s ease;
-    box-shadow: 0 4px 16px var(--shadow);
-    /* CRITICAL: Button is ALWAYS visible and clickable - NO opacity 0 */
-    opacity: 1 !important;
-    position: relative;
-    overflow: visible;
-    /* CRITICAL: Ensure button is always clickable - highest z-index */
-    z-index: 10002 !important;
-    pointer-events: auto !important;
-    /* Ensure tappable on mobile */
-    min-height: 44px;
-    touch-action: manipulation;
-    -webkit-tap-highlight-color: rgba(255, 255, 255, 0.3);
-    /* NO ANIMATION DELAY - button is immediately visible and clickable */
-    visibility: visible !important;
-    display: block !important;
-}
-
-/* Premium Desktop Button */
-@media (min-width: 1024px) {
     .pre-welcome-continue {
-        padding: 20px 56px;
-        font-size: 1.15rem;
-        font-weight: 500;
-        letter-spacing: 1px;
-        border-radius: 14px;
-        background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-color) 100%);
-        border: 1px solid rgba(255, 255, 255, 0.25);
-        box-shadow: 0 10px 32px rgba(0, 0, 0, 0.2),
-            0 4px 12px rgba(0, 0, 0, 0.15),
-            inset 0 1px 0 rgba(255, 255, 255, 0.15);
-        min-width: 220px;
-        text-align: center;
-        margin-top: 16px;
-        transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+        padding: 1rem 3rem;
+        width: 100%;
+        max-width: 300px;
     }
-
-    .pre-welcome-continue:hover {
-        transform: translateY(-3px);
-        box-shadow: 0 16px 40px rgba(0, 0, 0, 0.25),
-            0 6px 16px rgba(0, 0, 0, 0.2),
-            inset 0 1px 0 rgba(255, 255, 255, 0.2);
-        background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-color) 100%);
-    }
-
-    .pre-welcome-continue:active {
-        transform: translateY(-1px) scale(0.98);
-        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
-    }
-
-    .pre-welcome-continue:focus {
-        outline: 2px solid rgba(255, 255, 255, 0.4);
-        outline-offset: 4px;
-    }
-}
-
-.pre-welcome-continue::before {
-    content: '';
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    width: 0;
-    height: 0;
-    border-radius: 50%;
-    background: rgba(255, 255, 255, 0.3);
-    transform: translate(-50%, -50%);
-    transition: width 0.6s ease, height 0.6s ease;
-    /* CRITICAL: Ensure pseudo-element doesn't block clicks */
-    pointer-events: none;
-    z-index: -1;
-}
-
-.pre-welcome-continue:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 6px 20px var(--shadow);
-}
-
-.pre-welcome-continue:active {
-    transform: translateY(0) scale(0.98);
-}
-
-.pre-welcome-continue:active::before {
-    width: 300px;
-    height: 300px;
 }
 
 /* AI Presence during gameplay (subtle, corner) */
