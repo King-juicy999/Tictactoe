@@ -1308,6 +1308,40 @@ if (mockMusic2Sec) {
         console.log('Could not initialize mockMusic2Sec attributes:', e);
     }
 }
+let bgMusicRetryArmed = false;
+let bgMusicStartRequested = false;
+
+function armBgMusicGestureRetry() {
+    if (bgMusicRetryArmed) return;
+    bgMusicRetryArmed = true;
+    const handler = () => {
+        bgMusicRetryArmed = false;
+        tryStartBackgroundMusic('gesture-retry');
+    };
+    document.addEventListener('pointerdown', handler, { once: true, passive: true });
+    document.addEventListener('touchend', handler, { once: true, passive: true });
+}
+
+function tryStartBackgroundMusic(source = 'unknown') {
+    if (!bgMusic) return;
+    // Ensure volume is set once before attempting playback.
+    if (!bgMusicStartRequested) {
+        bgMusic.volume = 0.3;
+        bgMusicStartRequested = true;
+    }
+    try {
+        const playPromise = bgMusic.play();
+        if (playPromise && typeof playPromise.then === 'function') {
+            playPromise.catch((e) => {
+                console.log(`Could not play background music (${source}):`, e);
+                armBgMusicGestureRetry();
+            });
+        }
+    } catch (e) {
+        console.log(`Could not play background music (${source}):`, e);
+        armBgMusicGestureRetry();
+    }
+}
 const discoOverlay = document.getElementById('disco-overlay');
 const aiMockOverlay = document.getElementById('ai-mock-overlay');
 const aiMockText = document.getElementById('ai-mock-text');
@@ -2688,10 +2722,7 @@ function startGameAsAI() {
     }
     
     // Start background music
-    if (bgMusic) {
-        bgMusic.volume = 0.3; // Set volume to 30%
-        bgMusic.play().catch(e => console.log('Could not play background music:', e));
-    }
+    tryStartBackgroundMusic('startGameAsAI');
     
     // Initialize Power-Up Manager
     if (typeof PowerUpManager !== 'undefined') {
@@ -5052,7 +5083,7 @@ function makeAIMove() {
                 console.error('Error activating interactive AI mock on loss #3:', e);
                 // Fallback: simple endGame and resume music
                 if (gameState.musicPausedForTaunt && bgMusic) {
-                    bgMusic.play().catch(() => {});
+                    tryStartBackgroundMusic('taunt-resume-fallback');
                     gameState.musicPausedForTaunt = false;
                 }
                 if (isSarah()) {
@@ -6089,7 +6120,7 @@ function activateInteractiveAIMock() {
                 // THIRD LOSS MUSIC RULE: Resume background music after taunt sequence finishes
                 // Music was paused at start of third loss, now resume it
                 if (gameState.musicPausedForTaunt && bgMusic) {
-                    bgMusic.play().catch(e => console.log('Could not resume background music:', e));
+                    tryStartBackgroundMusic('taunt-resume');
                     gameState.musicPausedForTaunt = false;
                 }
             }, 500);
@@ -6569,7 +6600,7 @@ function closeInteractiveMode() {
     
     // Resume background music
     if (bgMusic) {
-        bgMusic.play().catch(e => console.log('Could not play background music:', e));
+        tryStartBackgroundMusic('resume-background');
     }
     
     // Turn alternation already happened in endGame() before interactive mode

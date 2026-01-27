@@ -1,10 +1,10 @@
 {
   "players": {
     "hmmm": {
-      "losses": 66,
+      "losses": 67,
       "wins": 10,
-      "plays": 103,
-      "lastActive": 1768995781145,
+      "plays": 109,
+      "lastActive": 1769539896434,
       "matricNumber": "",
       "life": ""
     },
@@ -187,8 +187,8 @@
     "Am good": {
       "losses": 9,
       "wins": 5,
-      "plays": 37,
-      "lastActive": 1768056455587,
+      "plays": 40,
+      "lastActive": 1769539748741,
       "matricNumber": "",
       "life": ""
     },
@@ -4434,86 +4434,64 @@
       "type": "start",
       "name": "df",
       "time": 1769368874454
+    },
+    {
+      "type": "start",
+      "name": "hmmm",
+      "time": 1769506844513
+    },
+    {
+      "type": "start",
+      "name": "hmmm",
+      "time": 1769506849859
+    },
+    {
+      "type": "start",
+      "name": "hmmm",
+      "time": 1769506849896
+    },
+    {
+      "type": "loss",
+      "name": "hmmm",
+      "time": 1769507051874
+    },
+    {
+      "type": "start",
+      "name": "Am good",
+      "time": 1769539737168
+    },
+    {
+      "type": "start",
+      "name": "Am good",
+      "time": 1769539748690
+    },
+    {
+      "type": "start",
+      "name": "Am good",
+      "time": 1769539748741
+    },
+    {
+      "type": "start",
+      "name": "hmmm",
+      "time": 1769539892202
+    },
+    {
+      "type": "start",
+      "name": "hmmm",
+      "time": 1769539896412
+    },
+    {
+      "type": "start",
+      "name": "hmmm",
+      "time": 1769539896434
     }
   ],
   "ai": {
-    "wins": 140,
-    "losses": 129,
-    "draws": 90,
-    "totalGames": 359,
+    "wins": 141,
+    "losses": 130,
+    "draws": 92,
+    "totalGames": 363,
     "moveHistory": [
-      {
-        "moveIndex": 0,
-        "boardState": [
-          "",
-          "",
-          "X",
-          "",
-          "X",
-          "",
-          "O",
-          "",
-          ""
-        ],
-        "moveType": "block_fork",
-        "reasoning": "Blocking opponent fork",
-        "gameId": "game_1767555083530_r6rp3d191",
-        "timestamp": 1767555094456
-      },
-      {
-        "moveIndex": 5,
-        "boardState": [
-          "O",
-          "",
-          "X",
-          "X",
-          "X",
-          "",
-          "O",
-          "",
-          ""
-        ],
-        "moveType": "block",
-        "reasoning": "Blocking opponent win",
-        "gameId": "game_1767555083530_r6rp3d191",
-        "timestamp": 1767555096270
-      },
-      {
-        "moveIndex": 7,
-        "boardState": [
-          "O",
-          "X",
-          "X",
-          "X",
-          "X",
-          "O",
-          "O",
-          "",
-          ""
-        ],
-        "moveType": "block",
-        "reasoning": "Blocking opponent win",
-        "gameId": "game_1767555083530_r6rp3d191",
-        "timestamp": 1767555098710
-      },
-      {
-        "moveIndex": 4,
-        "boardState": [
-          "",
-          "",
-          "",
-          "",
-          "",
-          "",
-          "",
-          "",
-          ""
-        ],
-        "moveType": "center",
-        "reasoning": "Taking center",
-        "gameId": "game_1767555098501_3808eg8sx",
-        "timestamp": 1767555101889
-      },
       {
         "moveIndex": 2,
         "boardState": [
@@ -22441,9 +22419,81 @@
         "reasoning": "Immediate AI winning move (absolute priority - AI never misses its own win)",
         "gameId": "game_1769368857627_v8ftexerv",
         "timestamp": 1769368860608
+      },
+      {
+        "moveIndex": 4,
+        "boardState": [
+          "O",
+          "X",
+          "X",
+          "X",
+          "",
+          "O",
+          "O",
+          "X",
+          ""
+        ],
+        "moveType": "block",
+        "reasoning": "Blocking player win (secondary priority - only when AI cannot win)",
+        "gameId": "game_1769506849702_00cwq6pox",
+        "timestamp": 1769506925981
+      },
+      {
+        "moveIndex": 6,
+        "boardState": [
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          ""
+        ],
+        "moveType": "corner",
+        "reasoning": "Empty corner",
+        "gameId": "game_1769506929005_0k2ntg47j",
+        "timestamp": 1769506930067
+      },
+      {
+        "moveIndex": 8,
+        "boardState": [
+          "X",
+          "O",
+          "",
+          "X",
+          "X",
+          "O",
+          "O",
+          "",
+          ""
+        ],
+        "moveType": "block",
+        "reasoning": "Blocking player win (secondary priority - only when AI cannot win)",
+        "gameId": "game_1769506929005_0k2ntg47j",
+        "timestamp": 1769507049762
+      },
+      {
+        "moveIndex": 7,
+        "boardState": [
+          "X",
+          "O",
+          "X",
+          "X",
+          "X",
+          "O",
+          "O",
+          "",
+          "O"
+        ],
+        "moveType": "win",
+        "reasoning": "Immediate AI winning move (absolute priority - AI never misses its own win)",
+        "gameId": "game_1769506929005_0k2ntg47j",
+        "timestamp": 1769507051732
       }
     ],
-    "learnedPatterns": 221,
+    "learnedPatterns": 223,
     "blockedWinPatterns": [],
     "adaptationLevel": 52,
     "patternsData": {
@@ -23061,15 +23111,16 @@
         ]
       },
       "0-3": {
-        "count": 6,
+        "count": 7,
         "players": [
           "Jerry",
           "ATHENA",
           "May",
           "Shekinah",
-          "Fara"
+          "Fara",
+          "hmmm"
         ],
-        "lastSeen": 1768527465928,
+        "lastSeen": 1769507051692,
         "firstSeen": 1765023855757,
         "isBlocked": false,
         "moves": [
@@ -23095,7 +23146,7 @@
         ]
       },
       "1-2": {
-        "count": 12,
+        "count": 13,
         "players": [
           "hmmmmmnb",
           "Blessed",
@@ -23103,7 +23154,7 @@
           "sammy",
           "Am good"
         ],
-        "lastSeen": 1768527465928,
+        "lastSeen": 1769506927503,
         "firstSeen": 1765023973394,
         "isBlocked": false,
         "moves": [
@@ -25782,8 +25833,39 @@
           6,
           4
         ]
+      },
+      "1-2-3-7-8": {
+        "count": 2,
+        "players": [
+          "hmmm"
+        ],
+        "lastSeen": 1769506927504,
+        "firstSeen": 1769506927493,
+        "isBlocked": false,
+        "moves": [
+          1,
+          2,
+          3,
+          7,
+          8
+        ]
+      },
+      "0-3-4-2": {
+        "count": 3,
+        "players": [
+          "hmmm"
+        ],
+        "lastSeen": 1769507051697,
+        "firstSeen": 1769507051689,
+        "isBlocked": false,
+        "moves": [
+          0,
+          3,
+          4,
+          2
+        ]
       }
     },
-    "lastLosingMoveIndex": 5
+    "lastLosingMoveIndex": 7
   }
 }
