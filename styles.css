@@ -1979,14 +1979,18 @@ button:disabled:hover {
    PRE-GAME WELCOME OVERLAY
    Minimal Cinematic Design
    ============================================ */
+/* ============================================
+   PRE-GAME WELCOME OVERLAY
+   Premium Gold & Cinematic Design
+   ============================================ */
 .pre-welcome-overlay {
     position: fixed;
     top: 0;
     left: 0;
     width: 100%;
     height: 100%;
-    /* Subtle background - minimal/clean */
-    background: linear-gradient(180deg, #f8fafc 0%, #f1f5f9 100%);
+    /* Deep rich background to let gold pop - stays isolated from game theme */
+    background: radial-gradient(circle at center, #1a1a20 0%, #050505 100%);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -1994,12 +1998,6 @@ button:disabled:hover {
     opacity: 0;
     animation: welcomeFadeIn 1s ease-out forwards;
     transition: opacity 0.8s ease-out;
-}
-
-/* Dark mode support if applicable, but enforcing the requested look */
-.theme-dark .pre-welcome-overlay,
-.theme-neon .pre-welcome-overlay {
-    background: linear-gradient(180deg, #0f172a 0%, #1e293b 100%);
 }
 
 @keyframes welcomeFadeIn {
@@ -2013,7 +2011,7 @@ button:disabled:hover {
     pointer-events: none;
 }
 
-/* Minimal Subtle Ambient Animation */
+/* Golden Ambient Animation */
 .pre-welcome-overlay::before {
     content: '';
     position: absolute;
@@ -2021,15 +2019,10 @@ button:disabled:hover {
     left: -50%;
     width: 200%;
     height: 200%;
-    background: radial-gradient(circle at center, rgba(255, 255, 255, 0.5) 0%, rgba(255, 255, 255, 0) 60%);
+    background: radial-gradient(circle at center, rgba(212, 175, 55, 0.15) 0%, rgba(212, 175, 55, 0) 60%);
     animation: ambientPulse 12s ease-in-out infinite;
     pointer-events: none;
     z-index: 0;
-}
-
-.theme-dark .pre-welcome-overlay::before,
-.theme-neon .pre-welcome-overlay::before {
-    background: radial-gradient(circle at center, rgba(30, 41, 59, 0.5) 0%, rgba(15, 23, 42, 0) 60%);
 }
 
 @keyframes ambientPulse {
@@ -2064,20 +2057,18 @@ button:disabled:hover {
     font-family: 'Cinzel', serif;
     font-size: clamp(3rem, 7vw, 5rem);
     font-weight: 700;
-    color: #0f172a;
-    /* Deep blue / near-black */
+    /* Soft Gold / Champagne */
+    color: #F5D0A9;
+    background: linear-gradient(135deg, #F5D0A9 0%, #D4AF37 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
     letter-spacing: 0.15em;
     margin: 0 0 2rem 0;
     padding: 0;
     line-height: 1.1;
     opacity: 0;
-    text-shadow: none;
+    text-shadow: 0 0 30px rgba(212, 175, 55, 0.3);
     text-transform: uppercase;
-}
-
-.theme-dark .pre-welcome-title,
-.theme-neon .pre-welcome-title {
-    color: #f8fafc;
 }
 
 .pre-welcome-messages {
@@ -2091,31 +2082,23 @@ button:disabled:hover {
 .pre-welcome-text {
     font-family: 'Cinzel', serif;
     font-size: clamp(1rem, 2vw, 1.25rem);
-    color: #475569;
-    /* Softer contrast */
+    /* Warm Ivory */
+    color: #FDFBF7;
     font-weight: 400;
     line-height: 1.6;
     margin: 0;
     opacity: 0;
-}
-
-.theme-dark .pre-welcome-text,
-.theme-neon .pre-welcome-text {
-    color: #94a3b8;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
 }
 
 .pre-welcome-divider {
     font-size: 1.2rem;
-    color: #cbd5e1;
+    /* Muted Gold */
+    color: #8C7335;
     letter-spacing: -2px;
     margin: 0.5rem 0 2rem 0;
     opacity: 0;
     user-select: none;
-}
-
-.theme-dark .pre-welcome-divider,
-.theme-neon .pre-welcome-divider {
-    color: #475569;
 }
 
 .pre-welcome-features {
@@ -2129,15 +2112,11 @@ button:disabled:hover {
 .pre-welcome-feature {
     font-family: 'Cinzel', serif;
     font-size: clamp(0.9rem, 1.5vw, 1rem);
-    color: #64748b;
+    /* Soft Muted Gold/Grey */
+    color: #C2B280;
     letter-spacing: 1px;
     margin: 0;
     font-style: italic;
-}
-
-.theme-dark .pre-welcome-feature,
-.theme-neon .pre-welcome-feature {
-    color: #94a3b8;
 }
 
 /* BUTTON */
@@ -2148,39 +2127,27 @@ button:disabled:hover {
     letter-spacing: 3px;
     text-transform: uppercase;
     font-weight: 600;
-    color: #0f172a;
+    /* Gold Text */
+    color: #D4AF37;
     background: transparent;
-    border: 1px solid #cbd5e1;
+    /* Gold Border */
+    border: 1px solid #D4AF37;
     border-radius: 999px;
     cursor: pointer;
     transition: all 0.4s cubic-bezier(0.2, 0.8, 0.2, 1);
     opacity: 0;
     pointer-events: auto;
-    box-shadow: none;
+    box-shadow: 0 0 15px rgba(212, 175, 55, 0.1);
     min-width: 200px;
     z-index: 100;
 }
 
-.theme-dark .pre-welcome-continue,
-.theme-neon .pre-welcome-continue {
-    color: #f8fafc;
-    border-color: #475569;
-}
-
 .pre-welcome-continue:hover {
-    background: #0f172a;
-    color: #ffffff;
-    border-color: #0f172a;
+    background: rgba(212, 175, 55, 0.1);
+    color: #F5D0A9;
+    border-color: #F5D0A9;
     transform: translateY(-3px);
-    box-shadow: 0 10px 30px rgba(15, 23, 42, 0.1);
-}
-
-.theme-dark .pre-welcome-continue:hover,
-.theme-neon .pre-welcome-continue:hover {
-    background: #f8fafc;
-    color: #0f172a;
-    border-color: #f8fafc;
-    box-shadow: 0 10px 30px rgba(248, 250, 252, 0.1);
+    box-shadow: 0 0 25px rgba(212, 175, 55, 0.3);
 }
 
 .pre-welcome-continue:active {
