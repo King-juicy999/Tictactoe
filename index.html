@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -7,6 +8,7 @@
     <link rel="stylesheet" href="styles.css">
     <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700;900&display=swap" rel="stylesheet">
 </head>
+
 <body>
     <!-- Pre-Game Welcome Overlay - Premium Cinematic Flow -->
     <div id="pre-welcome-overlay" class="pre-welcome-overlay">
@@ -16,23 +18,23 @@
                 <div class="ai-orb"></div>
                 <div class="ai-glow"></div>
             </div>
-            
+
             <!-- Stage 1: Fade-in welcome message -->
             <h1 class="pre-welcome-title fade-in-delay-1">Welcome</h1>
-            
+
             <!-- Stage 2: Animated explanation - Adaptive AI -->
             <div class="pre-welcome-messages">
                 <p class="pre-welcome-text fade-in-delay-2">You are about to face an adaptive AI.</p>
                 <p class="pre-welcome-text fade-in-delay-3">It learns your patterns. It does not repeat mistakes.</p>
                 <p class="pre-welcome-text fade-in-delay-4">Every move you make is remembered.</p>
             </div>
-            
+
             <!-- Stage 3: Animated hint - Levels & Power-ups -->
             <div class="pre-welcome-features fade-in-delay-5">
                 <p class="pre-welcome-feature">Levels exist. Power-ups exist.</p>
                 <p class="pre-welcome-feature">You must earn your progression.</p>
             </div>
-            
+
             <!-- Final: Premium continue button -->
             <button id="continue-welcome-btn" class="pre-welcome-continue fade-in-delay-6">
                 I'm Ready
@@ -45,7 +47,7 @@
             <h1 class="title">😇Angelic Tic Tac Toe🤭</h1>
             <div class="form-container">
                 <input type="text" id="player-name" placeholder="Enter your name..." required>
-                
+
                 <div class="camera-section">
                     <div class="camera-status" id="camera-status">
                         <span class="camera-icon">📹</span>
@@ -60,7 +62,7 @@
                         </div>
                     </div>
                 </div>
-                
+
                 <button id="start-btn" disabled>Enter In Peace</button>
             </div>
         </div>
@@ -79,7 +81,7 @@
                     <!-- Power-ups will be dynamically generated -->
                 </div>
             </div>
-            
+
             <div class="game-info">
                 <div id="player-info">Player: <span id="display-name"></span></div>
                 <div id="wins-counter">Wins: <span id="wins">0</span></div>
@@ -89,7 +91,7 @@
                     <span id="game-camera-status">Monitoring</span>
                 </div>
             </div>
-            
+
             <!-- Level 1 progress: 5 wins to complete -->
             <div class="level-progress-container" aria-label="Level progress">
                 <div class="level-progress-visual">
@@ -108,9 +110,9 @@
                     Wins this level: <span id="level-wins-count">0</span> / 5
                 </div>
             </div>
-            
+
             <div id="message-box" class="message"></div>
-            
+
             <div class="game-board">
                 <div class="board-dim-overlay"></div>
                 <div class="cell" data-index="0"></div>
@@ -125,7 +127,7 @@
             </div>
 
             <button id="reset-btn">Play Again... if you dare</button>
-            
+
             <!-- Guide Icon Button (in game screen) -->
             <button id="guide-icon-btn-game" class="guide-icon-btn" aria-label="Open Guide">
                 <span class="guide-icon">?</span>
@@ -144,7 +146,7 @@
         <div id="disco-overlay" class="hidden">
             <div class="disco-lights"></div>
         </div>
-        
+
         <!-- Snowfall effect container for first loss -->
         <div id="snowfall-container" class="hidden"></div>
 
@@ -157,7 +159,7 @@
                 </div>
             </div>
         </div>
-        
+
         <!-- Sarah Narrative Overlay -->
         <div id="sarah-narrative-overlay" class="sarah-narrative-overlay hidden">
             <div class="sarah-narrative-container">
@@ -165,14 +167,17 @@
                 <div class="sarah-narrative-actions" id="sarah-narrative-actions"></div>
             </div>
         </div>
-        
+
         <!-- Power Up Guide (Multi-page Manual) -->
         <div id="powerup-guide-overlay" class="powerup-guide-overlay hidden">
             <div class="powerup-guide-container">
                 <!-- Page 1: Introduction -->
                 <div class="guide-page active" data-page="1">
                     <h2 class="guide-title">How the Game Works</h2>
-                    <p class="guide-text">This game is played against an adaptive AI. The AI is smart and learns from your moves, but it is not impossible to beat. You can win with good strategy. You progress through levels by winning rounds. Power ups help you make strategic decisions, but timing matters.</p>
+                    <p class="guide-text">This game is played against an adaptive AI. The AI is smart and learns from
+                        your moves, but it is not impossible to beat. You can win with good strategy. You progress
+                        through levels by winning rounds. Power ups help you make strategic decisions, but timing
+                        matters.</p>
                     <div class="guide-board-preview">
                         <div class="guide-board-cell"></div>
                         <div class="guide-board-cell"></div>
@@ -185,7 +190,7 @@
                         <div class="guide-board-cell"></div>
                     </div>
                 </div>
-                
+
                 <!-- Page 2: Level System -->
                 <div class="guide-page" data-page="2">
                     <h2 class="guide-title">Levels & Progress</h2>
@@ -198,9 +203,10 @@
                             <div class="guide-circle"></div>
                         </div>
                     </div>
-                    <p class="guide-text">Each level requires 5 wins to advance. Losing does not reset your progress.</p>
+                    <p class="guide-text">Each level requires 5 wins to advance. Losing does not reset your progress.
+                    </p>
                 </div>
-                
+
                 <!-- Page 3: Power Ups Overview -->
                 <div class="guide-page" data-page="3">
                     <h2 class="guide-title">Power Ups</h2>
@@ -222,7 +228,7 @@
                         </div>
                     </div>
                 </div>
-                
+
                 <!-- Page 4: Hint Pulse -->
                 <div class="guide-page" data-page="4">
                     <h2 class="guide-title">Hint Pulse</h2>
@@ -240,7 +246,8 @@
                         </div>
                         <div class="guide-demo-caption" id="guide-hint-caption">Highlighting best move...</div>
                     </div>
-                    <p class="guide-text"><strong>Hint Pulse</strong><br>Briefly shows a recommended move for 2 seconds. Use it when you are unsure.</p>
+                    <p class="guide-text"><strong>Hint Pulse</strong><br>Briefly shows a recommended move for 2 seconds.
+                        Use it when you are unsure.</p>
                     <div class="guide-notes">
                         <p>• Does not play for you</p>
                         <p>• Does not pause the AI</p>
@@ -248,7 +255,7 @@
                         <p>• Locks after two uses until next run</p>
                     </div>
                 </div>
-                
+
                 <!-- Page 5: Board Shake -->
                 <div class="guide-page" data-page="5">
                     <h2 class="guide-title">Board Shake</h2>
@@ -266,7 +273,9 @@
                         </div>
                         <div class="guide-demo-caption" id="guide-shake-caption"></div>
                     </div>
-                    <p class="guide-text"><strong>Board Shake</strong><br>Reindexes all cell positions once. All existing marks remain, but their logical positions are remapped. The AI must recalculate after remap.</p>
+                    <p class="guide-text"><strong>Board Shake</strong><br>Reindexes all cell positions once. All
+                        existing marks remain, but their logical positions are remapped. The AI must recalculate after
+                        remap.</p>
                     <div class="guide-notes">
                         <p>• All marks remain on board</p>
                         <p>• Positions are randomly remapped</p>
@@ -274,7 +283,7 @@
                         <p>• Level 1 only</p>
                     </div>
                 </div>
-                
+
                 <!-- Page 6: Last Stand -->
                 <div class="guide-page" data-page="6">
                     <h2 class="guide-title">Last Stand</h2>
@@ -292,7 +301,9 @@
                         </div>
                         <div class="guide-demo-caption" id="guide-laststand-caption"></div>
                     </div>
-                    <p class="guide-text"><strong>Last Stand</strong><br>Click Last Chance → Choose a future play count → It activates automatically when you're about to lose on that play. Grants one extra player move.</p>
+                    <p class="guide-text"><strong>Last Stand</strong><br>Click Last Chance → Choose a future play count
+                        → It activates automatically when you're about to lose on that play. Grants one extra player
+                        move.</p>
                     <div class="guide-notes">
                         <p>• Click to schedule deployment</p>
                         <p>• Choose future play count (forward-only)</p>
@@ -300,43 +311,47 @@
                         <p>• Level 1 only</p>
                     </div>
                 </div>
-                
+
                 <!-- Page 7: Tactical Claim (AI Power-Up) -->
                 <div class="guide-page" data-page="7">
                     <h2 class="guide-title">Tactical Claim</h2>
                     <div class="guide-powerup-demo">
-                        <div class="guide-demo-board">
-                            <div class="guide-demo-cell"></div>
-                            <div class="guide-demo-cell"></div>
-                            <div class="guide-demo-cell"></div>
-                            <div class="guide-demo-cell"></div>
-                            <div class="guide-demo-cell guide-tactical-claim-demo">
-                                <div class="guide-tactical-claim-icon">🔒</div>
+                        <div class="guide-demo-board guide-tactical-claim-board">
+                            <div class="guide-demo-cell" data-mark="X">X</div>
+                            <div class="guide-demo-cell" data-mark=""></div>
+                            <div class="guide-demo-cell" data-mark="O">O</div>
+                            <div class="guide-demo-cell" data-mark=""></div>
+                            <div class="guide-demo-cell" data-mark="X">X</div>
+                            <div class="guide-demo-cell" data-mark=""></div>
+                            <div class="guide-demo-cell" data-mark="O">O</div>
+                            <div class="guide-demo-cell" data-mark=""></div>
+                            <div class="guide-demo-cell" data-mark=""></div>
+                            <div class="guide-tactical-claim-overlay" aria-hidden="true">
+                                <div class="guide-tactical-claim-grid"></div>
+                                <div class="guide-tactical-claim-wave"></div>
+                                <div class="guide-tactical-claim-text">AI recalculates its strategy...</div>
                             </div>
-                            <div class="guide-demo-cell"></div>
-                            <div class="guide-demo-cell"></div>
-                            <div class="guide-demo-cell"></div>
-                            <div class="guide-demo-cell"></div>
                         </div>
                     </div>
-                    <p class="guide-text"><strong>Tactical Claim</strong><br>An AI-only strategic power-up available in Level 1. The AI temporarily reserves one cell to disrupt your plan and force you to rethink your strategy. This is a strategic disruption, not a cheat. The AI's intelligence remains fully active after using it.</p>
+                    <p class="guide-text"><strong>Tactical Claim</strong><br>Tactical Claim allows the AI to temporarily
+                        focus its strategy, forcing you to rethink your next moves. It is a strategic disruption, not a
+                        cheat.</p>
                     <div class="guide-notes">
-                        <p>• AI only - appears in Level 1</p>
-                        <p>• Strategic disruption, not a cheat</p>
-                        <p>• Temporarily reserves one cell</p>
-                        <p>• Neither you nor the AI can play there</p>
-                        <p>• Reservation lasts for two full turns</p>
-                        <p>• Cell unlocks automatically</p>
-                        <p>• Does not pause the game or reduce AI intelligence</p>
+                        <p>??? AI only - appears in Level 1</p>
+                        <p>??? Strategic disruption, not a cheat</p>
+                        <p>??? The board briefly pulses to signal pressure</p>
+                        <p>??? No cells are revealed or highlighted</p>
+                        <p>??? Gameplay continues without pausing</p>
+                        <p>??? AI stays fully active after it triggers</p>
                     </div>
                 </div>
-                
+
                 <!-- Page 8: Closing -->
                 <div class="guide-page" data-page="8">
                     <h2 class="guide-title">You are ready to play.</h2>
                     <button id="guide-start-game" class="guide-start-btn">Start Game</button>
                 </div>
-                
+
                 <!-- Navigation -->
                 <div class="guide-navigation">
                     <button class="guide-nav-btn guide-prev" id="guide-prev">←</button>
@@ -345,12 +360,12 @@
                     </div>
                     <button class="guide-nav-btn guide-next" id="guide-next">→</button>
                 </div>
-                
+
                 <!-- Skip button (only on first page) -->
                 <button class="guide-skip" id="guide-skip">Skip</button>
             </div>
         </div>
-        
+
         <!-- Guide Icon Button (to reopen guide) -->
         <button id="guide-icon-btn" class="guide-icon-btn" aria-label="Open Guide">
             <span class="guide-icon">?</span>
@@ -394,9 +409,12 @@
     <audio id="win-sound" src="evil laugh.wav"></audio>
     <audio id="lose-sound" src="scream.wav"></audio>
     <audio id="tsukuyomi-sound" src="dark-ambience.wav"></audio>
-    <audio id="bg-music" src="Romantic Rap Instrumental - _Story_ _ Love Rap Beat(MP3_320K).mp3" preload="auto" loop></audio>
-    <audio id="mock-music" src="blackbear - hot girl bummer [Low Budget Video](MP3_128K)_[cut_13sec].mp3" preload="auto"></audio>
-    <audio id="mock-music-2sec" src="blackbear - hot girl bummer [Low Budget Video](MP3_128K)_[cut_2sec].mp3" preload="auto"></audio>
+    <audio id="bg-music" src="Romantic Rap Instrumental - _Story_ _ Love Rap Beat(MP3_320K).mp3" preload="auto"
+        loop></audio>
+    <audio id="mock-music" src="blackbear - hot girl bummer [Low Budget Video](MP3_128K)_[cut_13sec].mp3"
+        preload="auto"></audio>
+    <audio id="mock-music-2sec" src="blackbear - hot girl bummer [Low Budget Video](MP3_128K)_[cut_2sec].mp3"
+        preload="auto"></audio>
     <audio id="powerup-activate-sound" src="button.mp3" preload="auto"></audio>
 
     <!-- Theme Selection Overlay -->
@@ -407,8 +425,9 @@
             <div class="theme-preview-grid">
                 <div class="theme-preview-card" data-theme="light">
                     <svg class="theme-checkmark" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <circle cx="12" cy="12" r="10" fill="currentColor"/>
-                        <path d="M9 12l2 2 4-4" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+                        <circle cx="12" cy="12" r="10" fill="currentColor" />
+                        <path d="M9 12l2 2 4-4" stroke="white" stroke-width="2.5" stroke-linecap="round"
+                            stroke-linejoin="round" />
                     </svg>
                     <div class="theme-preview-name">Light</div>
                     <div class="theme-preview-sample">
@@ -419,8 +438,9 @@
                 </div>
                 <div class="theme-preview-card" data-theme="dark">
                     <svg class="theme-checkmark" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <circle cx="12" cy="12" r="10" fill="currentColor"/>
-                        <path d="M9 12l2 2 4-4" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+                        <circle cx="12" cy="12" r="10" fill="currentColor" />
+                        <path d="M9 12l2 2 4-4" stroke="white" stroke-width="2.5" stroke-linecap="round"
+                            stroke-linejoin="round" />
                     </svg>
                     <div class="theme-preview-name">Dark</div>
                     <div class="theme-preview-sample">
@@ -431,8 +451,9 @@
                 </div>
                 <div class="theme-preview-card" data-theme="neon">
                     <svg class="theme-checkmark" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <circle cx="12" cy="12" r="10" fill="currentColor"/>
-                        <path d="M9 12l2 2 4-4" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+                        <circle cx="12" cy="12" r="10" fill="currentColor" />
+                        <path d="M9 12l2 2 4-4" stroke="white" stroke-width="2.5" stroke-linecap="round"
+                            stroke-linejoin="round" />
                     </svg>
                     <div class="theme-preview-name">Neon</div>
                     <div class="theme-preview-sample">
@@ -443,8 +464,9 @@
                 </div>
                 <div class="theme-preview-card" data-theme="retro">
                     <svg class="theme-checkmark" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <circle cx="12" cy="12" r="10" fill="currentColor"/>
-                        <path d="M9 12l2 2 4-4" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+                        <circle cx="12" cy="12" r="10" fill="currentColor" />
+                        <path d="M9 12l2 2 4-4" stroke="white" stroke-width="2.5" stroke-linecap="round"
+                            stroke-linejoin="round" />
                     </svg>
                     <div class="theme-preview-name">Retro Arcade</div>
                     <div class="theme-preview-sample">
@@ -483,4 +505,5 @@
     <script src="animations.js"></script>
     <script src="script.js"></script>
 </body>
+
 </html>

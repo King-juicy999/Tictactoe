@@ -377,6 +377,7 @@ const gameState = {
         lastAITurnUsed: false, // Track if Tactical Claim was used on last AI turn (prevents consecutive use)
         cooldown: false // Prevents stacking - only one active at a time
     },
+    reservedCells: [], // Legacy Tactical Claim reservations (visual only, non-blocking)
     // MVP: Board layout lock - prevent shrinking between rounds
     boardInitialized: false, // Track if board has been initialized (prevents re-animation between rounds)
     // MVP: Track if game has started once - prevents Play Game button from reappearing
@@ -393,7 +394,8 @@ const gameState = {
     // AI recalculation trigger (set to true when power-up changes board state)
     aiRecalculationNeeded: false,
     // Additional AI turn lock for double-move prevention
-    aiMoveInProgress: false // Secondary lock to prevent double moves
+    aiMoveInProgress: false, // Secondary lock to prevent double moves
+    aiFailSafeTimer: null // Safety timer to prevent AI thinking deadlocks
 };
 
 /**
@@ -3571,8 +3573,9 @@ function activateTacticalClaimStrategic() {
     gameState.tacticalClaim.lastAITurnUsed = true; // Prevent consecutive use
     gameState.tacticalClaim.cooldown = false; // Not on cooldown yet
     
-    // CRITICAL: No visual indicators, no UI, no animations
-    // This is completely invisible to the player
+    // CRITICAL: Visuals must be non-revealing and non-blocking
+    playTacticalClaimAnimation();
+    showTacticalClaimAnnouncement();
 }
 
 /**
@@ -3819,7 +3822,7 @@ function activateTacticalClaim() {
     // Do NOT set it again here to prevent duplicate setting
     
     // Play cinematic animation
-    playTacticalClaimAnimation(selectedCell);
+    playTacticalClaimAnimation();
     
     // Show AI announcement
     showTacticalClaimAnnouncement();
@@ -3951,147 +3954,70 @@ function getReservedCellIndices() {
  * Play Tactical Claim cinematic animation
  * CRITICAL: This is VISUAL ONLY - must NOT block gameplay, inputs, or AI thinking
  */
-function playTacticalClaimAnimation(cellIndex) {
+function playTacticalClaimAnimation() {
     // FAILSAFE: If animation system fails, skip it and continue
     try {
-    const cell = document.querySelector(`.cell[data-index="${cellIndex}"]`);
-    if (!cell) return;
-    
-    const board = document.querySelector('.game-board');
-    if (!board) return;
-    
+        const board = document.querySelector('.game-board');
+        if (!board) return;
+
         // CRITICAL: Ensure inputs remain enabled during animation
         // Tactical Claim animation must NEVER block clicks or pause the game
         gameState.uiLocked = false; // Explicitly unlock UI
         cells.forEach(c => {
             if (c) c.style.pointerEvents = 'auto';
         });
-        
-        // 0. DRAMATIC CINEMATIC ANNOUNCEMENT - bold word/phrase
-    const announcement = document.createElement('div');
-    announcement.className = 'tactical-claim-announcement-text';
-        announcement.textContent = 'TACTICAL CLAIM';
-        announcement.style.pointerEvents = 'none'; // Don't block clicks
-    document.body.appendChild(announcement);
-    
-    // Animate announcement appearance
-    setTimeout(() => {
-        announcement.classList.add('active');
-    }, 10);
-    
-        // 1. Screen dim (non-blocking overlay)
-    const dimOverlay = document.createElement('div');
-    dimOverlay.className = 'tactical-claim-dim';
-        dimOverlay.style.pointerEvents = 'none'; // CRITICAL: Don't block clicks
-    document.body.appendChild(dimOverlay);
-    
-    setTimeout(() => {
-        dimOverlay.classList.add('active');
-    }, 10);
-    
-        // 2. Green energy flash from AI side (non-blocking)
-    setTimeout(() => {
-            try {
-        const flash = document.createElement('div');
-        flash.className = 'tactical-claim-flash';
-                flash.style.pointerEvents = 'none'; // Don't block clicks
-        board.appendChild(flash);
-        
+
+        const announcement = document.createElement('div');
+        announcement.className = 'tactical-claim-announcement-text';
+        announcement.textContent = 'The AI recalculates its strategy...';
+        announcement.style.pointerEvents = 'none';
+        document.body.appendChild(announcement);
+
+        const dimOverlay = document.createElement('div');
+        dimOverlay.className = 'tactical-claim-dim';
+        dimOverlay.style.pointerEvents = 'none';
+        document.body.appendChild(dimOverlay);
+
+        const gridPulse = document.createElement('div');
+        gridPulse.className = 'tactical-claim-grid-pulse';
+        gridPulse.style.pointerEvents = 'none';
+        board.appendChild(gridPulse);
+
+        const wave = document.createElement('div');
+        wave.className = 'tactical-claim-wave';
+        wave.style.pointerEvents = 'none';
+        board.appendChild(wave);
+
+        requestAnimationFrame(() => {
+            announcement.classList.add('active');
+            dimOverlay.classList.add('active');
+            gridPulse.classList.add('active');
+            wave.classList.add('active');
+        });
+
+        const animationDuration = 1400;
         setTimeout(() => {
-            flash.classList.add('active');
-        }, 10);
-        
+            dimOverlay.classList.remove('active');
+            setTimeout(() => {
+                dimOverlay.remove();
+            }, 300);
+            gridPulse.remove();
+            wave.remove();
+        }, animationDuration);
+
         setTimeout(() => {
-            flash.remove();
-        }, 600);
-            } catch (e) {
-                console.error('Flash animation error (continued):', e);
-            }
-    }, 100);
-    
-        // 3. Cell stamp and lock animation (non-blocking)
-    setTimeout(() => {
-            try {
-                const cell = document.querySelector(`.cell[data-index="${cellIndex}"]`);
-                if (!cell) return;
-                
-        cell.classList.add('tactical-claim-reserved');
-        
-        // Create lock icon
-        const lockIcon = document.createElement('div');
-        lockIcon.className = 'tactical-claim-lock';
-        lockIcon.innerHTML = '🔒';
-                lockIcon.style.pointerEvents = 'none'; // Don't block clicks
-        cell.appendChild(lockIcon);
-        
-        // Create countdown indicator
-        const countdown = document.createElement('div');
-        countdown.className = 'tactical-claim-countdown';
-        countdown.textContent = '2';
-                countdown.style.pointerEvents = 'none'; // Don't block clicks
-        cell.appendChild(countdown);
-        
-                // Holographic ring (non-blocking)
-        const ring = document.createElement('div');
-        ring.className = 'tactical-claim-ring';
-                ring.style.pointerEvents = 'none';
-        cell.appendChild(ring);
-        
-                // Shockwave (non-blocking)
-        const shockwave = document.createElement('div');
-        shockwave.className = 'tactical-claim-shockwave';
-                shockwave.style.pointerEvents = 'none';
-        board.appendChild(shockwave);
-        
-        setTimeout(() => {
-            shockwave.classList.add('active');
-        }, 10);
-        
-        setTimeout(() => {
-            shockwave.remove();
-            ring.remove();
-        }, 800);
-            } catch (e) {
-                console.error('Cell animation error (continued):', e);
-            }
-    }, 300);
-    
-        // 4. Return to normal brightness (non-blocking)
-    setTimeout(() => {
-            try {
-                const dimOverlay = document.querySelector('.tactical-claim-dim');
-                if (dimOverlay) {
-        dimOverlay.classList.remove('active');
-        setTimeout(() => {
-            dimOverlay.remove();
-        }, 300);
-                }
-            } catch (e) {
-                console.error('Dim overlay cleanup error (continued):', e);
-            }
-    }, 600);
-    
-        // Remove announcement after animation (visible for at least 1.5 seconds)
-    setTimeout(() => {
-            try {
-                const announcement = document.querySelector('.tactical-claim-announcement-text');
-                if (announcement) {
-        announcement.classList.remove('active');
-        setTimeout(() => {
-            announcement.remove();
-                    }, 600);
-                }
-            } catch (e) {
-                console.error('Announcement cleanup error (continued):', e);
-            }
-            
+            announcement.classList.remove('active');
+            setTimeout(() => {
+                announcement.remove();
+            }, 400);
+
             // CRITICAL: Ensure inputs are fully enabled after animation completes
             gameState.uiLocked = false;
             gameState.uiLockingReason = null;
             cells.forEach(c => {
                 if (c) c.style.pointerEvents = 'auto';
             });
-        }, 1500); // Show for 1.5 seconds, then fade out
+        }, animationDuration + 100);
     } catch (animError) {
         // FAILSAFE: If entire animation fails, ensure game continues
         console.error('Tactical Claim animation critical error (game continues):', animError);
@@ -4253,10 +4179,9 @@ function showTacticalClaimAnnouncement() {
     if (!messageBox) return;
     
     const announcements = [
-        "Tactical Claim initiated.",
-        "This position is now under my watch.",
-        "I will secure this square.",
-        "A calculated hold."
+        "The AI recalculates its strategy...",
+        "A tactical shift is underway.",
+        "The AI refocuses its approach."
     ];
     
     const announcement = announcements[Math.floor(Math.random() * announcements.length)];
@@ -4722,6 +4647,23 @@ function handleCellClick(cell) {
     gameState.uiLocked = true;
     const cellAnimationDuration = 180; // Match CSS animation duration
     const pacingDelayAfterMove = 100; // Small delay after move for pacing
+
+    const expectedOCount = gameState.board.filter(cell => cell === 'O').length;
+    if (gameState.aiFailSafeTimer) {
+        clearTimeout(gameState.aiFailSafeTimer);
+        gameState.aiFailSafeTimer = null;
+    }
+    const aiFailSafeDelay = cellAnimationDuration + (pacingDelayAfterMove * 2) + thinkingDelay + 500;
+    gameState.aiFailSafeTimer = setTimeout(() => {
+        if (!gameState.gameActive || gameState.inInteractiveMode) return;
+        if (gameState.board.filter(cell => cell === 'O').length !== expectedOCount) return;
+        if (!gameState.board.includes('')) return;
+        console.warn('[AI] Failsafe triggered - releasing stuck AI turn');
+        gameState.aiTurnInProgress = false;
+        gameState.aiMoveInProgress = false;
+        gameState.uiLocked = true;
+        makeAIMove();
+    }, aiFailSafeDelay);
     
     // Wait for cell animation + pacing delay, then AI thinking delay
     setTimeout(() => {
@@ -4848,6 +4790,11 @@ function makeAIMove() {
     // CRITICAL: Do NOT pause music when game is blocked - music continues as global ambience
     if (!gameState.gameActive || gameState.inInteractiveMode) {
         return;
+    }
+
+    if (gameState.aiFailSafeTimer) {
+        clearTimeout(gameState.aiFailSafeTimer);
+        gameState.aiFailSafeTimer = null;
     }
     
     // CRITICAL: Lock turn IMMEDIATELY before any async operations
