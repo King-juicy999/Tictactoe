@@ -284,7 +284,243 @@ document.addEventListener('DOMContentLoaded', () => {
             card.style.transition = 'transform 0.4s ease';
         });
     });
+
+    // Initialize 3D Interactive Mode Board
+    initMode3DCanvas();
 });
+
+/**
+ * 3D Interactive Tic Tac Toe Board for Mode Selection
+ * Vanilla JS 3D perspective rendering with mouse tilt & particles
+ */
+function initMode3DCanvas() {
+    const canvas = document.getElementById('ttt-3d-canvas');
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    const container = canvas.closest('.mode-container');
+    if (!container) return;
+    
+    let width, height;
+    let mouseX = 0, mouseY = 0;
+    let targetRotX = 22 * (Math.PI / 180);
+    let targetRotY = 8 * (Math.PI / 180);
+    let currentRotX = targetRotX;
+    let currentRotY = targetRotY;
+    let lastMouseMove = Date.now();
+    let isMouseOver = false;
+
+    // Particles floating upward
+    const particles = [];
+    for(let i=0; i<18; i++) {
+        particles.push({
+            x: Math.random() * 260 - 130,
+            y: Math.random() * 100,
+            z: Math.random() * 260 - 130,
+            s: 0.3 + Math.random() * 0.5,
+            c: i % 2 === 0 ? '#C8A96E' : '#86A8C7',
+            r: 0.8 + Math.random() * 1.5,
+            o: Math.random()
+        });
+    }
+
+    // Static ghost game state
+    const ghostState = [
+        {idx: 4, mark: 'X'}, // Center
+        {idx: 0, mark: 'X'}, // Top-left
+        {idx: 2, mark: 'O'}, // Top-right
+        {idx: 6, mark: 'O'}, // Bottom-left
+        {idx: 8, mark: 'X'}  // Bottom-right
+    ];
+
+    function resize() {
+        const dpr = window.devicePixelRatio || 1;
+        width = canvas.clientWidth;
+        height = canvas.clientHeight;
+        canvas.width = width * dpr;
+        canvas.height = height * dpr;
+        ctx.scale(dpr, dpr);
+    }
+
+    window.addEventListener('resize', resize);
+    resize();
+
+    // Mouse tracking for tilt
+    container.addEventListener('mousemove', (e) => {
+        const rect = container.getBoundingClientRect();
+        mouseX = (e.clientX - rect.left) / rect.width - 0.5;
+        mouseY = (e.clientY - rect.top) / rect.height - 0.5;
+        
+        // Map mouse position to rotation targets
+        targetRotY = mouseX * 30 * (Math.PI / 180);
+        targetRotX = (22 + mouseY * 20) * (Math.PI / 180);
+        
+        lastMouseMove = Date.now();
+        isMouseOver = true;
+    });
+
+    container.addEventListener('mouseleave', () => {
+        targetRotX = 22 * (Math.PI / 180);
+        targetRotY = 8 * (Math.PI / 180);
+        isMouseOver = false;
+    });
+
+    // Simple 3D projection function
+    function project(x, y, z) {
+        // Rotation around Y
+        let nx = x * Math.cos(currentRotY) - z * Math.sin(currentRotY);
+        let nz = x * Math.sin(currentRotY) + z * Math.cos(currentRotY);
+        
+        // Rotation around X
+        let ny = y * Math.cos(currentRotX) - nz * Math.sin(currentRotX);
+        let fz = y * Math.sin(currentRotX) + nz * Math.cos(currentRotX);
+        
+        const perspective = 500;
+        const scale = perspective / (perspective + fz + 250);
+        
+        return {
+            x: nx * scale + width / 2,
+            y: ny * scale + height / 2 + 15,
+            s: scale,
+            depth: fz
+        };
+    }
+
+    function draw() {
+        // Skip rendering if hidden to save resources
+        const overlay = document.getElementById('mode-select');
+        if (!overlay || overlay.classList.contains('hidden')) {
+            requestAnimationFrame(draw);
+            return;
+        }
+
+        ctx.clearRect(0, 0, width, height);
+
+        // Auto-rotation logic (turntable)
+        if (!isMouseOver && Date.now() - lastMouseMove > 2000) {
+            targetRotY += 0.005;
+        }
+
+        // Smooth Lerping
+        currentRotX += (targetRotX - currentRotX) * 0.06;
+        currentRotY += (targetRotY - currentRotY) * 0.06;
+
+        const size = 130;
+        const cellSize = size / 3;
+
+        // 1. Draw back-depth particles
+        particles.forEach(p => { if (p.z < 0) drawParticle(p); });
+
+        // 2. Draw 3D Grid
+        ctx.strokeStyle = 'rgba(200, 169, 110, 0.6)';
+        ctx.lineWidth = 1.5;
+
+        // Draw cells and highlight
+        let closestCell = -1;
+        let minD = 45;
+        const mx = (mouseX + 0.5) * width;
+        const my = (mouseY + 0.5) * height;
+
+        for (let r = 0; r < 3; r++) {
+            for (let c = 0; c < 3; c++) {
+                const cx = -size/2 + (c + 0.5) * cellSize;
+                const cz = -size/2 + (r + 0.5) * cellSize;
+                const p = project(cx, 0, cz);
+                
+                // Track closest cell for hover effect
+                const d = Math.sqrt((p.x - mx)**2 + (p.y - (my - 20))**2);
+                if (d < minD) { minD = d; closestCell = r * 3 + c; }
+                
+                // Draw cell base
+                ctx.fillStyle = 'rgba(10, 12, 24, 0.4)';
+                ctx.beginPath();
+                const tl = project(cx - cellSize/2, 0, cz - cellSize/2);
+                const tr = project(cx + cellSize/2, 0, cz - cellSize/2);
+                const br = project(cx + cellSize/2, 0, cz + cellSize/2);
+                const bl = project(cx - cellSize/2, 0, cz + cellSize/2);
+                ctx.moveTo(tl.x, tl.y); ctx.lineTo(tr.x, tr.y);
+                ctx.lineTo(br.x, br.y); ctx.lineTo(bl.x, bl.y);
+                ctx.fill();
+            }
+        }
+
+        // Pulse highlight for hovered cell
+        if (closestCell !== -1 && isMouseOver) {
+            const r = Math.floor(closestCell / 3);
+            const c = closestCell % 3;
+            const cx = -size/2 + (c + 0.5) * cellSize;
+            const cz = -size/2 + (r + 0.5) * cellSize;
+            const p = project(cx, 0, cz);
+            
+            ctx.fillStyle = `rgba(200, 169, 110, ${0.1 + Math.sin(Date.now()/200)*0.05})`;
+            ctx.beginPath();
+            ctx.arc(p.x, p.y, 28 * p.s, 0, Math.PI * 2);
+            ctx.fill();
+        }
+
+        // Draw Grid Lines
+        for (let i = 0; i <= 3; i++) {
+            // Horizontal
+            ctx.beginPath();
+            let a = project(-size/2, 0, -size/2 + i * cellSize);
+            let b = project(size/2, 0, -size/2 + i * cellSize);
+            ctx.moveTo(a.x, a.y); ctx.lineTo(b.x, b.y);
+            ctx.stroke();
+
+            // Vertical
+            ctx.beginPath();
+            a = project(-size/2 + i * cellSize, 0, -size/2);
+            b = project(-size/2 + i * cellSize, 0, size/2);
+            ctx.moveTo(a.x, a.y); ctx.lineTo(b.x, b.y);
+            ctx.stroke();
+        }
+
+        // 3. Draw Marks
+        ghostState.forEach(s => {
+            const r = Math.floor(s.idx / 3);
+            const c = s.idx % 3;
+            const cx = -size/2 + (c + 0.5) * cellSize;
+            const cz = -size/2 + (r + 0.5) * cellSize;
+            const p = project(cx, -2, cz); // Slightly above grid
+
+            ctx.lineWidth = 2.5 * p.s;
+            if (s.mark === 'X') {
+                ctx.strokeStyle = '#C8A96E';
+                const off = 10 * p.s;
+                ctx.beginPath();
+                ctx.moveTo(p.x - off, p.y - off); ctx.lineTo(p.x + off, p.y + off);
+                ctx.moveTo(p.x + off, p.y - off); ctx.lineTo(p.x - off, p.y + off);
+                ctx.stroke();
+            } else {
+                ctx.strokeStyle = '#86A8C7';
+                ctx.beginPath();
+                ctx.arc(p.x, p.y, 10 * p.s, 0, Math.PI * 2);
+                ctx.stroke();
+            }
+        });
+
+        // 4. Draw front-depth particles
+        particles.forEach(p => { if (p.z >= 0) drawParticle(p); });
+
+        requestAnimationFrame(draw);
+    }
+
+    function drawParticle(p) {
+        p.y -= p.s; // Float up
+        if (p.y < -80) { p.y = 80; p.x = Math.random() * 260 - 130; p.z = Math.random() * 260 - 130; }
+        
+        const proj = project(p.x, p.y, p.z);
+        const alpha = Math.min(1, Math.max(0, 1 - Math.abs(p.y)/80));
+        
+        ctx.globalAlpha = alpha;
+        ctx.fillStyle = p.c;
+        ctx.beginPath();
+        ctx.arc(proj.x, proj.y, p.r * proj.s, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.globalAlpha = 1;
+    }
+
+    draw();
+}
 window.addEventListener('error', (event) => {
     console.error('Global error caught:', event.error, event.filename, event.lineno);
     // Don't let errors crash the game

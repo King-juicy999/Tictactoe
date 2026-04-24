@@ -504,8 +504,19 @@
             </g>
         </svg>
         <div class="mode-container">
-            <h2 class="ritual-font-display">Choose Your Path</h2>
+            <!-- Corner Decorations -->
+            <span class="ritual-corner ritual-corner-tl" aria-hidden="true"></span>
+            <span class="ritual-corner ritual-corner-tr" aria-hidden="true"></span>
+            <span class="ritual-corner ritual-corner-bl" aria-hidden="true"></span>
+            <span class="ritual-corner ritual-corner-br" aria-hidden="true"></span>
+
+            <!-- 3D Decorative Canvas -->
+            <canvas id="ttt-3d-canvas" class="mode-3d-canvas" aria-hidden="true"></canvas>
+
+            <h2 class="ritual-font-display">CHOOSE YOUR PATH</h2>
+            <p class="mode-subtitle-italic">The board awaits. What kind of warrior are you?</p>
             <div class="ritual-divider"></div>
+
             <div class="mode-buttons">
                 <button id="mode-ai" class="mode-btn">
                     <div class="mode-card-icon">
@@ -513,8 +524,8 @@
                             <path d="M14 14 L50 50 M50 14 L14 50" stroke="var(--champagne)" stroke-width="2.5" stroke-linecap="square" fill="none" />
                         </svg>
                     </div>
-                    <span class="mode-card-title">Ancient Wisdom</span>
-                    <span class="mode-card-desc">Face the adaptive intelligence.</span>
+                    <span class="mode-card-title">Battle the AI</span>
+                    <span class="mode-card-desc">Face an adaptive intelligence that learns your patterns, predicts your moves, and shows no mercy.</span>
                 </button>
                 <button id="mode-player" class="mode-btn">
                     <div class="mode-card-icon">
@@ -524,7 +535,7 @@
                         </svg>
                     </div>
                     <span class="mode-card-title">Mortal Accord</span>
-                    <span class="mode-card-desc">Challenge a soul in the void.</span>
+                    <span class="mode-card-desc">Challenge a real soul across the void. No algorithms. Just two minds, one board.</span>
                 </button>
             </div>
         </div>

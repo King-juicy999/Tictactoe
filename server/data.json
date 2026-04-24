@@ -295,6 +295,22 @@
       "lastActive": 1776994467863,
       "matricNumber": "",
       "life": ""
+    },
+    "s": {
+      "losses": 0,
+      "wins": 0,
+      "plays": 3,
+      "lastActive": 1776995593065,
+      "matricNumber": "",
+      "life": ""
+    },
+    "q": {
+      "losses": 0,
+      "wins": 0,
+      "plays": 1,
+      "lastActive": 1776995615583,
+      "matricNumber": "",
+      "life": ""
     }
   },
   "sessions": [
@@ -4772,6 +4788,26 @@
       "type": "start",
       "name": "willl",
       "time": 1776994467863
+    },
+    {
+      "type": "start",
+      "name": "s",
+      "time": 1776995581205
+    },
+    {
+      "type": "start",
+      "name": "s",
+      "time": 1776995593057
+    },
+    {
+      "type": "start",
+      "name": "s",
+      "time": 1776995593065
+    },
+    {
+      "type": "start",
+      "name": "q",
+      "time": 1776995615583
     }
   ],
   "ai": {
