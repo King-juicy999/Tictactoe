@@ -489,11 +489,43 @@
 
     <!-- Mode selection (AI or Player) shown after entering name and enabling camera -->
     <div id="mode-select" class="overlay hidden">
+        <svg class="mode-bg-sigil" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+            <g fill="none" stroke="var(--champagne)" stroke-width="0.4" opacity="0.3">
+                <circle cx="100" cy="100" r="78" />
+                <circle cx="100" cy="100" r="62" />
+                <circle cx="100" cy="100" r="46" />
+                <circle cx="100" cy="100" r="30" />
+                <line x1="100" y1="22" x2="100" y2="178" />
+                <line x1="22" y1="100" x2="178" y2="100" />
+                <line x1="38" y1="38" x2="162" y2="162" />
+                <line x1="162" y1="38" x2="38" y2="162" />
+                <polygon points="100,28 162,162 38,162" opacity="0.7" />
+                <polygon points="100,172 38,38 162,38" opacity="0.55" />
+            </g>
+        </svg>
         <div class="mode-container">
-            <h2>Choose Mode</h2>
+            <h2 class="ritual-font-display">Choose Your Path</h2>
+            <div class="ritual-divider"></div>
             <div class="mode-buttons">
-                <button id="mode-ai" class="mode-btn">Play vs AI</button>
-                <button id="mode-player" class="mode-btn">Play vs Player</button>
+                <button id="mode-ai" class="mode-btn">
+                    <div class="mode-card-icon">
+                        <svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M14 14 L50 50 M50 14 L14 50" stroke="var(--champagne)" stroke-width="2.5" stroke-linecap="square" fill="none" />
+                        </svg>
+                    </div>
+                    <span class="mode-card-title">Ancient Wisdom</span>
+                    <span class="mode-card-desc">Face the adaptive intelligence.</span>
+                </button>
+                <button id="mode-player" class="mode-btn">
+                    <div class="mode-card-icon">
+                        <svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
+                            <circle cx="24" cy="32" r="14" fill="none" stroke="var(--steel)" stroke-width="2.5" />
+                            <circle cx="40" cy="32" r="14" fill="none" stroke="var(--steel)" stroke-width="2.5" />
+                        </svg>
+                    </div>
+                    <span class="mode-card-title">Mortal Accord</span>
+                    <span class="mode-card-desc">Challenge a soul in the void.</span>
+                </button>
             </div>
         </div>
     </div>
