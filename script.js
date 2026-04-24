@@ -1,38 +1,106 @@
 // Global error handler to prevent crashes
 
-// Initialize Theme Manager on page load (but don't auto-load theme - wait for user selection in welcome flow)
-// ThemeManager.loadTheme(); // Commented out - theme selection happens in welcome flow
-
 // Welcome Flow State
 let welcomeFlowState = {
-    preWelcomeShown: false,
-    themeSelected: false
+    preWelcomeShown: false
 };
 
 // Pre-welcome overlay elements (will be set on DOMContentLoaded)
-let preWelcomeOverlay, continueWelcomeBtn, themeSelectionOverlay, themePreviewCards, themeConfirmBtn, aiPresenceGameplay;
-let selectedTheme = null;
+let preWelcomeOverlay, continueWelcomeBtn, aiPresenceGameplay;
+let preWelcomeAutoTimer = null;
 
-function updateThemePreviewSelection() {
-    if (themePreviewCards && selectedTheme) {
-        themePreviewCards.forEach(card => {
-            if (card.dataset.theme === selectedTheme) {
-                card.classList.add('selected');
-            } else {
-                card.classList.remove('selected');
+/** Slow parallax star field for void intro (canvas). */
+function initVoidStarfield() {
+    const canvas = document.getElementById('void-stars-canvas');
+    if (!canvas || !canvas.getContext) return;
+    const ctx = canvas.getContext('2d');
+    let stars = [];
+    let rafId = 0;
+    const prefersReduced =
+        typeof window.matchMedia === 'function' &&
+        window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+    function resize() {
+        const dpr = Math.min(window.devicePixelRatio || 1, 2);
+        const w = window.innerWidth;
+        const h = window.innerHeight;
+        canvas.width = Math.floor(w * dpr);
+        canvas.height = Math.floor(h * dpr);
+        canvas.style.width = w + 'px';
+        canvas.style.height = h + 'px';
+        ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+        const count = Math.floor((w * h) / 9000);
+        stars = [];
+        for (let i = 0; i < count; i++) {
+            stars.push({
+                x: Math.random() * w,
+                y: Math.random() * h,
+                r: Math.random() * 1.1 + 0.15,
+                a: Math.random() * Math.PI * 2,
+                s: 0.015 + Math.random() * 0.04,
+                v: 0.02 + Math.random() * 0.07
+            });
+        }
+    }
+
+    function frame() {
+        const w = canvas.clientWidth;
+        const h = canvas.clientHeight;
+        if (!w || !h) {
+            rafId = requestAnimationFrame(frame);
+            return;
+        }
+        ctx.clearRect(0, 0, w, h);
+        for (let i = 0; i < stars.length; i++) {
+            const st = stars[i];
+            st.a += st.s;
+            st.y += st.v;
+            if (st.y > h + 2) st.y = -2;
+            const tw = 0.35 + Math.sin(st.a) * 0.25;
+            ctx.fillStyle = `rgba(200, 196, 230, ${tw})`;
+            ctx.beginPath();
+            ctx.arc(st.x, st.y, st.r, 0, Math.PI * 2);
+            ctx.fill();
+        }
+        rafId = requestAnimationFrame(frame);
+    }
+
+    resize();
+    window.addEventListener('resize', resize);
+    if (!prefersReduced) {
+        rafId = requestAnimationFrame(frame);
+    } else {
+        ctx.fillStyle = 'rgba(180, 175, 210, 0.35)';
+        for (let i = 0; i < Math.min(stars.length, 80); i++) {
+            const st = stars[i];
+            ctx.beginPath();
+            ctx.arc(st.x, st.y, st.r, 0, Math.PI * 2);
+            ctx.fill();
+        }
+    }
+
+    const overlay = document.getElementById('pre-welcome-overlay');
+    const stop = () => {
+        if (rafId) cancelAnimationFrame(rafId);
+        rafId = 0;
+        window.removeEventListener('resize', resize);
+    };
+    if (overlay && typeof MutationObserver !== 'undefined') {
+        const mo = new MutationObserver(() => {
+            if (overlay.classList.contains('hiding') || overlay.style.display === 'none') {
+                stop();
+                mo.disconnect();
             }
         });
+        mo.observe(overlay, { attributes: true, attributeFilter: ['class', 'style'] });
     }
 }
 
-// Theme Switcher UI
+// Welcome / intro UI
 document.addEventListener('DOMContentLoaded', () => {
     // Get welcome flow elements
     preWelcomeOverlay = document.getElementById('pre-welcome-overlay');
     continueWelcomeBtn = document.getElementById('continue-welcome-btn');
-    themeSelectionOverlay = document.getElementById('theme-selection-overlay');
-    themePreviewCards = document.querySelectorAll('.theme-preview-card');
-    themeConfirmBtn = document.getElementById('theme-confirm-btn');
     aiPresenceGameplay = document.getElementById('ai-presence-gameplay');
     
     // Initialize pre-welcome overlay
@@ -40,22 +108,27 @@ document.addEventListener('DOMContentLoaded', () => {
         setTimeout(() => {
             if (preWelcomeOverlay) {
                 preWelcomeOverlay.style.display = 'flex';
+                initVoidStarfield();
             }
         }, 100);
     }
-    
-    // Continue button - MVP FLOW: Ready → Theme → Name
+
+    // Continue button - Flow: Intro → Welcome (name/camera)
     let buttonTransitioned = false;
     
     const handleContinueClick = (e) => {
         try {
+            if (preWelcomeAutoTimer) {
+                clearTimeout(preWelcomeAutoTimer);
+                preWelcomeAutoTimer = null;
+            }
             // Prevent multiple transitions
             if (buttonTransitioned) {
                 console.log('[Continue] Already transitioned, ignoring click');
                 return;
             }
             
-            console.log('[Continue] === BUTTON CLICKED - Showing Theme Selector ===');
+            console.log('[Continue] === BUTTON CLICKED - Showing Welcome Screen ===');
             
             // Mark as transitioned immediately to prevent double-clicks
             buttonTransitioned = true;
@@ -74,32 +147,28 @@ document.addEventListener('DOMContentLoaded', () => {
                 console.log('[Continue] Pre-welcome overlay hidden');
                 }
                 
-            // Show theme selection overlay FIRST (MVP requirement)
-                if (themeSelectionOverlay) {
-                    // Set default theme if none selected
-                    if (!selectedTheme) {
-                        selectedTheme = (typeof ThemeManager !== 'undefined' && ThemeManager.getCurrentTheme()) 
-                            ? ThemeManager.getCurrentTheme() 
-                            : 'light';
-                    updateThemePreviewSelection();
-                    }
-                    
-                // Animate theme selector onto screen smoothly
-                    themeSelectionOverlay.style.display = 'flex';
-                themeSelectionOverlay.style.opacity = '0';
+            // Show welcome screen (name input & camera enable)
+            const welcomeScreen = document.getElementById('welcome-screen');
+            if (welcomeScreen) {
+                welcomeScreen.style.opacity = '0';
+                welcomeScreen.style.display = 'block';
+                welcomeScreen.style.visibility = 'visible';
+                welcomeScreen.classList.add('active');
+                welcomeScreen.style.transition = 'opacity 0.4s ease-in';
                 setTimeout(() => {
-                    themeSelectionOverlay.classList.add('active');
-                    themeSelectionOverlay.style.opacity = '1';
+                    welcomeScreen.style.opacity = '1';
                 }, 100);
-                console.log('[Continue] Theme selection overlay shown');
-                } else {
-                console.error('[Continue] Theme selection overlay not found!');
-                    // Fallback: show welcome screen directly
-                    const welcomeScreen = document.getElementById('welcome-screen');
-                    if (welcomeScreen) {
-                        welcomeScreen.classList.add('active');
-                    welcomeScreen.style.display = 'block';
-                }
+                console.log('[Continue] Welcome screen shown');
+            } else {
+                console.error('[Continue] Welcome screen not found!');
+            }
+
+            // Show AI presence during gameplay (decorative)
+            if (aiPresenceGameplay) {
+                setTimeout(() => {
+                    aiPresenceGameplay.classList.remove('hidden');
+                    aiPresenceGameplay.classList.add('active');
+                }, 500);
             }
             
             // Re-enable inputs
@@ -110,22 +179,26 @@ document.addEventListener('DOMContentLoaded', () => {
             
         } catch (error) {
             console.error('[Continue] Error in handleContinueClick:', error);
-            // Fallback: try to show theme selector or welcome screen
+            // Fallback: try to show welcome screen
             const overlay = document.getElementById('pre-welcome-overlay');
             if (overlay) overlay.style.display = 'none';
             
-            if (themeSelectionOverlay) {
-                themeSelectionOverlay.style.display = 'flex';
-                themeSelectionOverlay.classList.add('active');
-            } else {
-                const welcomeScreen = document.getElementById('welcome-screen');
-                if (welcomeScreen) {
-                    welcomeScreen.classList.add('active');
-                    welcomeScreen.style.display = 'block';
-                }
+            const welcomeScreen = document.getElementById('welcome-screen');
+            if (welcomeScreen) {
+                welcomeScreen.classList.add('active');
+                welcomeScreen.style.display = 'block';
             }
         }
     };
+
+    /* Cinematic intro: auto-advance timer removed per user request
+    preWelcomeAutoTimer = setTimeout(() => {
+        const overlay = document.getElementById('pre-welcome-overlay');
+        if (!overlay || overlay.classList.contains('hiding')) return;
+        if (overlay.style.display === 'none' || overlay.style.visibility === 'hidden') return;
+        handleContinueClick({ preventDefault: () => {} });
+    }, 6500);
+    */
     
     // Setup button with multiple attempts and error handling
     const setupContinueButton = () => {
@@ -137,8 +210,10 @@ document.addEventListener('DOMContentLoaded', () => {
             
             console.log('[Continue] Button found, setting up handlers');
             
-            // Make button immediately clickable
-            btn.style.opacity = '1';
+            // Make button immediately clickable (keep CSS stagger opacity on void intro skip)
+            if (!btn.classList.contains('void-skip-btn')) {
+                btn.style.opacity = '1';
+            }
             btn.style.pointerEvents = 'auto';
             btn.style.cursor = 'pointer';
             btn.disabled = false;
@@ -190,126 +265,6 @@ document.addEventListener('DOMContentLoaded', () => {
             console.error('[Continue] Error in document click handler:', error);
     }
     }, true);
-    
-    // Theme preview card selection
-    if (themePreviewCards && themePreviewCards.length > 0) {
-        themePreviewCards.forEach(card => {
-            card.addEventListener('click', () => {
-                selectedTheme = card.dataset.theme;
-                updateThemePreviewSelection();
-            });
-        });
-    }
-    
-    // Confirm theme selection - MVP FLOW: Theme → Name Input
-    if (themeConfirmBtn) {
-        themeConfirmBtn.addEventListener('click', () => {
-            try {
-            if (selectedTheme && typeof ThemeManager !== 'undefined') {
-                ThemeManager.applyTheme(selectedTheme);
-                welcomeFlowState.themeSelected = true;
-                
-                    console.log('[Theme] Theme confirmed:', selectedTheme);
-                    
-                    // Hide theme selection overlay with smooth animation
-                if (themeSelectionOverlay) {
-                        themeSelectionOverlay.style.opacity = '0';
-                        themeSelectionOverlay.style.transition = 'opacity 0.4s ease-out';
-                        setTimeout(() => {
-                    themeSelectionOverlay.classList.remove('active');
-                            themeSelectionOverlay.style.display = 'none';
-                            themeSelectionOverlay.style.pointerEvents = 'none';
-                        }, 400);
-                    }
-                    
-                    // Show welcome screen (name input & camera enable) - MVP requirement
-                    const welcomeScreen = document.getElementById('welcome-screen');
-                    if (welcomeScreen) {
-                        welcomeScreen.style.opacity = '0';
-                        welcomeScreen.style.display = 'block';
-                        welcomeScreen.style.visibility = 'visible';
-                        welcomeScreen.classList.add('active');
-                        welcomeScreen.style.transition = 'opacity 0.4s ease-in';
-                        setTimeout(() => {
-                            welcomeScreen.style.opacity = '1';
-                        }, 100);
-                        console.log('[Theme] Welcome screen (name input) shown');
-                    } else {
-                        console.error('[Theme] Welcome screen not found!');
-                }
-                
-                // Show AI presence during gameplay
-                if (aiPresenceGameplay) {
-                    setTimeout(() => {
-                        aiPresenceGameplay.classList.remove('hidden');
-                        aiPresenceGameplay.classList.add('active');
-                    }, 500);
-                    }
-                } else {
-                    console.warn('[Theme] No theme selected or ThemeManager not available');
-                }
-            } catch (error) {
-                console.error('[Theme] Error confirming theme selection:', error);
-                // Fallback: hide theme selector and show welcome screen
-                if (themeSelectionOverlay) {
-                    themeSelectionOverlay.style.display = 'none';
-                    themeSelectionOverlay.classList.remove('active');
-                }
-                const welcomeScreen = document.getElementById('welcome-screen');
-                if (welcomeScreen) {
-                    welcomeScreen.classList.add('active');
-                    welcomeScreen.style.display = 'block';
-                }
-            }
-        });
-    }
-    
-    // Initialize theme switcher UI
-    const themeBtn = document.getElementById('theme-btn');
-    const themeMenu = document.getElementById('theme-menu');
-    const themeOptions = document.querySelectorAll('.theme-option');
-    
-    if (themeBtn && themeMenu) {
-        // Toggle theme menu
-        themeBtn.addEventListener('click', (e) => {
-            e.stopPropagation();
-            themeMenu.classList.toggle('hidden');
-        });
-        
-        // Close menu when clicking outside
-        document.addEventListener('click', (e) => {
-            if (!themeBtn.contains(e.target) && !themeMenu.contains(e.target)) {
-                themeMenu.classList.add('hidden');
-            }
-        });
-        
-        // Theme selection
-        themeOptions.forEach(option => {
-            option.addEventListener('click', () => {
-                const theme = option.dataset.theme;
-                if (typeof ThemeManager !== 'undefined') {
-                    ThemeManager.applyTheme(theme);
-                    
-                    // Update active state
-                    themeOptions.forEach(opt => opt.classList.remove('active'));
-                    option.classList.add('active');
-                    
-                    // Close menu
-                    themeMenu.classList.add('hidden');
-                }
-            });
-        });
-        
-        // Set initial active theme
-        if (typeof ThemeManager !== 'undefined') {
-            const currentTheme = ThemeManager.getCurrentTheme();
-            themeOptions.forEach(opt => {
-                if (opt.dataset.theme === currentTheme) {
-                    opt.classList.add('active');
-                }
-            });
-        }
-    }
     
     // Setup guide icon buttons on page load (so guide can always be reopened)
     setupGuideIconButtons();
@@ -1415,32 +1370,18 @@ async function requestCameraAccess() {
             ensureVideoPlayback();
         }
         
-        cameraPreview.style.display = 'block';
-        enableCameraBtn.textContent = 'Camera Enabled';
-        enableCameraBtn.disabled = true;
-        enableCameraBtn.style.background = '#4CAF50';
-        
-        // Update status
-        cameraStatus.innerHTML = '<span class="camera-icon">📹</span><span class="camera-text">Camera access granted - Anti-cheat active</span>';
-        
-        // Enable start button
-        updateStartButtonState();
-        
-        // MVP: If name is already entered, auto-proceed to game board
-        if (gameState.playerName && playerNameInput && playerNameInput.value.trim()) {
-            // Small delay to ensure UI is ready
-            setTimeout(() => {
-                try {
-                    // Trigger start button click to proceed to game
-                    if (startBtn && !startBtn.disabled) {
-                        startBtn.click();
-                    }
-                } catch (autoStartError) {
-                    console.warn('Auto-start after camera enable failed:', autoStartError);
-                    // Fallback: Just enable the button, user can click manually
-                }
-            }, 300);
+        if (cameraPreview) cameraPreview.style.display = 'block';
+        if (enableCameraBtn) {
+            enableCameraBtn.textContent = 'Camera Enabled';
+            enableCameraBtn.disabled = true;
+            enableCameraBtn.style.background = '#4CAF50';
         }
+        if (cameraStatus) {
+            cameraStatus.innerHTML =
+                '<span class="camera-icon">📹</span><span class="camera-text">Camera access granted - Anti-cheat active</span>';
+        }
+
+        updateStartButtonState();
         
         // Notify admin of camera status (only when player name is set)
         if (gameState.playerName) {
@@ -1456,8 +1397,11 @@ async function requestCameraAccess() {
         return true;
     } catch (error) {
         console.error('Camera access denied:', error);
-        cameraStatus.innerHTML = '<span class="camera-icon">❌</span><span class="camera-text">Camera access denied - Required to prevent cheating</span>';
-        enableCameraBtn.textContent = 'Retry Camera Access';
+        if (cameraStatus) {
+            cameraStatus.innerHTML =
+                '<span class="camera-icon">❌</span><span class="camera-text">Camera access denied - Required to prevent cheating</span>';
+        }
+        if (enableCameraBtn) enableCameraBtn.textContent = 'Retry Camera Access';
         gameState.cameraEnabled = false;
         cameraInitialized = false;
         cameraInitializationInProgress = false;
@@ -1500,20 +1444,10 @@ function ensureVideoPlayback() {
 }
 
 function updateStartButtonState() {
-    const nameFilled = playerNameInput.value.trim();
-    const cameraReady = gameState.cameraEnabled;
-    
-    if (nameFilled && cameraReady) {
-        startBtn.disabled = false;
-        startBtn.textContent = 'Enter In Peace';
-    } else {
-        startBtn.disabled = true;
-        if (!cameraReady) {
-            startBtn.textContent = 'Enable Camera First';
-        } else {
-            startBtn.textContent = 'Enter Your Name';
-        }
-    }
+    const nameFilled = playerNameInput && playerNameInput.value.trim();
+    if (!startBtn) return;
+    startBtn.textContent = 'Enter In Peace';
+    startBtn.disabled = !nameFilled;
 }
 
 function stopCamera() {
@@ -1538,8 +1472,10 @@ function stopCamera() {
     }
 }
 
-// Camera event listeners
-enableCameraBtn.addEventListener('click', requestCameraAccess);
+// Camera event listeners (welcome camera UI may be hidden — keep listener optional)
+if (enableCameraBtn) {
+    enableCameraBtn.addEventListener('click', requestCameraAccess);
+}
 
 // Initialize button state on page load
 updateStartButtonState();
@@ -1551,8 +1487,10 @@ function monitorCameraStatus() {
         const activeTracks = tracks.filter(track => track.readyState === 'live');
         
         if (activeTracks.length === 0) {
-            gameCameraStatus.textContent = 'Camera Disconnected';
-            gameCameraStatus.style.color = '#ff4444';
+            if (gameCameraStatus) {
+                gameCameraStatus.textContent = 'Camera Disconnected';
+                gameCameraStatus.style.color = '#ff4444';
+            }
             gameState.cameraEnabled = false;
             
             // Notify admin of camera disconnection
@@ -1564,7 +1502,7 @@ function monitorCameraStatus() {
             } catch(_) {}
             
             // Could add additional logic here to pause game or show warning
-        } else {
+        } else if (gameCameraStatus) {
             gameCameraStatus.textContent = 'Monitoring';
             gameCameraStatus.style.color = '#4CAF50';
         }
@@ -2230,11 +2168,6 @@ if (socket) {
 function emitBoardUpdate() {
     try {
         if (!socket) return;
-        // Get current theme
-        const currentTheme = (typeof ThemeManager !== 'undefined' && ThemeManager.getCurrentTheme()) 
-            ? ThemeManager.getCurrentTheme() 
-            : 'light';
-        
         socket.emit('board-update', {
             name: gameState.playerName,
             board: [...gameState.board],
@@ -2252,7 +2185,7 @@ function emitBoardUpdate() {
             aiWinsInLevel: gameState.aiWinsInLevel || 0, // AI wins in current level
             roundCount: gameState.roundCount || 0, // Total rounds completed (includes draws)
             tacticalClaimUsed: gameState.tacticalClaimUsed || false,
-            theme: currentTheme,
+            theme: 'luxury',
             timestamp: Date.now()
         });
     } catch(_) {}
@@ -2507,7 +2440,7 @@ const MAX_RECENT_TAUNTS = 5;
 
 // After entering name & enabling camera, show mode selection (AI or Player)
 // UI INPUT GUARANTEE: Button must ALWAYS respond - if handler fails, reset and proceed
-startBtn.addEventListener('click', () => {
+startBtn.addEventListener('click', async () => {
     try {
     gameState.playerName = playerNameInput.value.trim();
 
@@ -2516,9 +2449,13 @@ startBtn.addEventListener('click', () => {
         return;
     }
 
-    if (!gameState.cameraEnabled) {
-            if (messageBox) messageBox.textContent = "Camera access is required to prevent cheating!";
-        return;
+    // Ritual welcome has no camera chrome; still attempt stream for existing anti-cheat hooks when supported
+    if (!gameState.cameraEnabled && typeof navigator !== 'undefined' && navigator.mediaDevices) {
+        try {
+            await requestCameraAccess();
+        } catch (_) {
+            /* proceed without camera */
+        }
     }
 
     // Hide welcome screen and show mode selection page
@@ -2654,15 +2591,11 @@ function startGameAsAI() {
         }
     }
 
-    // MVP: Also ensure pre-welcome and theme overlays are removed from DOM
+    // MVP: Also ensure pre-welcome overlay is removed from DOM
     try {
         const preOverlay = document.getElementById('pre-welcome-overlay');
         if (preOverlay && preOverlay.parentNode) {
             preOverlay.parentNode.removeChild(preOverlay);
-        }
-        const themeOverlay = document.getElementById('theme-selection-overlay');
-        if (themeOverlay && themeOverlay.parentNode) {
-            themeOverlay.parentNode.removeChild(themeOverlay);
         }
     } catch (e) {
         console.warn('[Layout] Failed to remove onboarding overlays (non‑critical):', e);
@@ -4382,7 +4315,7 @@ function handleCellClick(cell) {
                     if (typeof AnimationUtils !== 'undefined' && winningCombo) {
                         const boardElement = document.querySelector('.game-board');
                         if (boardElement) {
-                            AnimationUtils.animateWinningLine(winningCombo, boardElement, ThemeManager?.getCurrentTheme());
+                            AnimationUtils.animateWinningLine(winningCombo, boardElement, 'luxury');
                         }
                     }
                     
@@ -4477,7 +4410,7 @@ function handleCellClick(cell) {
         if (typeof AnimationUtils !== 'undefined' && winningCombo) {
             const boardElement = document.querySelector('.game-board');
             if (boardElement) {
-                AnimationUtils.animateWinningLine(winningCombo, boardElement, ThemeManager?.getCurrentTheme());
+                AnimationUtils.animateWinningLine(winningCombo, boardElement, 'luxury');
             }
         }
         
