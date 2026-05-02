@@ -15,6 +15,10 @@
         aria-live="polite">
         <canvas id="void-stars-canvas" class="void-stars-canvas" aria-hidden="true"></canvas>
         <div class="void-vignette" aria-hidden="true"></div>
+        <span class="void-corner void-corner-tl" aria-hidden="true"></span>
+        <span class="void-corner void-corner-tr" aria-hidden="true"></span>
+        <span class="void-corner void-corner-bl" aria-hidden="true"></span>
+        <span class="void-corner void-corner-br" aria-hidden="true"></span>
         <div class="void-sigil-wrap" aria-hidden="true">
             <svg class="void-sigil" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
                 <defs>
@@ -47,7 +51,8 @@
             </svg>
         </div>
         <div class="void-intro-content">
-            <h1 class="void-title void-reveal-1">Tic Tac Toe. Reimagined.</h1>
+            <p class="void-est void-reveal-0">∴ EST. IN THE VOID ∴</p>
+            <h1 class="void-title void-reveal-1">ANGELIC</h1>
             
             <div class="void-mini-board void-reveal-2" aria-hidden="true">
                 <span class="void-mini-cell void-mini-x"></span>
@@ -75,6 +80,7 @@
     <div class="container">
         <div id="welcome-screen" class="screen active ritual-welcome-screen">
             <div class="ritual-welcome-bg" aria-hidden="true">
+                <canvas class="ritual-stars-canvas" id="ritual-stars-canvas"></canvas>
                 <div class="ritual-starfield"></div>
                 <svg class="ritual-bg-sigil" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
                     <defs>
@@ -183,20 +189,6 @@
         </div>
 
         <div id="game-screen" class="screen">
-            <!-- Power-Up Sidebar HUD -->
-            <div id="powerup-sidebar" class="powerup-sidebar">
-                <div class="powerup-sidebar-header">
-                    <h3 class="powerup-title">Power-Ups</h3>
-                    <div class="powerup-level">Level <span id="powerup-level-display">1</span></div>
-                    <button id="powerup-toggle" class="powerup-toggle" aria-label="Toggle sidebar">
-                        <span class="powerup-toggle-icon">▼</span>
-                    </button>
-                </div>
-                <div id="powerup-list" class="powerup-list">
-                    <!-- Power-ups will be dynamically generated -->
-                </div>
-            </div>
-
             <div class="game-info">
                 <div id="player-info">Player: <span id="display-name"></span></div>
                 <div id="wins-counter">Wins: <span id="wins">0</span></div>
@@ -207,26 +199,76 @@
                 </div>
             </div>
 
-            <!-- Level 1 progress: 5 wins to complete -->
-            <div class="level-progress-container" aria-label="Level progress">
-                <div class="level-progress-visual">
-                    <div class="level-progress-dots">
-                        <span class="progress-dot" data-win="1">○</span>
-                        <span class="progress-dot" data-win="2">○</span>
-                        <span class="progress-dot" data-win="3">○</span>
-                        <span class="progress-dot" data-win="4">○</span>
-                        <span class="progress-dot" data-win="5">○</span>
-                    </div>
-                    <div class="level-progress-bar">
-                        <div id="level-progress-fill" class="level-progress-fill"></div>
-                    </div>
-                </div>
-                <div class="level-progress-text">
-                    Wins this level: <span id="level-wins-count">0</span> / 5
-                </div>
+            <div id="message-box" class="message"></div>
+
+            <div id="activation-banner" class="activation-banner" aria-live="polite" aria-atomic="true">
+                <span class="activation-banner__icon">💡</span>
+                <span class="activation-banner__text">Hint Pulse Activated</span>
             </div>
 
-            <div id="message-box" class="message"></div>
+            <aside id="powerup-sidebar" class="powerup-sidebar" aria-label="Power-ups">
+                <article class="pu-card" data-powerup="hint-pulse">
+                    <div class="pu-rune" aria-hidden="true">💡</div>
+                    <div class="pu-meta">
+                        <h3 class="pu-name">Hint Pulse</h3>
+                        <div class="pu-charge">2 Charges</div>
+                        <p class="pu-desc">Reveals the best move with a glowing pulse</p>
+                    </div>
+                    <button class="pu-btn" type="button">Activate</button>
+                </article>
+
+                <article class="pu-card" data-powerup="board-shake">
+                    <div class="pu-rune" aria-hidden="true">🌊</div>
+                    <div class="pu-meta">
+                        <h3 class="pu-name">Board Shake</h3>
+                        <div class="pu-charge">1 Charge · Level 1</div>
+                        <p class="pu-desc">Remaps all cell positions. Marks remain.</p>
+                    </div>
+                    <button class="pu-btn" type="button">Activate</button>
+                </article>
+
+                <article class="pu-card" data-powerup="last-stand">
+                    <div class="pu-rune" aria-hidden="true">⚡</div>
+                    <div class="pu-meta">
+                        <h3 class="pu-name">Last Stand</h3>
+                        <div class="pu-charge">1 Charge · Level 1</div>
+                        <p class="pu-desc">Schedules an extra move when about to lose.</p>
+                    </div>
+                    <button class="pu-btn" type="button">Activate</button>
+                </article>
+
+                <article class="pu-card pu-card--ai" data-powerup="tactical-claim" aria-disabled="true">
+                    <div class="pu-rune" aria-hidden="true">🎯</div>
+                    <div class="pu-meta">
+                        <h3 class="pu-name">Tactical Claim</h3>
+                        <div class="pu-charge">AI Only</div>
+                        <p class="pu-desc">AI countermeasure. Reserves momentum in steel.</p>
+                    </div>
+                </article>
+            </aside>
+
+            <nav class="bottom-bar" aria-label="Power-up quick bar">
+                <div class="bb-card bb-card--active" data-powerup="hint-pulse">
+                    <span class="bb-icon" aria-hidden="true">💡</span>
+                    <span class="bb-name">Hint Pulse</span>
+                    <span class="bb-charge">2</span>
+                </div>
+                <div class="bb-card" data-powerup="board-shake">
+                    <span class="bb-icon" aria-hidden="true">🌊</span>
+                    <span class="bb-name">Board Shake</span>
+                    <span class="bb-charge">1</span>
+                </div>
+                <div class="bb-card" data-powerup="last-stand">
+                    <span class="bb-icon" aria-hidden="true">⚡</span>
+                    <span class="bb-name">Last Stand</span>
+                    <span class="bb-charge">1</span>
+                </div>
+                <div class="bb-card bb-card--ai" data-powerup="tactical-claim">
+                    <span class="bb-icon" aria-hidden="true">🎯</span>
+                    <span class="bb-name">Tactical</span>
+                    <span class="bb-charge">AI</span>
+                </div>
+            </nav>
 
             <div class="game-board">
                 <div class="board-dim-overlay"></div>
@@ -242,12 +284,115 @@
             </div>
 
             <button id="reset-btn">Play Again... if you dare</button>
-
-            <!-- Guide Icon Button (in game screen) -->
-            <button id="guide-icon-btn-game" class="guide-icon-btn" aria-label="Open Guide">
-                <span class="guide-icon">?</span>
-            </button>
         </div>
+
+        <section id="guidebook-demo-pages" class="guidebook-demo-pages" aria-label="Power-up guidebook demos">
+            <div class="guide-page" data-page="4">
+                <h3 class="guide-demo-title">Hint Pulse</h3>
+                <div class="guide-demo-board mini-board" data-demo="hint-pulse" aria-hidden="true">
+                    <div class="mini-cell">✕</div>
+                    <div class="mini-cell"></div>
+                    <div class="mini-cell">◯</div>
+                    <div class="mini-cell"></div>
+                    <div class="mini-cell"></div>
+                    <div class="mini-cell"></div>
+                    <div class="mini-cell">◯</div>
+                    <div class="mini-cell"></div>
+                    <div class="mini-cell">✕</div>
+                </div>
+                <p class="guide-demo-status" data-status>Scanning the board for the best line...</p>
+                <div class="guide-demo-dots" aria-hidden="true">
+                    <span class="is-active"></span>
+                    <span></span>
+                    <span></span>
+                </div>
+                <ul class="guide-demo-rules">
+                    <li>Use it to reveal the strongest immediate move.</li>
+                    <li>The recommended cell pulses with ritual gold.</li>
+                    <li>It helps, but it does not place the mark for you.</li>
+                </ul>
+            </div>
+
+            <div class="guide-page" data-page="5">
+                <h3 class="guide-demo-title">Board Shake</h3>
+                <div class="guide-demo-board mini-board" data-demo="board-shake" aria-hidden="true">
+                    <div class="mini-cell">✕</div>
+                    <div class="mini-cell">◯</div>
+                    <div class="mini-cell"></div>
+                    <div class="mini-cell"></div>
+                    <div class="mini-cell">✕</div>
+                    <div class="mini-cell"></div>
+                    <div class="mini-cell">◯</div>
+                    <div class="mini-cell"></div>
+                    <div class="mini-cell">✕</div>
+                </div>
+                <p class="guide-demo-status" data-status>Board rests before the remap.</p>
+                <div class="guide-demo-dots" aria-hidden="true">
+                    <span class="is-active"></span>
+                    <span></span>
+                    <span></span>
+                </div>
+                <ul class="guide-demo-rules">
+                    <li>Only available on Level 1.</li>
+                    <li>Cells are remapped, but every mark stays on the board.</li>
+                    <li>Ideal for breaking a line the AI already understands.</li>
+                </ul>
+            </div>
+
+            <div class="guide-page" data-page="6">
+                <h3 class="guide-demo-title">Last Stand</h3>
+                <div class="guide-demo-board mini-board" data-demo="last-stand" aria-hidden="true">
+                    <div class="mini-cell">✕</div>
+                    <div class="mini-cell">✕</div>
+                    <div class="mini-cell"></div>
+                    <div class="mini-cell">◯</div>
+                    <div class="mini-cell">◯</div>
+                    <div class="mini-cell"></div>
+                    <div class="mini-cell"></div>
+                    <div class="mini-cell"></div>
+                    <div class="mini-cell"></div>
+                </div>
+                <p class="guide-demo-status" data-status>Watching for a lethal AI turn...</p>
+                <div class="guide-demo-dots" aria-hidden="true">
+                    <span class="is-active"></span>
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </div>
+                <ul class="guide-demo-rules">
+                    <li>Only available on Level 1.</li>
+                    <li>It waits until the AI is about to close the line.</li>
+                    <li>When it triggers, you gain one extra life-saving move.</li>
+                </ul>
+            </div>
+
+            <div class="guide-page" data-page="7">
+                <h3 class="guide-demo-title">Tactical Claim</h3>
+                <div class="guide-demo-board mini-board tactical-demo-board" data-demo="tactical-claim" aria-hidden="true">
+                    <div class="mini-cell">◯</div>
+                    <div class="mini-cell"></div>
+                    <div class="mini-cell">✕</div>
+                    <div class="mini-cell"></div>
+                    <div class="mini-cell">◯</div>
+                    <div class="mini-cell"></div>
+                    <div class="mini-cell">✕</div>
+                    <div class="mini-cell"></div>
+                    <div class="mini-cell"></div>
+                    <div class="tactical-claim-overlay" aria-hidden="true"></div>
+                </div>
+                <p class="guide-demo-status" data-status>The AI is waiting to answer your advantage.</p>
+                <div class="guide-demo-dots" aria-hidden="true">
+                    <span class="is-active"></span>
+                    <span></span>
+                    <span></span>
+                </div>
+                <ul class="guide-demo-rules">
+                    <li>This power-up belongs to the AI alone.</li>
+                    <li>It manifests as a steel ritual grid across the board.</li>
+                    <li>Expect it after you disrupt the flow with your own tools.</li>
+                </ul>
+            </div>
+        </section>
 
         <div id="tsukuyomi-overlay" class="hidden">
             <img src="madara.webp" alt="Mangekyō Sharingan" class="sharingan">
@@ -282,209 +427,6 @@
                 <div class="sarah-narrative-actions" id="sarah-narrative-actions"></div>
             </div>
         </div>
-
-        <!-- Power Up Guide (Multi-page Manual) -->
-        <div id="powerup-guide-overlay" class="powerup-guide-overlay hidden">
-            <div class="powerup-guide-container">
-                <!-- Page 1: Introduction -->
-                <div class="guide-page active" data-page="1">
-                    <h2 class="guide-title">How the Game Works</h2>
-                    <p class="guide-text">This game is played against an adaptive AI. The AI is smart and learns from
-                        your moves, but it is not impossible to beat. You can win with good strategy. You progress
-                        through levels by winning rounds. Power ups help you make strategic decisions, but timing
-                        matters.</p>
-                    <div class="guide-board-preview">
-                        <div class="guide-board-cell"></div>
-                        <div class="guide-board-cell"></div>
-                        <div class="guide-board-cell"></div>
-                        <div class="guide-board-cell"></div>
-                        <div class="guide-board-cell"></div>
-                        <div class="guide-board-cell"></div>
-                        <div class="guide-board-cell"></div>
-                        <div class="guide-board-cell"></div>
-                        <div class="guide-board-cell"></div>
-                    </div>
-                </div>
-
-                <!-- Page 2: Level System -->
-                <div class="guide-page" data-page="2">
-                    <h2 class="guide-title">Levels & Progress</h2>
-                    <div class="guide-level-visual">
-                        <div class="guide-level-circles">
-                            <div class="guide-circle"></div>
-                            <div class="guide-circle"></div>
-                            <div class="guide-circle"></div>
-                            <div class="guide-circle"></div>
-                            <div class="guide-circle"></div>
-                        </div>
-                    </div>
-                    <p class="guide-text">Each level requires 5 wins to advance. Losing does not reset your progress.
-                    </p>
-                </div>
-
-                <!-- Page 3: Power Ups Overview -->
-                <div class="guide-page" data-page="3">
-                    <h2 class="guide-title">Power Ups</h2>
-                    <div class="guide-powerups-overview">
-                        <div class="guide-powerup-card" data-powerup="hintPulse">
-                            <div class="guide-powerup-icon">💡</div>
-                            <div class="guide-powerup-name">Hint Pulse</div>
-                            <p class="guide-powerup-desc">Briefly shows a recommended move</p>
-                        </div>
-                        <div class="guide-powerup-card" data-powerup="boardShake">
-                            <div class="guide-powerup-icon">🌊</div>
-                            <div class="guide-powerup-name">Board Shake</div>
-                            <p class="guide-powerup-desc">Reindexes cell positions</p>
-                        </div>
-                        <div class="guide-powerup-card" data-powerup="lastStand">
-                            <div class="guide-powerup-icon">⚡</div>
-                            <div class="guide-powerup-name">Last Stand</div>
-                            <p class="guide-powerup-desc">Extra move when one from losing</p>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Page 4: Hint Pulse -->
-                <div class="guide-page" data-page="4">
-                    <h2 class="guide-title">Hint Pulse</h2>
-                    <div class="guide-powerup-demo">
-                        <div class="guide-demo-board" id="guide-hint-demo-board">
-                            <div class="guide-demo-cell" data-index="0">X</div>
-                            <div class="guide-demo-cell" data-index="1">O</div>
-                            <div class="guide-demo-cell" data-index="2"></div>
-                            <div class="guide-demo-cell" data-index="3">X</div>
-                            <div class="guide-demo-cell guide-hint-pulse-demo" data-index="4"></div>
-                            <div class="guide-demo-cell" data-index="5">O</div>
-                            <div class="guide-demo-cell" data-index="6"></div>
-                            <div class="guide-demo-cell" data-index="7">X</div>
-                            <div class="guide-demo-cell" data-index="8">O</div>
-                        </div>
-                        <div class="guide-demo-caption" id="guide-hint-caption">Highlighting best move...</div>
-                    </div>
-                    <p class="guide-text"><strong>Hint Pulse</strong><br>Briefly shows a recommended move for 2 seconds.
-                        Use it when you are unsure.</p>
-                    <div class="guide-notes">
-                        <p>• Does not play for you</p>
-                        <p>• Does not pause the AI</p>
-                        <p>• Can be used twice per run</p>
-                        <p>• Locks after two uses until next run</p>
-                    </div>
-                </div>
-
-                <!-- Page 5: Board Shake -->
-                <div class="guide-page" data-page="5">
-                    <h2 class="guide-title">Board Shake</h2>
-                    <div class="guide-powerup-demo">
-                        <div class="guide-demo-board guide-board-shake-container" id="guide-board-shake-demo">
-                            <div class="guide-demo-cell" data-index="0" data-mark="X">X</div>
-                            <div class="guide-demo-cell" data-index="1" data-mark=""></div>
-                            <div class="guide-demo-cell" data-index="2" data-mark="O">O</div>
-                            <div class="guide-demo-cell" data-index="3" data-mark=""></div>
-                            <div class="guide-demo-cell" data-index="4" data-mark="X">X</div>
-                            <div class="guide-demo-cell" data-index="5" data-mark="O">O</div>
-                            <div class="guide-demo-cell" data-index="6" data-mark=""></div>
-                            <div class="guide-demo-cell" data-index="7" data-mark="X">X</div>
-                            <div class="guide-demo-cell" data-index="8" data-mark=""></div>
-                        </div>
-                        <div class="guide-demo-caption" id="guide-shake-caption"></div>
-                    </div>
-                    <p class="guide-text"><strong>Board Shake</strong><br>Reindexes all cell positions once. All
-                        existing marks remain, but their logical positions are remapped. The AI must recalculate after
-                        remap.</p>
-                    <div class="guide-notes">
-                        <p>• All marks remain on board</p>
-                        <p>• Positions are randomly remapped</p>
-                        <p>• Usable once per game</p>
-                        <p>• Level 1 only</p>
-                    </div>
-                </div>
-
-                <!-- Page 6: Last Stand -->
-                <div class="guide-page" data-page="6">
-                    <h2 class="guide-title">Last Stand</h2>
-                    <div class="guide-powerup-demo">
-                        <div class="guide-demo-board guide-last-stand-board" id="guide-last-stand-demo">
-                            <div class="guide-demo-cell" data-index="0" data-mark="O">O</div>
-                            <div class="guide-demo-cell" data-index="1" data-mark="O">O</div>
-                            <div class="guide-demo-cell" data-index="2" data-mark=""></div>
-                            <div class="guide-demo-cell" data-index="3" data-mark="X">X</div>
-                            <div class="guide-demo-cell" data-index="4" data-mark="X">X</div>
-                            <div class="guide-demo-cell" data-index="5" data-mark=""></div>
-                            <div class="guide-demo-cell" data-index="6" data-mark=""></div>
-                            <div class="guide-demo-cell" data-index="7" data-mark=""></div>
-                            <div class="guide-demo-cell" data-index="8" data-mark=""></div>
-                        </div>
-                        <div class="guide-demo-caption" id="guide-laststand-caption"></div>
-                    </div>
-                    <p class="guide-text"><strong>Last Stand</strong><br>Click Last Chance → Choose a future play count
-                        → It activates automatically when you're about to lose on that play. Grants one extra player
-                        move.</p>
-                    <div class="guide-notes">
-                        <p>• Click to schedule deployment</p>
-                        <p>• Choose future play count (forward-only)</p>
-                        <p>• Auto-triggers when about to lose</p>
-                        <p>• Level 1 only</p>
-                    </div>
-                </div>
-
-                <!-- Page 7: Tactical Claim (AI Power-Up) -->
-                <div class="guide-page" data-page="7">
-                    <h2 class="guide-title">Tactical Claim</h2>
-                    <div class="guide-powerup-demo">
-                        <div class="guide-demo-board guide-tactical-claim-board">
-                            <div class="guide-demo-cell" data-mark="X">X</div>
-                            <div class="guide-demo-cell" data-mark=""></div>
-                            <div class="guide-demo-cell" data-mark="O">O</div>
-                            <div class="guide-demo-cell" data-mark=""></div>
-                            <div class="guide-demo-cell" data-mark="X">X</div>
-                            <div class="guide-demo-cell" data-mark=""></div>
-                            <div class="guide-demo-cell" data-mark="O">O</div>
-                            <div class="guide-demo-cell" data-mark=""></div>
-                            <div class="guide-demo-cell" data-mark=""></div>
-                            <div class="guide-tactical-claim-overlay" aria-hidden="true">
-                                <div class="guide-tactical-claim-grid"></div>
-                                <div class="guide-tactical-claim-wave"></div>
-                                <div class="guide-tactical-claim-text">AI recalculates its strategy...</div>
-                            </div>
-                        </div>
-                    </div>
-                    <p class="guide-text"><strong>Tactical Claim</strong><br>Tactical Claim allows the AI to temporarily
-                        focus its strategy, forcing you to rethink your next moves. It is a strategic disruption, not a
-                        cheat.</p>
-                    <div class="guide-notes">
-                        <p>??? AI only - appears in Level 1</p>
-                        <p>??? Strategic disruption, not a cheat</p>
-                        <p>??? The board briefly pulses to signal pressure</p>
-                        <p>??? No cells are revealed or highlighted</p>
-                        <p>??? Gameplay continues without pausing</p>
-                        <p>??? AI stays fully active after it triggers</p>
-                    </div>
-                </div>
-
-                <!-- Page 8: Closing -->
-                <div class="guide-page" data-page="8">
-                    <h2 class="guide-title">You are ready to play.</h2>
-                    <button id="guide-start-game" class="guide-start-btn">Start Game</button>
-                </div>
-
-                <!-- Navigation -->
-                <div class="guide-navigation">
-                    <button class="guide-nav-btn guide-prev" id="guide-prev">←</button>
-                    <div class="guide-page-indicator">
-                        <span id="guide-page-number">1</span> / 8
-                    </div>
-                    <button class="guide-nav-btn guide-next" id="guide-next">→</button>
-                </div>
-
-                <!-- Skip button (only on first page) -->
-                <button class="guide-skip" id="guide-skip">Skip</button>
-            </div>
-        </div>
-
-        <!-- Guide Icon Button (to reopen guide) -->
-        <button id="guide-icon-btn" class="guide-icon-btn" aria-label="Open Guide">
-            <span class="guide-icon">?</span>
-        </button>
     </div>
 
     <!-- Mode selection (AI or Player) shown after entering name and enabling camera -->
@@ -573,7 +515,6 @@
         preload="auto"></audio>
     <audio id="mock-music-2sec" src="blackbear - hot girl bummer [Low Budget Video](MP3_128K)_[cut_2sec].mp3"
         preload="auto"></audio>
-    <audio id="powerup-activate-sound" src="button.mp3" preload="auto"></audio>
 
     <!-- AI Presence During Gameplay (Decorative) -->
     <div id="ai-presence-gameplay" class="ai-presence-gameplay hidden">

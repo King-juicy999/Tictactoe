@@ -311,6 +311,78 @@
       "lastActive": 1776995615583,
       "matricNumber": "",
       "life": ""
+    },
+    "ee": {
+      "losses": 0,
+      "wins": 0,
+      "plays": 3,
+      "lastActive": 1777070721417,
+      "matricNumber": "",
+      "life": ""
+    },
+    "w": {
+      "losses": 0,
+      "wins": 0,
+      "plays": 3,
+      "lastActive": 1777071708660,
+      "matricNumber": "",
+      "life": ""
+    },
+    "eer": {
+      "losses": 0,
+      "wins": 0,
+      "plays": 3,
+      "lastActive": 1777071879946,
+      "matricNumber": "",
+      "life": ""
+    },
+    "ii": {
+      "losses": 4,
+      "wins": 0,
+      "plays": 3,
+      "lastActive": 1777119059556,
+      "matricNumber": "",
+      "life": ""
+    },
+    "wio": {
+      "losses": 3,
+      "wins": 0,
+      "plays": 3,
+      "lastActive": 1777650189454,
+      "matricNumber": "",
+      "life": ""
+    },
+    "fayy": {
+      "losses": 0,
+      "wins": 0,
+      "plays": 1,
+      "lastActive": 1777730985538,
+      "matricNumber": "",
+      "life": ""
+    },
+    "kk": {
+      "losses": 0,
+      "wins": 0,
+      "plays": 4,
+      "lastActive": 1777731133355,
+      "matricNumber": "",
+      "life": ""
+    },
+    "ddd": {
+      "losses": 0,
+      "wins": 0,
+      "plays": 3,
+      "lastActive": 1777731540905,
+      "matricNumber": "",
+      "life": ""
+    },
+    "iii": {
+      "losses": 0,
+      "wins": 0,
+      "plays": 3,
+      "lastActive": 1777732696693,
+      "matricNumber": "",
+      "life": ""
     }
   },
   "sessions": [
@@ -4808,50 +4880,179 @@
       "type": "start",
       "name": "q",
       "time": 1776995615583
+    },
+    {
+      "type": "start",
+      "name": "ee",
+      "time": 1777069405777
+    },
+    {
+      "type": "start",
+      "name": "ee",
+      "time": 1777070721374
+    },
+    {
+      "type": "start",
+      "name": "ee",
+      "time": 1777070721417
+    },
+    {
+      "type": "start",
+      "name": "w",
+      "time": 1777071698689
+    },
+    {
+      "type": "start",
+      "name": "w",
+      "time": 1777071706379
+    },
+    {
+      "type": "start",
+      "name": "w",
+      "time": 1777071708660
+    },
+    {
+      "type": "start",
+      "name": "eer",
+      "time": 1777071878172
+    },
+    {
+      "type": "start",
+      "name": "eer",
+      "time": 1777071879933
+    },
+    {
+      "type": "start",
+      "name": "eer",
+      "time": 1777071879946
+    },
+    {
+      "type": "start",
+      "name": "ii",
+      "time": 1777118970302
+    },
+    {
+      "type": "start",
+      "name": "ii",
+      "time": 1777118971794
+    },
+    {
+      "type": "start",
+      "name": "ii",
+      "time": 1777118971849
+    },
+    {
+      "type": "loss",
+      "name": "ii",
+      "time": 1777119002963
+    },
+    {
+      "type": "loss",
+      "name": "ii",
+      "time": 1777119005713
+    },
+    {
+      "type": "loss",
+      "name": "ii",
+      "time": 1777119013399
+    },
+    {
+      "type": "loss",
+      "name": "ii",
+      "time": 1777119059556
+    },
+    {
+      "type": "start",
+      "name": "wio",
+      "time": 1777650122381
+    },
+    {
+      "type": "start",
+      "name": "wio",
+      "time": 1777650141202
+    },
+    {
+      "type": "start",
+      "name": "wio",
+      "time": 1777650141293
+    },
+    {
+      "type": "loss",
+      "name": "wio",
+      "time": 1777650161119
+    },
+    {
+      "type": "loss",
+      "name": "wio",
+      "time": 1777650182912
+    },
+    {
+      "type": "loss",
+      "name": "wio",
+      "time": 1777650189454
+    },
+    {
+      "type": "start",
+      "name": "fayy",
+      "time": 1777730985538
+    },
+    {
+      "type": "start",
+      "name": "kk",
+      "time": 1777731128851
+    },
+    {
+      "type": "start",
+      "name": "kk",
+      "time": 1777731130601
+    },
+    {
+      "type": "start",
+      "name": "kk",
+      "time": 1777731130655
+    },
+    {
+      "type": "start",
+      "name": "kk",
+      "time": 1777731133355
+    },
+    {
+      "type": "start",
+      "name": "ddd",
+      "time": 1777731539003
+    },
+    {
+      "type": "start",
+      "name": "ddd",
+      "time": 1777731540869
+    },
+    {
+      "type": "start",
+      "name": "ddd",
+      "time": 1777731540905
+    },
+    {
+      "type": "start",
+      "name": "iii",
+      "time": 1777732694792
+    },
+    {
+      "type": "start",
+      "name": "iii",
+      "time": 1777732696672
+    },
+    {
+      "type": "start",
+      "name": "iii",
+      "time": 1777732696693
     }
   ],
   "ai": {
-    "wins": 8,
-    "losses": 6,
-    "draws": 8,
-    "totalGames": 22,
+    "wins": 17,
+    "losses": 11,
+    "draws": 14,
+    "totalGames": 42,
     "moveHistory": [
-      {
-        "moveIndex": 4,
-        "boardState": [
-          "",
-          "",
-          "",
-          "",
-          "",
-          "",
-          "",
-          "",
-          ""
-        ],
-        "moveType": "center",
-        "reasoning": "Taking center",
-        "gameId": "game_1767637038810_btj5i87ex",
-        "timestamp": 1767637040768
-      },
-      {
-        "moveIndex": 8,
-        "boardState": [
-          "X",
-          "",
-          "",
-          "",
-          "O",
-          "",
-          "",
-          "",
-          ""
-        ],
-        "moveType": "corner",
-        "reasoning": "Opposite corner",
-        "gameId": "game_1767637038810_btj5i87ex",
-        "timestamp": 1767637043007
-      },
       {
         "moveIndex": 2,
         "boardState": [
@@ -22815,18 +23016,4051 @@
         "reasoning": "Immediate AI winning move (absolute priority - AI never misses its own win)",
         "gameId": "game_1776517358882_ilrc3y25r",
         "timestamp": 1776518598735
+      },
+      {
+        "moveIndex": 7,
+        "boardState": [
+          "O",
+          "X",
+          "",
+          "",
+          "X",
+          "",
+          "",
+          "",
+          ""
+        ],
+        "moveType": "block",
+        "reasoning": "Blocking player win (secondary priority - only when AI cannot win)",
+        "gameId": "game_1777071879904_nu2p9l18s",
+        "timestamp": 1777071885738
+      },
+      {
+        "moveIndex": 2,
+        "boardState": [
+          "O",
+          "X",
+          "",
+          "",
+          "X",
+          "",
+          "X",
+          "O",
+          ""
+        ],
+        "moveType": "block",
+        "reasoning": "Blocking player win (secondary priority - only when AI cannot win)",
+        "gameId": "game_1777071879904_nu2p9l18s",
+        "timestamp": 1777071887924
       }
     ],
-    "learnedPatterns": 19,
+    "learnedPatterns": 275,
     "blockedWinPatterns": [],
-    "adaptationLevel": 51,
+    "adaptationLevel": 52,
     "patternsData": {
+      "0": {
+        "count": 3,
+        "players": [
+          "sammy",
+          "ATHENA",
+          "Fara"
+        ],
+        "lastSeen": 1776510085578,
+        "firstSeen": 1767705591480,
+        "isBlocked": false,
+        "moves": [
+          0
+        ]
+      },
+      "1": {
+        "count": 4,
+        "players": [
+          "hmmm",
+          "william",
+          "ii"
+        ],
+        "lastSeen": 1777119005668,
+        "firstSeen": 1765025588197,
+        "isBlocked": false,
+        "moves": [
+          1
+        ]
+      },
+      "4": {
+        "count": 2,
+        "players": [
+          "sammy",
+          "df"
+        ],
+        "lastSeen": 1776510085578,
+        "firstSeen": 1767791296895,
+        "isBlocked": false,
+        "moves": [
+          4
+        ]
+      },
+      "6": {
+        "count": 2,
+        "players": [
+          "hmmm"
+        ],
+        "lastSeen": 1776510085579,
+        "firstSeen": 1767824791985,
+        "isBlocked": false,
+        "moves": [
+          6
+        ]
+      },
+      "7": {
+        "count": 1,
+        "players": [
+          "hmmm"
+        ],
+        "lastSeen": 1776510085579,
+        "firstSeen": 1767826088710,
+        "isBlocked": false,
+        "moves": [
+          7
+        ]
+      },
+      "2-6-0-1": {
+        "count": 15,
+        "players": [
+          "boy",
+          "df",
+          "sammym",
+          "Jerry"
+        ],
+        "lastSeen": 1776510085579,
+        "firstSeen": 1765020916054,
+        "isBlocked": false,
+        "moves": [
+          2,
+          6,
+          0,
+          1
+        ]
+      },
+      "8-6-2": {
+        "count": 3,
+        "players": [
+          "df"
+        ],
+        "lastSeen": 1776510085579,
+        "firstSeen": 1765020984843,
+        "isBlocked": false,
+        "moves": [
+          8,
+          6,
+          2
+        ]
+      },
+      "6-2-0-3": {
+        "count": 3,
+        "players": [
+          "df"
+        ],
+        "lastSeen": 1776510085579,
+        "firstSeen": 1765020995890,
+        "isBlocked": false,
+        "moves": [
+          6,
+          2,
+          0,
+          3
+        ]
+      },
+      "6-1-5": {
+        "count": 2,
+        "players": [
+          "df"
+        ],
+        "lastSeen": 1776510085579,
+        "firstSeen": 1765021016466,
+        "isBlocked": false,
+        "moves": [
+          6,
+          1,
+          5
+        ]
+      },
+      "3-2-8-6-1": {
+        "count": 2,
+        "players": [
+          "df"
+        ],
+        "lastSeen": 1776510085579,
+        "firstSeen": 1765021028853,
+        "isBlocked": false,
+        "moves": [
+          3,
+          2,
+          8,
+          6,
+          1
+        ]
+      },
+      "8-2-3-0-7": {
+        "count": 2,
+        "players": [
+          "hi"
+        ],
+        "lastSeen": 1776510085579,
+        "firstSeen": 1765021098973,
+        "isBlocked": false,
+        "moves": [
+          8,
+          2,
+          3,
+          0,
+          7
+        ]
+      },
+      "2-6-0-3": {
+        "count": 3,
+        "players": [
+          "gh"
+        ],
+        "lastSeen": 1776510085579,
+        "firstSeen": 1765021144405,
+        "isBlocked": false,
+        "moves": [
+          2,
+          6,
+          0,
+          3
+        ]
+      },
+      "0-8-2-5": {
+        "count": 3,
+        "players": [
+          "sammy"
+        ],
+        "lastSeen": 1776510085579,
+        "firstSeen": 1765021209484,
+        "isBlocked": false,
+        "moves": [
+          0,
+          8,
+          2,
+          5
+        ]
+      },
+      "4-0-6-1": {
+        "count": 2,
+        "players": [
+          "hmmm"
+        ],
+        "lastSeen": 1776510085579,
+        "firstSeen": 1765021252247,
+        "isBlocked": false,
+        "moves": [
+          4,
+          0,
+          6,
+          1
+        ]
+      },
+      "0-1-6-8": {
+        "count": 19,
+        "players": [
+          "uy",
+          "sammy",
+          "Sarah",
+          "hmmm",
+          "May",
+          "Fara",
+          "ii"
+        ],
+        "lastSeen": 1777119002920,
+        "firstSeen": 1765021535740,
+        "isBlocked": false,
+        "moves": [
+          0,
+          1,
+          6,
+          8
+        ]
+      },
+      "0-3-7": {
+        "count": 9,
+        "players": [
+          "uy",
+          "sammy",
+          "Jerry",
+          "ATHENA"
+        ],
+        "lastSeen": 1776510085579,
+        "firstSeen": 1765021561394,
+        "isBlocked": false,
+        "moves": [
+          0,
+          3,
+          7
+        ]
+      },
+      "0-1-3": {
+        "count": 32,
+        "players": [
+          "uy",
+          "KL",
+          "sammy",
+          "Yw",
+          "hmmm"
+        ],
+        "lastSeen": 1776510085579,
+        "firstSeen": 1765021770380,
+        "isBlocked": false,
+        "moves": [
+          0,
+          1,
+          3
+        ]
+      },
+      "0-1-6-5-7": {
+        "count": 10,
+        "players": [
+          "sammy",
+          "ATHENA",
+          "hmmm",
+          "Praise-el"
+        ],
+        "lastSeen": 1776517196266,
+        "firstSeen": 1765022497685,
+        "isBlocked": false,
+        "moves": [
+          0,
+          1,
+          6,
+          5,
+          7
+        ]
+      },
+      "3-1": {
+        "count": 3,
+        "players": [
+          "sammy",
+          "Yw"
+        ],
+        "lastSeen": 1776510085579,
+        "firstSeen": 1765022502175,
+        "isBlocked": false,
+        "moves": [
+          3,
+          1
+        ]
+      },
+      "4-1-6-0-5": {
+        "count": 4,
+        "players": [
+          "sammy"
+        ],
+        "lastSeen": 1776510085579,
+        "firstSeen": 1765022518639,
+        "isBlocked": false,
+        "moves": [
+          4,
+          1,
+          6,
+          0,
+          5
+        ]
+      },
+      "1-0": {
+        "count": 42,
+        "players": [
+          "sammy",
+          "Jerry",
+          "sammym",
+          "hmmm",
+          "Sarah",
+          "Shekinah",
+          "KL",
+          "naynker",
+          "ATHENA",
+          "df",
+          "wio"
+        ],
+        "lastSeen": 1777650189384,
+        "firstSeen": 1765022525707,
+        "isBlocked": false,
+        "moves": [
+          1,
+          0
+        ]
+      },
+      "4-0-5-6-7": {
+        "count": 2,
+        "players": [
+          "sammy"
+        ],
+        "lastSeen": 1776510085579,
+        "firstSeen": 1765022535476,
+        "isBlocked": false,
+        "moves": [
+          4,
+          0,
+          5,
+          6,
+          7
+        ]
+      },
+      "1-0-3": {
+        "count": 15,
+        "players": [
+          "sammy",
+          "KL",
+          "Sarah",
+          "df"
+        ],
+        "lastSeen": 1776510085579,
+        "firstSeen": 1765022597326,
+        "isBlocked": false,
+        "moves": [
+          1,
+          0,
+          3
+        ]
+      },
+      "4-2-3-7-8": {
+        "count": 4,
+        "players": [
+          "sammy",
+          "Fara"
+        ],
+        "lastSeen": 1776510085579,
+        "firstSeen": 1765022612446,
+        "isBlocked": false,
+        "moves": [
+          4,
+          2,
+          3,
+          7,
+          8
+        ]
+      },
+      "1-0-6-7": {
+        "count": 8,
+        "players": [
+          "sammy",
+          "Jerry",
+          "Sarah"
+        ],
+        "lastSeen": 1776510085579,
+        "firstSeen": 1765022668034,
+        "isBlocked": false,
+        "moves": [
+          1,
+          0,
+          6,
+          7
+        ]
+      },
+      "1-6": {
+        "count": 7,
+        "players": [
+          "sammy",
+          "Jerry",
+          "Blessed",
+          "ATHENA",
+          "ii"
+        ],
+        "lastSeen": 1777119059517,
+        "firstSeen": 1765022675871,
+        "isBlocked": false,
+        "moves": [
+          1,
+          6
+        ]
+      },
+      "4-2": {
+        "count": 9,
+        "players": [
+          "sammy",
+          "ATHENA",
+          "Fara",
+          "hmmm",
+          "df"
+        ],
+        "lastSeen": 1776510085579,
+        "firstSeen": 1765022684237,
+        "isBlocked": false,
+        "moves": [
+          4,
+          2
+        ]
+      },
+      "4-2-5": {
+        "count": 1,
+        "players": [
+          "sammy"
+        ],
+        "lastSeen": 1776510085579,
+        "firstSeen": 1765022684238,
+        "isBlocked": false,
+        "moves": [
+          4,
+          2,
+          5
+        ]
+      },
+      "0-6-2": {
+        "count": 24,
+        "players": [
+          "sammy",
+          "Jerry",
+          "hmmm",
+          "Am good",
+          "ATHENA"
+        ],
+        "lastSeen": 1776510085579,
+        "firstSeen": 1765022714848,
+        "isBlocked": false,
+        "moves": [
+          0,
+          6,
+          2
+        ]
+      },
+      "0-6": {
+        "count": 33,
+        "players": [
+          "sammy",
+          "Jerry",
+          "hmmm",
+          "May",
+          "Am good",
+          "naynker",
+          "ATHENA",
+          "df",
+          "Gift"
+        ],
+        "lastSeen": 1776510085579,
+        "firstSeen": 1765022714849,
+        "isBlocked": false,
+        "moves": [
+          0,
+          6
+        ]
+      },
+      "0-1": {
+        "count": 49,
+        "players": [
+          "sammy",
+          "Jerry",
+          "ATHENA",
+          "Y",
+          "hmmm",
+          "899",
+          "Sarah",
+          "May",
+          "KL",
+          "Yw",
+          "Am good",
+          "Fara",
+          "df",
+          "Gift",
+          "Praise-el",
+          "ii"
+        ],
+        "lastSeen": 1777119002918,
+        "firstSeen": 1765022724409,
+        "isBlocked": false,
+        "moves": [
+          0,
+          1
+        ]
+      },
+      "1-0-7": {
+        "count": 3,
+        "players": [
+          "sammy"
+        ],
+        "lastSeen": 1776510085579,
+        "firstSeen": 1765022755979,
+        "isBlocked": false,
+        "moves": [
+          1,
+          0,
+          7
+        ]
+      },
+      "2-0-7-3-5": {
+        "count": 2,
+        "players": [
+          "Jerry"
+        ],
+        "lastSeen": 1776510085579,
+        "firstSeen": 1765023751480,
+        "isBlocked": false,
+        "moves": [
+          2,
+          0,
+          7,
+          3,
+          5
+        ]
+      },
+      "2-0": {
+        "count": 15,
+        "players": [
+          "Jerry",
+          "sammym",
+          "hmmm",
+          "sammy",
+          "Am good",
+          "Fara",
+          "william",
+          "df",
+          "Gift"
+        ],
+        "lastSeen": 1776510085579,
+        "firstSeen": 1765023751481,
+        "isBlocked": false,
+        "moves": [
+          2,
+          0
+        ]
+      },
+      "1-6-3": {
+        "count": 6,
+        "players": [
+          "Jerry",
+          "ii"
+        ],
+        "lastSeen": 1777119059520,
+        "firstSeen": 1765023778811,
+        "isBlocked": false,
+        "moves": [
+          1,
+          6,
+          3
+        ]
+      },
+      "1-3": {
+        "count": 10,
+        "players": [
+          "Jerry",
+          "hmmm",
+          "sammy",
+          "Praise-el",
+          "ii"
+        ],
+        "lastSeen": 1777119013345,
+        "firstSeen": 1765023784168,
+        "isBlocked": false,
+        "moves": [
+          1,
+          3
+        ]
+      },
+      "1-3-8-7": {
+        "count": 3,
+        "players": [
+          "Jerry"
+        ],
+        "lastSeen": 1776510085579,
+        "firstSeen": 1765023815475,
+        "isBlocked": false,
+        "moves": [
+          1,
+          3,
+          8,
+          7
+        ]
+      },
+      "0-1-6": {
+        "count": 10,
+        "players": [
+          "Jerry",
+          "sammy",
+          "Am good"
+        ],
+        "lastSeen": 1776510085579,
+        "firstSeen": 1765023823659,
+        "isBlocked": false,
+        "moves": [
+          0,
+          1,
+          6
+        ]
+      },
+      "0-3": {
+        "count": 8,
+        "players": [
+          "Jerry",
+          "ATHENA",
+          "May",
+          "Shekinah",
+          "Fara",
+          "hmmm",
+          "df"
+        ],
+        "lastSeen": 1776510085579,
+        "firstSeen": 1765023855757,
+        "isBlocked": false,
+        "moves": [
+          0,
+          3
+        ]
+      },
+      "1-2-8-3-7": {
+        "count": 6,
+        "players": [
+          "hmmmmmnb",
+          "Blessed"
+        ],
+        "lastSeen": 1776510085579,
+        "firstSeen": 1765023973391,
+        "isBlocked": false,
+        "moves": [
+          1,
+          2,
+          8,
+          3,
+          7
+        ]
+      },
+      "1-2": {
+        "count": 14,
+        "players": [
+          "hmmmmmnb",
+          "Blessed",
+          "hmmm",
+          "sammy",
+          "Am good",
+          "df",
+          "Praise-el"
+        ],
+        "lastSeen": 1776517205888,
+        "firstSeen": 1765023973394,
+        "isBlocked": false,
+        "moves": [
+          1,
+          2
+        ]
+      },
+      "2-6-8-5": {
+        "count": 9,
+        "players": [
+          "sammym",
+          "Jerry"
+        ],
+        "lastSeen": 1776510085579,
+        "firstSeen": 1765024007414,
+        "isBlocked": false,
+        "moves": [
+          2,
+          6,
+          8,
+          5
+        ]
+      },
+      "2-6": {
+        "count": 10,
+        "players": [
+          "sammym",
+          "Jerry",
+          "sammy",
+          "Andrew",
+          "Gift"
+        ],
+        "lastSeen": 1776510085579,
+        "firstSeen": 1765024007415,
+        "isBlocked": false,
+        "moves": [
+          2,
+          6
+        ]
+      },
+      "0-2": {
+        "count": 22,
+        "players": [
+          "sammym",
+          "ATHENA",
+          "hmmm",
+          "sammy",
+          "Fara",
+          "wio"
+        ],
+        "lastSeen": 1777650173562,
+        "firstSeen": 1765024036316,
+        "isBlocked": false,
+        "moves": [
+          0,
+          2
+        ]
+      },
+      "2-1": {
+        "count": 7,
+        "players": [
+          "sammym",
+          "hmmm",
+          "KL",
+          "Fara",
+          "Gift",
+          "JJJ"
+        ],
+        "lastSeen": 1776510099971,
+        "firstSeen": 1765024061066,
+        "isBlocked": false,
+        "moves": [
+          2,
+          1
+        ]
+      },
+      "2-1-8": {
+        "count": 1,
+        "players": [
+          "sammym"
+        ],
+        "lastSeen": 1776510085579,
+        "firstSeen": 1765024061067,
+        "isBlocked": false,
+        "moves": [
+          2,
+          1,
+          8
+        ]
+      },
+      "0-2-7-3-5": {
+        "count": 2,
+        "players": [
+          "sammym"
+        ],
+        "lastSeen": 1776510085579,
+        "firstSeen": 1765024097647,
+        "isBlocked": false,
+        "moves": [
+          0,
+          2,
+          7,
+          3,
+          5
+        ]
+      },
+      "2-0-8": {
+        "count": 3,
+        "players": [
+          "sammym"
+        ],
+        "lastSeen": 1776510085579,
+        "firstSeen": 1765024110128,
+        "isBlocked": false,
+        "moves": [
+          2,
+          0,
+          8
+        ]
+      },
+      "5-2-6": {
+        "count": 3,
+        "players": [
+          "sammym"
+        ],
+        "lastSeen": 1776510085579,
+        "firstSeen": 1765024123133,
+        "isBlocked": false,
+        "moves": [
+          5,
+          2,
+          6
+        ]
+      },
+      "5-2": {
+        "count": 1,
+        "players": [
+          "sammym"
+        ],
+        "lastSeen": 1776510085579,
+        "firstSeen": 1765024123134,
+        "isBlocked": false,
+        "moves": [
+          5,
+          2
+        ]
+      },
+      "3-6-8": {
+        "count": 3,
+        "players": [
+          "Jerry"
+        ],
+        "lastSeen": 1776510085579,
+        "firstSeen": 1765024192859,
+        "isBlocked": false,
+        "moves": [
+          3,
+          6,
+          8
+        ]
+      },
+      "3-6": {
+        "count": 2,
+        "players": [
+          "Jerry",
+          "Gift"
+        ],
+        "lastSeen": 1776510085579,
+        "firstSeen": 1765024192860,
+        "isBlocked": false,
+        "moves": [
+          3,
+          6
+        ]
+      },
+      "1-3-2": {
+        "count": 4,
+        "players": [
+          "Jerry",
+          "ii"
+        ],
+        "lastSeen": 1777119013348,
+        "firstSeen": 1765024207650,
+        "isBlocked": false,
+        "moves": [
+          1,
+          3,
+          2
+        ]
+      },
+      "2-5": {
+        "count": 4,
+        "players": [
+          "Jerry",
+          "sammy",
+          "Gift"
+        ],
+        "lastSeen": 1776510085579,
+        "firstSeen": 1765024218779,
+        "isBlocked": false,
+        "moves": [
+          2,
+          5
+        ]
+      },
+      "2-5-0": {
+        "count": 4,
+        "players": [
+          "Jerry"
+        ],
+        "lastSeen": 1776510085579,
+        "firstSeen": 1765024218779,
+        "isBlocked": false,
+        "moves": [
+          2,
+          5,
+          0
+        ]
+      },
+      "2-1-3": {
+        "count": 3,
+        "players": [
+          "hmmm"
+        ],
+        "lastSeen": 1776510085579,
+        "firstSeen": 1765025580930,
+        "isBlocked": false,
+        "moves": [
+          2,
+          1,
+          3
+        ]
+      },
+      "4-6": {
+        "count": 9,
+        "players": [
+          "hmmm",
+          "sammy",
+          "Fara",
+          "Gift"
+        ],
+        "lastSeen": 1776510085579,
+        "firstSeen": 1765025596410,
+        "isBlocked": false,
+        "moves": [
+          4,
+          6
+        ]
+      },
+      "4-6-7": {
+        "count": 1,
+        "players": [
+          "hmmm"
+        ],
+        "lastSeen": 1776510085579,
+        "firstSeen": 1765025596410,
+        "isBlocked": false,
+        "moves": [
+          4,
+          6,
+          7
+        ]
+      },
+      "1-0-8": {
+        "count": 3,
+        "players": [
+          "sammy"
+        ],
+        "lastSeen": 1776510085579,
+        "firstSeen": 1765027711112,
+        "isBlocked": false,
+        "moves": [
+          1,
+          0,
+          8
+        ]
+      },
+      "0-2-6": {
+        "count": 11,
+        "players": [
+          "ATHENA",
+          "hmmm",
+          "sammy",
+          "Fara"
+        ],
+        "lastSeen": 1776510085579,
+        "firstSeen": 1765028059641,
+        "isBlocked": false,
+        "moves": [
+          0,
+          2,
+          6
+        ]
+      },
+      "4-2-7-3-0": {
+        "count": 2,
+        "players": [
+          "ATHENA"
+        ],
+        "lastSeen": 1776510085579,
+        "firstSeen": 1765028080717,
+        "isBlocked": false,
+        "moves": [
+          4,
+          2,
+          7,
+          3,
+          0
+        ]
+      },
+      "0-7-2-5-3": {
+        "count": 2,
+        "players": [
+          "Blessed"
+        ],
+        "lastSeen": 1776510085579,
+        "firstSeen": 1765358198368,
+        "isBlocked": false,
+        "moves": [
+          0,
+          7,
+          2,
+          5,
+          3
+        ]
+      },
+      "0-7": {
+        "count": 3,
+        "players": [
+          "Blessed",
+          "sammy",
+          "hmmm"
+        ],
+        "lastSeen": 1776510085579,
+        "firstSeen": 1765358198375,
+        "isBlocked": false,
+        "moves": [
+          0,
+          7
+        ]
+      },
+      "7-0-5": {
+        "count": 3,
+        "players": [
+          "Blessed"
+        ],
+        "lastSeen": 1776510085579,
+        "firstSeen": 1765358212120,
+        "isBlocked": false,
+        "moves": [
+          7,
+          0,
+          5
+        ]
+      },
+      "7-0": {
+        "count": 2,
+        "players": [
+          "Blessed",
+          "Gift"
+        ],
+        "lastSeen": 1776510085579,
+        "firstSeen": 1765358212120,
+        "isBlocked": false,
+        "moves": [
+          7,
+          0
+        ]
+      },
+      "0-5-6": {
+        "count": 3,
+        "players": [
+          "Blessed"
+        ],
+        "lastSeen": 1776510085579,
+        "firstSeen": 1765358253253,
+        "isBlocked": false,
+        "moves": [
+          0,
+          5,
+          6
+        ]
+      },
+      "0-5": {
+        "count": 5,
+        "players": [
+          "Blessed",
+          "Fara",
+          "ATHENA",
+          "df"
+        ],
+        "lastSeen": 1776510085579,
+        "firstSeen": 1765358253254,
+        "isBlocked": false,
+        "moves": [
+          0,
+          5
+        ]
+      },
+      "1-7-2-8": {
+        "count": 3,
+        "players": [
+          "Blessed"
+        ],
+        "lastSeen": 1776510085579,
+        "firstSeen": 1765358274483,
+        "isBlocked": false,
+        "moves": [
+          1,
+          7,
+          2,
+          8
+        ]
+      },
+      "1-7": {
+        "count": 2,
+        "players": [
+          "Blessed"
+        ],
+        "lastSeen": 1776510085579,
+        "firstSeen": 1765358274484,
+        "isBlocked": false,
+        "moves": [
+          1,
+          7
+        ]
+      },
+      "1-7-0-5": {
+        "count": 3,
+        "players": [
+          "Blessed"
+        ],
+        "lastSeen": 1776510085579,
+        "firstSeen": 1765358338332,
+        "isBlocked": false,
+        "moves": [
+          1,
+          7,
+          0,
+          5
+        ]
+      },
+      "1-6-8": {
+        "count": 3,
+        "players": [
+          "Blessed"
+        ],
+        "lastSeen": 1776510085579,
+        "firstSeen": 1765358349114,
+        "isBlocked": false,
+        "moves": [
+          1,
+          6,
+          8
+        ]
+      },
+      "8-3-2": {
+        "count": 6,
+        "players": [
+          "Blessed"
+        ],
+        "lastSeen": 1776510085579,
+        "firstSeen": 1765358379751,
+        "isBlocked": false,
+        "moves": [
+          8,
+          3,
+          2
+        ]
+      },
+      "8-3": {
+        "count": 2,
+        "players": [
+          "Blessed"
+        ],
+        "lastSeen": 1776510085579,
+        "firstSeen": 1765358379751,
+        "isBlocked": false,
+        "moves": [
+          8,
+          3
+        ]
+      },
+      "0-8-6-1-5": {
+        "count": 2,
+        "players": [
+          "Blessed"
+        ],
+        "lastSeen": 1776510085579,
+        "firstSeen": 1765358399905,
+        "isBlocked": false,
+        "moves": [
+          0,
+          8,
+          6,
+          1,
+          5
+        ]
+      },
+      "0-8": {
+        "count": 4,
+        "players": [
+          "Blessed",
+          "Fara",
+          "df"
+        ],
+        "lastSeen": 1776510085579,
+        "firstSeen": 1765358399906,
+        "isBlocked": false,
+        "moves": [
+          0,
+          8
+        ]
+      },
+      "0-6-5-7-1": {
+        "count": 2,
+        "players": [
+          "sammy"
+        ],
+        "lastSeen": 1776510085579,
+        "firstSeen": 1766424745279,
+        "isBlocked": false,
+        "moves": [
+          0,
+          6,
+          5,
+          7,
+          1
+        ]
+      },
+      "4-6-1-8-5": {
+        "count": 4,
+        "players": [
+          "sammy",
+          "Fara"
+        ],
+        "lastSeen": 1776510085579,
+        "firstSeen": 1766424775813,
+        "isBlocked": false,
+        "moves": [
+          4,
+          6,
+          1,
+          8,
+          5
+        ]
+      },
+      "0-1-2": {
+        "count": 12,
+        "players": [
+          "Y",
+          "899",
+          "ATHENA",
+          "df"
+        ],
+        "lastSeen": 1776510085579,
+        "firstSeen": 1766424808164,
+        "isBlocked": false,
+        "moves": [
+          0,
+          1,
+          2
+        ]
+      },
+      "1-2-6": {
+        "count": 9,
+        "players": [
+          "hmmm",
+          "sammy",
+          "Am good"
+        ],
+        "lastSeen": 1776510085579,
+        "firstSeen": 1766653142199,
+        "isBlocked": false,
+        "moves": [
+          1,
+          2,
+          6
+        ]
+      },
+      "4-1-6-5-0": {
+        "count": 2,
+        "players": [
+          "hmmm"
+        ],
+        "lastSeen": 1776510085579,
+        "firstSeen": 1766653157317,
+        "isBlocked": false,
+        "moves": [
+          4,
+          1,
+          6,
+          5,
+          0
+        ]
+      },
+      "4-1": {
+        "count": 7,
+        "players": [
+          "hmmm",
+          "sammy",
+          "Am good"
+        ],
+        "lastSeen": 1776510085579,
+        "firstSeen": 1766653157319,
+        "isBlocked": false,
+        "moves": [
+          4,
+          1
+        ]
+      },
+      "1-0-6": {
+        "count": 4,
+        "players": [
+          "hmmm",
+          "Sarah"
+        ],
+        "lastSeen": 1776510085579,
+        "firstSeen": 1766653358822,
+        "isBlocked": false,
+        "moves": [
+          1,
+          0,
+          6
+        ]
+      },
+      "1-0-6-5-7": {
+        "count": 4,
+        "players": [
+          "hmmm"
+        ],
+        "lastSeen": 1776510085579,
+        "firstSeen": 1766653367580,
+        "isBlocked": false,
+        "moves": [
+          1,
+          0,
+          6,
+          5,
+          7
+        ]
+      },
+      "0-6-5-1-7": {
+        "count": 4,
+        "players": [
+          "hmmm"
+        ],
+        "lastSeen": 1776510085579,
+        "firstSeen": 1766678835116,
+        "isBlocked": false,
+        "moves": [
+          0,
+          6,
+          5,
+          1,
+          7
+        ]
+      },
+      "0-1-5-2": {
+        "count": 3,
+        "players": [
+          "899"
+        ],
+        "lastSeen": 1776510085579,
+        "firstSeen": 1767635461564,
+        "isBlocked": false,
+        "moves": [
+          0,
+          1,
+          5,
+          2
+        ]
+      },
+      "0-6-1": {
+        "count": 6,
+        "players": [
+          "sammy"
+        ],
+        "lastSeen": 1776510085580,
+        "firstSeen": 1767642717533,
+        "isBlocked": false,
+        "moves": [
+          0,
+          6,
+          1
+        ]
+      },
+      "4-2-5-8": {
+        "count": 3,
+        "players": [
+          "sammy"
+        ],
+        "lastSeen": 1776510085580,
+        "firstSeen": 1767642731424,
+        "isBlocked": false,
+        "moves": [
+          4,
+          2,
+          5,
+          8
+        ]
+      },
+      "2-5-1": {
+        "count": 4,
+        "players": [
+          "sammy",
+          "Gift"
+        ],
+        "lastSeen": 1776510085580,
+        "firstSeen": 1767642750173,
+        "isBlocked": false,
+        "moves": [
+          2,
+          5,
+          1
+        ]
+      },
+      "0-1-7": {
+        "count": 4,
+        "players": [
+          "Sarah",
+          "Am good"
+        ],
+        "lastSeen": 1776510085580,
+        "firstSeen": 1767642821372,
+        "isBlocked": false,
+        "moves": [
+          0,
+          1,
+          7
+        ]
+      },
+      "0-1-5": {
+        "count": 1,
+        "players": [
+          "Sarah"
+        ],
+        "lastSeen": 1776510085580,
+        "firstSeen": 1767642829932,
+        "isBlocked": false,
+        "moves": [
+          0,
+          1,
+          5
+        ]
+      },
+      "1-0-6-8": {
+        "count": 6,
+        "players": [
+          "hmmm",
+          "wio"
+        ],
+        "lastSeen": 1777650161033,
+        "firstSeen": 1767645035126,
+        "isBlocked": false,
+        "moves": [
+          1,
+          0,
+          6,
+          8
+        ]
+      },
+      "4-1-2-5": {
+        "count": 1,
+        "players": [
+          "sammy"
+        ],
+        "lastSeen": 1776510085580,
+        "firstSeen": 1767660835775,
+        "isBlocked": false,
+        "moves": [
+          4,
+          1,
+          2,
+          5
+        ]
+      },
+      "2-7-5": {
+        "count": 3,
+        "players": [
+          "sammy"
+        ],
+        "lastSeen": 1776510085580,
+        "firstSeen": 1767660874753,
+        "isBlocked": false,
+        "moves": [
+          2,
+          7,
+          5
+        ]
+      },
+      "2-7": {
+        "count": 2,
+        "players": [
+          "sammy",
+          "Fara"
+        ],
+        "lastSeen": 1776510085580,
+        "firstSeen": 1767660874753,
+        "isBlocked": false,
+        "moves": [
+          2,
+          7
+        ]
+      },
+      "0-1-5-7-6": {
+        "count": 2,
+        "players": [
+          "sammy"
+        ],
+        "lastSeen": 1776510085580,
+        "firstSeen": 1767666741385,
+        "isBlocked": false,
+        "moves": [
+          0,
+          1,
+          5,
+          7,
+          6
+        ]
+      },
+      "4-0-7-2-8": {
+        "count": 3,
+        "players": [
+          "sammy"
+        ],
+        "lastSeen": 1776510085580,
+        "firstSeen": 1767666762047,
+        "isBlocked": false,
+        "moves": [
+          4,
+          0,
+          7,
+          2,
+          8
+        ]
+      },
+      "4-0": {
+        "count": 12,
+        "players": [
+          "sammy",
+          "Shekinah",
+          "hmmm",
+          "Fara",
+          "df",
+          "Praise-el",
+          "wio"
+        ],
+        "lastSeen": 1777650182804,
+        "firstSeen": 1767666762048,
+        "isBlocked": false,
+        "moves": [
+          4,
+          0
+        ]
+      },
+      "0-6-2-4": {
+        "count": 9,
+        "players": [
+          "May",
+          "df",
+          "Gift"
+        ],
+        "lastSeen": 1776510085580,
+        "firstSeen": 1767704755214,
+        "isBlocked": false,
+        "moves": [
+          0,
+          6,
+          2,
+          4
+        ]
+      },
+      "8-6-2-4": {
+        "count": 3,
+        "players": [
+          "May"
+        ],
+        "lastSeen": 1776510085580,
+        "firstSeen": 1767704794253,
+        "isBlocked": false,
+        "moves": [
+          8,
+          6,
+          2,
+          4
+        ]
+      },
+      "8-6": {
+        "count": 2,
+        "players": [
+          "May",
+          "df"
+        ],
+        "lastSeen": 1776510085580,
+        "firstSeen": 1767704794254,
+        "isBlocked": false,
+        "moves": [
+          8,
+          6
+        ]
+      },
+      "0-3-6": {
+        "count": 3,
+        "players": [
+          "May"
+        ],
+        "lastSeen": 1776510085580,
+        "firstSeen": 1767704806925,
+        "isBlocked": false,
+        "moves": [
+          0,
+          3,
+          6
+        ]
+      },
+      "0-2-3": {
+        "count": 6,
+        "players": [
+          "sammy"
+        ],
+        "lastSeen": 1776510085580,
+        "firstSeen": 1767705548303,
+        "isBlocked": false,
+        "moves": [
+          0,
+          2,
+          3
+        ]
+      },
+      "4-0-5-3": {
+        "count": 3,
+        "players": [
+          "Shekinah"
+        ],
+        "lastSeen": 1776510085580,
+        "firstSeen": 1767721412229,
+        "isBlocked": false,
+        "moves": [
+          4,
+          0,
+          5,
+          3
+        ]
+      },
+      "0-3-2": {
+        "count": 3,
+        "players": [
+          "Shekinah"
+        ],
+        "lastSeen": 1776510085580,
+        "firstSeen": 1767721441143,
+        "isBlocked": false,
+        "moves": [
+          0,
+          3,
+          2
+        ]
+      },
+      "1-0-6-5-8": {
+        "count": 2,
+        "players": [
+          "Shekinah"
+        ],
+        "lastSeen": 1776510085580,
+        "firstSeen": 1767721467327,
+        "isBlocked": false,
+        "moves": [
+          1,
+          0,
+          6,
+          5,
+          8
+        ]
+      },
+      "2-8-0-5": {
+        "count": 3,
+        "players": [
+          "sammy"
+        ],
+        "lastSeen": 1776510085580,
+        "firstSeen": 1767722008774,
+        "isBlocked": false,
+        "moves": [
+          2,
+          8,
+          0,
+          5
+        ]
+      },
+      "2-8": {
+        "count": 5,
+        "players": [
+          "sammy",
+          "hmmm",
+          "Jerry"
+        ],
+        "lastSeen": 1776510085580,
+        "firstSeen": 1767722008776,
+        "isBlocked": false,
+        "moves": [
+          2,
+          8
+        ]
+      },
+      "2-6-3-8-1": {
+        "count": 2,
+        "players": [
+          "sammy"
+        ],
+        "lastSeen": 1776510085580,
+        "firstSeen": 1767722211815,
+        "isBlocked": false,
+        "moves": [
+          2,
+          6,
+          3,
+          8,
+          1
+        ]
+      },
+      "2-8-3-1-7": {
+        "count": 2,
+        "players": [
+          "hmmm"
+        ],
+        "lastSeen": 1776510085580,
+        "firstSeen": 1767722289672,
+        "isBlocked": false,
+        "moves": [
+          2,
+          8,
+          3,
+          1,
+          7
+        ]
+      },
+      "2-8-0-1": {
+        "count": 3,
+        "players": [
+          "Jerry"
+        ],
+        "lastSeen": 1776510085580,
+        "firstSeen": 1767722373152,
+        "isBlocked": false,
+        "moves": [
+          2,
+          8,
+          0,
+          1
+        ]
+      },
+      "4-5-0-8": {
+        "count": 3,
+        "players": [
+          "Jerry"
+        ],
+        "lastSeen": 1776510085580,
+        "firstSeen": 1767722425358,
+        "isBlocked": false,
+        "moves": [
+          4,
+          5,
+          0,
+          8
+        ]
+      },
+      "4-5": {
+        "count": 1,
+        "players": [
+          "Jerry"
+        ],
+        "lastSeen": 1776510085580,
+        "firstSeen": 1767722425360,
+        "isBlocked": false,
+        "moves": [
+          4,
+          5
+        ]
+      },
+      "2-8-5": {
+        "count": 3,
+        "players": [
+          "hmmm"
+        ],
+        "lastSeen": 1776510085580,
+        "firstSeen": 1767722522897,
+        "isBlocked": false,
+        "moves": [
+          2,
+          8,
+          5
+        ]
+      },
+      "1-4-2": {
+        "count": 3,
+        "players": [
+          "ATHENA"
+        ],
+        "lastSeen": 1776510085580,
+        "firstSeen": 1767722594039,
+        "isBlocked": false,
+        "moves": [
+          1,
+          4,
+          2
+        ]
+      },
+      "1-4": {
+        "count": 5,
+        "players": [
+          "ATHENA",
+          "hmmm",
+          "Praise-el",
+          "wio"
+        ],
+        "lastSeen": 1777650220807,
+        "firstSeen": 1767722594040,
+        "isBlocked": false,
+        "moves": [
+          1,
+          4
+        ]
+      },
+      "2-1-5": {
+        "count": 3,
+        "players": [
+          "KL"
+        ],
+        "lastSeen": 1776510085580,
+        "firstSeen": 1767722637050,
+        "isBlocked": false,
+        "moves": [
+          2,
+          1,
+          5
+        ]
+      },
+      "0-6-3": {
+        "count": 9,
+        "players": [
+          "Am good",
+          "sammy"
+        ],
+        "lastSeen": 1776510085580,
+        "firstSeen": 1767722933916,
+        "isBlocked": false,
+        "moves": [
+          0,
+          6,
+          3
+        ]
+      },
+      "1-3-8-2-5": {
+        "count": 3,
+        "players": [
+          "sammy"
+        ],
+        "lastSeen": 1776510085580,
+        "firstSeen": 1767749884979,
+        "isBlocked": false,
+        "moves": [
+          1,
+          3,
+          8,
+          2,
+          5
+        ]
+      },
+      "4-0-8": {
+        "count": 3,
+        "players": [
+          "sammy"
+        ],
+        "lastSeen": 1776510085580,
+        "firstSeen": 1767750275349,
+        "isBlocked": false,
+        "moves": [
+          4,
+          0,
+          8
+        ]
+      },
+      "0-6-2-1": {
+        "count": 9,
+        "players": [
+          "sammy",
+          "naynker",
+          "df"
+        ],
+        "lastSeen": 1776510085580,
+        "firstSeen": 1767750287819,
+        "isBlocked": false,
+        "moves": [
+          0,
+          6,
+          2,
+          1
+        ]
+      },
+      "0-6-2-7-5": {
+        "count": 2,
+        "players": [
+          "sammy"
+        ],
+        "lastSeen": 1776510085580,
+        "firstSeen": 1767750931614,
+        "isBlocked": false,
+        "moves": [
+          0,
+          6,
+          2,
+          7,
+          5
+        ]
+      },
+      "0-2-6-5": {
+        "count": 3,
+        "players": [
+          "sammy"
+        ],
+        "lastSeen": 1776510085580,
+        "firstSeen": 1767750944079,
+        "isBlocked": false,
+        "moves": [
+          0,
+          2,
+          6,
+          5
+        ]
+      },
+      "0-2-5": {
+        "count": 6,
+        "players": [
+          "sammy"
+        ],
+        "lastSeen": 1776510085580,
+        "firstSeen": 1767750974676,
+        "isBlocked": false,
+        "moves": [
+          0,
+          2,
+          5
+        ]
+      },
+      "0-2-6-7-5": {
+        "count": 2,
+        "players": [
+          "sammy"
+        ],
+        "lastSeen": 1776510085580,
+        "firstSeen": 1767750988161,
+        "isBlocked": false,
+        "moves": [
+          0,
+          2,
+          6,
+          7,
+          5
+        ]
+      },
+      "8-0": {
+        "count": 5,
+        "players": [
+          "sammy",
+          "Skol",
+          "hmmm",
+          "df"
+        ],
+        "lastSeen": 1776510085580,
+        "firstSeen": 1767751005246,
+        "isBlocked": false,
+        "moves": [
+          8,
+          0
+        ]
+      },
+      "0-6-7-2": {
+        "count": 3,
+        "players": [
+          "sammy"
+        ],
+        "lastSeen": 1776510085580,
+        "firstSeen": 1767753008105,
+        "isBlocked": false,
+        "moves": [
+          0,
+          6,
+          7,
+          2
+        ]
+      },
+      "2-0-5-3": {
+        "count": 3,
+        "players": [
+          "sammy"
+        ],
+        "lastSeen": 1776510085580,
+        "firstSeen": 1767753045639,
+        "isBlocked": false,
+        "moves": [
+          2,
+          0,
+          5,
+          3
+        ]
+      },
+      "1-0-5": {
+        "count": 6,
+        "players": [
+          "hmmm"
+        ],
+        "lastSeen": 1776510085580,
+        "firstSeen": 1767754179811,
+        "isBlocked": false,
+        "moves": [
+          1,
+          0,
+          5
+        ]
+      },
+      "2-1-4-3-8": {
+        "count": 2,
+        "players": [
+          "hmmm"
+        ],
+        "lastSeen": 1776510085580,
+        "firstSeen": 1767754202748,
+        "isBlocked": false,
+        "moves": [
+          2,
+          1,
+          4,
+          3,
+          8
+        ]
+      },
+      "2-0-3": {
+        "count": 6,
+        "players": [
+          "Am good",
+          "sammy"
+        ],
+        "lastSeen": 1776510085580,
+        "firstSeen": 1767755281875,
+        "isBlocked": false,
+        "moves": [
+          2,
+          0,
+          3
+        ]
+      },
+      "0-2-3-5": {
+        "count": 3,
+        "players": [
+          "hmmm"
+        ],
+        "lastSeen": 1776510085580,
+        "firstSeen": 1767761992725,
+        "isBlocked": false,
+        "moves": [
+          0,
+          2,
+          3,
+          5
+        ]
+      },
+      "0-7-5": {
+        "count": 1,
+        "players": [
+          "sammy"
+        ],
+        "lastSeen": 1776510085580,
+        "firstSeen": 1767783179532,
+        "isBlocked": false,
+        "moves": [
+          0,
+          7,
+          5
+        ]
+      },
+      "4-0-6": {
+        "count": 4,
+        "players": [
+          "sammy",
+          "df"
+        ],
+        "lastSeen": 1776510085580,
+        "firstSeen": 1767786499237,
+        "isBlocked": false,
+        "moves": [
+          4,
+          0,
+          6
+        ]
+      },
+      "0-4": {
+        "count": 8,
+        "players": [
+          "sammy",
+          "Am good",
+          "Skol",
+          "Fara",
+          "hmmm",
+          "Gift"
+        ],
+        "lastSeen": 1776510085580,
+        "firstSeen": 1767790696524,
+        "isBlocked": false,
+        "moves": [
+          0,
+          4
+        ]
+      },
+      "3-5-1": {
+        "count": 3,
+        "players": [
+          "sammy"
+        ],
+        "lastSeen": 1776510085580,
+        "firstSeen": 1767790747060,
+        "isBlocked": false,
+        "moves": [
+          3,
+          5,
+          1
+        ]
+      },
+      "3-5": {
+        "count": 1,
+        "players": [
+          "sammy"
+        ],
+        "lastSeen": 1776510085580,
+        "firstSeen": 1767790747060,
+        "isBlocked": false,
+        "moves": [
+          3,
+          5
+        ]
+      },
+      "7-1": {
+        "count": 2,
+        "players": [
+          "Am good"
+        ],
+        "lastSeen": 1776510085580,
+        "firstSeen": 1767790817576,
+        "isBlocked": false,
+        "moves": [
+          7,
+          1
+        ]
+      },
+      "0-4-5-7-6": {
+        "count": 2,
+        "players": [
+          "Am good"
+        ],
+        "lastSeen": 1776510085580,
+        "firstSeen": 1767790828572,
+        "isBlocked": false,
+        "moves": [
+          0,
+          4,
+          5,
+          7,
+          6
+        ]
+      },
+      "2-3": {
+        "count": 2,
+        "players": [
+          "sammy",
+          "Praise-el"
+        ],
+        "lastSeen": 1776517371882,
+        "firstSeen": 1767814750200,
+        "isBlocked": false,
+        "moves": [
+          2,
+          3
+        ]
+      },
+      "4-1-6-5-8": {
+        "count": 2,
+        "players": [
+          "sammy"
+        ],
+        "lastSeen": 1776510085580,
+        "firstSeen": 1767814759884,
+        "isBlocked": false,
+        "moves": [
+          4,
+          1,
+          6,
+          5,
+          8
+        ]
+      },
+      "0-6-7": {
+        "count": 1,
+        "players": [
+          "sammy"
+        ],
+        "lastSeen": 1776510085580,
+        "firstSeen": 1767814767914,
+        "isBlocked": false,
+        "moves": [
+          0,
+          6,
+          7
+        ]
+      },
+      "0-1-4": {
+        "count": 6,
+        "players": [
+          "ATHENA"
+        ],
+        "lastSeen": 1776510085580,
+        "firstSeen": 1767815300301,
+        "isBlocked": false,
+        "moves": [
+          0,
+          1,
+          4
+        ]
+      },
+      "1-5": {
+        "count": 1,
+        "players": [
+          "ATHENA"
+        ],
+        "lastSeen": 1776510085580,
+        "firstSeen": 1767815310312,
+        "isBlocked": false,
+        "moves": [
+          1,
+          5
+        ]
+      },
+      "1-5-8": {
+        "count": 1,
+        "players": [
+          "ATHENA"
+        ],
+        "lastSeen": 1776510085580,
+        "firstSeen": 1767815310314,
+        "isBlocked": false,
+        "moves": [
+          1,
+          5,
+          8
+        ]
+      },
+      "4-0-6-7": {
+        "count": 1,
+        "players": [
+          "hmmm"
+        ],
+        "lastSeen": 1776510085580,
+        "firstSeen": 1767818097716,
+        "isBlocked": false,
+        "moves": [
+          4,
+          0,
+          6,
+          7
+        ]
+      },
+      "0-1-6-7": {
+        "count": 3,
+        "players": [
+          "hmmm"
+        ],
+        "lastSeen": 1776510085580,
+        "firstSeen": 1767824782829,
+        "isBlocked": false,
+        "moves": [
+          0,
+          1,
+          6,
+          7
+        ]
+      },
+      "1-2-8-6": {
+        "count": 1,
+        "players": [
+          "hmmm"
+        ],
+        "lastSeen": 1776510085580,
+        "firstSeen": 1767824802488,
+        "isBlocked": false,
+        "moves": [
+          1,
+          2,
+          8,
+          6
+        ]
+      },
+      "1-4-6-3": {
+        "count": 3,
+        "players": [
+          "hmmm"
+        ],
+        "lastSeen": 1776510085580,
+        "firstSeen": 1767826047170,
+        "isBlocked": false,
+        "moves": [
+          1,
+          4,
+          6,
+          3
+        ]
+      },
+      "4-6-8-5": {
+        "count": 1,
+        "players": [
+          "hmmm"
+        ],
+        "lastSeen": 1776510085580,
+        "firstSeen": 1767826100737,
+        "isBlocked": false,
+        "moves": [
+          4,
+          6,
+          8,
+          5
+        ]
+      },
+      "1-2-3-7": {
+        "count": 3,
+        "players": [
+          "sammy"
+        ],
+        "lastSeen": 1776510085580,
+        "firstSeen": 1767885577026,
+        "isBlocked": false,
+        "moves": [
+          1,
+          2,
+          3,
+          7
+        ]
+      },
+      "0-1-4-7": {
+        "count": 3,
+        "players": [
+          "hmmm"
+        ],
+        "lastSeen": 1776510085580,
+        "firstSeen": 1767887412916,
+        "isBlocked": false,
+        "moves": [
+          0,
+          1,
+          4,
+          7
+        ]
+      },
+      "6-2-8-7": {
+        "count": 3,
+        "players": [
+          "Skol"
+        ],
+        "lastSeen": 1776510085580,
+        "firstSeen": 1767907336282,
+        "isBlocked": false,
+        "moves": [
+          6,
+          2,
+          8,
+          7
+        ]
+      },
+      "6-2": {
+        "count": 3,
+        "players": [
+          "Skol",
+          "hmmm",
+          "df"
+        ],
+        "lastSeen": 1776510085580,
+        "firstSeen": 1767907336284,
+        "isBlocked": false,
+        "moves": [
+          6,
+          2
+        ]
+      },
+      "0-4-2-1": {
+        "count": 6,
+        "players": [
+          "Skol",
+          "Fara"
+        ],
+        "lastSeen": 1776510085580,
+        "firstSeen": 1767907374730,
+        "isBlocked": false,
+        "moves": [
+          0,
+          4,
+          2,
+          1
+        ]
+      },
+      "0-1-4-5": {
+        "count": 3,
+        "players": [
+          "hmmm"
+        ],
+        "lastSeen": 1776510085580,
+        "firstSeen": 1767907797495,
+        "isBlocked": false,
+        "moves": [
+          0,
+          1,
+          4,
+          5
+        ]
+      },
+      "2-6-1-8-3": {
+        "count": 2,
+        "players": [
+          "Andrew"
+        ],
+        "lastSeen": 1776510085580,
+        "firstSeen": 1767908042809,
+        "isBlocked": false,
+        "moves": [
+          2,
+          6,
+          1,
+          8,
+          3
+        ]
+      },
+      "4-8-3-2-7": {
+        "count": 2,
+        "players": [
+          "Cherem"
+        ],
+        "lastSeen": 1776510085580,
+        "firstSeen": 1767911446079,
+        "isBlocked": false,
+        "moves": [
+          4,
+          8,
+          3,
+          2,
+          7
+        ]
+      },
+      "4-8": {
+        "count": 3,
+        "players": [
+          "Cherem",
+          "Fara",
+          "Gift"
+        ],
+        "lastSeen": 1776510085580,
+        "firstSeen": 1767911446090,
+        "isBlocked": false,
+        "moves": [
+          4,
+          8
+        ]
+      },
+      "0-6-8": {
+        "count": 3,
+        "players": [
+          "naynker"
+        ],
+        "lastSeen": 1776510085580,
+        "firstSeen": 1767994960643,
+        "isBlocked": false,
+        "moves": [
+          0,
+          6,
+          8
+        ]
+      },
+      "1-0-6-8-5": {
+        "count": 2,
+        "players": [
+          "naynker"
+        ],
+        "lastSeen": 1776510085580,
+        "firstSeen": 1767994973587,
+        "isBlocked": false,
+        "moves": [
+          1,
+          0,
+          6,
+          8,
+          5
+        ]
+      },
+      "4-8-3": {
+        "count": 3,
+        "players": [
+          "Fara"
+        ],
+        "lastSeen": 1776510085580,
+        "firstSeen": 1767995435748,
+        "isBlocked": false,
+        "moves": [
+          4,
+          8,
+          3
+        ]
+      },
+      "0-3-2-7": {
+        "count": 2,
+        "players": [
+          "Fara",
+          "df"
+        ],
+        "lastSeen": 1776510085580,
+        "firstSeen": 1767995471098,
+        "isBlocked": false,
+        "moves": [
+          0,
+          3,
+          2,
+          7
+        ]
+      },
+      "4-0-6-2": {
+        "count": 3,
+        "players": [
+          "Fara"
+        ],
+        "lastSeen": 1776510085580,
+        "firstSeen": 1767995483507,
+        "isBlocked": false,
+        "moves": [
+          4,
+          0,
+          6,
+          2
+        ]
+      },
+      "0-5-7-2-8": {
+        "count": 3,
+        "players": [
+          "Fara"
+        ],
+        "lastSeen": 1776510085580,
+        "firstSeen": 1767995503124,
+        "isBlocked": false,
+        "moves": [
+          0,
+          5,
+          7,
+          2,
+          8
+        ]
+      },
+      "4-6-1-5-8": {
+        "count": 4,
+        "players": [
+          "Fara",
+          "Gift"
+        ],
+        "lastSeen": 1776510085580,
+        "firstSeen": 1767995519166,
+        "isBlocked": false,
+        "moves": [
+          4,
+          6,
+          1,
+          5,
+          8
+        ]
+      },
+      "6-1": {
+        "count": 2,
+        "players": [
+          "Fara",
+          "Gift",
+          "Praise-el"
+        ],
+        "lastSeen": 1776517254904,
+        "firstSeen": 1767995532382,
+        "isBlocked": false,
+        "moves": [
+          6,
+          1
+        ]
+      },
+      "6-1-5-2": {
+        "count": 1,
+        "players": [
+          "Fara"
+        ],
+        "lastSeen": 1776510085580,
+        "firstSeen": 1767995532383,
+        "isBlocked": false,
+        "moves": [
+          6,
+          1,
+          5,
+          2
+        ]
+      },
+      "2-7-5-0": {
+        "count": 1,
+        "players": [
+          "Fara"
+        ],
+        "lastSeen": 1776510085580,
+        "firstSeen": 1767995557872,
+        "isBlocked": false,
+        "moves": [
+          2,
+          7,
+          5,
+          0
+        ]
+      },
+      "4-2-0-7-5": {
+        "count": 2,
+        "players": [
+          "Fara"
+        ],
+        "lastSeen": 1776510085580,
+        "firstSeen": 1767995570645,
+        "isBlocked": false,
+        "moves": [
+          4,
+          2,
+          0,
+          7,
+          5
+        ]
+      },
+      "2-1-8-3": {
+        "count": 2,
+        "players": [
+          "Fara",
+          "Gift"
+        ],
+        "lastSeen": 1776510085580,
+        "firstSeen": 1767995583291,
+        "isBlocked": false,
+        "moves": [
+          2,
+          1,
+          8,
+          3
+        ]
+      },
+      "4-2-3-8-1": {
+        "count": 2,
+        "players": [
+          "Fara"
+        ],
+        "lastSeen": 1776510085580,
+        "firstSeen": 1767995598222,
+        "isBlocked": false,
+        "moves": [
+          4,
+          2,
+          3,
+          8,
+          1
+        ]
+      },
+      "4-6-5-0": {
+        "count": 1,
+        "players": [
+          "Fara"
+        ],
+        "lastSeen": 1776510085580,
+        "firstSeen": 1767995612209,
+        "isBlocked": false,
+        "moves": [
+          4,
+          6,
+          5,
+          0
+        ]
+      },
+      "4-0-7-2-5": {
+        "count": 2,
+        "players": [
+          "Fara"
+        ],
+        "lastSeen": 1776510085580,
+        "firstSeen": 1767995627078,
+        "isBlocked": false,
+        "moves": [
+          4,
+          0,
+          7,
+          2,
+          5
+        ]
+      },
+      "2-0-7-3": {
+        "count": 2,
+        "players": [
+          "Fara",
+          "df"
+        ],
+        "lastSeen": 1776510085580,
+        "firstSeen": 1767995643653,
+        "isBlocked": false,
+        "moves": [
+          2,
+          0,
+          7,
+          3
+        ]
+      },
+      "4-2-8": {
+        "count": 1,
+        "players": [
+          "Fara"
+        ],
+        "lastSeen": 1776510085580,
+        "firstSeen": 1767995663799,
+        "isBlocked": false,
+        "moves": [
+          4,
+          2,
+          8
+        ]
+      },
+      "0-5-6-1": {
+        "count": 1,
+        "players": [
+          "Fara"
+        ],
+        "lastSeen": 1776510085580,
+        "firstSeen": 1767995697401,
+        "isBlocked": false,
+        "moves": [
+          0,
+          5,
+          6,
+          1
+        ]
+      },
+      "0-2-8-5": {
+        "count": 3,
+        "players": [
+          "Fara"
+        ],
+        "lastSeen": 1776510085580,
+        "firstSeen": 1767995711230,
+        "isBlocked": false,
+        "moves": [
+          0,
+          2,
+          8,
+          5
+        ]
+      },
+      "0-2-7-5": {
+        "count": 2,
+        "players": [
+          "Fara",
+          "wio"
+        ],
+        "lastSeen": 1777650173564,
+        "firstSeen": 1767995724981,
+        "isBlocked": false,
+        "moves": [
+          0,
+          2,
+          7,
+          5
+        ]
+      },
+      "4-0-2-3": {
+        "count": 3,
+        "players": [
+          "Fara"
+        ],
+        "lastSeen": 1776510085580,
+        "firstSeen": 1767995776614,
+        "isBlocked": false,
+        "moves": [
+          4,
+          0,
+          2,
+          3
+        ]
+      },
+      "0-3-2-7-4": {
+        "count": 2,
+        "players": [
+          "Fara"
+        ],
+        "lastSeen": 1776510085580,
+        "firstSeen": 1767995797579,
+        "isBlocked": false,
+        "moves": [
+          0,
+          3,
+          2,
+          7,
+          4
+        ]
+      },
+      "0-2-7-3": {
+        "count": 1,
+        "players": [
+          "Fara"
+        ],
+        "lastSeen": 1776510085580,
+        "firstSeen": 1767995816510,
+        "isBlocked": false,
+        "moves": [
+          0,
+          2,
+          7,
+          3
+        ]
+      },
+      "0-8-6-7": {
+        "count": 3,
+        "players": [
+          "Fara"
+        ],
+        "lastSeen": 1776510085580,
+        "firstSeen": 1767995832499,
+        "isBlocked": false,
+        "moves": [
+          0,
+          8,
+          6,
+          7
+        ]
+      },
+      "0-1-6-5": {
+        "count": 2,
+        "players": [
+          "Fara",
+          "Gift"
+        ],
+        "lastSeen": 1776510085580,
+        "firstSeen": 1767995855376,
+        "isBlocked": false,
+        "moves": [
+          0,
+          1,
+          6,
+          5
+        ]
+      },
+      "0-8-5-6-1": {
+        "count": 4,
+        "players": [
+          "Fara",
+          "df"
+        ],
+        "lastSeen": 1776510085580,
+        "firstSeen": 1767995872415,
+        "isBlocked": false,
+        "moves": [
+          0,
+          8,
+          5,
+          6,
+          1
+        ]
+      },
+      "0-4-6-2": {
+        "count": 3,
+        "players": [
+          "hmmm"
+        ],
+        "lastSeen": 1776510085580,
+        "firstSeen": 1768046836899,
+        "isBlocked": false,
+        "moves": [
+          0,
+          4,
+          6,
+          2
+        ]
+      },
+      "1-3-5-2": {
+        "count": 1,
+        "players": [
+          "hmmm"
+        ],
+        "lastSeen": 1776510085580,
+        "firstSeen": 1768050512593,
+        "isBlocked": false,
+        "moves": [
+          1,
+          3,
+          5,
+          2
+        ]
+      },
+      "0-1-6-5-8": {
+        "count": 4,
+        "players": [
+          "sammy",
+          "df"
+        ],
+        "lastSeen": 1776510085580,
+        "firstSeen": 1768053384629,
+        "isBlocked": false,
+        "moves": [
+          0,
+          1,
+          6,
+          5,
+          8
+        ]
+      },
+      "4-0-7": {
+        "count": 3,
+        "players": [
+          "sammy"
+        ],
+        "lastSeen": 1776510085580,
+        "firstSeen": 1768053400908,
+        "isBlocked": false,
+        "moves": [
+          4,
+          0,
+          7
+        ]
+      },
+      "0-1-4-8": {
+        "count": 3,
+        "players": [
+          "ATHENA"
+        ],
+        "lastSeen": 1776510085580,
+        "firstSeen": 1768053699356,
+        "isBlocked": false,
+        "moves": [
+          0,
+          1,
+          4,
+          8
+        ]
+      },
+      "0-5-2-6": {
+        "count": 1,
+        "players": [
+          "ATHENA"
+        ],
+        "lastSeen": 1776510085580,
+        "firstSeen": 1768053716866,
+        "isBlocked": false,
+        "moves": [
+          0,
+          5,
+          2,
+          6
+        ]
+      },
+      "1-0-7-6": {
+        "count": 3,
+        "players": [
+          "ATHENA"
+        ],
+        "lastSeen": 1776510085580,
+        "firstSeen": 1768053732219,
+        "isBlocked": false,
+        "moves": [
+          1,
+          0,
+          7,
+          6
+        ]
+      },
+      "1-4-6-5-0": {
+        "count": 2,
+        "players": [
+          "ATHENA"
+        ],
+        "lastSeen": 1776510085580,
+        "firstSeen": 1768054745761,
+        "isBlocked": false,
+        "moves": [
+          1,
+          4,
+          6,
+          5,
+          0
+        ]
+      },
+      "1-0-4-8": {
+        "count": 3,
+        "players": [
+          "ATHENA"
+        ],
+        "lastSeen": 1776510085580,
+        "firstSeen": 1768054765722,
+        "isBlocked": false,
+        "moves": [
+          1,
+          0,
+          4,
+          8
+        ]
+      },
+      "2-0-7-2": {
+        "count": 3,
+        "players": [
+          "sammy"
+        ],
+        "lastSeen": 1776510085580,
+        "firstSeen": 1768055816965,
+        "isBlocked": false,
+        "moves": [
+          2,
+          0,
+          7,
+          2
+        ]
+      },
+      "2-0-3-4": {
+        "count": 3,
+        "players": [
+          "william"
+        ],
+        "lastSeen": 1776510085580,
+        "firstSeen": 1768056454980,
+        "isBlocked": false,
+        "moves": [
+          2,
+          0,
+          3,
+          4
+        ]
+      },
+      "0-6-5-7-2": {
+        "count": 3,
+        "players": [
+          "Am good"
+        ],
+        "lastSeen": 1776510085580,
+        "firstSeen": 1768056455015,
+        "isBlocked": false,
+        "moves": [
+          0,
+          6,
+          5,
+          7,
+          2
+        ]
+      },
+      "0-6-8-4": {
+        "count": 3,
+        "players": [
+          "hmmm"
+        ],
+        "lastSeen": 1776510085580,
+        "firstSeen": 1768056600937,
+        "isBlocked": false,
+        "moves": [
+          0,
+          6,
+          8,
+          4
+        ]
+      },
+      "6-7": {
+        "count": 2,
+        "players": [
+          "hmmm"
+        ],
+        "lastSeen": 1776510085580,
+        "firstSeen": 1768056622381,
+        "isBlocked": false,
+        "moves": [
+          6,
+          7
+        ]
+      },
+      "6-7-0-5": {
+        "count": 2,
+        "players": [
+          "hmmm"
+        ],
+        "lastSeen": 1776510085580,
+        "firstSeen": 1768056622384,
+        "isBlocked": false,
+        "moves": [
+          6,
+          7,
+          0,
+          5
+        ]
+      },
+      "6-2-0-1": {
+        "count": 3,
+        "players": [
+          "hmmm"
+        ],
+        "lastSeen": 1776510085580,
+        "firstSeen": 1768056646821,
+        "isBlocked": false,
+        "moves": [
+          6,
+          2,
+          0,
+          1
+        ]
+      },
+      "4-2-3-8": {
+        "count": 1,
+        "players": [
+          "hmmm"
+        ],
+        "lastSeen": 1776510085580,
+        "firstSeen": 1768056676287,
+        "isBlocked": false,
+        "moves": [
+          4,
+          2,
+          3,
+          8
+        ]
+      },
+      "8-0-2-5": {
+        "count": 3,
+        "players": [
+          "hmmm"
+        ],
+        "lastSeen": 1776510085580,
+        "firstSeen": 1768056706559,
+        "isBlocked": false,
+        "moves": [
+          8,
+          0,
+          2,
+          5
+        ]
+      },
+      "4-6-0": {
+        "count": 3,
+        "players": [
+          "hmmm"
+        ],
+        "lastSeen": 1776510085580,
+        "firstSeen": 1768056760154,
+        "isBlocked": false,
+        "moves": [
+          4,
+          6,
+          0
+        ]
+      },
+      "0-7-5-2": {
+        "count": 2,
+        "players": [
+          "hmmm"
+        ],
+        "lastSeen": 1776510085580,
+        "firstSeen": 1768056840800,
+        "isBlocked": false,
+        "moves": [
+          0,
+          7,
+          5,
+          2
+        ]
+      },
+      "8-4-6-7": {
+        "count": 3,
+        "players": [
+          "hmmm"
+        ],
+        "lastSeen": 1776510085580,
+        "firstSeen": 1768056863150,
+        "isBlocked": false,
+        "moves": [
+          8,
+          4,
+          6,
+          7
+        ]
+      },
+      "8-4": {
+        "count": 3,
+        "players": [
+          "hmmm",
+          "df"
+        ],
+        "lastSeen": 1776510085580,
+        "firstSeen": 1768056863152,
+        "isBlocked": false,
+        "moves": [
+          8,
+          4
+        ]
+      },
+      "8-2": {
+        "count": 1,
+        "players": [
+          "hmmm"
+        ],
+        "lastSeen": 1776510085580,
+        "firstSeen": 1768056887897,
+        "isBlocked": false,
+        "moves": [
+          8,
+          2
+        ]
+      },
+      "8-2-3-7": {
+        "count": 1,
+        "players": [
+          "hmmm"
+        ],
+        "lastSeen": 1776510085580,
+        "firstSeen": 1768056887899,
+        "isBlocked": false,
+        "moves": [
+          8,
+          2,
+          3,
+          7
+        ]
+      },
+      "4-0-6-3": {
+        "count": 3,
+        "players": [
+          "hmmm"
+        ],
+        "lastSeen": 1776510085580,
+        "firstSeen": 1768056938270,
+        "isBlocked": false,
+        "moves": [
+          4,
+          0,
+          6,
+          3
+        ]
+      },
+      "8-4-3": {
+        "count": 3,
+        "players": [
+          "hmmm"
+        ],
+        "lastSeen": 1776510085580,
+        "firstSeen": 1768056983279,
+        "isBlocked": false,
+        "moves": [
+          8,
+          4,
+          3
+        ]
+      },
+      "0-6-4-2": {
+        "count": 3,
+        "players": [
+          "hmmm"
+        ],
+        "lastSeen": 1776510085580,
+        "firstSeen": 1768057004627,
+        "isBlocked": false,
+        "moves": [
+          0,
+          6,
+          4,
+          2
+        ]
+      },
+      "2-8-3-1": {
+        "count": 1,
+        "players": [
+          "hmmm"
+        ],
+        "lastSeen": 1776510085580,
+        "firstSeen": 1768057035056,
+        "isBlocked": false,
+        "moves": [
+          2,
+          8,
+          3,
+          1
+        ]
+      },
+      "2-0-4-6": {
+        "count": 3,
+        "players": [
+          "hmmm"
+        ],
+        "lastSeen": 1776510085580,
+        "firstSeen": 1768057057999,
+        "isBlocked": false,
+        "moves": [
+          2,
+          0,
+          4,
+          6
+        ]
+      },
+      "8-1": {
+        "count": 1,
+        "players": [
+          "hmmm"
+        ],
+        "lastSeen": 1776510085580,
+        "firstSeen": 1768057095306,
+        "isBlocked": false,
+        "moves": [
+          8,
+          1
+        ]
+      },
+      "8-1-2-3": {
+        "count": 1,
+        "players": [
+          "hmmm"
+        ],
+        "lastSeen": 1776510085580,
+        "firstSeen": 1768057095308,
+        "isBlocked": false,
+        "moves": [
+          8,
+          1,
+          2,
+          3
+        ]
+      },
+      "2-0-6": {
+        "count": 3,
+        "players": [
+          "df"
+        ],
+        "lastSeen": 1776510085580,
+        "firstSeen": 1768527473143,
+        "isBlocked": false,
+        "moves": [
+          2,
+          0,
+          6
+        ]
+      },
+      "1-4-0-6": {
+        "count": 3,
+        "players": [
+          "hmmm"
+        ],
+        "lastSeen": 1776510085580,
+        "firstSeen": 1768995770474,
+        "isBlocked": false,
+        "moves": [
+          1,
+          4,
+          0,
+          6
+        ]
+      },
+      "4-1-6-0": {
+        "count": 3,
+        "players": [
+          "hmmm"
+        ],
+        "lastSeen": 1776510085580,
+        "firstSeen": 1768995780961,
+        "isBlocked": false,
+        "moves": [
+          4,
+          1,
+          6,
+          0
+        ]
+      },
+      "3-0-4-2": {
+        "count": 3,
+        "players": [
+          "df"
+        ],
+        "lastSeen": 1776510085580,
+        "firstSeen": 1769000073521,
+        "isBlocked": false,
+        "moves": [
+          3,
+          0,
+          4,
+          2
+        ]
+      },
+      "3-0": {
+        "count": 1,
+        "players": [
+          "df"
+        ],
+        "lastSeen": 1776510085580,
+        "firstSeen": 1769000073525,
+        "isBlocked": false,
+        "moves": [
+          3,
+          0
+        ]
+      },
+      "1-0-6-4": {
+        "count": 3,
+        "players": [
+          "df"
+        ],
+        "lastSeen": 1776510085580,
+        "firstSeen": 1769368856127,
+        "isBlocked": false,
+        "moves": [
+          1,
+          0,
+          6,
+          4
+        ]
+      },
+      "1-2-3-7-8": {
+        "count": 2,
+        "players": [
+          "hmmm"
+        ],
+        "lastSeen": 1776510085580,
+        "firstSeen": 1769506927493,
+        "isBlocked": false,
+        "moves": [
+          1,
+          2,
+          3,
+          7,
+          8
+        ]
+      },
+      "0-3-4-2": {
+        "count": 3,
+        "players": [
+          "hmmm"
+        ],
+        "lastSeen": 1776510085580,
+        "firstSeen": 1769507051689,
+        "isBlocked": false,
+        "moves": [
+          0,
+          3,
+          4,
+          2
+        ]
+      },
+      "6-2-8": {
+        "count": 3,
+        "players": [
+          "df"
+        ],
+        "lastSeen": 1776510085580,
+        "firstSeen": 1769551364061,
+        "isBlocked": false,
+        "moves": [
+          6,
+          2,
+          8
+        ]
+      },
+      "1-8": {
+        "count": 2,
+        "players": [
+          "df"
+        ],
+        "lastSeen": 1776510085580,
+        "firstSeen": 1769551374357,
+        "isBlocked": false,
+        "moves": [
+          1,
+          8
+        ]
+      },
+      "8-6-1-3": {
+        "count": 1,
+        "players": [
+          "df"
+        ],
+        "lastSeen": 1776510085580,
+        "firstSeen": 1769551402838,
+        "isBlocked": false,
+        "moves": [
+          8,
+          6,
+          1,
+          3
+        ]
+      },
+      "0-5-6-4": {
+        "count": 1,
+        "players": [
+          "df"
+        ],
+        "lastSeen": 1776510085580,
+        "firstSeen": 1769551440530,
+        "isBlocked": false,
+        "moves": [
+          0,
+          5,
+          6,
+          4
+        ]
+      },
+      "8-0-5-6-1": {
+        "count": 2,
+        "players": [
+          "df"
+        ],
+        "lastSeen": 1776510085580,
+        "firstSeen": 1769551481845,
+        "isBlocked": false,
+        "moves": [
+          8,
+          0,
+          5,
+          6,
+          1
+        ]
+      },
+      "4-2-7-0-5": {
+        "count": 2,
+        "players": [
+          "df"
+        ],
+        "lastSeen": 1776510085580,
+        "firstSeen": 1769551513202,
+        "isBlocked": false,
+        "moves": [
+          4,
+          2,
+          7,
+          0,
+          5
+        ]
+      },
+      "6-5": {
+        "count": 1,
+        "players": [
+          "df"
+        ],
+        "lastSeen": 1776510085580,
+        "firstSeen": 1769551526304,
+        "isBlocked": false,
+        "moves": [
+          6,
+          5
+        ]
+      },
+      "6-5-1-0": {
+        "count": 1,
+        "players": [
+          "df"
+        ],
+        "lastSeen": 1776510085580,
+        "firstSeen": 1769551526305,
+        "isBlocked": false,
+        "moves": [
+          6,
+          5,
+          1,
+          0
+        ]
+      },
+      "6-8-0-4": {
+        "count": 3,
+        "players": [
+          "df"
+        ],
+        "lastSeen": 1776510085581,
+        "firstSeen": 1769551537373,
+        "isBlocked": false,
+        "moves": [
+          6,
+          8,
+          0,
+          4
+        ]
+      },
+      "6-8": {
+        "count": 4,
+        "players": [
+          "df",
+          "Gift"
+        ],
+        "lastSeen": 1776510085581,
+        "firstSeen": 1769551537374,
+        "isBlocked": false,
+        "moves": [
+          6,
+          8
+        ]
+      },
+      "6-8-1-5": {
+        "count": 1,
+        "players": [
+          "df"
+        ],
+        "lastSeen": 1776510085581,
+        "firstSeen": 1769551551503,
+        "isBlocked": false,
+        "moves": [
+          6,
+          8,
+          1,
+          5
+        ]
+      },
+      "8-4-3-6-1": {
+        "count": 2,
+        "players": [
+          "df"
+        ],
+        "lastSeen": 1776510085581,
+        "firstSeen": 1769551573629,
+        "isBlocked": false,
+        "moves": [
+          8,
+          4,
+          3,
+          6,
+          1
+        ]
+      },
+      "6-8-1-3": {
+        "count": 1,
+        "players": [
+          "df"
+        ],
+        "lastSeen": 1776510085581,
+        "firstSeen": 1769551586377,
+        "isBlocked": false,
+        "moves": [
+          6,
+          8,
+          1,
+          3
+        ]
+      },
+      "2-0-8-6": {
+        "count": 1,
+        "players": [
+          "df"
+        ],
+        "lastSeen": 1776510085581,
+        "firstSeen": 1769551601851,
+        "isBlocked": false,
+        "moves": [
+          2,
+          0,
+          8,
+          6
+        ]
+      },
+      "1-2-6-8": {
+        "count": 3,
+        "players": [
+          "df"
+        ],
+        "lastSeen": 1776510085581,
+        "firstSeen": 1769551673446,
+        "isBlocked": false,
+        "moves": [
+          1,
+          2,
+          6,
+          8
+        ]
+      },
+      "4-0-2-1": {
+        "count": 3,
+        "players": [
+          "df"
+        ],
+        "lastSeen": 1776510085581,
+        "firstSeen": 1769551683876,
+        "isBlocked": false,
+        "moves": [
+          4,
+          0,
+          2,
+          1
+        ]
+      },
+      "4-8-1-3-6": {
+        "count": 2,
+        "players": [
+          "Gift"
+        ],
+        "lastSeen": 1776510085581,
+        "firstSeen": 1770129717995,
+        "isBlocked": false,
+        "moves": [
+          4,
+          8,
+          1,
+          3,
+          6
+        ]
+      },
+      "2-6-8": {
+        "count": 3,
+        "players": [
+          "Gift"
+        ],
+        "lastSeen": 1776510085581,
+        "firstSeen": 1770129736904,
+        "isBlocked": false,
+        "moves": [
+          2,
+          6,
+          8
+        ]
+      },
+      "0-4-2-7-3": {
+        "count": 2,
+        "players": [
+          "Gift"
+        ],
+        "lastSeen": 1776510085581,
+        "firstSeen": 1770129753231,
+        "isBlocked": false,
+        "moves": [
+          0,
+          4,
+          2,
+          7,
+          3
+        ]
+      },
+      "2-0-4-8": {
+        "count": 3,
+        "players": [
+          "Gift"
+        ],
+        "lastSeen": 1776510085581,
+        "firstSeen": 1770129789579,
+        "isBlocked": false,
+        "moves": [
+          2,
+          0,
+          4,
+          8
+        ]
+      },
+      "0-4-2": {
+        "count": 1,
+        "players": [
+          "Gift"
+        ],
+        "lastSeen": 1776510085581,
+        "firstSeen": 1770129822283,
+        "isBlocked": false,
+        "moves": [
+          0,
+          4,
+          2
+        ]
+      },
+      "6-0-4-2": {
+        "count": 3,
+        "players": [
+          "Gift"
+        ],
+        "lastSeen": 1776510085581,
+        "firstSeen": 1770129881141,
+        "isBlocked": false,
+        "moves": [
+          6,
+          0,
+          4,
+          2
+        ]
+      },
+      "6-0": {
+        "count": 5,
+        "players": [
+          "Gift"
+        ],
+        "lastSeen": 1776510085581,
+        "firstSeen": 1770129881144,
+        "isBlocked": false,
+        "moves": [
+          6,
+          0
+        ]
+      },
+      "6-0-5-7": {
+        "count": 1,
+        "players": [
+          "Gift"
+        ],
+        "lastSeen": 1776510085581,
+        "firstSeen": 1770129901396,
+        "isBlocked": false,
+        "moves": [
+          6,
+          0,
+          5,
+          7
+        ]
+      },
+      "6-3": {
+        "count": 1,
+        "players": [
+          "Gift"
+        ],
+        "lastSeen": 1776510085581,
+        "firstSeen": 1770129934224,
+        "isBlocked": false,
+        "moves": [
+          6,
+          3
+        ]
+      },
+      "6-3-8-1": {
+        "count": 1,
+        "players": [
+          "Gift"
+        ],
+        "lastSeen": 1776510085581,
+        "firstSeen": 1770129934226,
+        "isBlocked": false,
+        "moves": [
+          6,
+          3,
+          8,
+          1
+        ]
+      },
+      "6-0-4-5-7": {
+        "count": 2,
+        "players": [
+          "Gift"
+        ],
+        "lastSeen": 1776510085581,
+        "firstSeen": 1770129957046,
+        "isBlocked": false,
+        "moves": [
+          6,
+          0,
+          4,
+          5,
+          7
+        ]
+      },
+      "7-0-6": {
+        "count": 3,
+        "players": [
+          "Gift"
+        ],
+        "lastSeen": 1776510085581,
+        "firstSeen": 1770129965840,
+        "isBlocked": false,
+        "moves": [
+          7,
+          0,
+          6
+        ]
+      },
+      "2-4-8-3-5": {
+        "count": 3,
+        "players": [
+          "Gift"
+        ],
+        "lastSeen": 1776510085581,
+        "firstSeen": 1770129981115,
+        "isBlocked": false,
+        "moves": [
+          2,
+          4,
+          8,
+          3,
+          5
+        ]
+      },
+      "2-4": {
+        "count": 2,
+        "players": [
+          "Gift"
+        ],
+        "lastSeen": 1776510085581,
+        "firstSeen": 1770129981117,
+        "isBlocked": false,
+        "moves": [
+          2,
+          4
+        ]
+      },
+      "2-4-3-7-8": {
+        "count": 2,
+        "players": [
+          "Gift"
+        ],
+        "lastSeen": 1776510085581,
+        "firstSeen": 1770130016088,
+        "isBlocked": false,
+        "moves": [
+          2,
+          4,
+          3,
+          7,
+          8
+        ]
+      },
+      "6-1-5-8": {
+        "count": 1,
+        "players": [
+          "Gift"
+        ],
+        "lastSeen": 1776510085581,
+        "firstSeen": 1770130039768,
+        "isBlocked": false,
+        "moves": [
+          6,
+          1,
+          5,
+          8
+        ]
+      },
+      "4-6-1": {
+        "count": 3,
+        "players": [
+          "Gift"
+        ],
+        "lastSeen": 1776510085581,
+        "firstSeen": 1770130058589,
+        "isBlocked": false,
+        "moves": [
+          4,
+          6,
+          1
+        ]
+      },
+      "6-8-1-3-5": {
+        "count": 2,
+        "players": [
+          "Gift"
+        ],
+        "lastSeen": 1776510085581,
+        "firstSeen": 1770130129011,
+        "isBlocked": false,
+        "moves": [
+          6,
+          8,
+          1,
+          3,
+          5
+        ]
+      },
+      "3-6-7": {
+        "count": 3,
+        "players": [
+          "Gift"
+        ],
+        "lastSeen": 1776510085581,
+        "firstSeen": 1770130136158,
+        "isBlocked": false,
+        "moves": [
+          3,
+          6,
+          7
+        ]
+      },
+      "6-4-8-0": {
+        "count": 3,
+        "players": [
+          "Gift"
+        ],
+        "lastSeen": 1776510085581,
+        "firstSeen": 1770130162183,
+        "isBlocked": false,
+        "moves": [
+          6,
+          4,
+          8,
+          0
+        ]
+      },
+      "6-4": {
+        "count": 1,
+        "players": [
+          "Gift"
+        ],
+        "lastSeen": 1776510085581,
+        "firstSeen": 1770130162185,
+        "isBlocked": false,
+        "moves": [
+          6,
+          4
+        ]
+      },
+      "2-6-7-0": {
+        "count": 1,
+        "players": [
+          "Gift"
+        ],
+        "lastSeen": 1776510085581,
+        "firstSeen": 1770130178038,
+        "isBlocked": false,
+        "moves": [
+          2,
+          6,
+          7,
+          0
+        ]
+      },
+      "2-1-4-8": {
+        "count": 3,
+        "players": [
+          "JJJ"
+        ],
+        "lastSeen": 1776510099972,
+        "firstSeen": 1776510099970,
+        "isBlocked": false,
+        "moves": [
+          2,
+          1,
+          4,
+          8
+        ]
+      },
       "1-4-6-5-8": {
         "count": 2,
         "players": [
           "Praise-el"
         ],
-        "lastSeen": 1776517173035,
+        "lastSeen": 1777118971821,
         "firstSeen": 1776517173030,
         "isBlocked": false,
         "moves": [
@@ -22837,25 +27071,12 @@
           8
         ]
       },
-      "1-4": {
-        "count": 1,
-        "players": [
-          "Praise-el"
-        ],
-        "lastSeen": 1776517173035,
-        "firstSeen": 1776517173035,
-        "isBlocked": false,
-        "moves": [
-          1,
-          4
-        ]
-      },
       "1-3-6": {
         "count": 3,
         "players": [
           "Praise-el"
         ],
-        "lastSeen": 1776517183401,
+        "lastSeen": 1777118971821,
         "firstSeen": 1776517183400,
         "isBlocked": false,
         "moves": [
@@ -22864,54 +27085,12 @@
           6
         ]
       },
-      "1-3": {
-        "count": 1,
-        "players": [
-          "Praise-el"
-        ],
-        "lastSeen": 1776517183401,
-        "firstSeen": 1776517183401,
-        "isBlocked": false,
-        "moves": [
-          1,
-          3
-        ]
-      },
-      "0-1-6-5-7": {
-        "count": 2,
-        "players": [
-          "Praise-el"
-        ],
-        "lastSeen": 1776517196266,
-        "firstSeen": 1776517196264,
-        "isBlocked": false,
-        "moves": [
-          0,
-          1,
-          6,
-          5,
-          7
-        ]
-      },
-      "0-1": {
-        "count": 1,
-        "players": [
-          "Praise-el"
-        ],
-        "lastSeen": 1776517196266,
-        "firstSeen": 1776517196266,
-        "isBlocked": false,
-        "moves": [
-          0,
-          1
-        ]
-      },
       "1-2-3": {
         "count": 3,
         "players": [
           "Praise-el"
         ],
-        "lastSeen": 1776517205888,
+        "lastSeen": 1777118971821,
         "firstSeen": 1776517205887,
         "isBlocked": false,
         "moves": [
@@ -22920,38 +27099,13 @@
           3
         ]
       },
-      "1-2": {
-        "count": 1,
-        "players": [
-          "Praise-el"
-        ],
-        "lastSeen": 1776517205888,
-        "firstSeen": 1776517205888,
-        "isBlocked": false,
-        "moves": [
-          1,
-          2
-        ]
-      },
-      "4-0": {
-        "count": 1,
-        "players": [
-          "Praise-el"
-        ],
-        "lastSeen": 1776517215985,
-        "firstSeen": 1776517215985,
-        "isBlocked": false,
-        "moves": [
-          4,
-          0
-        ]
-      },
       "4-0-2": {
-        "count": 1,
+        "count": 4,
         "players": [
-          "Praise-el"
+          "Praise-el",
+          "wio"
         ],
-        "lastSeen": 1776517215985,
+        "lastSeen": 1777650182807,
         "firstSeen": 1776517215985,
         "isBlocked": false,
         "moves": [
@@ -22960,25 +27114,12 @@
           2
         ]
       },
-      "6-1": {
-        "count": 1,
-        "players": [
-          "Praise-el"
-        ],
-        "lastSeen": 1776517254904,
-        "firstSeen": 1776517254904,
-        "isBlocked": false,
-        "moves": [
-          6,
-          1
-        ]
-      },
       "6-1-0-5": {
         "count": 1,
         "players": [
           "Praise-el"
         ],
-        "lastSeen": 1776517254904,
+        "lastSeen": 1777118971821,
         "firstSeen": 1776517254904,
         "isBlocked": false,
         "moves": [
@@ -22993,7 +27134,7 @@
         "players": [
           "Praise-el"
         ],
-        "lastSeen": 1776517357377,
+        "lastSeen": 1777118971821,
         "firstSeen": 1776517268129,
         "isBlocked": false,
         "moves": [
@@ -23004,11 +27145,12 @@
         ]
       },
       "4-3": {
-        "count": 4,
+        "count": 5,
         "players": [
-          "Praise-el"
+          "Praise-el",
+          "ii"
         ],
-        "lastSeen": 1776517357376,
+        "lastSeen": 1777119072041,
         "firstSeen": 1776517268130,
         "isBlocked": false,
         "moves": [
@@ -23021,7 +27163,7 @@
         "players": [
           "Praise-el"
         ],
-        "lastSeen": 1776517289473,
+        "lastSeen": 1777118971821,
         "firstSeen": 1776517289473,
         "isBlocked": false,
         "moves": [
@@ -23036,7 +27178,7 @@
         "players": [
           "Praise-el"
         ],
-        "lastSeen": 1776517306881,
+        "lastSeen": 1777118971821,
         "firstSeen": 1776517306881,
         "isBlocked": false,
         "moves": [
@@ -23051,7 +27193,7 @@
         "players": [
           "Praise-el"
         ],
-        "lastSeen": 1776517350838,
+        "lastSeen": 1777118971821,
         "firstSeen": 1776517350838,
         "isBlocked": false,
         "moves": [
@@ -23059,31 +27201,50 @@
           8
         ]
       },
-      "2-3": {
-        "count": 1,
-        "players": [
-          "Praise-el"
-        ],
-        "lastSeen": 1776517371882,
-        "firstSeen": 1776517371882,
-        "isBlocked": false,
-        "moves": [
-          2,
-          3
-        ]
-      },
       "2-3-0": {
         "count": 1,
         "players": [
           "Praise-el"
         ],
-        "lastSeen": 1776517371882,
+        "lastSeen": 1777118971821,
         "firstSeen": 1776517371882,
         "isBlocked": false,
         "moves": [
           2,
           3,
           0
+        ]
+      },
+      "4-3-1-6-8": {
+        "count": 2,
+        "players": [
+          "ii"
+        ],
+        "lastSeen": 1777119072041,
+        "firstSeen": 1777119072037,
+        "isBlocked": false,
+        "moves": [
+          4,
+          3,
+          1,
+          6,
+          8
+        ]
+      },
+      "1-4-3-6-8": {
+        "count": 2,
+        "players": [
+          "wio"
+        ],
+        "lastSeen": 1777650220808,
+        "firstSeen": 1777650220805,
+        "isBlocked": false,
+        "moves": [
+          1,
+          4,
+          3,
+          6,
+          8
         ]
       }
     },

@@ -12,71 +12,431 @@ let preWelcomeAutoTimer = null;
 /** Slow parallax star field for void intro (canvas). */
 function initVoidStarfield() {
     const canvas = document.getElementById('void-stars-canvas');
-    if (!canvas || !canvas.getContext) return;
-    const ctx = canvas.getContext('2d');
-    let stars = [];
-    let rafId = 0;
+    if (!canvas) return;
+    const gl =
+        canvas.getContext('webgl', { alpha: true, antialias: true, premultipliedAlpha: false }) ||
+        canvas.getContext('experimental-webgl', { alpha: true, antialias: true, premultipliedAlpha: false });
+    if (!gl) return;
+
     const prefersReduced =
         typeof window.matchMedia === 'function' &&
         window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    let rafId = 0;
+    let viewportWidth = 0;
+    let viewportHeight = 0;
+    let dpr = 1;
+    let sigilOpacity = 0;
+    let sigilAngle = 0;
+    let nextShootingAt = 0;
+    let stars = [];
+    let orbiters = [];
+    let shootingStars = [];
 
-    function resize() {
-        const dpr = Math.min(window.devicePixelRatio || 1, 2);
-        const w = window.innerWidth;
-        const h = window.innerHeight;
-        canvas.width = Math.floor(w * dpr);
-        canvas.height = Math.floor(h * dpr);
-        canvas.style.width = w + 'px';
-        canvas.style.height = h + 'px';
-        ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-        const count = Math.floor((w * h) / 9000);
-        stars = [];
-        for (let i = 0; i < count; i++) {
-            stars.push({
-                x: Math.random() * w,
-                y: Math.random() * h,
-                r: Math.random() * 1.1 + 0.15,
-                a: Math.random() * Math.PI * 2,
-                s: 0.015 + Math.random() * 0.04,
-                v: 0.02 + Math.random() * 0.07
-            });
+    const pointVertexSource = `
+        attribute vec2 a_position;
+        attribute float a_size;
+        attribute vec4 a_color;
+        varying vec4 v_color;
+        void main() {
+            gl_Position = vec4(a_position, 0.0, 1.0);
+            gl_PointSize = a_size;
+            v_color = a_color;
         }
+    `;
+
+    const pointFragmentSource = `
+        precision mediump float;
+        varying vec4 v_color;
+        void main() {
+            vec2 uv = gl_PointCoord - vec2(0.5);
+            float dist = length(uv);
+            float alpha = smoothstep(0.5, 0.0, dist) * v_color.a;
+            gl_FragColor = vec4(v_color.rgb, alpha);
+        }
+    `;
+
+    const lineVertexSource = `
+        attribute vec2 a_position;
+        attribute vec4 a_color;
+        varying vec4 v_color;
+        void main() {
+            gl_Position = vec4(a_position, 0.0, 1.0);
+            v_color = a_color;
+        }
+    `;
+
+    const lineFragmentSource = `
+        precision mediump float;
+        varying vec4 v_color;
+        void main() {
+            gl_FragColor = v_color;
+        }
+    `;
+
+    const glowVertexSource = `
+        attribute vec2 a_position;
+        varying vec2 v_uv;
+        void main() {
+            v_uv = a_position * 0.5 + 0.5;
+            gl_Position = vec4(a_position, 0.0, 1.0);
+        }
+    `;
+
+    const glowFragmentSource = `
+        precision mediump float;
+        varying vec2 v_uv;
+        uniform vec2 u_resolution;
+        void main() {
+            vec2 frag = gl_FragCoord.xy / u_resolution.xy;
+            vec2 centered = (frag - vec2(0.5)) * vec2(u_resolution.x / max(u_resolution.y, 1.0), 1.0);
+            float dist = length(centered * vec2(1.0, 1.2));
+            float alpha = smoothstep(0.95, 0.0, dist) * 0.18;
+            vec3 color = vec3(74.0 / 255.0, 63.0 / 255.0, 107.0 / 255.0);
+            gl_FragColor = vec4(color, alpha);
+        }
+    `;
+
+    function compileShader(type, source) {
+        const shader = gl.createShader(type);
+        gl.shaderSource(shader, source);
+        gl.compileShader(shader);
+        return shader;
     }
 
-    function frame() {
-        const w = canvas.clientWidth;
-        const h = canvas.clientHeight;
-        if (!w || !h) {
+    function createProgram(vertexSource, fragmentSource) {
+        const program = gl.createProgram();
+        gl.attachShader(program, compileShader(gl.VERTEX_SHADER, vertexSource));
+        gl.attachShader(program, compileShader(gl.FRAGMENT_SHADER, fragmentSource));
+        gl.linkProgram(program);
+        return program;
+    }
+
+    const pointProgram = createProgram(pointVertexSource, pointFragmentSource);
+    const lineProgram = createProgram(lineVertexSource, lineFragmentSource);
+    const glowProgram = createProgram(glowVertexSource, glowFragmentSource);
+
+    const pointBuffer = gl.createBuffer();
+    const lineBuffer = gl.createBuffer();
+    const glowBuffer = gl.createBuffer();
+
+    const pointPositionLoc = gl.getAttribLocation(pointProgram, 'a_position');
+    const pointSizeLoc = gl.getAttribLocation(pointProgram, 'a_size');
+    const pointColorLoc = gl.getAttribLocation(pointProgram, 'a_color');
+    const linePositionLoc = gl.getAttribLocation(lineProgram, 'a_position');
+    const lineColorLoc = gl.getAttribLocation(lineProgram, 'a_color');
+    const glowPositionLoc = gl.getAttribLocation(glowProgram, 'a_position');
+    const glowResolutionLoc = gl.getUniformLocation(glowProgram, 'u_resolution');
+
+    function toClipX(x) {
+        return (x / viewportWidth) * 2 - 1;
+    }
+
+    function toClipY(y) {
+        return 1 - (y / viewportHeight) * 2;
+    }
+
+    function rotatePoint(x, y, angle) {
+        const c = Math.cos(angle);
+        const s = Math.sin(angle);
+        return { x: x * c - y * s, y: x * s + y * c };
+    }
+
+    function projectPoint(x, y, rx) {
+        const cosX = Math.cos(rx);
+        const sinX = Math.sin(rx);
+        const y3 = y * cosX;
+        const z3 = y * sinX;
+        const perspective = 1 / (1 + z3 * 0.85);
+        return { x: x * perspective, y: y3 * perspective };
+    }
+
+    function scheduleNextShootingStar(now = performance.now()) {
+        nextShootingAt = now + 5000 + Math.random() * 4000;
+    }
+
+    function buildScene() {
+        stars = [];
+        orbiters = [];
+        shootingStars = [];
+        const starCount = 360;
+        for (let i = 0; i < starCount; i++) {
+            const roll = Math.random();
+            let size;
+            let color;
+            let drift;
+            let baseAlpha;
+            let additive = 0;
+            if (roll > 0.95) {
+                size = 1.2 + Math.random() * 0.8;
+                color = [200 / 255, 169 / 255, 110 / 255];
+                baseAlpha = 0.7;
+                additive = 1;
+                drift = 0.03 + Math.random() * 0.03;
+            } else if (roll > 0.38) {
+                size = 0.5 + Math.random() * 0.5;
+                color = [200 / 255, 196 / 255, 230 / 255];
+                baseAlpha = 0.45;
+                drift = 0.02 + Math.random() * 0.025;
+            } else {
+                size = 0.15 + Math.random() * 0.25;
+                color = [200 / 255, 196 / 255, 230 / 255];
+                baseAlpha = 0.25;
+                drift = 0.01 + Math.random() * 0.02;
+            }
+            stars.push({
+                x: Math.random() * viewportWidth,
+                y: Math.random() * viewportHeight,
+                size,
+                color,
+                drift,
+                baseAlpha,
+                phase: Math.random() * Math.PI * 2,
+                twinkle: 0.6 + Math.random() * 1.3,
+                additive
+            });
+        }
+
+        for (let i = 0; i < 40; i++) {
+            orbiters.push({
+                radiusX: 0.15 + Math.random() * 0.4,
+                radiusY: 0.09 + Math.random() * 0.28,
+                speed: 0.25 + Math.random() * 0.65,
+                phase: Math.random() * Math.PI * 2,
+                drift: -1 + Math.random() * 2
+            });
+        }
+        scheduleNextShootingStar();
+    }
+
+    function resize() {
+        dpr = Math.min(window.devicePixelRatio || 1, 2);
+        viewportWidth = Math.floor(window.innerWidth);
+        viewportHeight = Math.floor(window.innerHeight);
+        canvas.width = Math.floor(viewportWidth * dpr);
+        canvas.height = Math.floor(viewportHeight * dpr);
+        canvas.style.width = viewportWidth + 'px';
+        canvas.style.height = viewportHeight + 'px';
+        gl.viewport(0, 0, canvas.width, canvas.height);
+        buildScene();
+    }
+
+    function spawnShootingStar(now) {
+        shootingStars.push({
+            startX: -0.85 + Math.random() * 0.45,
+            startY: 0.75 - Math.random() * 0.35,
+            endX: -0.15 + Math.random() * 0.85,
+            endY: -0.1 - Math.random() * 0.55,
+            width: 0.002 + Math.random() * 0.002,
+            life: 1500,
+            bornAt: now
+        });
+    }
+
+    function drawGlow() {
+        gl.useProgram(glowProgram);
+        gl.bindBuffer(gl.ARRAY_BUFFER, glowBuffer);
+        gl.bufferData(
+            gl.ARRAY_BUFFER,
+            new Float32Array([-1, -1, 1, -1, -1, 1, 1, 1]),
+            gl.STATIC_DRAW
+        );
+        gl.enableVertexAttribArray(glowPositionLoc);
+        gl.vertexAttribPointer(glowPositionLoc, 2, gl.FLOAT, false, 0, 0);
+        gl.uniform2f(glowResolutionLoc, canvas.width, canvas.height);
+        gl.enable(gl.BLEND);
+        gl.blendFunc(gl.ONE, gl.ONE);
+        gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+    }
+
+    function drawPoints(points) {
+        if (!points.length) return;
+        const data = new Float32Array(points.length * 7);
+        let offset = 0;
+        for (let i = 0; i < points.length; i++) {
+            const pt = points[i];
+            data[offset++] = pt.x;
+            data[offset++] = pt.y;
+            data[offset++] = pt.size;
+            data[offset++] = pt.color[0];
+            data[offset++] = pt.color[1];
+            data[offset++] = pt.color[2];
+            data[offset++] = pt.alpha;
+        }
+        gl.useProgram(pointProgram);
+        gl.bindBuffer(gl.ARRAY_BUFFER, pointBuffer);
+        gl.bufferData(gl.ARRAY_BUFFER, data, gl.DYNAMIC_DRAW);
+        const stride = 7 * 4;
+        gl.enableVertexAttribArray(pointPositionLoc);
+        gl.vertexAttribPointer(pointPositionLoc, 2, gl.FLOAT, false, stride, 0);
+        gl.enableVertexAttribArray(pointSizeLoc);
+        gl.vertexAttribPointer(pointSizeLoc, 1, gl.FLOAT, false, stride, 2 * 4);
+        gl.enableVertexAttribArray(pointColorLoc);
+        gl.vertexAttribPointer(pointColorLoc, 4, gl.FLOAT, false, stride, 3 * 4);
+        gl.drawArrays(gl.POINTS, 0, points.length);
+    }
+
+    function drawLines(vertices) {
+        if (!vertices.length) return;
+        const data = new Float32Array(vertices.length * 6);
+        let offset = 0;
+        for (let i = 0; i < vertices.length; i++) {
+            const v = vertices[i];
+            data[offset++] = v.x;
+            data[offset++] = v.y;
+            data[offset++] = v.color[0];
+            data[offset++] = v.color[1];
+            data[offset++] = v.color[2];
+            data[offset++] = v.alpha;
+        }
+        gl.useProgram(lineProgram);
+        gl.bindBuffer(gl.ARRAY_BUFFER, lineBuffer);
+        gl.bufferData(gl.ARRAY_BUFFER, data, gl.DYNAMIC_DRAW);
+        const stride = 6 * 4;
+        gl.enableVertexAttribArray(linePositionLoc);
+        gl.vertexAttribPointer(linePositionLoc, 2, gl.FLOAT, false, stride, 0);
+        gl.enableVertexAttribArray(lineColorLoc);
+        gl.vertexAttribPointer(lineColorLoc, 4, gl.FLOAT, false, stride, 2 * 4);
+        gl.drawArrays(gl.LINES, 0, vertices.length);
+    }
+
+    function frame(now) {
+        if (!viewportWidth || !viewportHeight) {
             rafId = requestAnimationFrame(frame);
             return;
         }
-        ctx.clearRect(0, 0, w, h);
-        for (let i = 0; i < stars.length; i++) {
-            const st = stars[i];
-            st.a += st.s;
-            st.y += st.v;
-            if (st.y > h + 2) st.y = -2;
-            const tw = 0.35 + Math.sin(st.a) * 0.25;
-            ctx.fillStyle = `rgba(200, 196, 230, ${tw})`;
-            ctx.beginPath();
-            ctx.arc(st.x, st.y, st.r, 0, Math.PI * 2);
-            ctx.fill();
+        if (now >= nextShootingAt) {
+            spawnShootingStar(now);
+            scheduleNextShootingStar(now);
         }
+
+        sigilAngle += 0.0008 * 16.6667;
+        sigilOpacity = Math.min(0.22, sigilOpacity + 0.22 / (3000 / 16.6667));
+
+        gl.clearColor(0, 0, 0, 0);
+        gl.clear(gl.COLOR_BUFFER_BIT);
+        gl.disable(gl.DEPTH_TEST);
+        gl.enable(gl.BLEND);
+        gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
+
+        drawGlow();
+
+        const coolPoints = [];
+        const goldPoints = [];
+        for (let i = 0; i < stars.length; i++) {
+            const star = stars[i];
+            star.y -= star.drift;
+            if (star.y < -4) star.y = viewportHeight + 4;
+            const twinkle = 0.55 + Math.sin(now * 0.0012 * star.twinkle + star.phase) * 0.45;
+            const alpha = Math.max(0.05, star.baseAlpha * twinkle);
+            const point = {
+                x: toClipX(star.x),
+                y: toClipY(star.y),
+                size: star.size * dpr * 2.2,
+                color: star.color,
+                alpha
+            };
+            if (star.additive) {
+                goldPoints.push(point);
+            } else {
+                coolPoints.push(point);
+            }
+        }
+
+        drawPoints(coolPoints);
+        gl.blendFunc(gl.ONE, gl.ONE);
+        drawPoints(goldPoints);
+
+        const orbiterPoints = [];
+        for (let i = 0; i < orbiters.length; i++) {
+            const orb = orbiters[i];
+            const angle = now * 0.001 * orb.speed + orb.phase;
+            let x = Math.cos(angle) * orb.radiusX;
+            let y = Math.sin(angle) * orb.radiusY + Math.sin(angle * 0.35 + orb.phase) * 0.03 + orb.drift * 0.00025 * now;
+            if (y > 0.7) {
+                orb.phase = Math.random() * Math.PI * 2;
+                orb.drift = -1 + Math.random() * 2;
+                y = -0.7;
+            }
+            orbiterPoints.push({
+                x,
+                y,
+                size: dpr * 2.2,
+                color: [200 / 255, 169 / 255, 110 / 255],
+                alpha: 0.6
+            });
+        }
+        drawPoints(orbiterPoints);
+
+        gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
+        const lineVertices = [];
+        const sigilColor = [122 / 255, 107 / 255, 160 / 255];
+        const ringRadii = [0.55, 0.44, 0.34, 0.24, 0.14];
+        for (let r = 0; r < ringRadii.length; r++) {
+            const radius = ringRadii[r];
+            const segments = 80;
+            for (let i = 0; i < segments; i++) {
+                const a0 = (i / segments) * Math.PI * 2 + sigilAngle;
+                const a1 = ((i + 1) / segments) * Math.PI * 2 + sigilAngle;
+                const p0 = { x: Math.cos(a0) * radius * viewportHeight / viewportWidth, y: Math.sin(a0) * radius };
+                const p1 = { x: Math.cos(a1) * radius * viewportHeight / viewportWidth, y: Math.sin(a1) * radius };
+                lineVertices.push({ x: p0.x, y: p0.y, color: sigilColor, alpha: sigilOpacity });
+                lineVertices.push({ x: p1.x, y: p1.y, color: sigilColor, alpha: sigilOpacity });
+            }
+        }
+        const crossLines = [
+            [-0.62, -0.62, 0.62, 0.62],
+            [-0.62, 0.62, 0.62, -0.62],
+            [0, -0.68, 0, 0.68],
+            [-0.68, 0, 0.68, 0]
+        ];
+        crossLines.forEach((line) => {
+            const p0 = rotatePoint(line[0], line[1], sigilAngle);
+            const p1 = rotatePoint(line[2], line[3], sigilAngle);
+            lineVertices.push({ x: p0.x * viewportHeight / viewportWidth, y: p0.y, color: sigilColor, alpha: sigilOpacity });
+            lineVertices.push({ x: p1.x * viewportHeight / viewportWidth, y: p1.y, color: sigilColor, alpha: sigilOpacity });
+        });
+
+        const boardColor = [200 / 255, 169 / 255, 110 / 255];
+        const boardPulse = 0.5 + Math.sin(now * 0.0008) * 0.2;
+        const boardLines = [-0.1267, 0.1267];
+        boardLines.forEach((x) => {
+            const start = projectPoint(x, -0.38 + Math.sin(now * 0.0011 + x * 2.5) * 0.018, 15 * Math.PI / 180);
+            const end = projectPoint(x, 0.38 + Math.sin(now * 0.0011 + x * 2.5) * 0.018, 15 * Math.PI / 180);
+            lineVertices.push({ x: start.x, y: start.y, color: boardColor, alpha: boardPulse });
+            lineVertices.push({ x: end.x, y: end.y, color: boardColor, alpha: boardPulse });
+        });
+        boardLines.forEach((y) => {
+            const start = projectPoint(-0.38, y + Math.sin(now * 0.0011 - y * 3.5) * 0.018, 15 * Math.PI / 180);
+            const end = projectPoint(0.38, y + Math.sin(now * 0.0011 - y * 3.5) * 0.018, 15 * Math.PI / 180);
+            lineVertices.push({ x: start.x, y: start.y, color: boardColor, alpha: boardPulse });
+            lineVertices.push({ x: end.x, y: end.y, color: boardColor, alpha: boardPulse });
+        });
+
+        shootingStars = shootingStars.filter((shoot) => {
+            const progress = (now - shoot.bornAt) / shoot.life;
+            if (progress >= 1) return false;
+            const alpha = progress < 0.15 ? progress / 0.15 : 1 - ((progress - 0.15) / 0.85);
+            const sx = shoot.startX + (shoot.endX - shoot.startX) * progress;
+            const sy = shoot.startY + (shoot.endY - shoot.startY) * progress;
+            const tailX = sx - 0.18;
+            const tailY = sy + 0.18;
+            lineVertices.push({ x: tailX, y: tailY, color: boardColor, alpha: 0 });
+            lineVertices.push({ x: sx, y: sy, color: boardColor, alpha: alpha * 0.9 });
+            return true;
+        });
+
+        drawLines(lineVertices);
         rafId = requestAnimationFrame(frame);
     }
 
     resize();
     window.addEventListener('resize', resize);
     if (!prefersReduced) {
+        console.log('[Starfield] RAF started');
+        scheduleNextShootingStar(performance.now());
         rafId = requestAnimationFrame(frame);
     } else {
-        ctx.fillStyle = 'rgba(180, 175, 210, 0.35)';
-        for (let i = 0; i < Math.min(stars.length, 80); i++) {
-            const st = stars[i];
-            ctx.beginPath();
-            ctx.arc(st.x, st.y, st.r, 0, Math.PI * 2);
-            ctx.fill();
-        }
+        frame(performance.now());
     }
 
     const overlay = document.getElementById('pre-welcome-overlay');
@@ -94,6 +454,294 @@ function initVoidStarfield() {
         });
         mo.observe(overlay, { attributes: true, attributeFilter: ['class', 'style'] });
     }
+} 
+
+/* ============================================
+   GUIDEBOOK POWER-UP DEMOS
+   Self-contained loops. No gameState access.
+   ============================================ */
+(function initGuidebookPowerUpDemos() {
+    const onReady = (fn) => {
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', fn, { once: true });
+        } else {
+            fn();
+        }
+    };
+
+    onReady(() => {
+        const setDots = (page, activeIndex) => {
+            if (!page) return;
+            page.querySelectorAll('.guide-demo-dots span').forEach((dot, index) => {
+                dot.classList.toggle('is-active', index === activeIndex);
+            });
+        };
+
+        const hintPage = document.querySelector('.guide-page[data-page="4"]');
+        if (hintPage) {
+            const cells = hintPage.querySelectorAll('.mini-cell');
+            const status = hintPage.querySelector('[data-status]');
+            const hintTexts = [
+                'Scanning the board for the best line...',
+                'Best move found in the center node.',
+                'Hint Pulse is active. Take the center.'
+            ];
+            let phase = 0;
+
+            const runHintPhase = () => {
+                cells.forEach((cell) => cell.classList.remove('hint-pulse'));
+                if (phase >= 1 && cells[4]) {
+                    cells[4].classList.add('hint-pulse');
+                }
+                if (status) status.textContent = hintTexts[phase];
+                setDots(hintPage, phase);
+                phase = (phase + 1) % 3;
+            };
+
+            runHintPhase();
+            window.setInterval(runHintPhase, 1800);
+        }
+
+        const shakePage = document.querySelector('.guide-page[data-page="5"]');
+        if (shakePage) {
+            const board = shakePage.querySelector('[data-demo="board-shake"]');
+            const status = shakePage.querySelector('[data-status]');
+            const cells = Array.from(shakePage.querySelectorAll('.mini-cell'));
+            const baseMarks = ['✕', '◯', '', '', '✕', '', '◯', '', '✕'];
+            let dotPhase = 0;
+
+            const applyPermutation = () => {
+                const nextMarks = baseMarks.slice();
+                for (let i = nextMarks.length - 1; i > 0; i--) {
+                    const j = Math.floor(Math.random() * (i + 1));
+                    [nextMarks[i], nextMarks[j]] = [nextMarks[j], nextMarks[i]];
+                }
+                cells.forEach((cell, index) => {
+                    cell.textContent = nextMarks[index];
+                    cell.classList.remove('remap-pop');
+                    if (nextMarks[index]) {
+                        void cell.offsetWidth;
+                        cell.classList.add('remap-pop');
+                    }
+                });
+            };
+
+            const triggerBoardShake = () => {
+                if (!board) return;
+                status.textContent = 'Board Shake triggers. The grid is losing its anchor.';
+                setDots(shakePage, dotPhase % 3);
+                dotPhase += 1;
+                board.classList.remove('board-shake');
+                void board.offsetWidth;
+                board.classList.add('board-shake');
+
+                window.setTimeout(() => {
+                    applyPermutation();
+                    status.textContent = 'Cells remapped. The marks remain, but their meaning has shifted.';
+                    setDots(shakePage, 2);
+                }, 450);
+
+                window.setTimeout(() => {
+                    status.textContent = 'Board rests before the next remap.';
+                    setDots(shakePage, 0);
+                }, 1850);
+            };
+
+            triggerBoardShake();
+            window.setInterval(triggerBoardShake, 3200);
+        }
+
+        const lastStandPage = document.querySelector('.guide-page[data-page="6"]');
+        if (lastStandPage) {
+            const board = lastStandPage.querySelector('[data-demo="last-stand"]');
+            const cells = lastStandPage.querySelectorAll('.mini-cell');
+            const status = lastStandPage.querySelector('[data-status]');
+            const texts = [
+                'Watching for a lethal AI turn...',
+                'Threat detected. The AI is about to claim the top row.',
+                'Last Stand triggers and floods the board with gold.',
+                'An extra move is granted. The line is interrupted.'
+            ];
+            let phase = 0;
+
+            const runLastStandPhase = () => {
+                const threatCell = cells[2];
+                if (!threatCell) return;
+                threatCell.classList.remove('is-threat', 'is-saved');
+                threatCell.textContent = '';
+                if (board) board.classList.remove('last-stand');
+
+                if (phase === 1) {
+                    threatCell.classList.add('is-threat');
+                }
+                if (phase === 2) {
+                    threatCell.classList.add('is-saved');
+                    if (board) {
+                        void board.offsetWidth;
+                        board.classList.add('last-stand');
+                    }
+                }
+                if (phase === 3) {
+                    threatCell.classList.add('is-saved');
+                    threatCell.textContent = '✕';
+                }
+
+                if (status) status.textContent = texts[phase];
+                setDots(lastStandPage, phase);
+                phase = (phase + 1) % 4;
+            };
+
+            runLastStandPhase();
+            window.setInterval(runLastStandPhase, 2200);
+        }
+
+        const tacticalPage = document.querySelector('.guide-page[data-page="7"]');
+        if (tacticalPage) {
+            const overlay = tacticalPage.querySelector('.tactical-claim-overlay');
+            const status = tacticalPage.querySelector('[data-status]');
+            let phase = 0;
+            const statuses = [
+                'The AI is waiting to answer your advantage.',
+                'Tactical Claim ignites a steel grid across the board.',
+                'The wave fades, but the warning remains.'
+            ];
+
+            const fireTacticalWave = () => {
+                if (!overlay) return;
+                status.textContent = statuses[phase % statuses.length];
+                setDots(tacticalPage, phase % 3);
+                phase += 1;
+                overlay.classList.remove('is-active');
+                void overlay.offsetWidth;
+                overlay.classList.add('is-active');
+
+                window.setTimeout(() => {
+                    status.textContent = statuses[2];
+                    setDots(tacticalPage, 2);
+                }, 1200);
+            };
+
+            fireTacticalWave();
+            window.setInterval(fireTacticalWave, 2800);
+        }
+    });
+})();
+
+function initRitualWelcomeStarfield() {
+    const canvas = document.getElementById('ritual-stars-canvas');
+    if (!canvas || !canvas.getContext) return;
+    const ctx = canvas.getContext('2d');
+    const prefersReduced =
+        typeof window.matchMedia === 'function' &&
+        window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    let rafId = 0;
+    let stars = [];
+
+    function resize() {
+        const dpr = Math.min(window.devicePixelRatio || 1, 2);
+        const w = canvas.clientWidth || window.innerWidth;
+        const h = canvas.clientHeight || window.innerHeight;
+        canvas.width = Math.floor(w * dpr);
+        canvas.height = Math.floor(h * dpr);
+        canvas.style.width = w + 'px';
+        canvas.style.height = h + 'px';
+        ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+        const count = 220;
+        stars = Array.from({ length: count }, () => {
+            const roll = Math.random();
+            return {
+                x: Math.random() * w,
+                y: Math.random() * h,
+                r: roll > 0.94 ? 1.1 + Math.random() * 0.8 : roll > 0.4 ? 0.5 + Math.random() * 0.4 : 0.15 + Math.random() * 0.25,
+                v: 0.015 + Math.random() * 0.05,
+                phase: Math.random() * Math.PI * 2,
+                color: roll > 0.94 ? '200,169,110' : '200,196,230',
+                baseAlpha: roll > 0.94 ? 0.52 : roll > 0.4 ? 0.36 : 0.22
+            };
+        });
+    }
+
+    function frame(now) {
+        const w = canvas.clientWidth;
+        const h = canvas.clientHeight;
+        if (!w || !h) {
+            rafId = requestAnimationFrame(frame);
+            return;
+        }
+        ctx.clearRect(0, 0, w, h);
+        for (let i = 0; i < stars.length; i++) {
+            const star = stars[i];
+            star.y -= star.v;
+            if (star.y < -2) star.y = h + 2;
+            const alpha = star.baseAlpha * (0.7 + Math.sin(now * 0.0012 + star.phase) * 0.3);
+            ctx.fillStyle = `rgba(${star.color}, ${Math.max(0.08, alpha)})`;
+            ctx.beginPath();
+            ctx.arc(star.x, star.y, star.r, 0, Math.PI * 2);
+            ctx.fill();
+        }
+        rafId = requestAnimationFrame(frame);
+    }
+
+    resize();
+    window.addEventListener('resize', resize);
+    if (!prefersReduced) {
+        rafId = requestAnimationFrame(frame);
+    } else {
+        frame(performance.now());
+    }
+}
+
+function runCinematicScreenTransition(fromEl, toEl, options = {}) {
+    const { removeFromDom = false, hideWithDisplayNone = false } = options;
+    const phaseOneMs = 300;
+    const phaseHoldMs = 150;
+    const phaseThreeMs = 500;
+
+    if (fromEl) {
+        fromEl.classList.remove('screen-transition-enter', 'screen-transition-fade-in');
+        fromEl.classList.add('screen-transition-fade-out');
+    }
+
+    window.setTimeout(() => {
+        if (fromEl) {
+            fromEl.classList.remove('screen-transition-fade-out', 'active');
+            if (hideWithDisplayNone) {
+                fromEl.style.display = 'none';
+                fromEl.style.visibility = 'hidden';
+                fromEl.style.pointerEvents = 'none';
+                fromEl.classList.add('hiding');
+            } else if (removeFromDom) {
+                if (fromEl.parentNode) fromEl.parentNode.removeChild(fromEl);
+            } else {
+                fromEl.style.display = '';
+            }
+        }
+    }, phaseOneMs);
+
+    if (!toEl) return;
+
+    toEl.classList.remove('hidden');
+    toEl.classList.add('screen-transition-enter');
+    if (toEl.classList.contains('screen')) {
+        toEl.classList.add('active');
+        toEl.style.display = toEl.id === 'welcome-screen' ? 'flex' : 'block';
+    } else {
+        toEl.style.display = 'flex';
+    }
+    toEl.style.visibility = 'visible';
+    toEl.style.pointerEvents = 'auto';
+
+    window.setTimeout(() => {
+        toEl.classList.add('screen-transition-fade-in');
+        toEl.classList.remove('screen-transition-enter');
+        window.setTimeout(() => {
+            toEl.classList.remove('screen-transition-fade-in');
+            toEl.style.opacity = '';
+            toEl.style.transform = '';
+            toEl.style.background = '';
+            toEl.style.transition = '';
+        }, phaseThreeMs);
+    }, phaseOneMs + phaseHoldMs);
 }
 
 // Welcome / intro UI
@@ -109,6 +757,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (preWelcomeOverlay) {
                 preWelcomeOverlay.style.display = 'flex';
                 initVoidStarfield();
+                initRitualWelcomeStarfield();
             }
         }, 100);
     }
@@ -133,32 +782,15 @@ document.addEventListener('DOMContentLoaded', () => {
             // Mark as transitioned immediately to prevent double-clicks
             buttonTransitioned = true;
             
-            // Hide pre-welcome overlay with smooth animation
             const overlay = document.getElementById('pre-welcome-overlay');
-            if (overlay) {
-                overlay.style.opacity = '0';
-                overlay.style.transition = 'opacity 0.4s ease-out';
-                setTimeout(() => {
-                    overlay.style.display = 'none';
-                    overlay.style.visibility = 'hidden';
-                    overlay.style.pointerEvents = 'none';
-                    overlay.classList.add('hiding');
-                }, 400);
-                console.log('[Continue] Pre-welcome overlay hidden');
-                }
-                
-            // Show welcome screen (name input & camera enable)
             const welcomeScreen = document.getElementById('welcome-screen');
-            if (welcomeScreen) {
-                welcomeScreen.style.opacity = '0';
-                welcomeScreen.style.display = 'block';
-                welcomeScreen.style.visibility = 'visible';
-                welcomeScreen.classList.add('active');
-                welcomeScreen.style.transition = 'opacity 0.4s ease-in';
-                setTimeout(() => {
-                    welcomeScreen.style.opacity = '1';
-                }, 100);
+            if (overlay && welcomeScreen) {
+                runCinematicScreenTransition(overlay, welcomeScreen, { hideWithDisplayNone: true });
+                console.log('[Continue] Pre-welcome overlay hidden');
                 console.log('[Continue] Welcome screen shown');
+            } else if (welcomeScreen) {
+                welcomeScreen.classList.add('active');
+                welcomeScreen.style.display = 'block';
             } else {
                 console.error('[Continue] Welcome screen not found!');
             }
@@ -266,8 +898,8 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     }, true);
     
-    // Setup guide icon buttons on page load (so guide can always be reopened)
-    setupGuideIconButtons();
+    // Removed power-up guide setup
+
 
     // Add 3D tilt effect to mode cards
     const modeCards = document.querySelectorAll('.mode-btn');
@@ -545,877 +1177,404 @@ window.addEventListener('unhandledrejection', (event) => {
     event.preventDefault(); // Prevent default handling
 });
 
-// Game state
 const gameState = {
-    currentPlayer: 'X',
+    gameActive: false,
     board: Array(9).fill(''),
-    losses: 0, // Player losses
-    aiLosses: 0, // AI losses (when player wins)
-    wins: 0,
     playerName: '',
-    isKingWilliam: false,
-    gameActive: true,
+    wins: 0,
+    losses: 0,
+    playerGoesFirst: true,
+    uiLocked: false,
+    uiLockingReason: null,
     inTsukuyomi: false,
-    tsukuyomiBoard: Array(9).fill(''),
-    pendingCheatMoveIndex: null,
+    inInteractiveMode: false,
+    aiTurnInProgress: false,
+    aiMoveInProgress: false,
+    mode: 'ai',
     cameraEnabled: false,
     cameraStream: null,
-    behaviorAnalyzer: null,
-    currentGameId: null,
-    aiLearningSystem: null,
-    playerMoveHistory: [], // Track player moves for pattern learning
-    inInteractiveMode: false, // Track if in AI mock interactive mode
-    playerGoesFirst: true, // Track who goes first - alternates each game
-    playerJustWon: false, // Track if player won last game - AI will think longer
-    aiThinkingDelay: 500, // Base AI thinking delay (increased after player wins)
-    currentLevel: 1, // Current level (ALWAYS Level 1 until graduation)
-    totalGamesPlayed: 0, // Total games (wins + losses) for level calculation
-    level1Wins: 0, // Wins in current level (need 5 to graduate)
-    level1Losses: 0, // Losses in current level
-    aiWinsInLevel: 0, // AI wins in current level (need 5 to prevent graduation)
-    roundCount: 0, // Total rounds completed (increments on every game end: win/loss/draw)
-    // Shield Guard removed - shieldedCells no longer used
-    shieldedCells: [], // Kept for compatibility but not used (all checks removed from AI logic)
-    // Tactical Claim (AI-only strategic power-up - Level 1+)
-    tacticalClaim: {
-        active: false, // Whether Tactical Claim is currently active
-        claimedCell: null, // Cell index that AI is strategically prioritizing (NOT blocked)
-        aiTurnsRemaining: 0, // Number of AI turns until claim expires (starts at 2)
-        lastAITurnUsed: false, // Track if Tactical Claim was used on last AI turn (prevents consecutive use)
-        cooldown: false // Prevents stacking - only one active at a time
-    },
-    reservedCells: [], // Legacy Tactical Claim reservations (visual only, non-blocking)
-    // MVP: Board layout lock - prevent shrinking between rounds
-    boardInitialized: false, // Track if board has been initialized (prevents re-animation between rounds)
-    // MVP: Track if game has started once - prevents Play Game button from reappearing
-    hasGameStartedOnce: false, // Track if first game has started (prevents reset button from showing after first game)
-    // CRITICAL: Turn locking to prevent AI from playing twice
-    aiTurnInProgress: false, // Prevents AI from executing multiple moves in one turn
-    // Level 1 leniency tracking
-    firstRoundOfSession: true, // Track if this is the first round of the session
-    playerWinningPatterns: [], // Track patterns player used to win
-    // Last Stand power-up tracking
-    lastStandUsed: false, // Track if Last Stand was used this game
-    lastStandScheduledForPlay: null, // Track which play count (1-5) Last Stand is scheduled for (null = not scheduled)
-    currentPlayCount: 0, // Track current play count (1-5) - increments each game
-    // AI recalculation trigger (set to true when power-up changes board state)
-    aiRecalculationNeeded: false,
-    // Additional AI turn lock for double-move prevention
-    aiMoveInProgress: false, // Secondary lock to prevent double moves
-    aiFailSafeTimer: null // Safety timer to prevent AI thinking deadlocks
+    boardInitialized: false,
+    roundCount: 0,
+    firstRoundOfSession: true,
+    playerWinningPatterns: [],
+    aiFailSafeTimer: null,
+    currentLevel: 1,
+    level1: {
+      playerWins: 0,
+      aiWins: 0,
+      gamesPlayed: 0,
+      totalGames: 5,
+      complete: false,
+      history: []
+    }
 };
+
+/**
+ * Angelic AI Level 1 - Beatable but adaptive intelligence.
+ * Evolves across 5 games with three distinct phases.
+ */
+const AngelicAI_Level1 = {
+    memory: [], // Stores { opening: '0,4', thirdMove: 8 }
+
+    getBestMove(board, gamesPlayed) {
+        const phase = this.getPhase(gamesPlayed);
+        console.log(`[Level 1 AI] Game ${gamesPlayed + 1}, Phase ${phase} active`);
+
+        // Phase 1 (Games 1-2): Cold
+        if (phase === 1) {
+            return this.phase1Move(board);
+        }
+        // Phase 2 (Games 3-4): Aware
+        if (phase === 2) {
+            return this.phase2Move(board);
+        }
+        // Phase 3 (Game 5): Adaptive
+        if (phase === 3) {
+            return this.phase3Move(board);
+        }
+        return this.phase1Move(board);
+    },
+
+    getPhase(gamesPlayed) {
+        if (gamesPlayed < 2) return 1;
+        if (gamesPlayed < 4) return 2;
+        return 3;
+    },
+
+    phase1Move(board) {
+        // 1. Immediate win
+        let move = this.findWinningMove(board, 'O');
+        if (move !== null) return move;
+
+        // 2. Immediate block
+        move = this.findWinningMove(board, 'X');
+        if (move !== null) return move;
+
+        // 3. Center -> corners -> sides
+        return this.basicPriorityMove(board);
+    },
+
+    phase2Move(board) {
+        // 1. Win/Block
+        let move = this.findWinningMove(board, 'O');
+        if (move !== null) return move;
+        move = this.findWinningMove(board, 'X');
+        if (move !== null) return move;
+
+        // 2. Opening memory pre-emption
+        const playerMoves = gameState.playerMoveHistory || [];
+        if (playerMoves.length === 2) {
+            const pattern = playerMoves.join(',');
+            const predicted = this.memory.find(p => p.opening === pattern);
+            if (predicted && board[predicted.thirdMove] === '') {
+                console.log(`[Level 1 AI] Pre-empting known opening: ${pattern}`);
+                return predicted.thirdMove;
+            }
+        }
+
+        // 3. Fork creation
+        move = this.findForkMove(board, 'O');
+        if (move !== null) return move;
+
+        return this.basicPriorityMove(board);
+    },
+
+    phase3Move(board) {
+        // 1. Win/Block
+        let move = this.findWinningMove(board, 'O');
+        if (move !== null) return move;
+        move = this.findWinningMove(board, 'X');
+        if (move !== null) return move;
+
+        // 2. Memory pre-emption
+        const playerMoves = gameState.playerMoveHistory || [];
+        if (playerMoves.length === 2) {
+            const pattern = playerMoves.join(',');
+            const predicted = this.memory.find(p => p.opening === pattern);
+            if (predicted && board[predicted.thirdMove] === '') {
+                return predicted.thirdMove;
+            }
+        }
+
+        // 3. Fork
+        move = this.findForkMove(board, 'O');
+        if (move !== null) return move;
+
+        // 4. Minimax depth 4
+        return this.minimax(board, 0, true, 4).index;
+    },
+
+    findWinningMove(board, mark) {
+        const winPatterns = [[0,1,2],[3,4,5],[6,7,8],[0,3,6],[1,4,7],[2,5,8],[0,4,8],[2,4,6]];
+        for (let p of winPatterns) {
+            const [a, b, c] = p;
+            if (board[a] === mark && board[b] === mark && board[c] === '') return c;
+            if (board[a] === mark && board[c] === mark && board[b] === '') return b;
+            if (board[b] === mark && board[c] === mark && board[a] === '') return a;
+        }
+        return null;
+    },
+
+    findForkMove(board, mark) {
+        for (let i = 0; i < 9; i++) {
+            if (board[i] === '') {
+                const temp = [...board];
+                temp[i] = mark;
+                let threats = 0;
+                const winPatterns = [[0,1,2],[3,4,5],[6,7,8],[0,3,6],[1,4,7],[2,5,8],[0,4,8],[2,4,6]];
+                for (let p of winPatterns) {
+                    const [a, b, c] = p;
+                    if (temp[a] === mark && temp[b] === mark && temp[c] === '') threats++;
+                    else if (temp[a] === mark && temp[c] === mark && temp[b] === '') threats++;
+                    else if (temp[b] === mark && temp[c] === mark && temp[a] === '') threats++;
+                }
+                if (threats >= 2) return i;
+            }
+        }
+        return null;
+    },
+
+    basicPriorityMove(board) {
+        if (board[4] === '') return 4;
+        const corners = [0, 2, 6, 8].filter(i => board[i] === '');
+        if (corners.length > 0) return corners[Math.floor(Math.random() * corners.length)];
+        const sides = [1, 3, 5, 7].filter(i => board[i] === '');
+        if (sides.length > 0) return sides[Math.floor(Math.random() * sides.length)];
+        const available = board.map((c, i) => c === '' ? i : null).filter(i => i !== null);
+        return available[Math.floor(Math.random() * available.length)];
+    },
+
+    minimax(board, depth, isMaximizing, maxDepth) {
+        const winner = this.checkWinner(board);
+        if (winner === 'O') return { score: 10 - depth };
+        if (winner === 'X') return { score: depth - 10 };
+        if (board.every(c => c !== '') || depth === maxDepth) return { score: 0 };
+
+        if (isMaximizing) {
+            let best = -Infinity;
+            let move = null;
+            for (let i = 0; i < 9; i++) {
+                if (board[i] === '') {
+                    board[i] = 'O';
+                    let score = this.minimax(board, depth + 1, false, maxDepth).score;
+                    board[i] = '';
+                    if (score > best) { best = score; move = i; }
+                }
+            }
+            return { score: best, index: move };
+        } else {
+            let best = Infinity;
+            let move = null;
+            for (let i = 0; i < 9; i++) {
+                if (board[i] === '') {
+                    board[i] = 'X';
+                    let score = this.minimax(board, depth + 1, true, maxDepth).score;
+                    board[i] = '';
+                    if (score < best) { best = score; move = i; }
+                }
+            }
+            return { score: best, index: move };
+        }
+    },
+
+    checkWinner(board) {
+        const winPatterns = [[0,1,2],[3,4,5],[6,7,8],[0,3,6],[1,4,7],[2,5,8],[0,4,8],[2,4,6]];
+        for (let p of winPatterns) {
+            const [a, b, c] = p;
+            if (board[a] && board[a] === board[b] && board[a] === board[c]) return board[a];
+        }
+        return null;
+    },
+
+    recordOpening(moves) {
+        if (moves && moves.length >= 3) {
+            const opening = moves.slice(0, 2).join(',');
+            const thirdMove = moves[2];
+            if (!this.memory.some(p => p.opening === opening)) {
+                this.memory.push({ opening, thirdMove });
+                console.log(`[Level 1 AI] Learned opening: ${opening} -> ${thirdMove}`);
+            }
+        }
+    }
+};
+
+/**
+ * Inject Level 1 UI Styles
+ */
+(function injectLevel1Styles() {
+    const style = document.createElement('style');
+    style.id = 'level1-styles';
+    style.innerHTML = `
+        .level1-progress {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 20px;
+            justify-content: center;
+            align-items: center;
+        }
+        .progress-slot {
+            width: 14px;
+            height: 14px;
+            border: 1px solid rgba(200, 169, 110, 0.3);
+            transform: rotate(45deg);
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+        }
+        .progress-slot.current {
+            border-color: var(--champagne);
+            box-shadow: 0 0 10px var(--champagne);
+            animation: diamond-pulse 1.5s infinite ease-in-out;
+        }
+        @keyframes diamond-pulse {
+            0%, 100% { opacity: 0.6; transform: rotate(45deg) scale(1); }
+            50% { opacity: 1; transform: rotate(45deg) scale(1.2); }
+        }
+        .progress-slot.player-win {
+            background: var(--champagne);
+            border-color: var(--champagne);
+            box-shadow: 0 0 15px var(--champagne);
+        }
+        .progress-slot.ai-win {
+            background: var(--steel);
+            border-color: var(--steel);
+            box-shadow: 0 0 15px var(--steel);
+        }
+        .progress-slot.draw {
+            border-color: rgba(255, 255, 255, 0.4);
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .level-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(5, 5, 10, 0.85);
+            backdrop-filter: blur(12px);
+            z-index: 9999;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            opacity: 0;
+            transition: opacity 0.8s ease;
+            color: white;
+            text-align: center;
+            padding: 20px;
+        }
+        .level-overlay.active { opacity: 1; }
+        
+        .level-overlay h2 {
+            font-family: 'Cinzel', serif;
+            font-size: 3.5rem;
+            margin-bottom: 0.5rem;
+            letter-spacing: 0.2rem;
+        }
+        .level-overlay.complete h2 { color: var(--champagne); text-shadow: 0 0 20px rgba(200, 169, 110, 0.4); }
+        .level-overlay.failed h2 { color: #ff3333; text-shadow: 0 0 20px rgba(255, 51, 51, 0.4); }
+        
+        .level-overlay .subtext {
+            font-family: 'Cormorant Garamond', serif;
+            font-style: italic;
+            font-size: 1.4rem;
+            opacity: 0.8;
+            margin-bottom: 2.5rem;
+        }
+        
+        .level-score {
+            font-family: 'DM Mono', monospace;
+            font-size: 2.5rem;
+            margin-bottom: 3rem;
+            display: flex;
+            gap: 20px;
+            align-items: center;
+        }
+        .score-val { color: var(--champagne); }
+        .score-val.ai { color: var(--steel); }
+        .score-divider { opacity: 0.3; }
+
+        .overlay-buttons {
+            display: flex;
+            gap: 20px;
+        }
+        .overlay-btn {
+            padding: 12px 30px;
+            font-family: 'Cinzel', serif;
+            font-size: 1rem;
+            cursor: pointer;
+            border: 1px solid;
+            background: transparent;
+            transition: all 0.3s ease;
+            letter-spacing: 1px;
+        }
+        .btn-gold { border-color: var(--champagne); color: var(--champagne); }
+        .btn-gold:hover:not(:disabled) { background: var(--champagne); color: black; }
+        .btn-gold:disabled { border-color: #555; color: #555; cursor: not-allowed; }
+        
+        .btn-steel { border-color: var(--steel); color: var(--steel); }
+        .btn-steel:hover { background: var(--steel); color: white; }
+
+        .taunt-line {
+            margin-top: 2rem;
+            font-size: 0.9rem;
+            opacity: 0.6;
+            font-family: 'Cormorant Garamond', serif;
+        }
+
+        .sigil-bg {
+            position: absolute;
+            width: 500px;
+            height: 500px;
+            opacity: 0.05;
+            z-index: -1;
+            pointer-events: none;
+            animation: rotate-sigil 60s linear infinite;
+        }
+        @keyframes rotate-sigil {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+    `;
+    document.head.appendChild(style);
+})();
+
+
+/**
+ * Finalizes the current round and starts the next one.
+ * Transitions to next round automatically after first game.
+ */
+function finalizeRoundAndStartNext() {
+    try {
+        if (gameState.level1 && gameState.level1.gamesPlayed >= gameState.level1.totalGames) {
+            return; // Series over — overlay is handling it
+        }
+        console.log('[Round Transition] Finalizing round and starting next...');
+        gameState.roundCount = (gameState.roundCount || 0) + 1;
+        
+        // Trigger the reset button click logic to re-initialize the game
+        if (resetBtn) {
+            resetBtn.click();
+        } else {
+            // Fallback if button missing
+            gameState.board = Array(9).fill('');
+            gameState.gameActive = true;
+            cells.forEach(cell => {
+                cell.textContent = '';
+                cell.setAttribute('data-mark', '');
+            });
+            emitBoardUpdate();
+        }
+    } catch (e) {
+        console.error('[Round Transition] Error in finalizeRoundAndStartNext:', e);
+    }
+}
 
 /**
  * Power-Up Manager System
  * Front-end only - visual effects, no AI logic changes
  */
-const PowerUpManager = {
-    powerUps: {
-        hintPulse: {
-            id: 'hintPulse',
-            name: 'Hint Pulse',
-            icon: '💡',
-            description: 'Reveals a suggested move with a glowing pulse',
-            duration: 2000, // 2 seconds
-            audioType: 'chime',
-            requiresTarget: false
-        },
-        boardShake: {
-            id: 'boardShake',
-            name: 'Board Shake',
-            icon: '🌊',
-            description: 'Reindexes all cell positions once. Marks remain but positions remap.',
-            duration: 200, // Animation duration
-            audioType: 'chime',
-            requiresTarget: false,
-            level1Only: true
-        },
-        lastStand: {
-            id: 'lastStand',
-            name: 'Last Stand',
-            icon: '⚡',
-            description: 'Schedule deployment for a future play count (1-5). Auto-triggers when about to lose on that play.',
-            duration: 600, // Animation duration
-            audioType: 'chime',
-            requiresTarget: false,
-            level1Only: true,
-            autoTrigger: false // Now requires scheduling
-        },
-        focusAura: {
-            id: 'focusAura',
-            name: 'Focus Aura',
-            icon: '🌀',
-            description: 'PvP only - Radiating aura effect (visual only in PvE)',
-            duration: 4000, // 4 seconds
-            audioType: 'chime',
-            requiresTarget: false,
-            pvpOnly: true
-        }
-    },
-    
-    currentLevel: 1,
-    quantities: {}, // Track quantities per power-up
-    activeEffects: {}, // Track currently active effects
-    
-    /**
-     * Initialize power-up system
-     */
-    init() {
-        this.currentLevel = gameState.currentLevel || 1;
-        this.resetPowerUpsForLevel();
-        this.renderSidebar();
-        this.setupEventListeners();
-    },
-    
-    /**
-     * Reset power-ups for new level (1 free power-up per level)
-     */
-    resetPowerUpsForLevel() {
-        Object.keys(this.powerUps).forEach(powerUpId => {
-            this.quantities[powerUpId] = 1; // 1 free power-up per level
-        });
-        // Note: activeEffects and shields are cleared when new game starts, not when level changes
-        
-        // REMOVED: Auto-prompt on level reset - Last Stand now schedules on click only
-    },
-    
-    /**
-     * Clear all shields (called when new game starts)
-     * NOTE: Shield Guard removed - this function kept for compatibility but does nothing
-     */
-    clearAllShields() {
-        // Shield Guard removed - no shields to clear
-    },
-    
-    /**
-     * Update level based on total games played
-     */
-    updateLevel() {
-        const newLevel = Math.floor((gameState.totalGamesPlayed || 0) / 1) + 1; // New level every game
-        if (newLevel !== this.currentLevel) {
-            this.currentLevel = newLevel;
-            gameState.currentLevel = newLevel;
-            this.resetPowerUpsForLevel();
-            this.renderSidebar();
-        }
-    },
-    
-    /**
-     * Render power-up sidebar
-     */
-    renderSidebar() {
-        const sidebar = document.getElementById('powerup-sidebar');
-        const list = document.getElementById('powerup-list');
-        const levelDisplay = document.getElementById('powerup-level-display');
-        
-        if (!sidebar || !list) return;
-        
-        // Update level display
-        if (levelDisplay) {
-            levelDisplay.textContent = this.currentLevel;
-        }
-        
-        // Clear existing power-ups
-        list.innerHTML = '';
-        
-        // Create power-up items
-        Object.values(this.powerUps).forEach(powerUp => {
-            // Skip PvP-only power-ups in Player vs AI mode
-            if (powerUp.pvpOnly && gameState.mode !== 'pvp') {
-                return;
-            }
-            
-            // Skip Level 1-only power-ups if not in Level 1
-            if (powerUp.level1Only && this.currentLevel !== 1) {
-                return;
-            }
-            
-            // Skip auto-trigger power-ups from UI (they trigger automatically)
-            if (powerUp.autoTrigger) {
-                return;
-            }
-            
-            const item = document.createElement('div');
-            item.className = 'powerup-item';
-            item.dataset.powerupId = powerUp.id;
-            
-            // CRITICAL: Power-up persistence - each power-up has independent state
-            // Read quantity directly from quantities object - do NOT modify other power-ups
-            const quantity = this.quantities[powerUp.id] !== undefined ? this.quantities[powerUp.id] : 0;
-            const isActive = this.activeEffects[powerUp.id] ? true : false;
-            const isDisabled = quantity === 0 || isActive;
-            const isPvpOnly = powerUp.pvpOnly && gameState.mode !== 'pvp';
-            
-            // CRITICAL: Only hide power-ups that have quantity 0 AND are not active
-            // Do NOT filter out power-ups that still have quantity > 0
-            // Each power-up's visibility is independent
-            
-            // CRITICAL: No permanent names/labels - icons only for clean UI
-            item.innerHTML = `
-                <button class="powerup-button ${isDisabled ? 'disabled' : ''} ${isActive ? 'active' : ''}" 
-                        data-powerup-id="${powerUp.id}"
-                        ${isDisabled ? 'disabled' : ''}
-                        aria-label="${powerUp.name}">
-                    <span class="powerup-icon">${powerUp.icon}</span>
-                    <span class="powerup-quantity">${quantity}</span>
-                </button>
-                <div class="powerup-tooltip">
-                    <div class="powerup-tooltip-name">${powerUp.name}</div>
-                    <div class="powerup-tooltip-desc">${powerUp.description}</div>
-                    ${isPvpOnly ? '<div class="powerup-tooltip-note">PvP only</div>' : ''}
-                    ${isActive ? '<div class="powerup-tooltip-active">Active</div>' : ''}
-                </div>
-            `;
-            
-            list.appendChild(item);
-        });
-        
-        // Attach click handlers
-        list.querySelectorAll('.powerup-button').forEach(btn => {
-            btn.addEventListener('click', (e) => {
-                const powerUpId = btn.dataset.powerupId;
-                if (powerUpId) {
-                    this.activatePowerUp(powerUpId);
-                    
-                    // MOBILE: Close panel immediately after selection
-                    if (window.innerWidth <= 768) {
-                        this.closeMobilePanel();
-                    }
-                }
-            });
-        });
-    },
-    
-    /**
-     * Close mobile power-up panel after selection
-     */
-    closeMobilePanel() {
-        const sidebar = document.getElementById('powerup-sidebar');
-        if (sidebar) {
-            sidebar.classList.remove('mobile-expanded');
-        }
-    },
-    
-    /**
-     * Activate a power-up (visual effects only)
-     */
-    activatePowerUp(powerUpId) {
-        const powerUp = this.powerUps[powerUpId];
-        if (!powerUp) return;
-        
-        const quantity = this.quantities[powerUpId] || 0;
-        if (quantity === 0) return;
-        
-        // Check if already active
-        if (this.activeEffects[powerUpId]) return;
-        
-        // Check PvP only restriction
-        if (powerUp.pvpOnly && gameState.mode !== 'pvp') {
-            this.showActivationMessage({...powerUp, name: 'Focus Aura (PvP only)'}, true);
-            return;
-        }
-        
-        // CRITICAL: Last Stand requires forward-scheduling (not instant activation)
-        if (powerUpId === 'lastStand') {
-            this.scheduleLastStandDeployment();
-            return; // Don't activate immediately - wait for scheduling
-        }
-        
-        // No power-ups require cell selection anymore (Shield Guard removed)
-        
-        // CRITICAL: Power-up consumption - ONLY decrease THIS power-up's quantity
-        // Do NOT modify other power-ups' quantities or states
-        // Each power-up has independent state that persists until individually consumed
-        this.quantities[powerUpId] = Math.max(0, quantity - 1);
-        
-        // Mark as active - ONLY this power-up
-        this.activeEffects[powerUpId] = true;
-        
-        // Play audio cue
-        this.playPowerUpAudio(powerUp.audioType);
-        
-        // Apply visual effect
-        this.applyVisualEffect(powerUpId);
-        
-        // CRITICAL: Trigger AI recalculation for ALL power-ups that affect gameplay
-        // This ensures AI re-evaluates board state after any power-up activation
-        // Power-ups that affect gameplay: boardShake (remaps board), hintPulse (visual only but may affect player strategy)
-        // Note: This is NOT an intelligence change - just a recalculation trigger
-        if (powerUpId === 'boardShake' || powerUpId === 'hintPulse') {
-            gameState.aiRecalculationNeeded = true;
-        }
-        
-        // CRITICAL: Trigger Tactical Claim activation check when player uses power-up
-        // This is one of the trigger conditions for Tactical Claim
-        if (gameState.currentLevel >= 1) {
-            checkAndActivateTacticalClaim('player_powerup');
-        }
-        
-        // CRITICAL: Power-up state isolation - only update THIS power-up's state
-        // Do NOT modify other power-ups' quantities, activeEffects, or render state
-        // Each power-up tracks its own state independently
-        
-        // Update sidebar with activation highlight
-        this.highlightPowerUpButton(powerUpId);
-        // CRITICAL: renderSidebar() rebuilds UI but preserves all power-up states
-        // It reads from quantities and activeEffects - these are not modified for other power-ups
-        this.renderSidebar();
-        
-        // Show prominent activation feedback banner
-        this.showPowerUpActivationBanner(powerUp);
-        
-        // Show activation message (legacy - kept for compatibility)
-        this.showActivationMessage(powerUp);
-        
-        // Deactivate after duration
-        setTimeout(() => {
-            this.deactivatePowerUp(powerUpId);
-        }, powerUp.duration);
-    },
-    
-    /**
-     * Schedule Last Stand deployment - player chooses future play count (1-5)
-     */
-    scheduleLastStandDeployment() {
-        // Check if already scheduled
-        if (gameState.lastStandScheduledForPlay !== null) {
-            const messageBox = document.getElementById('message-box');
-            if (messageBox) {
-                messageBox.textContent = `Last Stand already scheduled for Play #${gameState.lastStandScheduledForPlay}`;
-            }
-            return;
-        }
-        
-        // Show deployment play count selection UI
-        this.showLastStandDeploymentUI();
-    },
-    
-    /**
-     * Show UI for Last Stand deployment play count selection (CINEMATIC)
-     */
-    showLastStandDeploymentUI() {
-        // CINEMATIC: Pause gameplay input
-        const wasGameActive = gameState.gameActive;
-        gameState.gameActive = false;
-        gameState.uiLocked = true;
-        
-        // Create cinematic overlay with dimming
-        const overlay = document.createElement('div');
-        overlay.id = 'laststand-deployment-overlay';
-        overlay.className = 'laststand-deployment-overlay cinematic-overlay';
-        
-        const currentPlay = gameState.currentPlayCount || 0;
-        const maxPlay = 5; // Maximum play count
-        
-        let content = '<div class="laststand-deployment-content cinematic-content">';
-        content += '<div class="cinematic-header">';
-        content += '<h3 class="cinematic-title">You are choosing a moment in the future...</h3>';
-        content += '</div>';
-        content += `<p class="laststand-deployment-subtitle">Select when Last Stand will activate (Play #${currentPlay + 1} - ${maxPlay} only)</p>`;
-        content += '<div class="laststand-level-options cinematic-options">';
-        
-        // Show only future play counts (forward-only)
-        for (let play = currentPlay + 1; play <= maxPlay; play++) {
-            content += `<button class="laststand-level-btn cinematic-btn" data-play="${play}">`;
-            content += `Play #${play}`;
-            content += '</button>';
-        }
-        
-        content += '</div>';
-        content += '<button class="laststand-cancel-btn cinematic-cancel">Cancel</button>';
-        content += '</div>';
-        
-        overlay.innerHTML = content;
-        document.body.appendChild(overlay);
-        
-        // CINEMATIC: Dim background
-        const gameScreen = document.getElementById('game-screen');
-        if (gameScreen) {
-            gameScreen.classList.add('dimmed-for-overlay');
-        }
-        
-        // Animate in with fade
-        setTimeout(() => {
-            overlay.classList.add('active');
-        }, 10);
-        
-        // Attach event listeners
-        overlay.querySelectorAll('.laststand-level-btn').forEach(btn => {
-            btn.addEventListener('click', (e) => {
-                const playCount = parseInt(e.target.dataset.play);
-                this.confirmLastStandDeployment(playCount, wasGameActive);
-                overlay.classList.remove('active');
-                // Remove dimming
-                if (gameScreen) {
-                    gameScreen.classList.remove('dimmed-for-overlay');
-                }
-                setTimeout(() => overlay.remove(), 300);
-            });
-        });
-        
-        overlay.querySelector('.laststand-cancel-btn').addEventListener('click', () => {
-            overlay.classList.remove('active');
-            // Remove dimming and resume gameplay
-            if (gameScreen) {
-                gameScreen.classList.remove('dimmed-for-overlay');
-            }
-            gameState.gameActive = wasGameActive;
-            gameState.uiLocked = false;
-            setTimeout(() => overlay.remove(), 300);
-        });
-    },
-    
-    /**
-     * Confirm Last Stand deployment for selected play count
-     */
-    confirmLastStandDeployment(playCount, resumeGameplay = true) {
-        gameState.lastStandScheduledForPlay = playCount;
-        
-        // Consume the power-up
-        this.quantities['lastStand'] = Math.max(0, (this.quantities['lastStand'] || 0) - 1);
-        this.renderSidebar();
-        
-        // CINEMATIC: Resume gameplay after selection
-        if (resumeGameplay) {
-            gameState.gameActive = true;
-            gameState.uiLocked = false;
-        }
-        
-        // Show confirmation
-        const messageBox = document.getElementById('message-box');
-        if (messageBox) {
-            messageBox.textContent = `⚡ Last Stand scheduled for Play #${playCount}`;
-            setTimeout(() => {
-                if (messageBox.textContent.includes('Last Stand scheduled')) {
-                    messageBox.textContent = gameState.playerName ? `Your turn, ${gameState.playerName}!` : 'Your turn!';
-                }
-            }, 3000);
-        }
-    },
-    
-    
-    /**
-     * Play power-up audio cue
-     */
-    playPowerUpAudio(audioType) {
-        const audio = document.getElementById('powerup-activate-sound');
-        if (audio) {
-            audio.currentTime = 0;
-            audio.volume = audioType === 'shield' ? 0.25 : 0.3; // Subtle volume
-            audio.play().catch(() => {}); // Ignore autoplay errors
-        }
-    },
-    
-    /**
-     * Highlight power-up button on activation
-     */
-    highlightPowerUpButton(powerUpId) {
-        const button = document.querySelector(`[data-powerup-id="${powerUpId}"]`);
-        if (button) {
-            button.classList.add('powerup-activating');
-            setTimeout(() => {
-                button.classList.remove('powerup-activating');
-            }, 500);
-        }
-    },
-    
-    /**
-     * Apply visual effect for power-up
-     */
-    applyVisualEffect(powerUpId) {
-        const board = document.querySelector('.game-board');
-        const cells = document.querySelectorAll('.cell');
-        
-        if (!board) return;
-        
-        switch(powerUpId) {
-            case 'hintPulse':
-                this.createHintPulse(cells);
-                break;
-            case 'boardShake':
-                this.createBoardShake();
-                break;
-            case 'lastStand':
-                this.createLastStand();
-                break;
-            case 'focusAura':
-                this.createFocusAura();
-                break;
-        }
-    },
-    
-    /**
-     * Apply visual effect on specific cell
-     * NOTE: Shield Guard removed - no cell-specific effects currently
-     */
-    applyVisualEffectOnCell(powerUpId, cellIndex) {
-        // No cell-specific power-ups currently
-    },
-    
-    /**
-     * Create Hint Pulse effect - shows suggested move
-     * Visual only - uses AI logic to suggest but doesn't modify game state
-     */
-    createHintPulse(cells) {
-        // Get AI's suggested move (visual only, doesn't affect AI logic)
-        let suggestedIndex = null;
-        try {
-            // Store original board state
-            const originalBoard = [...gameState.board];
-            const originalPlayerGoesFirst = gameState.playerGoesFirst;
-            
-            // Temporarily set AI as next player to get its move suggestion
-            // This is read-only for hint purposes
-            if (typeof chooseHardAIMove === 'function') {
-                // Call AI move function to get suggestion
-                // Note: chooseHardAIMove should not modify board, but we'll restore anyway
-                suggestedIndex = chooseHardAIMove();
-            }
-            
-            // Restore board state (safety check - should not be modified)
-            gameState.board = originalBoard;
-            gameState.playerGoesFirst = originalPlayerGoesFirst;
-            
-            // Validate suggestion is an empty cell
-            if (suggestedIndex !== null && suggestedIndex >= 0 && suggestedIndex < 9) {
-                if (gameState.board[suggestedIndex] !== '') {
-                    // Invalid suggestion, find first empty cell
-                    suggestedIndex = null;
-                }
-            } else {
-                suggestedIndex = null;
-            }
-        } catch (e) {
-            console.log('Could not get hint suggestion:', e);
-            suggestedIndex = null;
-        }
-        
-        // Fallback: find first empty cell if no valid suggestion
-        if (suggestedIndex === null) {
-            for (let i = 0; i < cells.length; i++) {
-                if (!cells[i].textContent.trim() && gameState.board[i] === '') {
-                    suggestedIndex = i;
-                    break;
-                }
-            }
-        }
-        
-        if (suggestedIndex !== null && cells[suggestedIndex]) {
-            const cell = cells[suggestedIndex];
-            cell.classList.add('powerup-hint-pulse');
-            
-            // Remove after animation
-            setTimeout(() => {
-                cell.classList.remove('powerup-hint-pulse');
-            }, 2000);
-        }
-    },
-    
-    /**
-     * Create Board Shake effect - reindexes cell positions
-     */
-    createBoardShake() {
-        const board = document.querySelector('.game-board');
-        const cells = document.querySelectorAll('.cell');
-        if (!board || !cells || cells.length !== 9) return;
-        
-        // Store current board state (marks)
-        const currentMarks = Array.from(cells).map(cell => ({
-            mark: cell.textContent.trim(),
-            dataMark: cell.getAttribute('data-mark') || ''
-        }));
-        
-        // Create random permutation of indices (0-8)
-        const indices = [0, 1, 2, 3, 4, 5, 6, 7, 8];
-        for (let i = indices.length - 1; i > 0; i--) {
-            const j = Math.floor(Math.random() * (i + 1));
-            [indices[i], indices[j]] = [indices[j], indices[i]];
-        }
-        
-        // Apply shake animation
-        board.style.animation = 'board-shake 0.2s ease-in-out';
-        
-        // After animation, remap board state
-        setTimeout(() => {
-            // Create new board state array
-            const newBoard = Array(9).fill('');
-            const newMarks = Array(9).fill(null);
-            
-            // Remap marks to new positions
-            indices.forEach((newIndex, oldIndex) => {
-                newBoard[newIndex] = gameState.board[oldIndex];
-                newMarks[newIndex] = currentMarks[oldIndex];
-            });
-            
-            // Update gameState.board
-            gameState.board = newBoard;
-            
-            // Update visual cells
-            cells.forEach((cell, index) => {
-                const markData = newMarks[index];
-                if (markData) {
-                    cell.textContent = markData.mark;
-                    if (markData.dataMark) {
-                        cell.setAttribute('data-mark', markData.dataMark);
-                    } else {
-                        cell.removeAttribute('data-mark');
-                    }
-                } else {
-                    cell.textContent = '';
-                    cell.removeAttribute('data-mark');
-                }
-            });
-            
-            // Clear animation
-            board.style.animation = '';
-            
-            // CRITICAL: Trigger AI recalculation - board state changed
-            gameState.aiRecalculationNeeded = true;
-            
-            // Trigger AI recalculation hook (if exists)
-            if (typeof emitBoardUpdate === 'function') {
-                emitBoardUpdate();
-            }
-            
-            // CRITICAL: Trigger Tactical Claim activation check when Board Shake occurs
-            // This is one of the trigger conditions for Tactical Claim
-            if (gameState.currentLevel >= 1) {
-                checkAndActivateTacticalClaim('board_shake');
-            }
-        }, 200);
-    },
-    
-    /**
-     * Create Last Stand effect - grants extra move when one move from losing
-     */
-    createLastStand() {
-        const board = document.querySelector('.game-board');
-        const messageBox = document.getElementById('message-box');
-        
-        if (!board) return;
-        
-        // Visual effect: pulse and glow
-        board.style.animation = 'last-stand-pulse 0.6s ease-out';
-        board.classList.add('last-stand-active');
-        
-        // Show activation message
-        if (messageBox) {
-            const originalText = messageBox.textContent;
-            messageBox.textContent = '⚡ LAST STAND ACTIVATED';
-            messageBox.classList.add('last-stand-message');
-            
-            setTimeout(() => {
-                messageBox.classList.remove('last-stand-message');
-                messageBox.textContent = originalText;
-            }, 2000);
-        }
-        
-        // Clear visual effects after animation
-        setTimeout(() => {
-            board.style.animation = '';
-            board.classList.remove('last-stand-active');
-        }, 600);
-        
-        // Mark as used for this game
-        gameState.lastStandUsed = true;
-        
-        // CRITICAL: Trigger AI recalculation - Last Stand activated
-        gameState.aiRecalculationNeeded = true;
-        
-        // CRITICAL: Power-up isolation - Last Stand does NOT affect other power-ups
-        // Board Shake, Hint Pulse remain fully functional
-        // No shared cleanup or reset functions called
-        
-        // CRITICAL: Trigger AI recalculation - Last Stand activated, board state may change
-        gameState.aiRecalculationNeeded = true;
-    },
-    
-    /**
-     * Create Focus Aura effect (visual only, PvP placeholder)
-     */
-    createFocusAura() {
-        // In PvE, just show visual aura from player info area
-        const playerInfo = document.getElementById('player-info');
-        if (playerInfo) {
-            playerInfo.classList.add('powerup-focus-aura');
-            
-            setTimeout(() => {
-                playerInfo.classList.remove('powerup-focus-aura');
-            }, 4000);
-        }
-        
-        // Also add aura to sidebar power-up button
-        const button = document.querySelector('[data-powerup-id="focusAura"]');
-        if (button) {
-            button.classList.add('powerup-aura-active');
-            setTimeout(() => {
-                button.classList.remove('powerup-aura-active');
-            }, 4000);
-        }
-    },
-    
-    /**
-     * Deactivate power-up effect
-     */
-    deactivatePowerUp(powerUpId) {
-        // CRITICAL: Power-up state isolation - only deactivate THIS power-up
-        // Do NOT modify other power-ups' states
-        if (!this.activeEffects[powerUpId]) return;
-        
-        const effectData = this.activeEffects[powerUpId];
-        // CRITICAL: Only delete THIS power-up's active effect
-        delete this.activeEffects[powerUpId];
-        
-        const cells = document.querySelectorAll('.cell');
-        
-        // Remove visual effects based on power-up type
-        // CRITICAL: Only remove visual effects for THIS power-up
-        switch(powerUpId) {
-            case 'hintPulse':
-                cells.forEach(cell => {
-                    cell.classList.remove('powerup-hint-pulse');
-                });
-                break;
-            case 'boardShake':
-                // Animation completes automatically, just mark inactive
-                break;
-            case 'lastStand':
-                // Animation completes automatically, just mark inactive
-                break;
-            case 'focusAura':
-                const playerInfo = document.getElementById('player-info');
-                if (playerInfo) {
-                    playerInfo.classList.remove('powerup-focus-aura');
-                }
-                const button = document.querySelector('[data-powerup-id="focusAura"]');
-                if (button) {
-                    button.classList.remove('powerup-aura-active');
-                }
-                break;
-        }
-        
-        // CRITICAL: Update sidebar - this rebuilds UI but preserves all power-up states
-        // renderSidebar() reads from quantities and activeEffects - these remain unchanged for other power-ups
-        this.renderSidebar();
-    },
-    
-    /**
-     * Show brief cinematic flash for power-up activation
-     * Fast, non-intrusive, with background darkening
-     */
-    showPowerUpActivationBanner(powerUp) {
-        // Remove any existing banner/darkening first
-        const existingBanner = document.getElementById('powerup-activation-banner');
-        const existingDarken = document.getElementById('powerup-activation-darken');
-        if (existingBanner) existingBanner.remove();
-        if (existingDarken) existingDarken.remove();
-        
-        // Create background darkening overlay
-        const darken = document.createElement('div');
-        darken.id = 'powerup-activation-darken';
-        darken.className = 'powerup-activation-darken';
-        document.body.appendChild(darken);
-        
-        // Create small centered card
-        const banner = document.createElement('div');
-        banner.id = 'powerup-activation-banner';
-        banner.className = 'powerup-activation-banner';
-        banner.innerHTML = `
-            <div class="powerup-banner-content">
-                <span class="powerup-banner-icon">${powerUp.icon}</span>
-                <span class="powerup-banner-text">${powerUp.name} Activated</span>
-            </div>
-        `;
-        
-        document.body.appendChild(banner);
-        
-        // Animate in
-        setTimeout(() => {
-            darken.classList.add('visible');
-            banner.classList.add('visible');
-        }, 10);
-        
-        // Fade out and remove after ~2 seconds total
-        setTimeout(() => {
-            darken.classList.remove('visible');
-            banner.classList.remove('visible');
-            setTimeout(() => {
-                if (banner.parentNode) banner.remove();
-                if (darken.parentNode) darken.remove();
-            }, 300);
-        }, 2000);
-    },
-    
-    /**
-     * Show activation message (legacy - kept for compatibility)
-     */
-    showActivationMessage(powerUp, isError = false) {
-        const messageBox = document.getElementById('message-box');
-        if (messageBox) {
-            const originalText = messageBox.textContent;
-            if (isError) {
-                messageBox.textContent = `${powerUp.icon} ${powerUp.name} - PvP mode only`;
-                messageBox.classList.add('powerup-message', 'powerup-error');
-            } else {
-                messageBox.textContent = `${powerUp.icon} ${powerUp.name} activated!`;
-                messageBox.classList.add('powerup-message');
-            }
-            
-            setTimeout(() => {
-                messageBox.classList.remove('powerup-message', 'powerup-error');
-                if (gameState.gameActive && !isError) {
-                    messageBox.textContent = originalText;
-                }
-            }, 2000);
-        }
-    },
-    
-    /**
-     * Setup sidebar toggle
-     */
-    setupEventListeners() {
-        const toggle = document.getElementById('powerup-toggle');
-        const sidebar = document.getElementById('powerup-sidebar');
-        
-        if (toggle && sidebar) {
-            toggle.addEventListener('click', () => {
-                // Desktop: toggle collapsed state
-                if (window.innerWidth > 768) {
-                    sidebar.classList.toggle('collapsed');
-                    const icon = toggle.querySelector('.powerup-toggle-icon');
-                    if (icon) {
-                        icon.textContent = sidebar.classList.contains('collapsed') ? '▲' : '▼';
-                    }
-                }
-            });
-        }
-        
-        // MOBILE: Tap sidebar symbol to open panel
-        // CRITICAL: Use both touch and pointer events for reliable mobile input
-        // Attach listener regardless of initial screen size - check at event time
-        if (sidebar) {
-            // Handle touch/pointer events for mobile
-            const handleMobileToggle = (e) => {
-                // Only process if on mobile viewport
-                if (window.innerWidth <= 768) {
-                    // Prevent event from bubbling to power-up buttons
-                    e.stopPropagation();
-                    
-                    // Only toggle if clicking the sidebar container itself, not a power-up button
-                    const clickedButton = e.target.closest('.powerup-button');
-                    if (!clickedButton) {
-                        sidebar.classList.toggle('mobile-expanded');
-                    }
-                }
-            };
-            
-            // Support multiple input methods for mobile compatibility
-            sidebar.addEventListener('click', handleMobileToggle);
-            sidebar.addEventListener('touchstart', handleMobileToggle, { passive: true });
-            sidebar.addEventListener('pointerdown', handleMobileToggle);
-        }
-    }
-};
+/* (Removed PowerUpManager) */
 
 // Network helpers to report to server (if running)
 async function safePost(url, body, retries = 3) {
@@ -2217,24 +2376,6 @@ try {
                     messageBox.textContent = `Hint: try ${hintIdx+1}`;
                 }
                 break;
-            case 'trigger-tactical-claim':
-                // Admin override for Tactical Claim
-                if (gameState.currentLevel === 1 && !gameState.tacticalClaimUsed && gameState.gameActive) {
-                    activateTacticalClaim();
-                    // Emit admin-triggered event
-                    if (socket) {
-                        try {
-                            socket.emit('powerup-event', {
-                                playerName: gameState.playerName,
-                                type: 'tactical-claim-admin',
-                                isAdminTriggered: true
-                            });
-                        } catch (e) {
-                            console.error('Error emitting admin Tactical Claim event:', e);
-                        }
-                    }
-                }
-                break;
             case 'request-face-visible':
                 // Show message to player to show their face
                 const faceMessage = payload.value && payload.value.message 
@@ -2431,12 +2572,9 @@ function emitBoardUpdate() {
             cameraEnabled: gameState.cameraEnabled,
             inInteractiveMode: gameState.inInteractiveMode, // Let admin know about interactive mode
             playerGoesFirst: gameState.playerGoesFirst,
-            // Level visibility data - ALWAYS Level 1 until graduation
-            currentLevel: 1, // FORCE Level 1 display (never show other level numbers)
-            level1Wins: gameState.level1Wins || 0,
-            aiWinsInLevel: gameState.aiWinsInLevel || 0, // AI wins in current level
-            roundCount: gameState.roundCount || 0, // Total rounds completed (includes draws)
-            tacticalClaimUsed: gameState.tacticalClaimUsed || false,
+            currentLevel: 1,
+            level1Wins: gameState.wins || 0,
+            roundCount: gameState.roundCount || 0,
             theme: 'luxury',
             timestamp: Date.now()
         });
@@ -2712,8 +2850,12 @@ startBtn.addEventListener('click', async () => {
 
     // Hide welcome screen and show mode selection page
     const modeSelect = document.getElementById('mode-select');
-    if (welcomeScreen) welcomeScreen.classList.remove('active');
-    if (modeSelect) modeSelect.classList.remove('hidden');
+    if (welcomeScreen && modeSelect) {
+        runCinematicScreenTransition(welcomeScreen, modeSelect);
+    } else {
+        if (welcomeScreen) welcomeScreen.classList.remove('active');
+        if (modeSelect) modeSelect.classList.remove('hidden');
+    }
         
         // FAILSAFE: Ensure game state is valid
         gameState.gameActive = false; // Will be set to true when game starts
@@ -2815,33 +2957,55 @@ if (document.readyState === 'loading') {
 
 // Start game as AI (extract of previous start logic)
 function startGameAsAI() {
+    const modeSelect = document.getElementById('mode-select');
+    if (modeSelect) {
+        modeSelect.classList.add('hidden');
+        modeSelect.style.display = 'none';
+    }
+
+    const preOverlay = document.getElementById('pre-welcome-overlay');
+    if (preOverlay) {
+        preOverlay.style.display = 'none';
+        preOverlay.style.position = 'absolute';
+    }
+
+    if (welcomeScreen) {
+        welcomeScreen.style.display = 'none';
+    }
+
     // MVP: Mark that game has started once - prevents Play Game button from reappearing
     gameState.hasGameStartedOnce = true;
     
     displayName.textContent = gameState.playerName;
     
-    // Hide welcome screen with smooth fade, then fully remove onboarding DOM
-    if (welcomeScreen) {
+    if (modeSelect) {
         try {
-        welcomeScreen.style.opacity = '0';
-        welcomeScreen.style.transition = 'opacity 0.4s ease-out';
-        setTimeout(() => {
-            welcomeScreen.classList.remove('active');
-                // MVP: Fully unmount welcome screen so it cannot push layout
-                if (welcomeScreen.parentNode) {
-                    welcomeScreen.parentNode.removeChild(welcomeScreen);
-                }
-        }, 400);
+            runCinematicScreenTransition(modeSelect, gameScreen, { removeFromDom: true });
         } catch (e) {
-            console.warn('[Layout] Failed to fade/remove welcome screen:', e);
-            // Hard fallback: force-remove without animation
+            console.warn('[Layout] Failed to transition/remove mode select:', e);
             try {
-                if (welcomeScreen.parentNode) {
-                    welcomeScreen.parentNode.removeChild(welcomeScreen);
+                if (modeSelect.parentNode) {
+                    modeSelect.parentNode.removeChild(modeSelect);
                 }
             } catch (_) {}
+            gameScreen.classList.add('active');
         }
     }
+
+    if (welcomeScreen) {
+        welcomeScreen.classList.remove('active');
+        welcomeScreen.style.opacity = '0';
+    }
+
+    gameScreen.classList.add('active');
+    gameScreen.style.opacity = '1';
+    try {
+        window.scrollTo({ top: 0, behavior: 'auto' });
+    } catch (_) {
+        window.scrollTo(0, 0);
+    }
+    document.documentElement.scrollTop = 0;
+    document.body.scrollTop = 0;
 
     // MVP: Also ensure pre-welcome overlay is removed from DOM
     try {
@@ -2853,21 +3017,11 @@ function startGameAsAI() {
         console.warn('[Layout] Failed to remove onboarding overlays (non‑critical):', e);
     }
     
-    // Show game screen with smooth fade
-    gameScreen.style.opacity = '0';
-    gameScreen.classList.add('active');
-    setTimeout(() => {
-        gameScreen.style.transition = 'opacity 0.4s ease-out';
-        gameScreen.style.opacity = '1';
-
-        // MVP: Hard-reset scroll so board is immediately visible, no vertical gap
-        try {
-            window.scrollTo({ top: 0, behavior: 'auto' });
-        } catch (_) {
-            window.scrollTo(0, 0);
-        }
-    }, 100);
-
+    // Inject Level 1 Progress Indicator
+    if (gameState.currentLevel === 1) {
+        updateLevel1Progress();
+    }
+    
     // STAGE 5: FINAL PRE-PLAY MESSAGE
     // Just before first move: One last short line, Something ominous, No advice, No friendliness
     messageBox.textContent = "Let's see what you're made of...";
@@ -2909,10 +3063,7 @@ function startGameAsAI() {
     // Start background music
     tryStartBackgroundMusic('startGameAsAI');
     
-    // Initialize Power-Up Manager
-    if (typeof PowerUpManager !== 'undefined') {
-        PowerUpManager.init();
-    }
+
     
     // Initialize behavior analyzer
     if (typeof BehaviorAnalyzer !== 'undefined') {
@@ -3053,6 +3204,7 @@ function showSarahNarrative(message, actions) {
 
 function hideSarahNarrative() {
     if (!sarahNarrativeOverlay) return;
+    document.body.scrollTop = 0;
     // CRITICAL: Immediately disable pointer events to prevent blocking board clicks
     sarahNarrativeOverlay.style.pointerEvents = 'none';
     sarahNarrativeOverlay.classList.remove('active');
@@ -3070,7 +3222,12 @@ const modePlayerBtn = document.getElementById('mode-player');
 if (modeAiBtn) {
     modeAiBtn.addEventListener('click', () => {
         const modeSelect = document.getElementById('mode-select');
-        if (modeSelect) modeSelect.classList.add('hidden');
+        if (modeSelect) {
+            modeSelect.classList.add('hidden');
+            modeSelect.style.display = 'none';
+        }
+        document.documentElement.scrollTop = 0;
+        document.body.scrollTop = 0;
         
         // Show Sarah narrative before starting game - enhanced immersive welcome
         if (isSarah()) {
@@ -3149,1098 +3306,12 @@ if (modeAiBtn) {
                 ]
             );
         } else {
-            // ALWAYS show power-up guide before first game (restored for tutorial)
-            // Guide pauses gameplay until dismissed
-            showPowerUpGuide(true); // true = first play
-        }
-    });
-}
-
-/**
- * Power Up Guide System
- */
-let currentGuidePage = 1;
-// MVP: Keep JS in sync with HTML - there are exactly 8 guide pages
-const totalGuidePages = 8;
-
-/**
- * Show power-up guide
- * @param {boolean} isFirstPlay - If true, this is shown before first game
- */
-function showPowerUpGuide(isFirstPlay = false) {
-    const guideOverlay = document.getElementById('powerup-guide-overlay');
-    if (!guideOverlay) {
-        console.warn('Guide overlay not found, starting game directly');
-        // If guide doesn't exist, start game directly
-        startGameAsAI();
-        return;
-    }
-    
-    // Ensure overlay is visible
-    guideOverlay.style.display = 'flex';
-    guideOverlay.classList.remove('hidden');
-    
-    currentGuidePage = 1;
-    updateGuidePage();
-    
-    // Show overlay with animation
-    setTimeout(() => {
-        guideOverlay.classList.add('active');
-    }, 50);
-    
-    // Animate level circles on page 2
-    if (isFirstPlay) {
-        setTimeout(() => {
-            animateLevelCircles();
-        }, 500);
-    }
-    
-    // Setup navigation
-    setupGuideNavigation(isFirstPlay);
-}
-
-/**
- * Hide power-up guide
- * CRITICAL: Must re-enable all inputs immediately after closing
- */
-function hidePowerUpGuide() {
-    const guideOverlay = document.getElementById('powerup-guide-overlay');
-    if (!guideOverlay) return;
-    
-    guideOverlay.classList.remove('active');
-    setTimeout(() => {
-        guideOverlay.classList.add('hidden');
-        
-        // MVP: Smooth scroll to game board immediately after guidebook closes
-        // Ensure board is visible with minimal gap
-        try {
-            const gameBoard = document.querySelector('.game-board');
-            const gameScreen = document.getElementById('game-screen');
-            
-            if (gameBoard && gameScreen && gameScreen.classList.contains('active')) {
-                // MVP: Scroll to board smoothly (0.3-0.5 seconds) with minimal offset
-                setTimeout(() => {
-                    const boardRect = gameBoard.getBoundingClientRect();
-                    const scrollOffset = window.pageYOffset || document.documentElement.scrollTop;
-                    // MVP: Minimal top spacing (10-20px) - no huge gap
-                    const topPadding = Math.max(10, Math.min(20, window.innerWidth > 768 ? 20 : 10));
-                    const targetY = boardRect.top + scrollOffset - topPadding;
-                    
-                    window.scrollTo({
-                        top: Math.max(0, targetY),
-                        behavior: 'smooth'
-                    });
-                    
-                    console.log('[Guide] Scrolled to game board with minimal gap');
-                }, 100); // Small delay to ensure DOM is ready
-            }
-        } catch (scrollError) {
-            console.warn('[Guide] Scroll to board failed (non-critical):', scrollError);
-        }
-        
-        // MVP: Ensure no large gaps - reset any scroll position if needed
-        try {
-            // If page was scrolled down during guidebook, reset to top of game screen
-            const gameScreen = document.getElementById('game-screen');
-            if (gameScreen && gameScreen.classList.contains('active')) {
-                // Only scroll if we're way down the page
-                if (window.scrollY > 200) {
-                    setTimeout(() => {
-                        gameScreen.scrollIntoView({ 
-                            behavior: 'smooth', 
-                            block: 'start',
-                            inline: 'nearest'
-                        });
-                    }, 200);
-                }
-            }
-        } catch (resetError) {
-            console.warn('[Guide] Scroll reset failed (non-critical):', resetError);
-        }
-        
-        // CRITICAL: Re-enable all inputs immediately after guide closes
-        // No screen, overlay, animation, or modal is allowed to trap clicks
-        gameState.uiLocked = false;
-        gameState.uiLockingReason = null;
-        gameState.gameActive = true; // Ensure game is active if it should be
-        
-        // Release any waiting handlers
-        if (typeof window.__guideCloseHandler === 'function') {
-            try {
-                window.__guideCloseHandler();
-                window.__guideCloseHandler = null;
-            } catch (e) {
-                console.error('Error in guide close handler:', e);
-            }
-        }
-        
-        // Ensure cells are clickable
-        cells.forEach(cell => {
-            if (cell) {
-                cell.style.pointerEvents = 'auto';
-            }
-        });
-        
-        console.log('[Guide] Guide closed - all inputs re-enabled');
-    }, 400);
-    
-    // Stop all demo animations when guide closes
-    stopAllGuideDemos();
-    
-    // Don't mark guide as seen - allow it to show again if needed
-    // localStorage.setItem('powerupGuideSeen', 'true'); // Removed - guide always available
-}
-
-// Guidebook demo animation intervals (for cleanup)
-let guideDemoIntervals = {
-    hint: null,
-    boardShake: null,
-    lastStand: null
-};
-
-/**
- * Stop all guidebook demo animations
- */
-function stopAllGuideDemos() {
-    Object.keys(guideDemoIntervals).forEach(key => {
-        if (guideDemoIntervals[key]) {
-            clearInterval(guideDemoIntervals[key]);
-            guideDemoIntervals[key] = null;
-        }
-    });
-}
-
-/**
- * Guidebook Demo: Hint Pulse
- */
-function startHintPulseDemo() {
-    const board = document.getElementById('guide-hint-demo-board');
-    const caption = document.getElementById('guide-hint-caption');
-    if (!board || !caption) return;
-    
-    let cycleCount = 0;
-    
-    const runDemo = () => {
-        cycleCount++;
-        const cells = board.querySelectorAll('.guide-demo-cell');
-        
-        // Reset all cells
-        cells.forEach(cell => {
-            cell.classList.remove('guide-hint-pulse-demo');
-        });
-        
-        // Highlight the best move (center cell - index 4)
-        const hintCell = cells[4];
-        if (hintCell) {
-            hintCell.classList.add('guide-hint-pulse-demo');
-            caption.textContent = 'Highlighting best move...';
-            caption.classList.add('visible');
-        }
-        
-        // After 2 seconds, show usage limit message
-        setTimeout(() => {
-            if (cycleCount % 2 === 0) {
-                caption.textContent = 'Can be used twice per run. Locks after two uses until next run.';
-            } else {
-                caption.textContent = 'Highlighting best move...';
-            }
-        }, 2000);
-    };
-    
-    runDemo(); // Run immediately
-    guideDemoIntervals.hint = setInterval(runDemo, 4000); // Loop every 4 seconds
-}
-
-/**
- * Guidebook Demo: Board Shake
- */
-function startBoardShakeDemo() {
-    const board = document.getElementById('guide-board-shake-demo');
-    const caption = document.getElementById('guide-shake-caption');
-    if (!board || !caption) return;
-    
-    // Original state
-    const originalState = [
-        { mark: 'X', index: 0 },
-        { mark: '', index: 1 },
-        { mark: 'O', index: 2 },
-        { mark: '', index: 3 },
-        { mark: 'X', index: 4 },
-        { mark: 'O', index: 5 },
-        { mark: '', index: 6 },
-        { mark: 'X', index: 7 },
-        { mark: '', index: 8 }
-    ];
-    
-    const resetBoard = () => {
-        const cells = board.querySelectorAll('.guide-demo-cell');
-        originalState.forEach((state, i) => {
-            if (cells[i]) {
-                cells[i].textContent = state.mark;
-                cells[i].setAttribute('data-mark', state.mark);
-                cells[i].setAttribute('data-index', state.index.toString());
-            }
-        });
-    };
-    
-    const runDemo = () => {
-        resetBoard();
-        caption.textContent = '';
-        caption.classList.remove('visible');
-        
-        // Wait a moment, then shake
-        setTimeout(() => {
-            board.classList.add('shaking');
-            caption.textContent = 'Shaking board...';
-            caption.classList.add('visible');
-            
-            // After shake animation, remap
-            setTimeout(() => {
-                const cells = board.querySelectorAll('.guide-demo-cell');
-                
-                // Create random permutation
-                const indices = [0, 1, 2, 3, 4, 5, 6, 7, 8];
-                for (let i = indices.length - 1; i > 0; i--) {
-                    const j = Math.floor(Math.random() * (i + 1));
-                    [indices[i], indices[j]] = [indices[j], indices[i]];
-                }
-                
-                // Mark cells as remapping
-                cells.forEach(cell => {
-                    cell.classList.add('remapping');
-                });
-                
-                // Remap after brief delay
-                setTimeout(() => {
-                    const newMarks = Array(9).fill(null);
-                    originalState.forEach((state, oldIndex) => {
-                        newMarks[indices[oldIndex]] = state.mark;
-                    });
-                    
-                    cells.forEach((cell, newIndex) => {
-                        const mark = newMarks[newIndex];
-                        cell.textContent = mark;
-                        cell.setAttribute('data-mark', mark);
-                        cell.classList.remove('remapping');
-                    });
-                    
-                    board.classList.remove('shaking');
-                    caption.textContent = 'Board positions have been reshuffled. All marks remain.';
-                }, 300);
-            }, 200);
-        }, 1000);
-    };
-    
-    runDemo(); // Run immediately
-    guideDemoIntervals.boardShake = setInterval(runDemo, 5000); // Loop every 5 seconds
-}
-
-/**
- * Guidebook Demo: Last Stand
- */
-function startLastStandDemo() {
-    const board = document.getElementById('guide-last-stand-demo');
-    const caption = document.getElementById('guide-laststand-caption');
-    if (!board || !caption) return;
-    
-    const originalState = [
-        { mark: 'O', index: 0 },
-        { mark: 'O', index: 1 },
-        { mark: '', index: 2 }, // AI can win here
-        { mark: 'X', index: 3 },
-        { mark: 'X', index: 4 },
-        { mark: '', index: 5 },
-        { mark: '', index: 6 },
-        { mark: '', index: 7 },
-        { mark: '', index: 8 }
-    ];
-    
-    const resetBoard = () => {
-        const cells = board.querySelectorAll('.guide-demo-cell');
-        originalState.forEach((state, i) => {
-            if (cells[i]) {
-                cells[i].textContent = state.mark;
-                cells[i].setAttribute('data-mark', state.mark);
-                cells[i].classList.remove('losing-line', 'laststand-granted');
-            }
-        });
-        board.classList.remove('pulsing');
-        caption.textContent = '';
-        caption.classList.remove('visible');
-    };
-    
-    const runDemo = () => {
-        resetBoard();
-        
-        // Step 1: Show "Click Last Chance" prompt
-        setTimeout(() => {
-            caption.textContent = 'Click Last Chance → Choose the future';
-            caption.classList.add('visible');
-            board.classList.add('scheduled');
-        }, 500);
-        
-        // Step 2: Show selection (Play #3 scheduled)
-        setTimeout(() => {
-            caption.textContent = 'Scheduled for Play #3';
-            const cells = board.querySelectorAll('.guide-demo-cell');
-            // Show visual indicator that it's scheduled
-            if (cells[4]) {
-                cells[4].classList.add('scheduled-indicator');
-            }
-        }, 2000);
-        
-        // Step 3: Fast forward to Play #3 - show threat
-        setTimeout(() => {
-            resetBoard();
-            const cells = board.querySelectorAll('.guide-demo-cell');
-            // Highlight the losing line (cells 0, 1, 2 - AI can win)
-            [0, 1, 2].forEach(idx => {
-                if (cells[idx]) {
-                    cells[idx].classList.add('losing-line');
-                }
-            });
-            caption.textContent = 'Play #3: AI is about to win...';
-            caption.classList.add('visible');
-            
-            // Step 4: Trigger Last Stand (scheduled activation)
-            setTimeout(() => {
-                board.classList.add('pulsing');
-                caption.textContent = '⚡ LAST STAND ACTIVATED';
-                
-                // Show extra move granted
-                setTimeout(() => {
-                    const cells = board.querySelectorAll('.guide-demo-cell');
-                    // Highlight a cell where player can block
-                    if (cells[2]) {
-                        cells[2].classList.add('laststand-granted');
-                        cells[2].textContent = 'X';
-                    }
-                    caption.textContent = 'Second chance granted - extra move available';
-                }, 600);
-            }, 2000);
-        }, 3500);
-    };
-    
-    runDemo(); // Run immediately
-    guideDemoIntervals.lastStand = setInterval(runDemo, 8000); // Loop every 8 seconds (longer for full flow)
-}
-
-/**
- * Update current guide page display
- */
-function updateGuidePage() {
-    // Stop all demos when changing pages
-    stopAllGuideDemos();
-    
-    // Hide all pages
-    document.querySelectorAll('.guide-page').forEach(page => {
-        page.classList.remove('active');
-    });
-    
-    // Show current page
-    const currentPage = document.querySelector(`.guide-page[data-page="${currentGuidePage}"]`);
-    if (currentPage) {
-        currentPage.classList.add('active');
-        
-        // Start appropriate demo based on page
-        setTimeout(() => {
-            if (currentGuidePage === 4) {
-                startHintPulseDemo();
-            } else if (currentGuidePage === 5) {
-                startBoardShakeDemo();
-            } else if (currentGuidePage === 6) {
-                startLastStandDemo();
-            }
-        }, 300); // Small delay to ensure page is visible
-    }
-    
-    // Update page indicator
-    const pageIndicator = document.getElementById('guide-page-number');
-    if (pageIndicator) {
-        pageIndicator.textContent = currentGuidePage;
-    }
-    
-    // Update navigation buttons
-    const prevBtn = document.getElementById('guide-prev');
-    const nextBtn = document.getElementById('guide-next');
-    const skipBtn = document.getElementById('guide-skip');
-    
-    if (prevBtn) {
-        prevBtn.disabled = currentGuidePage === 1;
-    }
-    
-    if (nextBtn) {
-        nextBtn.disabled = currentGuidePage === totalGuidePages;
-    }
-    
-    // Show skip button only on first page
-    if (skipBtn) {
-        skipBtn.style.display = currentGuidePage === 1 ? 'block' : 'none';
-    }
-}
-
-/**
- * Setup guide navigation handlers
- */
-function setupGuideNavigation(isFirstPlay) {
-    const prevBtn = document.getElementById('guide-prev');
-    const nextBtn = document.getElementById('guide-next');
-    const skipBtn = document.getElementById('guide-skip');
-    const startBtn = document.getElementById('guide-start-game');
-    
-    if (prevBtn) {
-        prevBtn.onclick = () => {
-            if (currentGuidePage > 1) {
-                currentGuidePage--;
-                updateGuidePage();
-            }
-        };
-    }
-    
-    if (nextBtn) {
-        nextBtn.onclick = () => {
-            if (currentGuidePage < totalGuidePages) {
-                currentGuidePage++;
-                updateGuidePage();
-            }
-        };
-    }
-    
-    if (skipBtn) {
-        skipBtn.onclick = () => {
-            hidePowerUpGuide();
-            // CRITICAL: Re-enable inputs before starting game
-            setTimeout(() => {
-                gameState.uiLocked = false;
-                gameState.uiLockingReason = null;
             startGameAsAI();
-            }, 450); // Wait for guide close animation
-        };
-    }
-    
-    if (startBtn) {
-        startBtn.onclick = () => {
-            hidePowerUpGuide();
-            // CRITICAL: Re-enable inputs before starting game
-            setTimeout(() => {
-                gameState.uiLocked = false;
-                gameState.uiLockingReason = null;
-            startGameAsAI();
-            }, 450); // Wait for guide close animation
-        };
-    }
-    
-    // Setup guide icon buttons (to reopen guide) - set up every time
-    setupGuideIconButtons();
-}
-
-/**
- * Setup guide icon button handlers (call on page load)
- */
-function setupGuideIconButtons() {
-    const guideIconBtn = document.getElementById('guide-icon-btn');
-    const guideIconBtnGame = document.getElementById('guide-icon-btn-game');
-    
-    if (guideIconBtn) {
-        guideIconBtn.onclick = () => {
-            showPowerUpGuide(false);
-        };
-    }
-    
-    if (guideIconBtnGame) {
-        guideIconBtnGame.onclick = () => {
-            showPowerUpGuide(false);
-        };
-    }
-}
-
-/**
- * Animate level circles (for page 2 demo)
- */
-function animateLevelCircles() {
-    const circles = document.querySelectorAll('.guide-circle');
-    circles.forEach((circle, index) => {
-        setTimeout(() => {
-            circle.classList.add('filled');
-        }, index * 300);
+        }
     });
 }
 
-/**
- * Tactical Claim System (Level 1 only)
- */
 
-/**
- * CRITICAL: New Tactical Claim System - Strategic Evaluation Only
- * This power-up does NOT block cells - it only influences AI evaluation
- * No visual indicators, no UI, completely invisible to player
- */
-
-/**
- * Check and activate Tactical Claim based on trigger conditions
- * @param {string} triggerType - Type of trigger: 'player_powerup', 'board_shake', 'fork_detected', 'ai_losing'
- */
-function checkAndActivateTacticalClaim(triggerType) {
-    // Must be Level 1 or higher
-    if (gameState.currentLevel < 1) return;
-    
-    // Cannot activate if already active or on cooldown
-    if (gameState.tacticalClaim.active || gameState.tacticalClaim.cooldown) return;
-    
-    // Cannot activate on consecutive AI turns
-    if (gameState.tacticalClaim.lastAITurnUsed) return;
-    
-    // Check if conditions are met for activation
-    const shouldActivate = evaluateTacticalClaimTrigger(triggerType);
-    
-    if (shouldActivate) {
-        activateTacticalClaimStrategic();
-    }
-}
-
-/**
- * Evaluate if Tactical Claim should activate based on trigger type
- */
-function evaluateTacticalClaimTrigger(triggerType) {
-    // Player power-up activation - always triggers
-    if (triggerType === 'player_powerup') {
-        return true;
-    }
-    
-    // Board Shake - always triggers
-    if (triggerType === 'board_shake') {
-        return true;
-    }
-    
-    // Fork detection - check if player or AI has fork potential
-    if (triggerType === 'fork_detected') {
-        return detectForkThreat();
-    }
-    
-    // AI one move from losing - check if player can win next turn
-    if (triggerType === 'ai_losing') {
-        return isAIOneMoveFromLosing();
-    }
-    
-    return false;
-}
-
-/**
- * Check if there's a fork threat (player or AI can create fork)
- */
-function detectForkThreat() {
-    // Check if player can create fork
-    for (let i = 0; i < 9; i++) {
-        if (gameState.board[i] === '') {
-            gameState.board[i] = 'X';
-            const threats = countImmediateThreatsFor('X');
-            gameState.board[i] = '';
-            if (threats >= 2) return true;
-        }
-    }
-    
-    // Check if AI can create fork
-    for (let i = 0; i < 9; i++) {
-        if (gameState.board[i] === '') {
-            gameState.board[i] = 'O';
-            const threats = countImmediateThreatsFor('O');
-            gameState.board[i] = '';
-            if (threats >= 2) return true;
-        }
-    }
-    
-    return false;
-}
-
-/**
- * Check if AI is one move away from losing
- */
-function isAIOneMoveFromLosing() {
-    // Check if player has a winning move available
-    for (let i = 0; i < 9; i++) {
-        if (gameState.board[i] === '') {
-            gameState.board[i] = 'X';
-            if (checkWin('X')) {
-                gameState.board[i] = '';
-                return true;
-            }
-            gameState.board[i] = '';
-        }
-    }
-    return false;
-}
-
-/**
- * Activate Tactical Claim - strategic evaluation only (no blocking)
- */
-function activateTacticalClaimStrategic() {
-    // Find best cell to claim based on strategic value
-    const claimedCell = selectTacticalClaimCell();
-    
-    if (claimedCell === null) {
-        // No suitable cell found - don't activate
-        return;
-    }
-    
-    // Activate Tactical Claim
-    gameState.tacticalClaim.active = true;
-    gameState.tacticalClaim.claimedCell = claimedCell;
-    gameState.tacticalClaim.aiTurnsRemaining = 2; // Lasts exactly 2 AI turns
-    gameState.tacticalClaim.lastAITurnUsed = true; // Prevent consecutive use
-    gameState.tacticalClaim.cooldown = false; // Not on cooldown yet
-    
-    // CRITICAL: Visuals must be non-revealing and non-blocking
-    playTacticalClaimAnimation();
-    showTacticalClaimAnnouncement();
-}
-
-/**
- * Select the best cell for Tactical Claim based on strategic value
- */
-function selectTacticalClaimCell() {
-    const emptyCells = [];
-    
-    // Evaluate all empty cells
-    for (let i = 0; i < 9; i++) {
-        if (gameState.board[i] === '') {
-            const strategicValue = evaluateCellStrategicValue(i);
-            emptyCells.push({ index: i, value: strategicValue });
-        }
-    }
-    
-    if (emptyCells.length === 0) return null;
-    
-    // Sort by strategic value (highest first)
-    emptyCells.sort((a, b) => b.value - a.value);
-    
-    // Select top strategic cell
-    return emptyCells[0].index;
-}
-
-/**
- * Evaluate strategic value of a cell for Tactical Claim
- */
-function evaluateCellStrategicValue(cellIndex) {
-    let value = 0;
-    
-    // Center is highly valuable
-    if (cellIndex === 4) value += 10;
-    
-    // Corners are valuable
-    if ([0, 2, 6, 8].includes(cellIndex)) value += 5;
-    
-    // Check fork potential for AI
-    gameState.board[cellIndex] = 'O';
-    const aiThreats = countImmediateThreatsFor('O');
-    gameState.board[cellIndex] = '';
-    if (aiThreats >= 2) value += 15; // High value for fork creation
-    
-    // Check defensive importance (blocking player fork)
-    gameState.board[cellIndex] = 'X';
-    const playerThreats = countImmediateThreatsFor('X');
-    gameState.board[cellIndex] = '';
-    if (playerThreats >= 2) value += 12; // High value for blocking player fork
-    
-    // Check win prevention (blocking player win)
-    gameState.board[cellIndex] = 'X';
-    if (checkWin('X')) {
-        value += 20; // Critical defensive value
-    }
-    gameState.board[cellIndex] = '';
-    
-    return value;
-}
-
-/**
- * Update Tactical Claim state (decrement AI turns, expire if needed)
- */
-function updateTacticalClaimState() {
-    if (!gameState.tacticalClaim.active) return;
-    
-    // Decrement AI turns remaining
-    gameState.tacticalClaim.aiTurnsRemaining--;
-    
-    // Check if expired
-    if (gameState.tacticalClaim.aiTurnsRemaining <= 0) {
-        // Expire Tactical Claim
-        gameState.tacticalClaim.active = false;
-        gameState.tacticalClaim.claimedCell = null;
-        gameState.tacticalClaim.aiTurnsRemaining = 0;
-        gameState.tacticalClaim.lastAITurnUsed = false; // Reset for next use
-        gameState.tacticalClaim.cooldown = false; // Reset cooldown
-    } else {
-        // Still active - reset lastAITurnUsed flag after one turn
-        gameState.tacticalClaim.lastAITurnUsed = false;
-    }
-}
-
-/**
- * Check Tactical Claim trigger conditions during AI move selection
- */
-function checkTacticalClaimTriggers() {
-    // Check for fork detection
-    if (detectForkThreat()) {
-        checkAndActivateTacticalClaim('fork_detected');
-        return;
-    }
-    
-    // Check if AI is one move from losing
-    if (isAIOneMoveFromLosing()) {
-        checkAndActivateTacticalClaim('ai_losing');
-        return;
-    }
-}
-
-/**
- * Get Tactical Claim evaluation bonus for a cell
- * This is used in AI evaluation to weight the claimed cell
- */
-function getTacticalClaimBonus(cellIndex) {
-    if (!gameState.tacticalClaim.active) return 0;
-    if (gameState.tacticalClaim.claimedCell !== cellIndex) return 0;
-    
-    // Return bonus weight for claimed cell
-    // Higher bonus = AI more likely to prioritize this cell
-    return 50; // Significant but not overwhelming bonus
-}
-
-/**
- * OLD Tactical Claim functions - DEPRECATED (kept for reference, will be removed)
- * Check if Tactical Claim should be activated
- */
-function shouldActivateTacticalClaim() {
-    // Must be Level 1
-    if (gameState.currentLevel !== 1) return false;
-    
-    // Must not have been used this match
-    if (gameState.tacticalClaimUsed) return false;
-    
-    // Never early: require a real mid‑/late‑game state (at least 4 moves played)
-    const totalMoves = gameState.board.filter(cell => cell !== '').length;
-    if (totalMoves < 4) return false;
-
-    // Player dominance: player must have demonstrated strength in this level.
-    // Treat 2+ wins in Level 1 as "dominance" for activation purposes.
-    const playerWinsInLevel = gameState.level1Wins || 0;
-    if (playerWinsInLevel < 2) return false;
-
-    // AI disadvantage: more player wins than AI wins overall this session.
-    const playerWinsTotal = gameState.wins || 0;
-    const aiWinsTotal = gameState.losses || 0;
-    if (playerWinsTotal <= aiWinsTotal) return false;
-
-    // Situation critical: player has at least one imminent winning move available
-    // on the current board if the AI does nothing.
-    let criticalThreat = false;
-    for (let i = 0; i < 9; i++) {
-        if (gameState.board[i] === '') {
-            gameState.board[i] = 'X';
-            if (checkWin('X')) {
-                criticalThreat = true;
-                gameState.board[i] = '';
-                break;
-            }
-            gameState.board[i] = '';
-        }
-    }
-    if (!criticalThreat) return false;
-    
-    // Count empty cells (excluding shielded and reserved)
-    const emptyCells = gameState.board
-        .map((cell, i) => {
-            if (cell !== '') return null;
-            // Shield Guard removed - no shielded cell check
-            if (gameState.reservedCells.some(r => r.cellIndex === i)) return null;
-            return i;
-        })
-        .filter(i => i !== null);
-    
-    // Require at least 3 free targets so Tactical Claim is meaningful
-    if (emptyCells.length < 3) return false;
-
-    // LAST RESORT: if player is one win away from finishing Level 1,
-    // increase the activation chance slightly, but still keep it a
-    // rare tactical response, not a default pattern.
-    const isLastResort = playerWinsInLevel >= 4; // Player needs 5 wins, so 4 means one away
-    
-    const baseChance = 0.35;       // Normal critical activation chance
-    const lastResortChance = 0.75; // Higher chance when at absolute brink
-    const activationChance = isLastResort ? lastResortChance : baseChance;
-
-    return Math.random() < activationChance;
-}
-
-/**
- * Activate Tactical Claim - reserves a cell for 2 full turns
- */
-function activateTacticalClaim() {
-    // CRITICAL: Tactical Claim is VISUAL ONLY - must NOT block gameplay
-    // This function runs synchronously and does not pause or delay anything
-    
-    // Find a suitable cell to reserve
-    const emptyCells = gameState.board
-        .map((cell, i) => {
-            if (cell !== '') return null;
-            // Shield Guard removed - no shielded cell check
-            if (gameState.reservedCells.some(r => r.cellIndex === i)) return null;
-            return i;
-        })
-        .filter(i => i !== null);
-    
-    if (emptyCells.length === 0) {
-        // FAILSAFE: If no cells available, don't activate
-        gameState.tacticalClaimUsed = false; // Allow retry next turn
-        return;
-    }
-    
-    // Select a cell that won't guarantee immediate win
-    // Prefer center or corners (strategic but not winning)
-    let selectedCell = null;
-    const center = 4;
-    const corners = [0, 2, 6, 8];
-    
-    // Try center first
-    if (emptyCells.includes(center)) {
-        // Check if reserving center would block a win
-        const wouldBlockWin = checkIfReservingWouldBlockWin(center);
-        if (!wouldBlockWin) {
-            selectedCell = center;
-        }
-    }
-    
-    // Try corners if center not suitable
-    if (!selectedCell) {
-        for (const corner of corners) {
-            if (emptyCells.includes(corner)) {
-                const wouldBlockWin = checkIfReservingWouldBlockWin(corner);
-                if (!wouldBlockWin) {
-                    selectedCell = corner;
-                    break;
-                }
-            }
-        }
-    }
-    
-    // Fallback to any empty cell
-    if (!selectedCell && emptyCells.length > 0) {
-        selectedCell = emptyCells[Math.floor(Math.random() * emptyCells.length)];
-    }
-    
-    if (selectedCell === null) return;
-    
-    // Reserve the cell for 2 full turns (player + AI)
-    gameState.reservedCells.push({
-        cellIndex: selectedCell,
-        turnsRemaining: 2
-    });
-    
-    // CRITICAL: tacticalClaimUsed is set in makeAIMove before calling this function
-    // Do NOT set it again here to prevent duplicate setting
-    
-    // Play cinematic animation
-    playTacticalClaimAnimation();
-    
-    // Show AI announcement
-    showTacticalClaimAnnouncement();
-    
-    // Emit power-up event to admin
-    if (socket) {
-        try {
-            socket.emit('powerup-event', {
-                playerName: gameState.playerName,
-                type: 'tactical-claim',
-                isAdminTriggered: false
-            });
-        } catch (e) {
-            console.error('Error emitting Tactical Claim event:', e);
-        }
-    }
-}
-
-/**
- * Check if reserving a cell would block an immediate win
- */
-function checkIfReservingWouldBlockWin(cellIndex) {
-    // Temporarily reserve the cell
-    const testBoard = [...gameState.board];
-    testBoard[cellIndex] = 'RESERVED';
-    
-    // Check if player has a winning move that would be blocked
-    for (let i = 0; i < 9; i++) {
-        if (testBoard[i] === '') {
-            testBoard[i] = 'X';
-            if (checkWinOnBoard(testBoard, 'X')) {
-                return true; // Would block a win
-            }
-            testBoard[i] = '';
-        }
-    }
-    
-    return false;
-}
-
-/**
- * Check win on a specific board state
- */
-function checkWinOnBoard(board, player) {
-    const winningCombos = [
-        [0, 1, 2], [3, 4, 5], [6, 7, 8], // rows
-        [0, 3, 6], [1, 4, 7], [2, 5, 8], // columns
-        [0, 4, 8], [2, 4, 6] // diagonals
-    ];
-    
-    return winningCombos.some(combo => {
-        return combo.every(index => board[index] === player);
-    });
-}
-
-/**
- * Update Tactical Claim reservations (decrement turns, unlock if needed)
- */
-function updateTacticalClaimReservations() {
-    gameState.reservedCells = gameState.reservedCells.map(reservation => {
-        const updated = {
-            cellIndex: reservation.cellIndex,
-            turnsRemaining: reservation.turnsRemaining - 1
-        };
-        
-        // Update countdown display
-        const cell = document.querySelector(`.cell[data-index="${reservation.cellIndex}"]`);
-        if (cell) {
-            const countdown = cell.querySelector('.tactical-claim-countdown');
-            if (countdown) {
-                countdown.textContent = updated.turnsRemaining;
-                // Fade effect as turns decrease
-                if (updated.turnsRemaining === 1) {
-                    countdown.classList.add('fading');
-                }
-            }
-        }
-        
-        return updated;
-    }).filter(reservation => {
-        if (reservation.turnsRemaining <= 0) {
-            // Unlock this cell
-            unlockTacticalClaimCell(reservation.cellIndex);
-            return false; // Remove from list
-        }
-        return true; // Keep in list
-    });
-}
-
-/**
- * Unlock a Tactical Claim cell
- */
-function unlockTacticalClaimCell(cellIndex) {
-    const cell = document.querySelector(`.cell[data-index="${cellIndex}"]`);
-    if (cell) {
-        cell.classList.remove('tactical-claim-reserved');
-        const lockIcon = cell.querySelector('.tactical-claim-lock');
-        if (lockIcon) {
-            lockIcon.remove();
-        }
-        const countdown = cell.querySelector('.tactical-claim-countdown');
-        if (countdown) {
-            countdown.remove();
-        }
-    }
-}
-
-/**
- * Clear all Tactical Claim visuals
- */
-function clearTacticalClaimVisuals() {
-    document.querySelectorAll('.tactical-claim-reserved').forEach(cell => {
-        cell.classList.remove('tactical-claim-reserved');
-        const lockIcon = cell.querySelector('.tactical-claim-lock');
-        if (lockIcon) lockIcon.remove();
-        const countdown = cell.querySelector('.tactical-claim-countdown');
-        if (countdown) countdown.remove();
-    });
-}
-
-/**
- * Get list of reserved cell indices
- */
-function getReservedCellIndices() {
-    return gameState.reservedCells.map(r => r.cellIndex);
-}
-
-/**
- * Play Tactical Claim cinematic animation
- * CRITICAL: This is VISUAL ONLY - must NOT block gameplay, inputs, or AI thinking
- */
-function playTacticalClaimAnimation() {
-    // FAILSAFE: If animation system fails, skip it and continue
-    try {
-        const board = document.querySelector('.game-board');
-        if (!board) return;
-
-        // CRITICAL: Ensure inputs remain enabled during animation
-        // Tactical Claim animation must NEVER block clicks or pause the game
-        gameState.uiLocked = false; // Explicitly unlock UI
-        cells.forEach(c => {
-            if (c) c.style.pointerEvents = 'auto';
-        });
-
-        const announcement = document.createElement('div');
-        announcement.className = 'tactical-claim-announcement-text';
-        announcement.textContent = 'The AI recalculates its strategy...';
-        announcement.style.pointerEvents = 'none';
-        document.body.appendChild(announcement);
-
-        const dimOverlay = document.createElement('div');
-        dimOverlay.className = 'tactical-claim-dim';
-        dimOverlay.style.pointerEvents = 'none';
-        document.body.appendChild(dimOverlay);
-
-        const gridPulse = document.createElement('div');
-        gridPulse.className = 'tactical-claim-grid-pulse';
-        gridPulse.style.pointerEvents = 'none';
-        board.appendChild(gridPulse);
-
-        const wave = document.createElement('div');
-        wave.className = 'tactical-claim-wave';
-        wave.style.pointerEvents = 'none';
-        board.appendChild(wave);
-
-        requestAnimationFrame(() => {
-            announcement.classList.add('active');
-            dimOverlay.classList.add('active');
-            gridPulse.classList.add('active');
-            wave.classList.add('active');
-        });
-
-        const animationDuration = 1400;
-        setTimeout(() => {
-            dimOverlay.classList.remove('active');
-            setTimeout(() => {
-                dimOverlay.remove();
-            }, 300);
-            gridPulse.remove();
-            wave.remove();
-        }, animationDuration);
-
-        setTimeout(() => {
-            announcement.classList.remove('active');
-            setTimeout(() => {
-                announcement.remove();
-            }, 400);
-
-            // CRITICAL: Ensure inputs are fully enabled after animation completes
-            gameState.uiLocked = false;
-            gameState.uiLockingReason = null;
-            cells.forEach(c => {
-                if (c) c.style.pointerEvents = 'auto';
-            });
-        }, animationDuration + 100);
-    } catch (animError) {
-        // FAILSAFE: If entire animation fails, ensure game continues
-        console.error('Tactical Claim animation critical error (game continues):', animError);
-        gameState.uiLocked = false;
-        gameState.uiLockingReason = null;
-    }
-}
 
 // REMOVED: activateSoulSnatch function - second-loss taunt feature completely removed
 
@@ -4387,89 +3458,17 @@ function showMissedMoveTaunt() {
     }, 2500);
 }
 
-/**
- * Show Tactical Claim announcement
- */
-function showTacticalClaimAnnouncement() {
-    const messageBox = document.getElementById('message-box');
-    if (!messageBox) return;
-    
-    const announcements = [
-        "The AI recalculates its strategy...",
-        "A tactical shift is underway.",
-        "The AI refocuses its approach."
-    ];
-    
-    const announcement = announcements[Math.floor(Math.random() * announcements.length)];
-    messageBox.textContent = announcement;
-    messageBox.classList.add('tactical-claim-announcement');
-    
-    setTimeout(() => {
-        messageBox.classList.remove('tactical-claim-announcement');
-    }, 3000);
-}
 
-/**
- * Show game welcome screen with Level 1 info and power-ups (legacy - kept for compatibility)
- */
-function showGameWelcomeScreen() {
-    // Redirect to new guide system
-    showPowerUpGuide(true);
-}
 
-/**
- * Hide game welcome screen (legacy - kept for compatibility)
- */
-function hideGameWelcomeScreen() {
-    hidePowerUpGuide();
-}
 
-/**
- * Update level progress display
- */
-function updateLevelProgress() {
-    const progressFill = document.getElementById('level-progress-fill');
-    const winsCount = document.getElementById('level-wins-count');
-    const progressDots = document.querySelectorAll('.progress-dot');
-    
-    const wins = gameState.level1Wins || 0;
-    const progress = Math.min((wins / 5) * 100, 100);
-    
-    if (progressFill) {
-        progressFill.style.width = progress + '%';
-    }
-    
-    if (winsCount) {
-        winsCount.textContent = wins;
-    }
-    
-    // Update progress dots
-    if (progressDots) {
-        progressDots.forEach((dot, index) => {
-            if (index < wins) {
-                dot.classList.add('completed');
-            } else {
-                dot.classList.remove('completed');
-            }
-        });
-    }
-}
 
-/**
- * Show checkpoints briefly after a win, then hide them
- */
-function showCheckpointsAfterWin() {
-    const container = document.querySelector('.level-progress-container');
-    if (!container) return;
-    
-    // Show checkpoints
-    container.classList.add('show-after-win');
-    
-    // Hide after 3 seconds
-    setTimeout(() => {
-        container.classList.remove('show-after-win');
-    }, 3000);
-}
+
+
+
+
+
+
+
 
 if (modePlayerBtn) {
     modePlayerBtn.addEventListener('click', () => {
@@ -4522,104 +3521,6 @@ function handleCellClick(cell) {
     // Track player move for AI learning
     gameState.playerMoveHistory.push(index);
     
-    // Check for learned patterns BEFORE checking for win - block proactively (FASTER: check after 1 move)
-    if (gameState.aiLearningSystem && gameState.playerMoveHistory.length >= 1 && !gameState.isKingWilliam) {
-        const patternCheck = gameState.aiLearningSystem.shouldBlockPattern(
-            gameState.board,
-            gameState.playerMoveHistory
-        );
-        
-        if (patternCheck.shouldBlock && patternCheck.nextExpectedMove !== null) {
-            // AI recognizes this pattern - block it BEFORE player can win
-            const blockMove = patternCheck.nextExpectedMove;
-            if (gameState.board[blockMove] === '' && blockMove !== index) {
-                // Block the pattern by placing O in the expected position
-                gameState.board[blockMove] = 'O';
-                cells[blockMove].textContent = 'O';
-                cells[blockMove].setAttribute('data-mark', 'O');
-                
-                // Animate cell placement (premium animation)
-                if (typeof AnimationUtils !== 'undefined') {
-                    AnimationUtils.animateCellPlacement(cells[blockMove]);
-                }
-                
-                clickSound.play();
-                if (gameState.aiLearningSystem.blockedWinPatterns) {
-                    gameState.aiLearningSystem.blockedWinPatterns.add(patternCheck.pattern);
-                    gameState.aiLearningSystem.markPatternBlocked(patternCheck.pattern);
-                }
-                // Conditional message for Sarah
-                if (isSarah()) {
-                    messageBox.textContent = "The AI adapts to your patterns, Miss Sarah.";
-                } else {
-                    messageBox.textContent = "The AI is adapting...";
-                }
-                emitBoardUpdate();
-                
-                // Check if AI won after blocking
-                if (checkWin('O')) {
-                    // Find winning combination for animation
-                    const winningCombo = winningCombos.find(combo => 
-                        combo.every(i => gameState.board[i] === 'O')
-                    );
-                    
-                    // Animate winning line (premium animation)
-                    if (typeof AnimationUtils !== 'undefined' && winningCombo) {
-                        const boardElement = document.querySelector('.game-board');
-                        if (boardElement) {
-                            AnimationUtils.animateWinningLine(winningCombo, boardElement, 'luxury');
-                        }
-                    }
-                    
-                    gameState.losses++;
-                    lossesDisplay.textContent = gameState.losses;
-                    
-                    // CRITICAL: Increment level1Losses for second-loss taunt tracking
-                    if (gameState.currentLevel === 1) {
-                        gameState.level1Losses = (gameState.level1Losses || 0) + 1;
-                    }
-                    
-                    if (gameState.aiLearningSystem && gameState.currentGameId) {
-                        gameState.aiLearningSystem.recordGameResult('win', gameState.playerName);
-                        if (socket) {
-                            socket.emit('ai-stats-update', gameState.aiLearningSystem.getStats());
-                        }
-                    }
-                    
-                    // REMOVED: Second-loss taunt feature
-                    
-                    // Conditional message for Sarah
-                    if (isSarah()) {
-                        endGame("The AI has blocked your pattern, Miss Sarah. Shall we continue?");
-                    } else {
-                        endGame("AI Wins!\nThe AI blocked your pattern!");
-                    }
-                    emitBoardUpdate();
-                    return;
-                }
-                
-                // Continue game after blocking - AI made its move
-                if (!gameState.board.includes('')) {
-                    // CRITICAL: Clear AI state before ending round (draw)
-                    gameState.aiTurnInProgress = false;
-                    gameState.uiLocked = false;
-                    gameState.uiLockingReason = null;
-                    endGame("It's a draw!");
-                    return;
-                }
-                return; // Don't let player continue with this pattern
-            }
-        }
-    }
-    
-    // CRITICAL: Check if player played the Tactical Claim cell
-    // If so, AI must re-strategize (Tactical Claim adapts but remains active)
-    if (gameState.tacticalClaim.active && gameState.tacticalClaim.claimedCell === index) {
-        // Player disrupted the claim - AI must re-evaluate
-        gameState.aiRecalculationNeeded = true;
-        // Tactical Claim remains active but AI will adapt its strategy
-    }
-    
     // Record move for behavior analysis
     if (gameState.behaviorAnalyzer) {
         const isWinningMove = checkWin('X');
@@ -4668,22 +3569,9 @@ function handleCellClick(cell) {
         
         // Player wins - allow it and let AI learn from the pattern
         gameState.wins = (gameState.wins || 0) + 1;
-        gameState.level1Wins = (gameState.level1Wins || 0) + 1;
         playerWinCount++;
         gameState.playerJustWon = true; // Mark that player won - AI will think longer next game
         gameState.aiThinkingDelay = 1500; // Increase thinking delay to 1.5 seconds
-        
-        // LEVEL 1: Track winning pattern for adaptation
-        if (gameState.currentLevel === 1 && gameState.playerMoveHistory.length > 0) {
-            const patternKey = gameState.playerMoveHistory.join('-');
-            if (!gameState.playerWinningPatterns.includes(patternKey)) {
-                gameState.playerWinningPatterns.push(patternKey);
-                // Keep only last 5 winning patterns
-                if (gameState.playerWinningPatterns.length > 5) {
-                    gameState.playerWinningPatterns.shift();
-                }
-            }
-        }
         
         // Mark first round as complete
         gameState.firstRoundOfSession = false;
@@ -4692,19 +3580,6 @@ function handleCellClick(cell) {
         const winsDisplay = document.getElementById('wins');
         if (winsDisplay) {
             winsDisplay.textContent = gameState.wins;
-        }
-        
-        // Update level progress and show checkpoints briefly after win
-        updateLevelProgress();
-        showCheckpointsAfterWin();
-        
-        // Check if level completed (5 wins)
-        if (gameState.level1Wins >= 5) {
-            // Level completed - show celebration message
-            const messageBox = document.getElementById('message-box');
-            if (messageBox) {
-                messageBox.textContent = `Congratulations! You've completed Level 1 with ${gameState.level1Wins} wins!`;
-            }
         }
         
         // Play win sound
@@ -4811,48 +3686,7 @@ function handleCellClick(cell) {
         return;
     }
 
-    // LAST STAND: Forward-only deployment - check if scheduled and conditions met
-    // Only trigger if:
-    // 1. Last Stand is scheduled for current play count
-    // 2. Player is one move away from losing
-    // 3. Last Stand hasn't been used this game
-    if (gameState.lastStandScheduledForPlay !== null && 
-        gameState.currentPlayCount === gameState.lastStandScheduledForPlay &&
-        !gameState.lastStandUsed && 
-        !checkWin('X') && 
-        !checkWin('O') && 
-        gameState.board.includes('')) {
-        
-        // Check if AI can win on next move
-        let aiCanWin = false;
-        for (let i = 0; i < 9; i++) {
-            if (gameState.board[i] === '') {
-                const testBoard = [...gameState.board];
-                testBoard[i] = 'O';
-                if (checkWinOnBoard(testBoard, 'O')) {
-                    aiCanWin = true;
-                    break;
-                }
-            }
-        }
-        
-        // Trigger Last Stand if AI can win and scheduled play count matches
-        if (aiCanWin) {
-            PowerUpManager.activeEffects['lastStand'] = true;
-            PowerUpManager.createLastStand();
-            
-            // CRITICAL: Trigger AI recalculation - Last Stand activated
-            gameState.aiRecalculationNeeded = true;
-            
-            // Mark as used and clear scheduled value
-            gameState.lastStandUsed = true;
-            gameState.lastStandScheduledForPlay = null;
-            
-            // Grant extra move - player can move again immediately
-            gameState.uiLocked = false;
-            return; // Exit early - player gets another turn
-        }
-    }
+
     
     // PACING: AI thinking delay with smooth transitions
     // Longer if player just won, but ensure minimum pacing
@@ -5021,13 +3855,7 @@ function makeAIMove() {
     gameState.aiMoveInProgress = true;
     gameState.aiTurnInProgress = true;
     
-    // CRITICAL: AI Strategy Recalculation Trigger
-    // If power-up changed board state, invalidate previous evaluation and recompute
-    if (gameState.aiRecalculationNeeded) {
-        gameState.aiRecalculationNeeded = false;
-        // Force fresh evaluation - AI will recompute from current board state
-        // This ensures AI doesn't use pre-power-up planned moves
-    }
+
     
     // CRITICAL: Use try/finally to guarantee turn unlock
     let moveExecuted = false;
@@ -5036,20 +3864,15 @@ function makeAIMove() {
     
     try {
 
-    // Shields remain active for entire match - do NOT remove after AI move
-    
-    // CRITICAL: Update Tactical Claim state (decrement AI turns, expire if needed)
-    // This is called BEFORE AI move selection to ensure proper turn tracking
-    updateTacticalClaimState();
+
 
     // CRITICAL: AI must respond within time budget - use timeout for safety (reduced to 500ms)
     // This prevents AI thinking freeze and ensures smooth gameplay
     aiMoveTimeout = setTimeout(() => {
         // FALLBACK: If AI takes too long, use simplified heuristic
         console.warn('[AI] Move timeout - using fallback move');
-        const reservedIndices = getReservedCellIndices();
         const emptyCells = gameState.board
-            .map((cell, i) => (cell === '' && !reservedIndices.includes(i)) ? i : null)
+            .map((cell, i) => (cell === '') ? i : null)
             .filter(i => i !== null);
         if (emptyCells.length > 0) {
             index = emptyCells[Math.floor(Math.random() * emptyCells.length)];
@@ -5063,9 +3886,8 @@ function makeAIMove() {
         index = gameState.pendingCheatMoveIndex;
         gameState.pendingCheatMoveIndex = null;
     } else if (gameState.isKingWilliam) {
-        const reservedIndices = getReservedCellIndices();
         const emptyIndices = gameState.board
-            .map((cell, i) => (cell === '' && !reservedIndices.includes(i)) ? i : null)
+            .map((cell, i) => (cell === '') ? i : null)
             .filter(i => i !== null);
         if (emptyIndices.length > 0) {
             index = emptyIndices[Math.floor(Math.random() * emptyIndices.length)];
@@ -5080,9 +3902,8 @@ function makeAIMove() {
     // CRITICAL: HARD FAILSAFE - If index is still null, force a move
     if (index === null || index === undefined) {
         console.warn('[AI] Move selection returned null - using hard failsafe');
-        const reservedIndices = getReservedCellIndices();
         const emptyCells = gameState.board
-            .map((cell, i) => (cell === '' && !reservedIndices.includes(i)) ? i : null)
+            .map((cell, i) => (cell === '') ? i : null)
             .filter(i => i !== null);
         if (emptyCells.length > 0) {
             index = emptyCells[0]; // Always pick first available - guaranteed move
@@ -5109,9 +3930,8 @@ function makeAIMove() {
         // FAILSAFE: If move selection fails, use hard fallback
         if (aiMoveTimeout) clearTimeout(aiMoveTimeout);
         console.error('[AI] Move selection error (using hard fallback):', moveError);
-        const reservedIndices = getReservedCellIndices();
         const emptyCells = gameState.board
-            .map((cell, i) => (cell === '' && !reservedIndices.includes(i)) ? i : null)
+            .map((cell, i) => (cell === '') ? i : null)
             .filter(i => i !== null);
         if (emptyCells.length > 0) {
             index = emptyCells[0]; // Guaranteed move
@@ -5136,12 +3956,11 @@ function makeAIMove() {
     }
 
     // STATE CONSISTENCY CHECK: Verify board state before making move
-    if (gameState.board[index] !== '' || getReservedCellIndices().includes(index)) {
+    if (gameState.board[index] !== '') {
         console.warn('[AI] Attempted invalid move - recalculating');
         // Recalculate from scratch
-        const reservedIndices = getReservedCellIndices();
         const emptyCells = gameState.board
-            .map((cell, i) => (cell === '' && !reservedIndices.includes(i)) ? i : null)
+            .map((cell, i) => (cell === '') ? i : null)
             .filter(i => i !== null);
         if (emptyCells.length > 0) {
             index = emptyCells[0]; // Guaranteed valid move
@@ -5166,7 +3985,7 @@ function makeAIMove() {
     }
     
     // CRITICAL: Final validation before committing move
-    if (gameState.board[index] !== '' || getReservedCellIndices().includes(index)) {
+    if (gameState.board[index] !== '') {
         console.error('[AI] Move still invalid after recalculation - using emergency fallback');
         // Emergency fallback - find ANY empty cell
         for (let i = 0; i < 9; i++) {
@@ -5225,11 +4044,6 @@ function makeAIMove() {
         // AI wins - record it properly
         gameState.losses++;
         lossesDisplay.textContent = gameState.losses;
-        
-        // Increment level1Losses for tracking
-        if (gameState.currentLevel === 1) {
-            gameState.level1Losses = (gameState.level1Losses || 0) + 1;
-        }
         
         // REMOVED: Second-loss taunt feature
         
@@ -5329,11 +4143,6 @@ function makeAIMove() {
             } else {
                 endGame("AI Wins!\nThe AI has outplayed you this round, " + gameState.playerName + "!");
             }
-            // CRITICAL: Use unified round finalization instead of duplicate logic
-            // This ensures consistent state cleanup for all round endings
-            setTimeout(() => {
-                finalizeRoundAndStartNext();
-            }, 1000);
         }
         reportLoss();
         emitBoardUpdate();
@@ -5414,9 +4223,8 @@ function makeAIMove() {
         // If no move was executed, force one
         if (!moveExecuted) {
             console.warn('[AI] No move executed - forcing emergency move');
-            const reservedIndices = getReservedCellIndices();
             const emptyCells = gameState.board
-                .map((cell, i) => (cell === '' && !reservedIndices.includes(i)) ? i : null)
+                .map((cell, i) => (cell === '') ? i : null)
                 .filter(i => i !== null);
             if (emptyCells.length > 0) {
                 const emergencyIndex = emptyCells[0];
@@ -5437,6 +4245,9 @@ function makeAIMove() {
 
 function chooseHardAIMove() {
     try {
+        if (gameState.currentLevel === 1) {
+            return AngelicAI_Level1.getBestMove(gameState.board, gameState.level1.gamesPlayed);
+        }
         // STATE AWARENESS: AI must always know current game state
         // Recalculate immediately if any value is unknown
         const currentLevel = gameState.currentLevel || 1;
@@ -5444,7 +4255,6 @@ function chooseHardAIMove() {
         const playerWins = gameState.wins || 0;
         const aiWins = gameState.losses || 0; // AI wins = player losses
         const draws = (gameState.roundCount || 0) - (playerWins + aiWins);
-        const tacticalClaimUsed = gameState.tacticalClaimUsed || false;
         const isAdminOverride = false; // TODO: Track admin override state if needed
         const isPlayerActive = gameState.gameActive && !gameState.inInteractiveMode;
         
@@ -5474,7 +4284,7 @@ function chooseHardAIMove() {
         // player's move history; randomness is only used to break ties between
         // moves that are already evaluated as equally good.
 
-        const reservedIndices = getReservedCellIndices();
+
 
         // === STEP 1: AI WINNING MOVE (ABSOLUTE PRIORITY - MANDATORY) ===
         // AI MOVE PRIORITIZATION FIX: AI must always evaluate its own winning moves first.
@@ -5482,7 +4292,7 @@ function chooseHardAIMove() {
         // AI never sacrifices a guaranteed win for a block.
         const winMoves = [];
         for (let i = 0; i < 9; i++) {
-            if (gameState.board[i] === '' && !reservedIndices.includes(i)) {
+            if (gameState.board[i] === '') {
                 gameState.board[i] = 'O';
                 if (checkWin('O')) {
                     winMoves.push(i);
@@ -5516,7 +4326,7 @@ function chooseHardAIMove() {
         // Only if there is no AI winning move, the AI blocks player's winning moves.
         const blockMoves = [];
         for (let i = 0; i < 9; i++) {
-            if (gameState.board[i] === '' && !reservedIndices.includes(i)) {
+            if (gameState.board[i] === '') {
                 gameState.board[i] = 'X';
                 if (checkWin('X')) {
                     blockMoves.push(i);
@@ -5554,10 +4364,8 @@ function chooseHardAIMove() {
         );
         
         if (patternCheck.shouldBlock && patternCheck.nextExpectedMove !== null) {
-            const blockMove = patternCheck.nextExpectedMove;
-                const reserved = getReservedCellIndices();
-            // Check if cell is empty and not shielded or reserved
-                if (gameState.board[blockMove] === '' && !reserved.includes(blockMove)) {
+            // Check if cell is empty
+                if (gameState.board[blockMove] === '') {
                 const blockChance = isLosing ? 0.98 : 0.95;
                 if (Math.random() < blockChance) {
                     moveOptions.push({
@@ -5588,10 +4396,8 @@ function chooseHardAIMove() {
                     if (matches && gameState.playerMoveHistory.length < patternMoves.length) {
                         // Player is repeating a known pattern - counter it decisively
                         const nextExpectedMove = patternMoves[gameState.playerMoveHistory.length];
-                        const reserved = getReservedCellIndices();
                         if (nextExpectedMove !== undefined && 
-                            gameState.board[nextExpectedMove] === '' && 
-                            !reserved.includes(nextExpectedMove)) {
+                            gameState.board[nextExpectedMove] === '') {
                             moveOptions.push({
                                 index: nextExpectedMove,
                                 priority: 1200, // High priority to counter known pattern
@@ -5615,8 +4421,7 @@ function chooseHardAIMove() {
                 );
                 if (matches) {
                     const nextMove = patternMoves[gameState.playerMoveHistory.length];
-                        const reserved = getReservedCellIndices();
-                        if (nextMove !== undefined && gameState.board[nextMove] === '' && !reserved.includes(nextMove)) {
+                        if (nextMove !== undefined && gameState.board[nextMove] === '') {
                         const earlyBlockChance = isLosing ? 0.95 : 0.90;
                         if (Math.random() < earlyBlockChance) {
                             moveOptions.push({
@@ -5634,15 +4439,12 @@ function chooseHardAIMove() {
 
     // 3) Create forks (collect all fork moves, exclude shielded and reserved cells)
     // CRITICAL: Apply Tactical Claim bonus to fork moves
-    const forkMoves = [];
     for (let i = 0; i < 9; i++) {
-        if (gameState.board[i] === '' && !gameState.shieldedCells.includes(i) && !reservedIndices.includes(i)) {
+        if (gameState.board[i] === '') {
             gameState.board[i] = 'O';
             const threats = countImmediateThreatsFor('O');
             if (threats >= 2) {
                 let priority = 800;
-                const tacticalBonus = getTacticalClaimBonus(i);
-                if (tacticalBonus > 0) priority += tacticalBonus;
                 forkMoves.push({ index: i, priority: priority });
             }
             gameState.board[i] = '';
@@ -5656,7 +4458,7 @@ function chooseHardAIMove() {
             index: selectedFork.index,
             priority: selectedFork.priority,
             type: 'fork',
-            reasoning: getTacticalClaimBonus(selectedFork.index) > 0 ? 'Creating fork (multiple threats) - Tactical Claim priority' : 'Creating fork (multiple threats)'
+            reasoning: 'Creating fork (multiple threats)'
         });
     }
 
@@ -5664,13 +4466,11 @@ function chooseHardAIMove() {
     // CRITICAL: Apply Tactical Claim bonus to fork block moves
     const forkBlockMoves = [];
     for (let i = 0; i < 9; i++) {
-        if (gameState.board[i] === '' && !gameState.shieldedCells.includes(i) && !reservedIndices.includes(i)) {
+        if (gameState.board[i] === '') {
             gameState.board[i] = 'X';
             const threats = countImmediateThreatsFor('X');
             if (threats >= 2) {
                 let priority = 700;
-                const tacticalBonus = getTacticalClaimBonus(i);
-                if (tacticalBonus > 0) priority += tacticalBonus;
                 forkBlockMoves.push({ index: i, priority: priority });
             }
             gameState.board[i] = '';
@@ -5684,63 +4484,55 @@ function chooseHardAIMove() {
             index: selectedBlock.index,
             priority: selectedBlock.priority,
             type: 'block_fork',
-            reasoning: getTacticalClaimBonus(selectedBlock.index) > 0 ? 'Blocking opponent fork - Tactical Claim priority' : 'Blocking opponent fork'
+            reasoning: 'Blocking opponent fork'
         });
     }
 
     // 5) Strategic positions (center, corners, sides) - collect all options, exclude shielded and reserved cells
     // CRITICAL: Apply Tactical Claim bonus to strategic moves
     const strategicMoves = [];
-    if (gameState.board[4] === '' && !reservedIndices.includes(4)) {
+    if (gameState.board[4] === '') {
         let priority = 600;
-        const tacticalBonus = getTacticalClaimBonus(4);
-        if (tacticalBonus > 0) priority += tacticalBonus;
         strategicMoves.push({ 
             index: 4, 
             priority: priority, 
             type: 'center', 
-            reasoning: tacticalBonus > 0 ? 'Taking center - Tactical Claim priority' : 'Taking center' 
+            reasoning: 'Taking center' 
         });
     }
     
-    const corners = [0, 2, 6, 8].filter(i => gameState.board[i] === '' && !reservedIndices.includes(i));
+    const corners = [0, 2, 6, 8].filter(i => gameState.board[i] === '');
     if (corners.length > 0) {
     const oppCorner = getOppositeCornerIndex();
         if (oppCorner !== null && corners.includes(oppCorner)) {
             let priority = 550;
-            const tacticalBonus = getTacticalClaimBonus(oppCorner);
-            if (tacticalBonus > 0) priority += tacticalBonus;
             strategicMoves.push({ 
                 index: oppCorner, 
                 priority: priority, 
                 type: 'corner', 
-                reasoning: tacticalBonus > 0 ? 'Opposite corner - Tactical Claim priority' : 'Opposite corner' 
+                reasoning: 'Opposite corner' 
             });
         } else {
             const selectedCorner = corners[Math.floor(Math.random() * corners.length)];
             let priority = 500;
-            const tacticalBonus = getTacticalClaimBonus(selectedCorner);
-            if (tacticalBonus > 0) priority += tacticalBonus;
             strategicMoves.push({ 
                 index: selectedCorner, 
                 priority: priority, 
                 type: 'corner', 
-                reasoning: tacticalBonus > 0 ? 'Empty corner - Tactical Claim priority' : 'Empty corner' 
+                reasoning: 'Empty corner' 
             });
         }
     }
     
-    const sides = [1, 3, 5, 7].filter(i => gameState.board[i] === '' && !reservedIndices.includes(i));
+    const sides = [1, 3, 5, 7].filter(i => gameState.board[i] === '');
     if (sides.length > 0) {
         const selectedSide = sides[Math.floor(Math.random() * sides.length)];
         let priority = 400;
-        const tacticalBonus = getTacticalClaimBonus(selectedSide);
-        if (tacticalBonus > 0) priority += tacticalBonus;
         strategicMoves.push({ 
             index: selectedSide, 
             priority: priority, 
             type: 'side', 
-            reasoning: tacticalBonus > 0 ? 'Empty side - Tactical Claim priority' : 'Empty side' 
+            reasoning: 'Empty side' 
         });
     }
     
@@ -5749,7 +4541,7 @@ function chooseHardAIMove() {
     // 6) Fallback: Get all valid minimax moves and ALWAYS pick the best one
     // Exclude shielded cells and reserved cells (AI cannot select them)
     const emptyIndices = gameState.board
-        .map((cell, i) => (cell === '' && !gameState.shieldedCells.includes(i) && !reservedIndices.includes(i)) ? i : null)
+        .map((cell, i) => (cell === '') ? i : null)
         .filter(i => i !== null);
     if (emptyIndices.length > 0) {
         const minimaxScores = [];
@@ -5779,7 +4571,7 @@ function chooseHardAIMove() {
     if (moveOptions.length === 0) {
         // Ultimate fallback - random empty cell (exclude shielded and reserved)
         const empty = gameState.board
-            .map((cell, i) => (cell === '' && !reservedIndices.includes(i)) ? i : null)
+            .map((cell, i) => (cell === '') ? i : null)
             .filter(i => i !== null);
         if (empty.length > 0) {
                 // Respect the "no repeated losing move twice in a row" rule here as well
@@ -5862,7 +4654,7 @@ function chooseHardAIMove() {
     } else {
         // Fallback (shouldn't happen)
         const empty = gameState.board
-            .map((cell, i) => (cell === '' && !reservedIndices.includes(i)) ? i : null)
+            .map((cell, i) => (cell === '') ? i : null)
             .filter(i => i !== null);
         if (empty.length > 0) {
                 let candidatePool = empty.slice();
@@ -5941,9 +4733,8 @@ function chooseHardAIMove() {
     } catch (e) {
         // FAILSAFE: If any error occurs, use fallback and continue game
         console.error('Critical error in chooseHardAIMove (using fallback):', e);
-        const reservedIndices = getReservedCellIndices();
         const empty = gameState.board
-            .map((cell, i) => (cell === '' && !reservedIndices.includes(i)) ? i : null)
+            .map((cell, i) => (cell === '') ? i : null)
             .filter(i => i !== null);
         if (empty.length > 0) {
             return empty[Math.floor(Math.random() * empty.length)];
@@ -6145,17 +4936,8 @@ function activateTsukuyomi() {
         gameState.tsukuyomiBoard = Array(9).fill('');
         
         // Clear shields when new game starts (shields persist for entire match, not level)
-        if (typeof PowerUpManager !== 'undefined') {
-            PowerUpManager.clearAllShields();
-        }
+
         
-        // Reset Tactical Claim state for new game (but keep round count and level wins)
-        gameState.tacticalClaimUsed = false;
-        // NOTE: roundCount, level1Wins, and aiWinsInLevel persist across games within the same level
-        gameState.reservedCells = [];
-        gameState.turnCount = 0;
-        // Clear visual Tactical Claim effects
-        clearTacticalClaimVisuals();
         cells.forEach(cell => cell.textContent = '');
         gameState.gameActive = true;
     }, 10000);
@@ -6814,9 +5596,7 @@ function closeInteractiveMode() {
     }
     
     // Clear shields when new game starts (shields persist for entire match, not level)
-    if (typeof PowerUpManager !== 'undefined') {
-        PowerUpManager.clearAllShields();
-    }
+
     
     // Start new game
     if (gameState.behaviorAnalyzer) {
@@ -7189,11 +5969,7 @@ function finalizeRoundAndStartNext() {
         gameState.aiMoveInProgress = false; // Reset AI move lock
         
         // CRITICAL: Reset Tactical Claim on round end
-        gameState.tacticalClaim.active = false;
-        gameState.tacticalClaim.claimedCell = null;
-        gameState.tacticalClaim.aiTurnsRemaining = 0;
-        gameState.tacticalClaim.lastAITurnUsed = false;
-        gameState.tacticalClaim.cooldown = false;
+
         
         // Hide checkpoints during gameplay
         const checkpointContainer = document.querySelector('.level-progress-container');
@@ -7229,6 +6005,10 @@ function finalizeRoundAndStartNext() {
         if (gameState.aiLearningSystem) {
             gameState.aiLearningSystem.currentGameId = gameState.currentGameId;
         }
+
+        // Alternate first turn once per completed round.
+        // Round 1 starts with the player; after each completed round, the starter flips.
+        gameState.playerGoesFirst = (gameState.roundCount || 0) % 2 === 0;
         
         // Update message
         const messageBox = document.getElementById('message-box');
@@ -7431,21 +6211,175 @@ function endGame(message) {
             }
         }
         
-        // Alternate turns for next game (including draws)
-        // If player went first this game, AI goes first next game
-        gameState.playerGoesFirst = !gameState.playerGoesFirst;
-        
-        // Update level tracking for power-ups (visual only, no AI logic)
+        // Update game tracking
         gameState.totalGamesPlayed = (gameState.wins || 0) + (gameState.losses || 0);
-        if (typeof PowerUpManager !== 'undefined') {
-            PowerUpManager.updateLevel();
+        // Append Level 1 tracker call
+        if (gameState.currentLevel === 1) {
+            handleLevel1Logic(displayMessage);
         }
     } catch (e) {
         console.error('Critical error in endGame:', e);
-        // Fallback: just disable game
-        gameState.gameActive = false;
-        if (messageBox) messageBox.textContent = message || 'Game Over';
-        if (resetBtn) resetBtn.style.display = 'block';
+    }
+}
+
+/**
+ * Level 1 Series Logic
+ */
+function handleLevel1Logic(message) {
+    const l1 = gameState.level1;
+    if (l1.gamesPlayed >= l1.totalGames) return;
+
+    const isWin = message.toLowerCase().includes('win') && !message.toLowerCase().includes('ai wins');
+    const isLoss = message.toLowerCase().includes('ai wins') || message.toLowerCase().includes('outplayed');
+    
+    let result = 'draw';
+    if (isWin) {
+        l1.playerWins++;
+        result = 'player';
+    } else if (isLoss) {
+        l1.aiWins++;
+        result = 'ai';
+    }
+    
+    if (!l1.history) l1.history = [];
+    l1.history.push(result);
+    l1.gamesPlayed++;
+
+    // Record opening for AI memory
+    if (gameState.playerMoveHistory) {
+        AngelicAI_Level1.recordOpening([...gameState.playerMoveHistory]);
+    }
+
+    updateLevel1Progress();
+
+    if (l1.gamesPlayed >= l1.totalGames) {
+        // Series complete — evaluate result
+        setTimeout(() => {
+            if (l1.playerWins > l1.aiWins) {
+                showLevel1Complete(); // Player advances
+            } else {
+                showLevel1Failed(); // Try again or exit
+            }
+        }, 1500);
+    }
+}
+
+function updateLevel1Progress() {
+    let container = document.getElementById('level1-progress-container');
+    if (!container) {
+        container = document.createElement('div');
+        container.id = 'level1-progress-container';
+        container.className = 'level1-progress';
+        const msgBox = document.getElementById('message-box');
+        if (msgBox) {
+            msgBox.parentNode.insertBefore(container, msgBox);
+        } else {
+            return;
+        }
+    }
+    
+    container.innerHTML = '';
+    const l1 = gameState.level1;
+    if (!l1.history) l1.history = [];
+    
+    for (let i = 0; i < l1.totalGames; i++) {
+        const slot = document.createElement('div');
+        slot.className = 'progress-slot';
+        if (i < l1.history.length) {
+            const res = l1.history[i];
+            if (res === 'player') slot.classList.add('player-win');
+            else if (res === 'ai') slot.classList.add('ai-win');
+            else slot.classList.add('draw');
+        } else if (i === l1.history.length) {
+            slot.classList.add('current');
+        }
+        container.appendChild(slot);
+    }
+}
+
+function showLevel1Complete() {
+    const overlay = document.createElement('div');
+    overlay.className = 'level-overlay complete';
+    overlay.innerHTML = `
+        <svg class="sigil-bg" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+            <circle cx="100" cy="100" r="80" fill="none" stroke="var(--champagne)" stroke-width="0.5" opacity="0.4"/>
+            <polygon points="100,20 180,150 20,150" fill="none" stroke="var(--champagne)" stroke-width="0.5" opacity="0.3"/>
+            <polygon points="100,180 20,50 180,50" fill="none" stroke="var(--champagne)" stroke-width="0.5" opacity="0.2"/>
+        </svg>
+        <h2 style="opacity: 0; transform: translateY(20px); transition: all 0.8s ease 0.2s;">LEVEL I — CONQUERED</h2>
+        <p class="subtext" style="opacity: 0; transform: translateY(20px); transition: all 0.8s ease 0.4s;">You have proven yourself worthy. The next threshold awaits.</p>
+        <div class="level-score" style="opacity: 0; transform: translateY(20px); transition: all 0.8s ease 0.6s;">
+            <span class="score-val">${gameState.level1.playerWins}</span>
+            <span class="score-divider">—</span>
+            <span class="score-val ai">${gameState.level1.aiWins}</span>
+        </div>
+        <div class="overlay-buttons" style="opacity: 0; transform: translateY(20px); transition: all 0.8s ease 0.8s;">
+            <button class="overlay-btn btn-gold" disabled title="Coming soon">ENTER LEVEL II</button>
+            <button class="overlay-btn btn-steel" onclick="resetToLanding()">EXIT THE VOID</button>
+        </div>
+    `;
+    document.body.appendChild(overlay);
+    setTimeout(() => {
+        overlay.classList.add('active');
+        const elements = overlay.querySelectorAll('h2, .subtext, .level-score, .overlay-buttons');
+        elements.forEach(el => {
+            el.style.opacity = '1';
+            el.style.transform = 'translateY(0)';
+        });
+    }, 100);
+}
+
+function showLevel1Failed() {
+    const taunt = typeof tauntMessages !== 'undefined' ? tauntMessages[Math.floor(Math.random() * tauntMessages.length)] : "The AI has claimed this level.";
+    const overlay = document.createElement('div');
+    overlay.className = 'level-overlay failed';
+    overlay.innerHTML = `
+        <h2 style="opacity: 0; transform: translateY(20px); transition: all 0.8s ease 0.2s;">DEFEATED</h2>
+        <p class="subtext" style="opacity: 0; transform: translateY(20px); transition: all 0.8s ease 0.4s;">The AI has claimed this level. You were not ready.</p>
+        <div class="level-score" style="opacity: 0; transform: translateY(20px); transition: all 0.8s ease 0.6s;">
+            <span class="score-val">${gameState.level1.playerWins}</span>
+            <span class="score-divider">—</span>
+            <span class="score-val ai">${gameState.level1.aiWins}</span>
+        </div>
+        <div class="overlay-buttons" style="opacity: 0; transform: translateY(20px); transition: all 0.8s ease 0.8s;">
+            <button class="overlay-btn btn-gold" onclick="retryLevel1()">TRY AGAIN</button>
+            <button class="overlay-btn btn-steel" onclick="resetToLanding()">EXIT THE VOID</button>
+        </div>
+        <p class="taunt-line" style="opacity: 0; transition: all 1s ease 1.2s;">${taunt}</p>
+    `;
+    document.body.appendChild(overlay);
+    setTimeout(() => {
+        overlay.classList.add('active');
+        const elements = overlay.querySelectorAll('h2, .subtext, .level-score, .overlay-buttons, .taunt-line');
+        elements.forEach(el => {
+            el.style.opacity = '1';
+            el.style.transform = 'translateY(0)';
+        });
+    }, 100);
+}
+
+function retryLevel1() {
+    const overlays = document.querySelectorAll('.level-overlay');
+    overlays.forEach(o => o.remove());
+    
+    gameState.level1 = {
+        playerWins: 0,
+        aiWins: 0,
+        gamesPlayed: 0,
+        totalGames: 5,
+        complete: false,
+        history: []
+    };
+    
+    updateLevel1Progress();
+    
+    // Start game 1 of a fresh series
+    if (typeof finalizeRoundAndStartNext === 'function') {
+        // We need to bypass the guard
+        const originalGamesPlayed = gameState.level1.gamesPlayed;
+        gameState.level1.gamesPlayed = -1; // Temporary bypass
+        finalizeRoundAndStartNext();
+        gameState.level1.gamesPlayed = 0; // Reset
     }
 }
 
@@ -7480,13 +6414,7 @@ resetBtn.addEventListener('click', () => {
         gameState.uiLockingReason = null;
         gameState.aiTurnInProgress = false; // CRITICAL: Unlock AI turn
         gameState.aiMoveInProgress = false; // Reset AI move lock
-        // CRITICAL: Power-up isolation - only reset Last Stand if it was used
-        const wasLastStandUsed = gameState.lastStandUsed;
-        gameState.lastStandUsed = false; // Reset Last Stand
-        if (wasLastStandUsed) {
-            gameState.lastStandScheduledForPlay = null; // Only reset if used
-        }
-        gameState.aiRecalculationNeeded = false; // Reset recalculation flag
+
         
         // MVP: Clear board visually WITHOUT re-animating or resizing
         // Ensure board stays locked to prevent shrinking
