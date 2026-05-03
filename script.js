@@ -55,6 +55,8 @@ function readAngelicSpaLaunchPayload() {
 // Pre-welcome overlay elements (will be set on DOMContentLoaded)
 let preWelcomeOverlay, continueWelcomeBtn, aiPresenceGameplay;
 let preWelcomeAutoTimer = null;
+let hintPulseBusy = false;
+let hintPulseActivationTimer = null;
 
 /** Slow parallax star field for void intro (canvas). */
 function initVoidStarfield() {
@@ -1434,6 +1436,69 @@ const AngelicAI_Level1 = {
         }
     },
 
+    /**
+     * Minimax layer for Hint Pulse: best move for `forMark` (human) vs opponent.
+     * Matches guidebook / systems doc: quick simulation for the player's side.
+     */
+    _hintMinimaxScore(board, depth, maximizingForPlayer, forMark, opp, maxDepth) {
+        const w = this.checkWinner(board);
+        if (w === forMark) return 10 - depth;
+        if (w === opp) return depth - 10;
+        if (board.every((c) => c !== '') || depth >= maxDepth) return 0;
+
+        if (maximizingForPlayer) {
+            let best = -Infinity;
+            for (let i = 0; i < 9; i++) {
+                if (board[i] === '') {
+                    board[i] = forMark;
+                    best = Math.max(
+                        best,
+                        this._hintMinimaxScore(board, depth + 1, false, forMark, opp, maxDepth),
+                    );
+                    board[i] = '';
+                }
+            }
+            return best;
+        }
+        let best = Infinity;
+        for (let i = 0; i < 9; i++) {
+            if (board[i] === '') {
+                board[i] = opp;
+                best = Math.min(
+                    best,
+                    this._hintMinimaxScore(board, depth + 1, true, forMark, opp, maxDepth),
+                );
+                board[i] = '';
+            }
+        }
+        return best;
+    },
+
+    bestHintMove(board, forMark, maxDepth = 4) {
+        const opp = forMark === 'X' ? 'O' : 'X';
+        let move = this.findWinningMove(board, forMark);
+        if (move !== null) return move;
+        move = this.findWinningMove(board, opp);
+        if (move !== null) return move;
+        move = this.findForkMove(board, forMark);
+        if (move !== null) return move;
+
+        let bestScore = -Infinity;
+        let bestIdx = null;
+        for (let i = 0; i < 9; i++) {
+            if (board[i] !== '') continue;
+            board[i] = forMark;
+            const score = this._hintMinimaxScore(board, 1, false, forMark, opp, maxDepth);
+            board[i] = '';
+            if (score > bestScore) {
+                bestScore = score;
+                bestIdx = i;
+            }
+        }
+        if (bestIdx !== null) return bestIdx;
+        return this.basicPriorityMove(board);
+    },
+
     checkWinner(board) {
         const winPatterns = [[0,1,2],[3,4,5],[6,7,8],[0,3,6],[1,4,7],[2,5,8],[0,4,8],[2,4,6]];
         for (let p of winPatterns) {
@@ -2730,6 +2795,22 @@ function showActivationBanner(text, icon) {
     banner.classList.add('is-visible');
 }
 
+/** Human mark in AI mode is X; in PvP use lobby role. */
+function humanMarkForPowerups() {
+    return gameState.mode === 'pvp' && gameState.pvpRole ? gameState.pvpRole : 'X';
+}
+
+/** Whether it is the human's turn (standard X-first cadence). */
+function isHumanToMove() {
+    if (!gameState.gameActive) return false;
+    const b = gameState.board;
+    const nx = b.filter((c) => c === 'X').length;
+    const no = b.filter((c) => c === 'O').length;
+    const mark = humanMarkForPowerups();
+    if (mark === 'X') return nx === no;
+    return nx === no + 1;
+}
+
 function refreshPowerUpChargeLabels() {
     const sidebar = document.getElementById('powerup-sidebar');
     if (!sidebar) return;
@@ -2740,7 +2821,12 @@ function refreshPowerUpChargeLabels() {
         const el = hintCard.querySelector('.pu-charge');
         if (el) el.textContent = `${gameState.hintPulseCharges} Charges`;
         const btn = hintCard.querySelector('.pu-btn');
-        if (btn) btn.disabled = gameState.hintPulseCharges <= 0 || !gameState.gameActive;
+        if (btn) {
+            btn.disabled =
+                gameState.hintPulseCharges <= 0 ||
+                !gameState.gameActive ||
+                !isHumanToMove();
+        }
     }
     if (shakeCard) {
         const el = shakeCard.querySelector('.pu-charge');
@@ -2766,40 +2852,60 @@ function refreshPowerUpChargeLabels() {
 }
 
 function pickHintCellForHuman() {
-    const board = gameState.board;
-    const mark =
-        gameState.mode === 'pvp' && gameState.pvpRole
-            ? gameState.pvpRole
-            : 'X';
-    const opp = mark === 'X' ? 'O' : 'X';
-    let move = AngelicAI_Level1.findWinningMove(board, mark);
-    if (move !== null) return move;
-    move = AngelicAI_Level1.findWinningMove(board, opp);
-    if (move !== null) return move;
-    return AngelicAI_Level1.basicPriorityMove(board);
+    return AngelicAI_Level1.bestHintMove(gameState.board, humanMarkForPowerups(), 4);
 }
 
 function activateHintPulseFromUi() {
-    if (!gameState.gameActive || gameState.hintPulseCharges <= 0) return;
-    gameState.hintPulseCharges--;
-    refreshPowerUpChargeLabels();
-    cells.forEach((cell) => cell.classList.remove('hint-pulse'));
-    let idx = null;
-    try {
-        idx = pickHintCellForHuman();
-    } catch (_) {
-        idx = null;
+    if (!gameState.gameActive || gameState.hintPulseCharges <= 0 || hintPulseBusy) return;
+    if (!isHumanToMove()) {
+        if (messageBox) {
+            messageBox.textContent = 'Hint Pulse only reads the lattice on your turn.';
+        }
+        return;
     }
-    if (idx === null || idx === undefined || gameState.board[idx] !== '') {
-        const empty = gameState.board.findIndex((v) => v === '');
-        idx = empty === -1 ? null : empty;
-    }
-    if (idx !== null && idx !== undefined && cells[idx]) {
-        cells[idx].classList.add('hint-pulse');
-    }
-    showActivationBanner('Hint Pulse — strongest line glows gold', '💡');
+    hintPulseBusy = true;
+    window.clearTimeout(hintPulseActivationTimer);
+
+    const reduced =
+        typeof window.matchMedia === 'function' &&
+        window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const scanMs = reduced ? 0 : 650;
+
     if (messageBox) {
-        messageBox.textContent = 'Hint Pulse: follow the golden cell.';
+        messageBox.textContent = 'Scanning the board for the best line...';
+    }
+
+    const applyPulse = () => {
+        cells.forEach((cell) => cell.classList.remove('hint-pulse'));
+        let idx = null;
+        try {
+            idx = pickHintCellForHuman();
+        } catch (_) {
+            idx = null;
+        }
+        if (idx === null || idx === undefined || gameState.board[idx] !== '') {
+            const empty = gameState.board.findIndex((v) => v === '');
+            idx = empty === -1 ? null : empty;
+        }
+        if (idx === null || idx === undefined) {
+            hintPulseBusy = false;
+            if (messageBox) messageBox.textContent = 'Hint Pulse: no move to reveal.';
+            return;
+        }
+        gameState.hintPulseCharges--;
+        refreshPowerUpChargeLabels();
+        if (cells[idx]) cells[idx].classList.add('hint-pulse');
+        if (messageBox) {
+            messageBox.textContent = `Best move found in cell ${idx + 1}. Hint Pulse is active — seal the glowing mark yourself; it never plays for you.`;
+        }
+        showActivationBanner('Hint Pulse is active — seal the glowing cell', '💡');
+        hintPulseBusy = false;
+    };
+
+    if (scanMs <= 0) {
+        applyPulse();
+    } else {
+        hintPulseActivationTimer = window.setTimeout(applyPulse, scanMs);
     }
 }
 
@@ -3896,6 +4002,7 @@ function handleCellClick(cell) {
     // CRITICAL: Tactical Claim does NOT block cells - player can always play any cell
 
     clickSound.play();
+    cells.forEach((c) => c.classList.remove('hint-pulse'));
     gameState.board[index] = 'X';
     cell.textContent = 'X';
     cell.setAttribute('data-mark', 'X');
@@ -4105,7 +4212,8 @@ function handleCellClick(cell) {
     // Wait for cell animation + pacing delay, then AI thinking delay
     setTimeout(() => {
         gameState.uiLocked = false;
-        
+        refreshPowerUpChargeLabels();
+
         // PACING: Small delay before showing "AI is thinking" for smoothness
         setTimeout(() => {
             // Now trigger AI move after thinking delay
@@ -4421,6 +4529,7 @@ function makeAIMove() {
     setTimeout(() => {
         gameState.uiLocked = false;
         gameState.uiLockingReason = null;
+        refreshPowerUpChargeLabels();
     }, aiMoveAnimationDuration + pacingDelay);
 
     // CRITICAL: Check win conditions FIRST, then draw
