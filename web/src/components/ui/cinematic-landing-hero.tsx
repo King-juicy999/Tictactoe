@@ -477,21 +477,22 @@ export function AngelicCinematicHero({
         </h1>
       </div>
 
-      <div className="cta-wrapper-angelic absolute z-10 flex flex-col items-center justify-center text-center w-screen px-4 gsap-reveal pointer-events-auto will-change-transform relative">
-        <div
-          ref={orbitalRef}
-          className="cta-angelic-pfx pointer-events-none absolute left-1/2 top-[6%] z-0 flex w-[min(92vw,540px)] max-h-[min(38vh,340px)] aspect-square -translate-x-1/2 items-center justify-center opacity-[0.48] sm:opacity-[0.55]"
-          aria-hidden="true"
-          style={{ perspective: '1100px' }}
-        >
-          <div className="cta-angelic-pfx-inner">
-            <span className="cta-angelic-pfx-ring" />
-            <span className="cta-angelic-pfx-ring cta-angelic-pfx-ring--b" />
-            <span className="cta-angelic-pfx-ring cta-angelic-pfx-ring--c" />
+      <div className="cta-wrapper-angelic pointer-events-auto absolute inset-0 z-10 flex max-h-[100dvh] w-screen flex-col overflow-hidden pt-[max(0.35rem,env(safe-area-inset-top))] pb-[max(0.25rem,env(safe-area-inset-bottom))] text-center gsap-reveal will-change-transform">
+        <div className="relative z-[3] flex min-h-0 w-full flex-1 flex-col items-center overflow-y-auto overflow-x-hidden px-4 [-webkit-overflow-scrolling:touch]">
+          <div
+            ref={orbitalRef}
+            className="cta-angelic-pfx pointer-events-none relative z-0 mx-auto mt-1 flex w-[min(88vw,420px)] max-h-[min(22vh,200px)] shrink-0 aspect-square items-center justify-center opacity-[0.42] sm:mt-2 sm:max-h-[min(28vh,260px)] sm:opacity-[0.52]"
+            aria-hidden="true"
+            style={{ perspective: '1100px' }}
+          >
+            <div className="cta-angelic-pfx-inner">
+              <span className="cta-angelic-pfx-ring" />
+              <span className="cta-angelic-pfx-ring cta-angelic-pfx-ring--b" />
+              <span className="cta-angelic-pfx-ring cta-angelic-pfx-ring--c" />
+            </div>
           </div>
-        </div>
 
-        <div className="relative z-[3] flex w-full max-w-2xl flex-col items-center">
+          <div className="relative z-[3] flex w-full max-w-xl flex-col items-center pb-3 sm:max-w-2xl">
         <p
           style={{
             fontFamily: "'Cinzel', serif",
@@ -499,7 +500,7 @@ export function AngelicCinematicHero({
             letterSpacing: '0.38em',
             textTransform: 'uppercase',
             color: '#C8A96E',
-            marginBottom: '1.25rem',
+            marginBottom: '0.55rem',
             opacity: 0.75,
           }}
         >
@@ -511,11 +512,12 @@ export function AngelicCinematicHero({
         <h2
           style={{
             fontFamily: "'Cinzel', serif",
-            fontSize: 'clamp(2.2rem, 7vw, 5rem)',
+            fontSize: 'clamp(1.35rem, 5.5vw, 2.85rem)',
             fontWeight: 900,
             letterSpacing: '0.1em',
             textTransform: 'uppercase',
-            marginBottom: '1rem',
+            marginBottom: '0.45rem',
+            lineHeight: 1.12,
           }}
           className="text-silver-angelic"
         >
@@ -526,11 +528,11 @@ export function AngelicCinematicHero({
           style={{
             fontFamily: "'Cormorant Garamond', serif",
             fontStyle: 'italic',
-            fontSize: 'clamp(1rem, 2.5vw, 1.3rem)',
+            fontSize: 'clamp(0.88rem, 2.2vw, 1.15rem)',
             color: 'rgba(242,240,255,0.72)',
-            marginBottom: '1.35rem',
+            marginBottom: '0.75rem',
             maxWidth: '34rem',
-            lineHeight: 1.6,
+            lineHeight: 1.45,
           }}
         >
           {ctaDescription}
@@ -572,9 +574,9 @@ export function AngelicCinematicHero({
           ) : null}
         </div>
 
-        <p className="cta-mode-label-angelic text-center">Choose your path</p>
+        <p className="cta-mode-label-angelic mb-1 text-center">Choose your path</p>
         <div
-          className="cta-mode-row-angelic"
+          className="cta-mode-row-angelic !mb-3 sm:!mb-4"
           role="group"
           aria-label="Play against AI or another player"
         >
@@ -607,11 +609,13 @@ export function AngelicCinematicHero({
             </span>
           </button>
         </div>
+          </div>
+        </div>
 
-        <div className="flex flex-col sm:flex-row gap-5 items-center">
+        <div className="relative z-[5] flex w-full shrink-0 flex-col items-center gap-2 border-t border-[rgba(200,169,110,0.12)] bg-[linear-gradient(180deg,rgba(5,6,11,0.92)_0%,rgba(5,6,11,0.98)_100%)] px-4 py-2.5 pb-[max(0.5rem,env(safe-area-inset-bottom))] pt-2 shadow-[0_-12px_32px_rgba(0,0,0,0.35)] sm:flex-row sm:justify-center sm:gap-4 sm:py-3">
           <button
             type="button"
-            className="btn-angelic-cta"
+            className="btn-angelic-cta w-full max-w-xs sm:w-auto"
             aria-label={ctaPrimaryLabel}
             onClick={submitThreshold}
           >
@@ -620,13 +624,12 @@ export function AngelicCinematicHero({
 
           <button
             type="button"
-            className="btn-angelic-secondary"
+            className="btn-angelic-secondary w-full max-w-xs sm:w-auto"
             aria-label={ctaSecondaryLabel}
             onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
           >
             {ctaSecondaryLabel}
           </button>
-        </div>
         </div>
       </div>
 

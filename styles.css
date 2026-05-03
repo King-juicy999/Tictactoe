@@ -140,7 +140,7 @@ body {
 /* Room for fixed power-up rail on wide screens (board stays centered, not under the rail) */
 @media (min-width: 900px) {
     #game-screen.active {
-        padding-inline-end: min(300px, 26vw);
+        padding-inline-end: min(6.5rem, 16vw);
     }
 }
 
@@ -3162,6 +3162,259 @@ button:disabled::after {
     pointer-events: auto;
 }
 
+/* Hidden source cards — ritual dock + modal clone from these nodes */
+.powerup-sidebar--source {
+    position: absolute !important;
+    width: 1px !important;
+    height: 1px !important;
+    padding: 0 !important;
+    margin: -1px !important;
+    overflow: hidden !important;
+    clip: rect(0, 0, 0, 0) !important;
+    clip-path: inset(50%) !important;
+    white-space: nowrap !important;
+    border: 0 !important;
+    inset: 0 auto auto 0;
+    max-height: none !important;
+    pointer-events: none !important;
+    visibility: hidden !important;
+}
+
+/* Circular 3D ritual dock — opens detail modal (only during active play) */
+.powerup-ritual-dock {
+    position: fixed;
+    top: 50%;
+    right: max(0.45rem, env(safe-area-inset-right, 0px));
+    z-index: 72;
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.25rem;
+    transform: translateY(-50%);
+    pointer-events: none;
+}
+
+#game-screen.active .powerup-ritual-dock {
+    display: flex;
+}
+
+.powerup-ritual-dock * {
+    pointer-events: auto;
+}
+
+.powerup-orbit-3d {
+    width: 9rem;
+    height: 9rem;
+    perspective: 900px;
+}
+
+.powerup-orbit-track {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    transform-style: preserve-3d;
+    transform: rotateX(54deg);
+    animation: powerupOrbitDrift 12s ease-in-out infinite alternate;
+}
+
+@keyframes powerupOrbitDrift {
+    0% {
+        transform: rotateX(50deg) rotateZ(-5deg);
+    }
+
+    100% {
+        transform: rotateX(58deg) rotateZ(5deg);
+    }
+}
+
+.pu-orbit-node {
+    --orbit-r: 3.35rem;
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: 2.75rem;
+    height: 2.75rem;
+    margin: -1.375rem 0 0 -1.375rem;
+    padding: 0;
+    border-radius: 50%;
+    border: 1px solid rgba(200, 169, 110, 0.5);
+    background:
+        radial-gradient(circle at 32% 28%, rgba(242, 240, 255, 0.14), transparent 42%),
+        linear-gradient(165deg, rgba(16, 20, 40, 0.95), rgba(5, 6, 11, 0.98));
+    box-shadow:
+        0 10px 22px rgba(0, 0, 0, 0.45),
+        inset 0 1px 0 rgba(242, 240, 255, 0.06);
+    transform: rotate(var(--orbit-deg, 0deg)) translateY(calc(-1 * var(--orbit-r)))
+        rotate(calc(-1 * var(--orbit-deg, 0deg)));
+    transform-style: preserve-3d;
+    cursor: pointer;
+    display: grid;
+    place-items: center;
+    transition:
+        box-shadow 0.2s ease,
+        border-color 0.2s ease,
+        transform 0.2s ease;
+}
+
+.pu-orbit-node__glyph {
+    display: block;
+    font-size: 1.2rem;
+    line-height: 1;
+    transform: translateZ(4px);
+    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.5));
+}
+
+.pu-orbit-node:hover,
+.pu-orbit-node:focus-visible {
+    border-color: rgba(200, 169, 110, 0.9);
+    box-shadow:
+        0 0 22px rgba(200, 169, 110, 0.28),
+        0 12px 28px rgba(0, 0, 0, 0.5);
+    outline: none;
+}
+
+.pu-orbit-node--ai {
+    border-color: rgba(134, 168, 199, 0.55);
+}
+
+.powerup-orbit-caption {
+    font-size: 0.52rem;
+    letter-spacing: 0.28em;
+    text-transform: uppercase;
+    color: rgba(200, 169, 110, 0.72);
+    text-align: center;
+    max-width: 5rem;
+    line-height: 1.2;
+}
+
+.powerup-picker-modal {
+    position: fixed;
+    inset: 0;
+    z-index: 12000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: max(1rem, env(safe-area-inset-top)) max(1rem, env(safe-area-inset-right))
+        max(1rem, env(safe-area-inset-bottom)) max(1rem, env(safe-area-inset-left));
+}
+
+.powerup-picker-modal.hidden {
+    display: none !important;
+}
+
+.powerup-picker-modal__backdrop {
+    position: absolute;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.74);
+    backdrop-filter: blur(10px);
+}
+
+.powerup-picker-modal__panel {
+    position: relative;
+    z-index: 1;
+    width: min(440px, 100%);
+    max-height: min(88dvh, 640px);
+    overflow-y: auto;
+    border-radius: 22px;
+    border: 1px solid rgba(200, 169, 110, 0.38);
+    background:
+        radial-gradient(120% 80% at 50% 0%, rgba(200, 169, 110, 0.1), transparent 55%),
+        linear-gradient(180deg, rgba(11, 14, 30, 0.98) 0%, rgba(5, 6, 11, 0.99) 100%);
+    box-shadow: 0 28px 70px rgba(0, 0, 0, 0.55);
+    padding: 1.35rem 1.2rem 1.45rem;
+}
+
+.powerup-picker-modal__close {
+    position: absolute;
+    top: 0.45rem;
+    right: 0.55rem;
+    width: 2.25rem;
+    height: 2.25rem;
+    border: none;
+    border-radius: 10px;
+    background: rgba(10, 12, 24, 0.6);
+    color: rgba(242, 240, 255, 0.85);
+    font-size: 1.35rem;
+    line-height: 1;
+    cursor: pointer;
+}
+
+.powerup-picker-modal__title {
+    margin: 0 2rem 0.85rem 0;
+    font-size: clamp(0.95rem, 3vw, 1.15rem);
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--champagne);
+}
+
+.powerup-picker-modal__body .pu-card {
+    display: block;
+    padding: 0;
+    border: none;
+    background: transparent;
+    box-shadow: none;
+}
+
+.powerup-picker-modal__body .pu-card::before {
+    display: none;
+}
+
+.powerup-picker-modal__body .pu-rune {
+    margin: 0 auto 0.85rem;
+}
+
+.powerup-picker-modal__body .pu-meta {
+    text-align: center;
+}
+
+.powerup-picker-modal__body .pu-btn {
+    width: 100%;
+    margin-top: 1rem;
+    justify-self: stretch;
+}
+
+@media (min-width: 900px) {
+    .pu-orbit-node {
+        --orbit-r: 3.85rem;
+    }
+
+    .powerup-orbit-3d {
+        width: 10rem;
+        height: 10rem;
+    }
+}
+
+@media (max-width: 768px) {
+    .powerup-orbit-3d {
+        width: 8rem;
+        height: 8rem;
+    }
+
+    .pu-orbit-node {
+        --orbit-r: 2.85rem;
+        width: 2.5rem;
+        height: 2.5rem;
+        margin: -1.25rem 0 0 -1.25rem;
+    }
+
+    .pu-orbit-node__glyph {
+        font-size: 1.05rem;
+    }
+
+    .powerup-ritual-dock {
+        top: auto;
+        bottom: max(5.5rem, calc(env(safe-area-inset-bottom, 0px) + 4.5rem));
+        right: max(0.5rem, env(safe-area-inset-right, 0px));
+        transform: none;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .powerup-orbit-track {
+        animation: none;
+    }
+}
+
 .pu-card {
     position: relative;
     display: grid;
@@ -3304,7 +3557,7 @@ button:disabled::after {
     bottom: max(0.55rem, env(safe-area-inset-bottom, 0px));
     transform: translateX(-50%);
     width: min(96vw, 440px);
-    display: none;
+    display: none !important;
     grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 0.5rem 0.45rem;
     padding: 0.55rem 0.55rem calc(0.55rem + env(safe-area-inset-bottom, 0px));
@@ -3684,11 +3937,7 @@ button:disabled::after {
     }
 
     #game-screen.active {
-        padding-bottom: calc(7.25rem + env(safe-area-inset-bottom, 0px));
-    }
-
-    .bottom-bar {
-        display: grid;
+        padding-bottom: max(0.5rem, env(safe-area-inset-bottom, 0px));
     }
 
     .activation-banner {
@@ -3712,23 +3961,11 @@ button:disabled::after {
 
 @media (min-width: 769px) and (max-width: 899px) {
     #game-screen.active {
-        padding-inline-end: min(200px, 22vw);
+        padding-inline-end: min(5.5rem, 14vw);
     }
 
     .powerup-sidebar {
         width: min(232px, calc(100vw - 1rem));
-    }
-}
-
-@media (min-width: 520px) and (max-width: 768px) {
-    .bottom-bar {
-        grid-template-columns: repeat(4, minmax(0, 1fr));
-        width: min(94vw, 520px);
-    }
-
-    .bb-name {
-        white-space: nowrap;
-        -webkit-line-clamp: 1;
     }
 }
 
@@ -4265,7 +4502,7 @@ button:disabled::after {
 .cta-name-block-angelic {
     width: 100%;
     max-width: 22rem;
-    margin: 0 auto 1.75rem;
+    margin: 0 auto 0.95rem;
     text-align: left;
 }
 
@@ -4321,10 +4558,10 @@ button:disabled::after {
 .cta-mode-row-angelic {
     display: grid;
     grid-template-columns: 1fr;
-    gap: 0.65rem;
+    gap: 0.55rem;
     width: 100%;
     max-width: 36rem;
-    margin: 0 auto 2rem;
+    margin: 0 auto 1.15rem;
 }
 
 @media (min-width: 520px) {
@@ -4336,7 +4573,7 @@ button:disabled::after {
 .cta-mode-card-angelic {
     cursor: pointer;
     text-align: left;
-    padding: 1rem 1.1rem;
+    padding: 0.72rem 0.85rem;
     border-radius: 4px;
     background: rgba(10, 12, 24, 0.55);
     border: 1px solid rgba(134, 168, 199, 0.28);

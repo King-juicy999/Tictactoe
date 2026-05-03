@@ -967,6 +967,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Initialize 3D Interactive Mode Board
     initMode3DCanvas();
+
+    wirePowerUpSidebarActivations();
+    initPowerupOrbitPicker();
 });
 
 /**
@@ -1254,7 +1257,13 @@ const gameState = {
       totalGames: 5,
       complete: false,
       history: []
-    }
+    },
+    hintPulseCharges: 2,
+    boardShakeCharges: 1,
+    lastStandCharges: 1,
+    lastStandPending: false,
+    lastStandUsed: false,
+    lastStandScheduledForPlay: null
 };
 
 /**
@@ -2567,6 +2576,7 @@ if (socket) {
             gameState.mode = 'pvp';
             gameState.pvpSessionId = sessionId;
             gameState.pvpRole = role; // 'X' or 'O'
+            refreshPowerUpChargeLabels();
 
             // Reset board for real-time play; moves must be synced via socket events (not implemented here yet)
             gameState.board = Array(9).fill('');
@@ -2706,6 +2716,208 @@ function shuffleBoardContents() {
         for (let i = 0; i < 9; i++) cells[i].textContent = gameState.board[i];
         gameState.gameActive = true;
     }
+}
+
+function showActivationBanner(text, icon) {
+    const banner = document.getElementById('activation-banner');
+    if (!banner) return;
+    const iconEl = banner.querySelector('.activation-banner__icon');
+    const textEl = banner.querySelector('.activation-banner__text');
+    if (iconEl && icon) iconEl.textContent = icon;
+    if (textEl) textEl.textContent = text;
+    banner.classList.remove('is-visible');
+    void banner.offsetWidth;
+    banner.classList.add('is-visible');
+}
+
+function refreshPowerUpChargeLabels() {
+    const sidebar = document.getElementById('powerup-sidebar');
+    if (!sidebar) return;
+    const hintCard = sidebar.querySelector('[data-powerup="hint-pulse"]');
+    const shakeCard = sidebar.querySelector('[data-powerup="board-shake"]');
+    const standCard = sidebar.querySelector('[data-powerup="last-stand"]');
+    if (hintCard) {
+        const el = hintCard.querySelector('.pu-charge');
+        if (el) el.textContent = `${gameState.hintPulseCharges} Charges`;
+        const btn = hintCard.querySelector('.pu-btn');
+        if (btn) btn.disabled = gameState.hintPulseCharges <= 0 || !gameState.gameActive;
+    }
+    if (shakeCard) {
+        const el = shakeCard.querySelector('.pu-charge');
+        if (el) el.textContent = `${gameState.boardShakeCharges} Charge · Level 1`;
+        const btn = shakeCard.querySelector('.pu-btn');
+        if (btn) btn.disabled = gameState.boardShakeCharges <= 0 || !gameState.gameActive;
+    }
+    if (standCard) {
+        const el = standCard.querySelector('.pu-charge');
+        if (el) el.textContent = `${gameState.lastStandCharges} Charge · Level 1`;
+        const btn = standCard.querySelector('.pu-btn');
+        if (btn) btn.disabled = gameState.lastStandCharges <= 0 || !gameState.gameActive;
+    }
+    document.querySelectorAll('.bb-card[data-powerup="hint-pulse"] .bb-charge').forEach((n) => {
+        n.textContent = String(Math.max(0, gameState.hintPulseCharges));
+    });
+    document.querySelectorAll('.bb-card[data-powerup="board-shake"] .bb-charge').forEach((n) => {
+        n.textContent = String(Math.max(0, gameState.boardShakeCharges));
+    });
+    document.querySelectorAll('.bb-card[data-powerup="last-stand"] .bb-charge').forEach((n) => {
+        n.textContent = String(Math.max(0, gameState.lastStandCharges));
+    });
+}
+
+function pickHintCellForHuman() {
+    const board = gameState.board;
+    const mark =
+        gameState.mode === 'pvp' && gameState.pvpRole
+            ? gameState.pvpRole
+            : 'X';
+    const opp = mark === 'X' ? 'O' : 'X';
+    let move = AngelicAI_Level1.findWinningMove(board, mark);
+    if (move !== null) return move;
+    move = AngelicAI_Level1.findWinningMove(board, opp);
+    if (move !== null) return move;
+    return AngelicAI_Level1.basicPriorityMove(board);
+}
+
+function activateHintPulseFromUi() {
+    if (!gameState.gameActive || gameState.hintPulseCharges <= 0) return;
+    gameState.hintPulseCharges--;
+    refreshPowerUpChargeLabels();
+    cells.forEach((cell) => cell.classList.remove('hint-pulse'));
+    let idx = null;
+    try {
+        idx = pickHintCellForHuman();
+    } catch (_) {
+        idx = null;
+    }
+    if (idx === null || idx === undefined || gameState.board[idx] !== '') {
+        const empty = gameState.board.findIndex((v) => v === '');
+        idx = empty === -1 ? null : empty;
+    }
+    if (idx !== null && idx !== undefined && cells[idx]) {
+        cells[idx].classList.add('hint-pulse');
+    }
+    showActivationBanner('Hint Pulse — strongest line glows gold', '💡');
+    if (messageBox) {
+        messageBox.textContent = 'Hint Pulse: follow the golden cell.';
+    }
+}
+
+function activateBoardShakeFromUi() {
+    if (!gameState.gameActive || gameState.boardShakeCharges <= 0) return;
+    gameState.boardShakeCharges--;
+    refreshPowerUpChargeLabels();
+    shuffleBoardContents();
+    const boardEl = document.querySelector('.game-board');
+    if (boardEl) {
+        boardEl.classList.remove('shake-board');
+        void boardEl.offsetWidth;
+        boardEl.classList.add('shake-board');
+        window.setTimeout(() => boardEl.classList.remove('shake-board'), 550);
+    }
+    showActivationBanner('Board Shake — the grid remaps', '🌊');
+    if (messageBox) {
+        messageBox.textContent = 'Board Shake: positions remapped; marks kept.';
+    }
+}
+
+function activateLastStandFromUi() {
+    if (!gameState.gameActive || gameState.lastStandCharges <= 0) return;
+    gameState.lastStandCharges--;
+    gameState.lastStandPending = true;
+    refreshPowerUpChargeLabels();
+    showActivationBanner('Last Stand armed — one reprieve if the AI finishes you', '⚡');
+    if (messageBox) {
+        messageBox.textContent = 'Last Stand: if the AI wins this exchange, you get one reprieve.';
+    }
+}
+
+function wirePowerUpSidebarActivations() {
+    const sidebar = document.getElementById('powerup-sidebar');
+    if (!sidebar) return;
+    sidebar.querySelectorAll('.pu-card[data-powerup]').forEach((card) => {
+        const key = card.getAttribute('data-powerup');
+        const btn = card.querySelector('.pu-btn');
+        if (!btn) return;
+        btn.addEventListener('click', (e) => {
+            e.preventDefault();
+            if (btn.disabled) return;
+            if (key === 'hint-pulse') activateHintPulseFromUi();
+            else if (key === 'board-shake') activateBoardShakeFromUi();
+            else if (key === 'last-stand') activateLastStandFromUi();
+        });
+    });
+    refreshPowerUpChargeLabels();
+}
+
+function initPowerupOrbitPicker() {
+    const modal = document.getElementById('powerup-picker-modal');
+    const body = document.getElementById('powerup-picker-modal__body');
+    const title = document.getElementById('powerup-picker-title');
+    const sidebar = document.getElementById('powerup-sidebar');
+    const dock = document.getElementById('powerup-ritual-dock');
+    if (!modal || !body || !title || !sidebar || !dock) return;
+
+    let lastFocus = null;
+
+    function closeModal() {
+        modal.classList.add('hidden');
+        modal.setAttribute('aria-hidden', 'true');
+        document.body.style.overflow = '';
+        if (lastFocus && typeof lastFocus.focus === 'function') {
+            try {
+                lastFocus.focus();
+            } catch (_) {}
+        }
+    }
+
+    function openForPowerup(key) {
+        const sourceCard = sidebar.querySelector(`.pu-card[data-powerup="${key}"]`);
+        if (!sourceCard) return;
+        lastFocus = document.activeElement;
+        body.innerHTML = '';
+        const clone = sourceCard.cloneNode(true);
+        clone.classList.add('pu-card--modal-clone');
+        clone.querySelectorAll('[id]').forEach((el) => el.removeAttribute('id'));
+        body.appendChild(clone);
+        const nameEl = sourceCard.querySelector('.pu-name');
+        title.textContent = nameEl ? nameEl.textContent.trim() : 'Ritual';
+        const origBtn = sourceCard.querySelector('.pu-btn');
+        const cloneBtn = clone.querySelector('.pu-btn');
+        if (cloneBtn && origBtn) {
+            cloneBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                if (origBtn.disabled) return;
+                origBtn.click();
+                closeModal();
+            });
+        }
+        modal.classList.remove('hidden');
+        modal.setAttribute('aria-hidden', 'false');
+        document.body.style.overflow = 'hidden';
+        if (cloneBtn) {
+            window.requestAnimationFrame(() => cloneBtn.focus());
+        }
+    }
+
+    dock.querySelectorAll('.pu-orbit-node[data-powerup]').forEach((node) => {
+        node.addEventListener('click', () => {
+            const key = node.getAttribute('data-powerup');
+            if (key) openForPowerup(key);
+        });
+    });
+
+    modal.querySelectorAll('[data-close-modal]').forEach((el) => {
+        el.addEventListener('click', closeModal);
+    });
+    modal.addEventListener('click', (e) => {
+        if (e.target === modal) closeModal();
+    });
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && !modal.classList.contains('hidden')) {
+            closeModal();
+        }
+    });
 }
 
 function performJumpscare({ variant = 'both', duration = 3000, cheat = true } = {}) {
@@ -3210,7 +3422,8 @@ function startGameAsAI(skipGuidebookCheck) {
     gameState.gameActive = true;
     gameState.uiLocked = false;
     gameState.uiLockingReason = null;
-    
+    refreshPowerUpChargeLabels();
+
     // CRITICAL: Force enable all cells and ensure they're clickable
     const cells = Array.from(document.querySelectorAll('.cell'));
     cells.forEach(cell => {
@@ -4215,6 +4428,29 @@ function makeAIMove() {
     // This prevents AI wins from being misclassified as draws
     
     if (checkWin('O')) {
+        if (
+            gameState.lastStandPending &&
+            !gameState.lastStandUsed &&
+            gameState.mode === 'ai' &&
+            typeof index === 'number' &&
+            index >= 0 &&
+            index < 9
+        ) {
+            gameState.lastStandPending = false;
+            gameState.lastStandUsed = true;
+            gameState.board[index] = '';
+            if (cells[index]) {
+                cells[index].textContent = '';
+                cells[index].removeAttribute('data-mark');
+            }
+            if (messageBox) {
+                messageBox.textContent = 'Last Stand: the finishing mark dissolves. Your move.';
+            }
+            showActivationBanner('Last Stand — one more exchange', '⚡');
+            emitBoardUpdate();
+            refreshPowerUpChargeLabels();
+            return;
+        }
         // AI wins - record it properly
         gameState.losses++;
         lossesDisplay.textContent = gameState.losses;
@@ -6135,6 +6371,7 @@ function finalizeRoundAndStartNext() {
         // Other power-ups (Board Shake, Hint Pulse) remain unaffected
         const wasLastStandUsed = gameState.lastStandUsed;
         gameState.lastStandUsed = false; // Reset Last Stand for new game
+        gameState.lastStandPending = false;
         // Only clear scheduled play count if Last Stand was actually used
         if (wasLastStandUsed) {
             gameState.lastStandScheduledForPlay = null;
