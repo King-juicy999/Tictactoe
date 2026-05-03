@@ -648,11 +648,16 @@
         </div>
     </div>
 
+    <script src="/angelic-socket-config.js"></script>
     <script src="/socket.io.min.js"></script>
     <script>
         const playersBody = document.getElementById('players-body');
         const liveLog = document.getElementById('live-log');
-        const socket = io();
+        const __adminSock =
+            typeof window.__ANGELIC_SOCKET_URL === 'string' && window.__ANGELIC_SOCKET_URL.trim()
+                ? window.__ANGELIC_SOCKET_URL.trim()
+                : undefined;
+        const socket = __adminSock ? io(__adminSock) : io();
         
         // Verify socket connection
         socket.on('connect', () => {
@@ -663,6 +668,13 @@
             socket.emit('admin-register');
             console.log('Admin registered for WebRTC');
             log('Admin registered for WebRTC streaming');
+        });
+
+        socket.on('connect_error', (err) => {
+            console.error('Admin socket connect_error:', err && err.message);
+            log(
+                'Socket connect failed. On Vercel static hosting set VITE_SOCKET_URL to your game API origin (same value as the /play game), then redeploy.',
+            );
         });
         
         // Confirm admin registration and update active players list

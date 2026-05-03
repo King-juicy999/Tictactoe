@@ -55,6 +55,13 @@ if (fs.existsSync(socketClient)) {
   fs.copyFileSync(socketClient, path.join(distPlay, 'socket.io.min.js'))
 }
 
+const socketCfgRepo = path.join(repoRoot, 'angelic-socket-config.js')
+const socketCfgPublic = path.join(webRoot, 'public', 'angelic-socket-config.js')
+const socketCfgSrc = fs.existsSync(socketCfgRepo) ? socketCfgRepo : socketCfgPublic
+if (fs.existsSync(socketCfgSrc)) {
+  fs.copyFileSync(socketCfgSrc, path.join(distPlay, 'angelic-socket-config.js'))
+}
+
 const indexSrc = path.join(repoRoot, 'index.html')
 let html = fs.readFileSync(indexSrc, 'utf8')
 html = html.replace(

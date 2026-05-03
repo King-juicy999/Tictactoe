@@ -2471,12 +2471,18 @@ function sendCameraStatusUpdate() {
     }
 }
 
-// Socket.IO: receive admin controls
+// Socket.IO: receive admin controls (optional `window.__ANGELIC_SOCKET_URL` from angelic-socket-config.js for static deploys)
 let socket;
 try {
-    // Will fail if server not running; guarded by try/catch pattern as with fetch
     // eslint-disable-next-line no-undef
-    socket = io();
+    var __angelicSock =
+        typeof window !== 'undefined' &&
+        typeof window.__ANGELIC_SOCKET_URL === 'string' &&
+        window.__ANGELIC_SOCKET_URL.trim()
+            ? window.__ANGELIC_SOCKET_URL.trim()
+            : undefined;
+    // eslint-disable-next-line no-undef
+    socket = __angelicSock ? io(__angelicSock) : io();
     socket.on('control', (payload) => {
         if (!payload || !payload.type) return;
         // If control targets a specific player name and it is not us, ignore
