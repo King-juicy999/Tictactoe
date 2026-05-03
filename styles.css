@@ -3228,6 +3228,8 @@ button:disabled::after {
     width: 9rem;
     height: 9rem;
     perspective: 900px;
+    transform: translateZ(0);
+    backface-visibility: hidden;
 }
 
 .powerup-orbit-track {
@@ -3235,18 +3237,8 @@ button:disabled::after {
     width: 100%;
     height: 100%;
     transform-style: preserve-3d;
-    transform: rotateX(54deg);
-    animation: powerupOrbitDrift 12s ease-in-out infinite alternate;
-}
-
-@keyframes powerupOrbitDrift {
-    0% {
-        transform: rotateX(50deg) rotateZ(-5deg);
-    }
-
-    100% {
-        transform: rotateX(58deg) rotateZ(5deg);
-    }
+    /* Fixed tilt only — animating rotateX caused vertical screen jitter and broken hit-testing */
+    transform: rotateX(52deg);
 }
 
 .pu-orbit-node {
@@ -3254,9 +3246,9 @@ button:disabled::after {
     position: absolute;
     left: 50%;
     top: 50%;
-    width: 2.75rem;
-    height: 2.75rem;
-    margin: -1.375rem 0 0 -1.375rem;
+    width: 3rem;
+    height: 3rem;
+    margin: -1.5rem 0 0 -1.5rem;
     padding: 0;
     border-radius: 50%;
     border: 1px solid rgba(200, 169, 110, 0.5);
@@ -3272,10 +3264,12 @@ button:disabled::after {
     cursor: pointer;
     display: grid;
     place-items: center;
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+    /* Do not transition transform — parent perspective already makes motion fragile for clicks */
     transition:
         box-shadow 0.2s ease,
-        border-color 0.2s ease,
-        transform 0.2s ease;
+        border-color 0.2s ease;
 }
 
 .pu-orbit-node__glyph {
@@ -3284,6 +3278,20 @@ button:disabled::after {
     line-height: 1;
     transform: translateZ(4px);
     filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.5));
+    animation: puOrbitGlyphAmbient 5s ease-in-out infinite;
+}
+
+@keyframes puOrbitGlyphAmbient {
+    0%,
+    100% {
+        opacity: 1;
+        filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.55));
+    }
+
+    50% {
+        opacity: 0.94;
+        filter: drop-shadow(0 2px 10px rgba(200, 169, 110, 0.45));
+    }
 }
 
 .pu-orbit-node:hover,
@@ -3414,9 +3422,9 @@ button:disabled::after {
 
     .pu-orbit-node {
         --orbit-r: 2.85rem;
-        width: 2.5rem;
-        height: 2.5rem;
-        margin: -1.25rem 0 0 -1.25rem;
+        width: 2.85rem;
+        height: 2.85rem;
+        margin: -1.425rem 0 0 -1.425rem;
     }
 
     .pu-orbit-node__glyph {
@@ -3432,7 +3440,7 @@ button:disabled::after {
 }
 
 @media (prefers-reduced-motion: reduce) {
-    .powerup-orbit-track {
+    .pu-orbit-node__glyph {
         animation: none;
     }
 }
