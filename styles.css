@@ -188,7 +188,8 @@ button {
     box-shadow: 0 6px 16px rgba(184, 134, 11, 0.25);
 }
 
-button:hover {
+/* Exclude ritual orbit nodes — they need their own transform ring; global translateY fights hover and jitters. */
+button:hover:not(.pu-orbit-node) {
     transform: translateY(-2px);
     box-shadow: 0 10px 24px rgba(184, 134, 11, 0.35);
 }
@@ -3098,13 +3099,13 @@ button:disabled:hover {
     z-index: 10;
 }
 
-/* Enhanced button micro-interactions */
-button {
+/* Enhanced button micro-interactions (not ritual dock — tiny circular hit targets + ::after ripple breaks layout). */
+button:not(.pu-orbit-node) {
     position: relative;
     overflow: hidden;
 }
 
-button::after {
+button:not(.pu-orbit-node)::after {
     content: '';
     position: absolute;
     top: 50%;
@@ -3117,12 +3118,12 @@ button::after {
     transition: width 0.4s ease, height 0.4s ease;
 }
 
-button:active::after {
+button:not(.pu-orbit-node):active::after {
     width: 300px;
     height: 300px;
 }
 
-button:disabled::after {
+button:not(.pu-orbit-node):disabled::after {
     display: none;
 }
 
@@ -3214,8 +3215,9 @@ button:disabled::after {
     align-items: center;
     justify-content: center;
     gap: 0.35rem;
-    transform: none;
+    transform: translateZ(0);
     pointer-events: none;
+    contain: layout style;
 }
 
 #game-screen.active .powerup-ritual-dock {
@@ -3249,6 +3251,7 @@ button:disabled::after {
     height: 3rem;
     margin: -1.5rem 0 0 -1.5rem;
     padding: 0;
+    overflow: visible;
     border-radius: 50%;
     border: 1px solid rgba(200, 169, 110, 0.5);
     background:
@@ -3281,6 +3284,8 @@ button:disabled::after {
 
 .pu-orbit-node:hover,
 .pu-orbit-node:focus-visible {
+    transform: rotate(var(--orbit-deg, 0deg)) translateY(calc(-1 * var(--orbit-r)))
+        rotate(calc(-1 * var(--orbit-deg, 0deg)));
     border-color: rgba(200, 169, 110, 0.85);
     opacity: 0.93;
     box-shadow:
@@ -3291,6 +3296,8 @@ button:disabled::after {
 }
 
 .pu-orbit-node:active {
+    transform: rotate(var(--orbit-deg, 0deg)) translateY(calc(-1 * var(--orbit-r)))
+        rotate(calc(-1 * var(--orbit-deg, 0deg)));
     opacity: 0.68;
     border-color: rgba(200, 169, 110, 0.55);
     box-shadow:
@@ -3303,6 +3310,7 @@ button:disabled::after {
 }
 
 .powerup-orbit-caption {
+    flex-shrink: 0;
     font-size: 0.52rem;
     letter-spacing: 0.28em;
     text-transform: uppercase;
@@ -3310,6 +3318,7 @@ button:disabled::after {
     text-align: center;
     max-width: 5rem;
     line-height: 1.2;
+    transform: translateZ(0);
 }
 
 .powerup-picker-modal {
