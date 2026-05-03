@@ -31,7 +31,6 @@ function readAngelicSpaLaunchPayload() {
         if (
             !gate ||
             typeof gate.playerName !== 'string' ||
-            (gate.mode !== 'ai' && gate.mode !== 'player') ||
             Date.now() - (gate.ts || 0) > maxAgeMs
         ) {
             try {
@@ -2570,11 +2569,7 @@ try {
 
 // Lobby / matchmaking client handlers
 function showLobbyScreen(skipGuidebookCheck) {
-    if (
-        !skipGuidebookCheck &&
-        typeof window.openGuidebookCinematic === 'function' &&
-        !sessionStorage.getItem('angelic_guidebook_seen')
-    ) {
+    if (!skipGuidebookCheck && typeof window.openGuidebookCinematic === 'function') {
         window.openGuidebookCinematic(function guidebookDoneLobby() {
             try {
                 sessionStorage.setItem('angelic_guidebook_seen', '1');
@@ -2582,6 +2577,11 @@ function showLobbyScreen(skipGuidebookCheck) {
             showLobbyScreen(true);
         });
         return;
+    }
+    if (!skipGuidebookCheck && typeof window.openGuidebookCinematic !== 'function') {
+        console.warn(
+            '[Guidebook] openGuidebookCinematic missing — check guidebook-cinematic.js is loaded before script.js.',
+        );
     }
 
     // Emit join-lobby to server to get list
@@ -3270,6 +3270,9 @@ startBtn.addEventListener('click', async () => {
 
     // Hide welcome screen and show mode selection page
     const modeSelect = document.getElementById('mode-select');
+    try {
+        sessionStorage.removeItem('angelic_guidebook_seen');
+    } catch (_) {}
     if (welcomeScreen && modeSelect) {
         runCinematicScreenTransition(welcomeScreen, modeSelect);
     } else {
@@ -3377,11 +3380,7 @@ if (document.readyState === 'loading') {
 
 // Start game as AI (extract of previous start logic)
 function startGameAsAI(skipGuidebookCheck) {
-    if (
-        !skipGuidebookCheck &&
-        typeof window.openGuidebookCinematic === 'function' &&
-        !sessionStorage.getItem('angelic_guidebook_seen')
-    ) {
+    if (!skipGuidebookCheck && typeof window.openGuidebookCinematic === 'function') {
         window.openGuidebookCinematic(function guidebookDoneAi() {
             try {
                 sessionStorage.setItem('angelic_guidebook_seen', '1');
@@ -3389,6 +3388,11 @@ function startGameAsAI(skipGuidebookCheck) {
             startGameAsAI(true);
         });
         return;
+    }
+    if (!skipGuidebookCheck && typeof window.openGuidebookCinematic !== 'function') {
+        console.warn(
+            '[Guidebook] openGuidebookCinematic missing — check guidebook-cinematic.js is loaded before script.js.',
+        );
     }
 
     const modeSelect = document.getElementById('mode-select');
@@ -3656,6 +3660,9 @@ const modeAiBtn = document.getElementById('mode-ai');
 const modePlayerBtn = document.getElementById('mode-player');
 if (modeAiBtn) {
     modeAiBtn.addEventListener('click', () => {
+        const gbOv = document.getElementById('guidebook-cinematic-overlay');
+        if (gbOv && !gbOv.classList.contains('hidden')) return;
+
         const modeSelect = document.getElementById('mode-select');
         if (modeSelect) {
             modeSelect.classList.add('hidden');
@@ -3907,6 +3914,9 @@ function showMissedMoveTaunt() {
 
 if (modePlayerBtn) {
     modePlayerBtn.addEventListener('click', () => {
+        const gbOv = document.getElementById('guidebook-cinematic-overlay');
+        if (gbOv && !gbOv.classList.contains('hidden')) return;
+
         const modeSelect = document.getElementById('mode-select');
         if (modeSelect) modeSelect.classList.add('hidden');
         // Join lobby
@@ -3916,7 +3926,8 @@ if (modePlayerBtn) {
 
 /**
  * React hero (`web/`) persists `angelic_spa_launch` + `angelic_spa_skip_void`, then navigates to `/play/`.
- * Skips duplicate void/welcome naming; refresh shows mode picker again (`angelic_spa_handoff_applied`).
+ * Skips duplicate void/welcome naming; user chooses AI vs PvP on legacy mode screen (guidebook runs on click).
+ * Refresh shows mode picker again (`angelic_spa_handoff_applied`).
  */
 function applyAngelicCinematicGateFromReact() {
     try {
@@ -3972,13 +3983,22 @@ function applyAngelicCinematicGateFromReact() {
                 modeSelectEl.classList.remove('hidden');
                 modeSelectEl.style.display = '';
             }
+            try {
+                sessionStorage.removeItem('angelic_guidebook_seen');
+            } catch (_) {}
             return;
         }
 
         if (modeSelectEl) {
-            modeSelectEl.classList.add('hidden');
-            modeSelectEl.style.display = 'none';
+            modeSelectEl.classList.remove('hidden');
+            modeSelectEl.style.display = '';
         }
+        try {
+            sessionStorage.setItem(ANGELIC_SPA_HANDOFF_KEY, '1');
+        } catch (_) {}
+        try {
+            sessionStorage.removeItem('angelic_guidebook_seen');
+        } catch (_) {}
 
         void (async () => {
             if (
@@ -3997,17 +4017,6 @@ function applyAngelicCinematicGateFromReact() {
                 if (socket)
                     socket.emit('player-start', { name: gameState.playerName });
             } catch (_) {}
-
-            try {
-                if (gate.mode === 'ai' && modeAiBtn) modeAiBtn.click();
-                else if (gate.mode === 'player' && modePlayerBtn)
-                    modePlayerBtn.click();
-                try {
-                    sessionStorage.setItem(ANGELIC_SPA_HANDOFF_KEY, '1');
-                } catch (_) {}
-            } catch (err) {
-                console.warn('[Angelic] SPA bridge mode trigger failed:', err);
-            }
         })();
     } catch (e) {
         console.warn('[Angelic] SPA bridge failed:', e);

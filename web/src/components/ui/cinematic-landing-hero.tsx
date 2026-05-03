@@ -14,11 +14,8 @@ const HERO_ANIM_SKIP_MARKERS = [
   'heroSkip_pullbackDone',
 ] as const
 
-export type AngelicGameOpponentMode = 'ai' | 'player'
-
 export interface AngelicThresholdPayload {
   playerName: string
-  mode: AngelicGameOpponentMode
 }
 
 export interface AngelicCinematicHeroProps
@@ -36,7 +33,6 @@ export interface AngelicCinematicHeroProps
   namePlaceholder?: string
   ctaPrimaryLabel?: string
   ctaSecondaryLabel?: string
-  defaultOpponentMode?: AngelicGameOpponentMode
   onEnterThreshold?: (payload: AngelicThresholdPayload) => void
 }
 
@@ -60,7 +56,6 @@ export function AngelicCinematicHero({
   namePlaceholder = 'your name…',
   ctaPrimaryLabel = 'Enter the Threshold',
   ctaSecondaryLabel = 'Observe the Void',
-  defaultOpponentMode = 'ai',
   onEnterThreshold,
   className,
   ...props
@@ -74,8 +69,6 @@ export function AngelicCinematicHero({
   const autoShowTlRef = useRef<gsap.core.Timeline | null>(null)
   const heroAnimSkipIdxRef = useRef(0)
   const [playerNameDraft, setPlayerNameDraft] = useState('')
-  const [opponentMode, setOpponentMode] =
-    useState<AngelicGameOpponentMode>(defaultOpponentMode)
   const [nameInvalid, setNameInvalid] = useState(false)
 
   function submitThreshold() {
@@ -86,7 +79,7 @@ export function AngelicCinematicHero({
     }
     setNameInvalid(false)
     if (onEnterThreshold) {
-      onEnterThreshold({ playerName: trimmed, mode: opponentMode })
+      onEnterThreshold({ playerName: trimmed })
     } else {
       window.scrollTo({ top: 0, behavior: 'smooth' })
     }
@@ -640,41 +633,6 @@ export function AngelicCinematicHero({
           ) : null}
         </div>
 
-        <p className="cta-mode-label-angelic mb-1 text-center">Choose your path</p>
-        <div
-          className="cta-mode-row-angelic !mb-3 sm:!mb-4"
-          role="group"
-          aria-label="Play against AI or another player"
-        >
-          <button
-            type="button"
-            className={cn(
-              'cta-mode-card-angelic',
-              opponentMode === 'ai' && 'cta-mode-card-selected-ai',
-            )}
-            aria-pressed={opponentMode === 'ai'}
-            onClick={() => setOpponentMode('ai')}
-          >
-            <span className="cta-mode-card-title-angelic">Battle the AI</span>
-            <span className="cta-mode-card-desc-angelic">
-              Adaptive intelligence — learns your openings and escalates every loss.
-            </span>
-          </button>
-          <button
-            type="button"
-            className={cn(
-              'cta-mode-card-angelic',
-              opponentMode === 'player' && 'cta-mode-card-selected-player',
-            )}
-            aria-pressed={opponentMode === 'player'}
-            onClick={() => setOpponentMode('player')}
-          >
-            <span className="cta-mode-card-title-angelic">Mortal accord</span>
-            <span className="cta-mode-card-desc-angelic">
-              Face another player across the void — lobby matchmaking.
-            </span>
-          </button>
-        </div>
           </div>
         </div>
 

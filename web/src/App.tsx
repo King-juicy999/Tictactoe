@@ -29,11 +29,8 @@ export default function App() {
     persistSpaHomeHref()
   }, [])
 
-  const handleEnterThreshold = ({
-    playerName,
-    mode,
-  }: AngelicThresholdPayload) => {
-    const payload = { playerName, mode, ts: Date.now() }
+  const handleEnterThreshold = ({ playerName }: AngelicThresholdPayload) => {
+    const payload = { playerName, ts: Date.now() }
     const raw = JSON.stringify(payload)
     persistSpaHomeHref()
     try {
