@@ -62,6 +62,13 @@ function resolvePlayerKey(players, nameInput) {
 app.use(cors());
 app.use(express.json());
 
+/** Bundled Socket.IO client for admin + static pages (same path as Vercel `web/public/socket.io.min.js`). */
+app.get('/socket.io.min.js', (req, res) => {
+    res.sendFile(
+        path.join(__dirname, 'node_modules', 'socket.io', 'client-dist', 'socket.io.min.js'),
+    );
+});
+
 // Serve the static frontend from project root
 app.use(express.static(path.join(__dirname, '..')));
 

@@ -3450,7 +3450,7 @@ button:disabled::after {
         0 20px 45px rgba(0, 0, 0, 0.45),
         inset 0 1px 0 rgba(242, 240, 255, 0.06);
     backdrop-filter: blur(10px);
-    transition: transform 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease, filter 0.25s ease;
+    transition: border-color 0.25s ease, box-shadow 0.25s ease, filter 0.25s ease;
 }
 
 .pu-card::before {
@@ -3463,7 +3463,6 @@ button:disabled::after {
 }
 
 .pu-card:hover {
-    transform: translateX(-4px);
     border-color: rgba(200, 169, 110, 0.55);
     box-shadow:
         0 0 0 1px rgba(200, 169, 110, 0.2),
@@ -3472,8 +3471,11 @@ button:disabled::after {
 }
 
 .pu-card.is-active {
-    animation: powerupCardPulse 1.6s ease-in-out infinite;
     border-color: rgba(200, 169, 110, 0.7);
+    box-shadow:
+        0 0 0 1px rgba(200, 169, 110, 0.22),
+        0 0 30px rgba(200, 169, 110, 0.2),
+        0 22px 48px rgba(0, 0, 0, 0.48);
 }
 
 .pu-card.is-exhausted {
@@ -3823,23 +3825,6 @@ button:disabled::after {
     border-radius: 14px;
     opacity: 0;
     pointer-events: none;
-}
-
-@keyframes powerupCardPulse {
-    0%,
-    100% {
-        box-shadow:
-            0 0 0 1px rgba(200, 169, 110, 0.18),
-            0 0 24px rgba(200, 169, 110, 0.12),
-            0 20px 45px rgba(0, 0, 0, 0.45);
-    }
-
-    50% {
-        box-shadow:
-            0 0 0 1px rgba(200, 169, 110, 0.28),
-            0 0 34px rgba(200, 169, 110, 0.28),
-            0 24px 52px rgba(0, 0, 0, 0.5);
-    }
 }
 
 @keyframes activationBannerFade {
