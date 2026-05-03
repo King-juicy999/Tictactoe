@@ -5,6 +5,55 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Angelic Tic Tac Toe</title>
+    <!-- Reload on /play/* sends you back to the Vite SPA (web/) — same-origin dev/preview -->
+    <script>
+        (function () {
+            try {
+                var pathname = window.location.pathname || '';
+                if (!/^\/play(\/|$)/.test(pathname)) return;
+                if (sessionStorage.getItem('angelic_spa_skip_void') !== '1') return;
+
+                var isReload = false;
+                try {
+                    var entries =
+                        typeof performance.getEntriesByType === 'function'
+                            ? performance.getEntriesByType('navigation')
+                            : null;
+                    if (
+                        entries &&
+                        entries.length > 0 &&
+                        entries[0].type === 'reload'
+                    ) {
+                        isReload = true;
+                    }
+                } catch (_) {}
+                if (
+                    !isReload &&
+                    window.performance &&
+                    performance.navigation &&
+                    typeof performance.navigation.type === 'number' &&
+                    performance.navigation.type === 1
+                ) {
+                    isReload = true;
+                }
+                if (!isReload) return;
+
+                var home = '/';
+                try {
+                    var stored = sessionStorage.getItem(
+                        'angelic_spa_home_href'
+                    );
+                    if (stored && stored.charAt(0) === '/') home = stored;
+                } catch (_) {}
+
+                window.location.replace(
+                    new URL(home, window.location.origin).href
+                );
+            } catch (e) {
+                /* noop */
+            }
+        })();
+    </script>
     <link rel="stylesheet" href="styles.css">
     <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700;900&family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet">
 </head>
@@ -212,7 +261,7 @@
                     <div class="pu-meta">
                         <h3 class="pu-name">Hint Pulse</h3>
                         <div class="pu-charge">2 Charges</div>
-                        <p class="pu-desc">Reveals the best move with a glowing pulse</p>
+                        <p class="pu-desc">Reveals the strongest immediate move—the best cell pulses in ritual gold. It helps you see the line; it never places your mark for you.</p>
                     </div>
                     <button class="pu-btn" type="button">Activate</button>
                 </article>
@@ -248,7 +297,8 @@
             </aside>
 
             <nav class="bottom-bar" aria-label="Power-up quick bar">
-                <div class="bb-card bb-card--active" data-powerup="hint-pulse">
+                <div class="bb-card bb-card--active" data-powerup="hint-pulse"
+                    title="Hint Pulse: strongest move glows gold—does not play for you.">
                     <span class="bb-icon" aria-hidden="true">💡</span>
                     <span class="bb-name">Hint Pulse</span>
                     <span class="bb-charge">2</span>
@@ -284,115 +334,9 @@
             </div>
 
             <button id="reset-btn">Play Again... if you dare</button>
+            <button type="button" id="guidebook-reopen-btn" class="guidebook-reopen-btn" aria-label="Open the ritual guidebook"
+                title="Guidebook · review rules and power-ups">📘</button>
         </div>
-
-        <section id="guidebook-demo-pages" class="guidebook-demo-pages" aria-label="Power-up guidebook demos">
-            <div class="guide-page" data-page="4">
-                <h3 class="guide-demo-title">Hint Pulse</h3>
-                <div class="guide-demo-board mini-board" data-demo="hint-pulse" aria-hidden="true">
-                    <div class="mini-cell">✕</div>
-                    <div class="mini-cell"></div>
-                    <div class="mini-cell">◯</div>
-                    <div class="mini-cell"></div>
-                    <div class="mini-cell"></div>
-                    <div class="mini-cell"></div>
-                    <div class="mini-cell">◯</div>
-                    <div class="mini-cell"></div>
-                    <div class="mini-cell">✕</div>
-                </div>
-                <p class="guide-demo-status" data-status>Scanning the board for the best line...</p>
-                <div class="guide-demo-dots" aria-hidden="true">
-                    <span class="is-active"></span>
-                    <span></span>
-                    <span></span>
-                </div>
-                <ul class="guide-demo-rules">
-                    <li>Use it to reveal the strongest immediate move.</li>
-                    <li>The recommended cell pulses with ritual gold.</li>
-                    <li>It helps, but it does not place the mark for you.</li>
-                </ul>
-            </div>
-
-            <div class="guide-page" data-page="5">
-                <h3 class="guide-demo-title">Board Shake</h3>
-                <div class="guide-demo-board mini-board" data-demo="board-shake" aria-hidden="true">
-                    <div class="mini-cell">✕</div>
-                    <div class="mini-cell">◯</div>
-                    <div class="mini-cell"></div>
-                    <div class="mini-cell"></div>
-                    <div class="mini-cell">✕</div>
-                    <div class="mini-cell"></div>
-                    <div class="mini-cell">◯</div>
-                    <div class="mini-cell"></div>
-                    <div class="mini-cell">✕</div>
-                </div>
-                <p class="guide-demo-status" data-status>Board rests before the remap.</p>
-                <div class="guide-demo-dots" aria-hidden="true">
-                    <span class="is-active"></span>
-                    <span></span>
-                    <span></span>
-                </div>
-                <ul class="guide-demo-rules">
-                    <li>Only available on Level 1.</li>
-                    <li>Cells are remapped, but every mark stays on the board.</li>
-                    <li>Ideal for breaking a line the AI already understands.</li>
-                </ul>
-            </div>
-
-            <div class="guide-page" data-page="6">
-                <h3 class="guide-demo-title">Last Stand</h3>
-                <div class="guide-demo-board mini-board" data-demo="last-stand" aria-hidden="true">
-                    <div class="mini-cell">✕</div>
-                    <div class="mini-cell">✕</div>
-                    <div class="mini-cell"></div>
-                    <div class="mini-cell">◯</div>
-                    <div class="mini-cell">◯</div>
-                    <div class="mini-cell"></div>
-                    <div class="mini-cell"></div>
-                    <div class="mini-cell"></div>
-                    <div class="mini-cell"></div>
-                </div>
-                <p class="guide-demo-status" data-status>Watching for a lethal AI turn...</p>
-                <div class="guide-demo-dots" aria-hidden="true">
-                    <span class="is-active"></span>
-                    <span></span>
-                    <span></span>
-                    <span></span>
-                </div>
-                <ul class="guide-demo-rules">
-                    <li>Only available on Level 1.</li>
-                    <li>It waits until the AI is about to close the line.</li>
-                    <li>When it triggers, you gain one extra life-saving move.</li>
-                </ul>
-            </div>
-
-            <div class="guide-page" data-page="7">
-                <h3 class="guide-demo-title">Tactical Claim</h3>
-                <div class="guide-demo-board mini-board tactical-demo-board" data-demo="tactical-claim" aria-hidden="true">
-                    <div class="mini-cell">◯</div>
-                    <div class="mini-cell"></div>
-                    <div class="mini-cell">✕</div>
-                    <div class="mini-cell"></div>
-                    <div class="mini-cell">◯</div>
-                    <div class="mini-cell"></div>
-                    <div class="mini-cell">✕</div>
-                    <div class="mini-cell"></div>
-                    <div class="mini-cell"></div>
-                    <div class="tactical-claim-overlay" aria-hidden="true"></div>
-                </div>
-                <p class="guide-demo-status" data-status>The AI is waiting to answer your advantage.</p>
-                <div class="guide-demo-dots" aria-hidden="true">
-                    <span class="is-active"></span>
-                    <span></span>
-                    <span></span>
-                </div>
-                <ul class="guide-demo-rules">
-                    <li>This power-up belongs to the AI alone.</li>
-                    <li>It manifests as a steel ritual grid across the board.</li>
-                    <li>Expect it after you disrupt the flow with your own tools.</li>
-                </ul>
-            </div>
-        </section>
 
         <div id="tsukuyomi-overlay" class="hidden">
             <img src="madara.webp" alt="Mangekyō Sharingan" class="sharingan">
@@ -522,6 +466,157 @@
         <div class="ai-glow"></div>
     </div>
 
+    <!-- Click-flip RPG guidebook (GSAP 3D, no ScrollTrigger) -->
+    <div id="guidebook-cinematic-overlay" class="guidebook-cinematic-overlay hidden" aria-hidden="true">
+        <div class="film-grain" aria-hidden="true"></div>
+        <div class="bg-grid-angelic guidebook-cinematic-grid" aria-hidden="true"></div>
+        <div class="guidebook-cinematic-centered">
+            <div class="guidebook-float-wrap">
+                <div class="guidebook-stage">
+                    <div id="guidebook-book-3d" class="guidebook-book-3d">
+                        <div class="book-cover-closed-layer" aria-hidden="true">
+                            <div class="book-cover-spine-shadow"></div>
+                            <div class="book-cover-face">
+                                <p class="book-cover-emboss ritual-font-display">Angelic</p>
+                                <h2 class="book-cover-title ritual-font-display" id="guidebook-cover-title">
+                                    <span>Tic Tac Toe Guidebook</span>
+                                </h2>
+                                <span class="book-cover-glint" aria-hidden="true"></span>
+                            </div>
+                        </div>
+                        <div class="book-spread-mask">
+                            <div class="book-spine-line" aria-hidden="true"></div>
+                            <div id="guidebook-sheet-flip" class="guidebook-sheet-flip">
+                                <div id="guidebook-sheet-inner" class="guidebook-sheet-inner">
+                                    <div id="guidebook-reading-body" class="guidebook-reading-body"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Off-screen stash: demos stay in DOM so initGuidebookPowerUpDemos keeps one set of nodes -->
+        <div id="guidebook-demo-repo-wrap" aria-hidden="true">
+            <section id="guidebook-demo-pages" class="guidebook-demo-pages guidebook-demo-pages--repo"
+                aria-label="Power-up demos repository">
+                <div class="guide-page" data-page="4">
+                    <h3 class="guide-demo-title">Hint Pulse</h3>
+                    <div class="guide-demo-board mini-board" data-demo="hint-pulse" aria-hidden="true">
+                        <div class="mini-cell">✕</div>
+                        <div class="mini-cell"></div>
+                        <div class="mini-cell">◯</div>
+                        <div class="mini-cell"></div>
+                        <div class="mini-cell"></div>
+                        <div class="mini-cell"></div>
+                        <div class="mini-cell">◯</div>
+                        <div class="mini-cell"></div>
+                        <div class="mini-cell">✕</div>
+                    </div>
+                    <p class="guide-demo-status" data-status>Scanning the board for the best line...</p>
+                    <div class="guide-demo-dots" aria-hidden="true">
+                        <span class="is-active"></span><span></span><span></span>
+                    </div>
+                    <ul class="guide-demo-rules">
+                        <li>Use it to reveal the strongest immediate move.</li>
+                        <li>The recommended cell pulses with ritual gold.</li>
+                        <li>It helps, but it does not place the mark for you.</li>
+                    </ul>
+                </div>
+                <div class="guide-page" data-page="5">
+                    <h3 class="guide-demo-title">Board Shake</h3>
+                    <div class="guide-demo-board mini-board" data-demo="board-shake" aria-hidden="true">
+                        <div class="mini-cell">✕</div>
+                        <div class="mini-cell">◯</div>
+                        <div class="mini-cell"></div>
+                        <div class="mini-cell"></div>
+                        <div class="mini-cell">✕</div>
+                        <div class="mini-cell"></div>
+                        <div class="mini-cell">◯</div>
+                        <div class="mini-cell"></div>
+                        <div class="mini-cell">✕</div>
+                    </div>
+                    <p class="guide-demo-status" data-status>Board rests before the remap.</p>
+                    <div class="guide-demo-dots" aria-hidden="true">
+                        <span class="is-active"></span><span></span><span></span>
+                    </div>
+                    <ul class="guide-demo-rules">
+                        <li>Only available on Level 1.</li>
+                        <li>Cells are remapped, but every mark stays on the board.</li>
+                        <li>Ideal for breaking a line the AI already understands.</li>
+                    </ul>
+                </div>
+                <div class="guide-page" data-page="6">
+                    <h3 class="guide-demo-title">Last Stand</h3>
+                    <div class="guide-demo-board mini-board" data-demo="last-stand" aria-hidden="true">
+                        <div class="mini-cell">✕</div>
+                        <div class="mini-cell">✕</div>
+                        <div class="mini-cell"></div>
+                        <div class="mini-cell">◯</div>
+                        <div class="mini-cell">◯</div>
+                        <div class="mini-cell"></div>
+                        <div class="mini-cell"></div>
+                        <div class="mini-cell"></div>
+                        <div class="mini-cell"></div>
+                    </div>
+                    <p class="guide-demo-status" data-status>Watching for a lethal AI turn...</p>
+                    <div class="guide-demo-dots" aria-hidden="true">
+                        <span class="is-active"></span><span></span><span></span><span></span>
+                    </div>
+                    <ul class="guide-demo-rules">
+                        <li>Only available on Level 1.</li>
+                        <li>It waits until the AI is about to close the line.</li>
+                        <li>When it triggers, you gain one extra life-saving move.</li>
+                    </ul>
+                </div>
+                <div class="guide-page" data-page="7">
+                    <h3 class="guide-demo-title">Tactical Claim</h3>
+                    <div class="guide-demo-board mini-board tactical-demo-board" data-demo="tactical-claim"
+                        aria-hidden="true">
+                        <div class="mini-cell">◯</div>
+                        <div class="mini-cell"></div>
+                        <div class="mini-cell">✕</div>
+                        <div class="mini-cell"></div>
+                        <div class="mini-cell">◯</div>
+                        <div class="mini-cell"></div>
+                        <div class="mini-cell">✕</div>
+                        <div class="mini-cell"></div>
+                        <div class="mini-cell"></div>
+                        <div class="tactical-claim-overlay" aria-hidden="true"></div>
+                    </div>
+                    <p class="guide-demo-status" data-status>The AI is waiting to answer your advantage.</p>
+                    <div class="guide-demo-dots" aria-hidden="true">
+                        <span class="is-active"></span><span></span><span></span>
+                    </div>
+                    <ul class="guide-demo-rules">
+                        <li>This power-up belongs to the AI alone.</li>
+                        <li>It manifests as a steel ritual grid across the board.</li>
+                        <li>Expect it after you disrupt the flow with your own tools.</li>
+                    </ul>
+                </div>
+            </section>
+        </div>
+
+        <footer class="guidebook-cinematic-footer">
+            <p id="guidebook-page-hint" class="guidebook-page-hint ritual-font-display">&nbsp;</p>
+            <div class="guidebook-footer-buttons">
+                <button type="button" id="guidebook-btn-prev" class="btn-angelic-secondary hidden"
+                    aria-label="Previous page">◀ Previous page</button>
+                <button type="button" id="guidebook-btn-next" class="btn-angelic-cta hidden"
+                    aria-label="Next page">Next page ▶</button>
+                <button type="button" id="guidebook-btn-enter-game" class="btn-angelic-cta hidden">
+                    Step onto the board
+                </button>
+                <button type="button" id="guidebook-btn-close-replay" class="btn-angelic-secondary hidden">
+                    Close book
+                </button>
+            </div>
+        </footer>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js"></script>
+    <script src="guidebook-cinematic.js"></script>
     <script src="/socket.io/socket.io.js"></script>
     <script src="server/behavior_analyzer.js"></script>
     <script src="server/ai_learning.js"></script>
