@@ -3942,6 +3942,13 @@ function applyAngelicCinematicGateFromReact() {
 
         var handoffDone = sessionStorage.getItem(ANGELIC_SPA_HANDOFF_KEY) === '1';
 
+        /* First SPA→play handoff: show cinematic guidebook again (seen flag may block after partial sessions). */
+        if (!handoffDone) {
+            try {
+                sessionStorage.removeItem('angelic_guidebook_seen');
+            } catch (_) {}
+        }
+
         var pre = document.getElementById('pre-welcome-overlay');
         if (pre) {
             pre.style.display = 'none';

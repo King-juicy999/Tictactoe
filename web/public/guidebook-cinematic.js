@@ -305,6 +305,9 @@
         if (overlayRef) {
             overlayRef.classList.add('hidden');
             overlayRef.style.visibility = '';
+            overlayRef.style.display = '';
+            overlayRef.style.opacity = '';
+            overlayRef.style.pointerEvents = '';
             overlayRef.removeAttribute('data-reduced-motion');
             overlayRef.removeAttribute('data-no-gsap');
         }
@@ -442,7 +445,10 @@
         else delete overlay.dataset.noGsap;
 
         overlay.classList.remove('hidden');
+        overlay.style.display = 'flex';
         overlay.style.visibility = 'visible';
+        overlay.style.opacity = '1';
+        overlay.style.pointerEvents = 'auto';
         overlay.setAttribute('aria-hidden', 'false');
         document.documentElement.style.overflow = 'hidden';
         document.body.style.overflow = 'hidden';
