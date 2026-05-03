@@ -58,6 +58,45 @@ let preWelcomeAutoTimer = null;
 let hintPulseBusy = false;
 let hintPulseActivationTimer = null;
 
+/** Void pre-welcome: each click snaps the next staggered beat (CSS animations). */
+let voidIntroSkipStep = 0;
+const VOID_INTRO_SKIP_SELECTORS = [
+    '.void-intro-content > p.void-reveal-0',
+    'h1.void-title.void-reveal-1',
+    '.void-mini-board.void-reveal-2',
+    'p.void-line.void-reveal-3',
+    'p.void-line.void-reveal-4',
+    'p.void-line.void-reveal-5',
+    '#continue-welcome-btn.void-reveal-6',
+];
+
+function attachVoidIntroClickAdvance() {
+    const overlay = document.getElementById('pre-welcome-overlay');
+    if (!overlay || overlay.dataset.voidClickAdvance === '1') return;
+    overlay.dataset.voidClickAdvance = '1';
+    overlay.addEventListener(
+        'click',
+        (e) => {
+            if (welcomeFlowState.skipVoidBootstrapFromSpaGate) return;
+            if (overlay.classList.contains('hiding')) return;
+            if (overlay.style.display === 'none') return;
+
+            const max = VOID_INTRO_SKIP_SELECTORS.length;
+            if (voidIntroSkipStep >= max) return;
+
+            e.preventDefault();
+            e.stopPropagation();
+            e.stopImmediatePropagation();
+
+            const sel = VOID_INTRO_SKIP_SELECTORS[voidIntroSkipStep];
+            const el = overlay.querySelector(sel);
+            if (el) el.classList.add('void-reveal-force-visible');
+            voidIntroSkipStep += 1;
+        },
+        true,
+    );
+}
+
 /** Slow parallax star field for void intro (canvas). */
 function initVoidStarfield() {
     const canvas = document.getElementById('void-stars-canvas');
@@ -972,6 +1011,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     wirePowerUpSidebarActivations();
     initPowerupOrbitPicker();
+    attachVoidIntroClickAdvance();
 });
 
 /**

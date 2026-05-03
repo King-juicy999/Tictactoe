@@ -2,6 +2,18 @@ import React, { useEffect, useRef, useState } from 'react'
 import { gsap } from 'gsap'
 import { cn } from '@/lib/utils'
 
+/** GSAP labels for click-to-advance through the post-intro timeline (see autoShowTl). */
+const HERO_ANIM_SKIP_MARKERS = [
+  'cardIn',
+  'heroSkip_postExpand',
+  'heroSkip_postMockup',
+  'heroSkip_postBoard',
+  'heroSkip_postSides',
+  'heroSkip_postDetail',
+  'heroSkip_ctaReveal',
+  'heroSkip_pullbackDone',
+] as const
+
 export type AngelicGameOpponentMode = 'ai' | 'player'
 
 export interface AngelicThresholdPayload {
@@ -58,6 +70,9 @@ export function AngelicCinematicHero({
   const mockupRef = useRef<HTMLDivElement>(null)
   const orbitalRef = useRef<HTMLDivElement>(null)
   const requestRef = useRef<number>(0)
+  const introTlRef = useRef<gsap.core.Timeline | null>(null)
+  const autoShowTlRef = useRef<gsap.core.Timeline | null>(null)
+  const heroAnimSkipIdxRef = useRef(0)
   const [playerNameDraft, setPlayerNameDraft] = useState('')
   const [opponentMode, setOpponentMode] =
     useState<AngelicGameOpponentMode>(defaultOpponentMode)
@@ -75,6 +90,39 @@ export function AngelicCinematicHero({
     } else {
       window.scrollTo({ top: 0, behavior: 'smooth' })
     }
+  }
+
+  function advanceHeroAnimOnClick(e: React.PointerEvent<HTMLDivElement>) {
+    if (e.pointerType === 'mouse' && e.button !== 0) return
+    const el = e.target as HTMLElement | null
+    if (el?.closest('button, a, input, textarea, select, label')) return
+
+    const prefersReduced =
+      typeof window.matchMedia === 'function' &&
+      window.matchMedia('(prefers-reduced-motion: reduce)').matches
+    if (prefersReduced) return
+
+    const intro = introTlRef.current
+    const auto = autoShowTlRef.current
+    if (!intro || !auto) return
+
+    if (intro.progress() < 1) {
+      intro.progress(1)
+      return
+    }
+
+    let i = heroAnimSkipIdxRef.current
+    const cur = auto.time()
+    while (i < HERO_ANIM_SKIP_MARKERS.length) {
+      const label = HERO_ANIM_SKIP_MARKERS[i]
+      const tMark = auto.labels[label as string] as number | undefined
+      i += 1
+      if (typeof tMark === 'number' && tMark > cur + 0.05) {
+        auto.tweenTo(label, { duration: 0.35, ease: 'power2.out' })
+        break
+      }
+    }
+    heroAnimSkipIdxRef.current = i
   }
 
   useEffect(() => {
@@ -150,6 +198,10 @@ export function AngelicCinematicHero({
       typeof window.matchMedia === 'function' &&
       window.matchMedia('(prefers-reduced-motion: reduce)').matches
 
+    introTlRef.current = null
+    autoShowTlRef.current = null
+    heroAnimSkipIdxRef.current = 0
+
     /** First beat after intro typography: linger on headline view. */
     const HOLD_FIRST_VIEW_SEC = 2
     /** Mockup / copy board “reading window” beforename CTA. */
@@ -207,6 +259,7 @@ export function AngelicCinematicHero({
       }
 
       const introTl = gsap.timeline({ delay: 0.3 })
+      introTlRef.current = introTl
       introTl
         .to('.text-track-angelic', {
           duration: 1.8,
@@ -228,6 +281,7 @@ export function AngelicCinematicHero({
         )
 
       const autoShowTl = gsap.timeline({ paused: true })
+      autoShowTlRef.current = autoShowTl
 
       autoShowTl
         .to({}, { duration: HOLD_FIRST_VIEW_SEC })
@@ -259,6 +313,7 @@ export function AngelicCinematicHero({
           },
           '>',
         )
+        .addLabel('heroSkip_postExpand', '+=0')
         .fromTo(
           '.mockup-scroll-wrapper-angelic',
           {
@@ -281,6 +336,7 @@ export function AngelicCinematicHero({
           },
           '-=0.8',
         )
+        .addLabel('heroSkip_postMockup', '+=0')
         .fromTo(
           '.board-widget',
           { y: 40, autoAlpha: 0, scale: 0.95 },
@@ -294,6 +350,7 @@ export function AngelicCinematicHero({
           },
           '-=1.5',
         )
+        .addLabel('heroSkip_postBoard', '+=0')
         .to(
           '.progress-ring-angelic',
           { strokeDashoffset: 60, duration: 2, ease: 'power3.inOut' },
@@ -351,9 +408,12 @@ export function AngelicCinematicHero({
           },
           '<',
         )
+        .addLabel('heroSkip_postSides', '+=0')
         .to({}, { duration: HOLD_CARD_DETAIL_SEC })
+        .addLabel('heroSkip_postDetail', '+=0')
         .set('.hero-text-wrapper-angelic', { autoAlpha: 0 })
         .set('.cta-wrapper-angelic', { autoAlpha: 1 })
+        .addLabel('heroSkip_ctaReveal', '+=0')
         .to({}, { duration: 1.5 })
         .to(
           [
@@ -393,6 +453,7 @@ export function AngelicCinematicHero({
           },
           'pullback',
         )
+        .addLabel('heroSkip_pullbackDone', '+=0')
         .to('.main-card-angelic', {
           y: -window.innerHeight - 300,
           ease: 'power3.in',
@@ -404,7 +465,11 @@ export function AngelicCinematicHero({
       })
     }, containerRef)
 
-    return () => ctx.revert()
+    return () => {
+      introTlRef.current = null
+      autoShowTlRef.current = null
+      ctx.revert()
+    }
   }, [metricValue])
 
   return (
@@ -421,6 +486,7 @@ export function AngelicCinematicHero({
         fontFamily: "'Cormorant Garamond', serif",
         color: '#F2F0FF',
       }}
+      onPointerDown={advanceHeroAnimOnClick}
       {...props}
     >
       <div className="film-grain" aria-hidden="true" />

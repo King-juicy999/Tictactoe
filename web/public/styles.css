@@ -2324,6 +2324,28 @@ button:disabled:hover {
     animation-fill-mode: forwards;
 }
 
+/* Tap/click to advance void intro: snap current beat to its end state */
+.void-reveal-force-visible {
+    animation: none !important;
+    opacity: 1 !important;
+    filter: blur(0) !important;
+    -webkit-filter: blur(0) !important;
+    transform: translateY(0) !important;
+}
+
+.void-mini-board.void-reveal-force-visible {
+    opacity: 1 !important;
+}
+
+.void-title.void-reveal-force-visible {
+    animation: voidTitleGlow 3s ease-in-out 0s infinite !important;
+}
+
+#continue-welcome-btn.void-reveal-force-visible {
+    opacity: 1 !important;
+    transform: translateY(0) !important;
+}
+
 /* ============================================
    RITUAL WELCOME — center column (reference layout)
    ============================================ */
