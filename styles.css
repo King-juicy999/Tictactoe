@@ -5141,3 +5141,88 @@ button:not(.pu-orbit-node):disabled::after {
         font-size: 1.1rem;
     }
 }
+
+/* Mobile polish (CSS-only): reduce oversized UI + avoid fixed overlays covering the board */
+@media (max-width: 600px) {
+    body {
+        align-items: flex-start;
+        min-height: 100dvh;
+    }
+
+    #game-screen.active {
+        max-height: none;
+        padding-bottom: calc(8.5rem + env(safe-area-inset-bottom, 0px));
+    }
+
+    .container {
+        padding: 0.75rem;
+    }
+
+    .title {
+        font-size: clamp(2.1rem, 9vw, 2.8rem);
+        margin-bottom: 1.2rem;
+    }
+
+    .game-board {
+        max-width: min(92vw, 360px);
+        padding: 0;
+        gap: 8px;
+    }
+
+    .cell {
+        font-size: clamp(2.2rem, 12vw, 3rem);
+        border-radius: 14px;
+    }
+
+    .game-info {
+        font-size: 1.05rem;
+        padding: 0.6rem;
+        margin-bottom: clamp(0.25rem, 2vw, 0.6rem);
+    }
+
+    .message {
+        font-size: 1.15rem;
+        margin: clamp(0.35rem, 2vw, 0.6rem) 0;
+        padding: 0.6rem 0.8rem;
+        min-height: 2.25rem;
+    }
+
+    button {
+        padding: 0.9rem 1.2rem;
+        font-size: 1.1rem;
+        min-height: 48px;
+        border-radius: 14px;
+    }
+
+    input {
+        min-height: 48px;
+        font-size: 1.05rem;
+    }
+
+    .powerup-orbit-3d {
+        width: 7rem;
+        height: 7rem;
+    }
+
+    .pu-orbit-node {
+        --orbit-r: 2.45rem;
+        width: 2.55rem;
+        height: 2.55rem;
+        margin: -1.275rem 0 0 -1.275rem;
+    }
+
+    .powerup-orbit-caption {
+        display: none;
+    }
+}
+
+@media (max-width: 600px) and (max-height: 700px) {
+    .game-board {
+        gap: 6px;
+        margin: 0.5rem auto;
+    }
+
+    .cell {
+        font-size: clamp(2rem, 11vw, 2.6rem);
+    }
+}
