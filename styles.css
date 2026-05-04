@@ -3710,7 +3710,7 @@ button:not(.pu-orbit-node):disabled::after {
 
 .game-board.tactical-claim-wave::after,
 .game-board.tactical-wave::after,
-.tactical-claim-overlay.is-active {
+.tactical-claim-overlay.is-active:not(.guide-tactical-claim-overlay) {
     content: "";
     position: absolute;
     inset: 0;
@@ -3826,6 +3826,124 @@ button:not(.pu-orbit-node):disabled::after {
 
 .tactical-demo-board {
     overflow: hidden;
+}
+
+/* Guidebook Board Shake: outer wrapper can carry .shaking while inner board uses .board-shake */
+.guide-board-shake-container {
+    position: relative;
+    width: min(100%, 170px);
+    margin: 0 auto 0.9rem;
+}
+
+.guide-board-shake-container.shaking {
+    animation: boardShake 0.45s ease-in-out;
+}
+
+.guide-board-shake-container .guide-demo-board {
+    margin-bottom: 0;
+}
+
+.mini-cell.remapping {
+    animation: remapPop 0.42s ease-out;
+}
+
+/* Last Stand guide demo */
+.guide-last-stand-board {
+    position: relative;
+    padding-top: 0.65rem;
+}
+
+.guide-last-stand-scheduled-badge {
+    position: absolute;
+    top: -0.35rem;
+    left: 50%;
+    transform: translateX(-50%);
+    padding: 0.15rem 0.45rem;
+    font-family: var(--font-display);
+    font-size: 0.52rem;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: rgba(200, 169, 110, 0.95);
+    background: rgba(5, 6, 11, 0.85);
+    border: 1px solid rgba(200, 169, 110, 0.45);
+    border-radius: 999px;
+    opacity: 0;
+    pointer-events: none;
+    z-index: 2;
+    transition: opacity 0.35s ease;
+}
+
+.guide-last-stand-scheduled-badge.is-visible {
+    opacity: 1;
+}
+
+.mini-cell.losing-line {
+    box-shadow:
+        0 0 0 1px rgba(134, 168, 199, 0.55),
+        0 0 14px rgba(134, 168, 199, 0.35);
+}
+
+.mini-cell.laststand-granted {
+    animation: hintPulseGlow 1.2s ease-in-out 1;
+}
+
+/* Tactical Claim guide: subtle green grid (AI-only demo copy) */
+.guide-tactical-demo-column {
+    position: relative;
+    margin: 0 auto 0.9rem;
+    width: min(100%, 190px);
+}
+
+.tactical-claim-overlay.guide-tactical-claim-overlay.is-active {
+    background:
+        repeating-linear-gradient(
+            0deg,
+            rgba(96, 160, 120, 0.22) 0 2px,
+            transparent 2px 26px
+        ),
+        repeating-linear-gradient(
+            90deg,
+            rgba(96, 160, 120, 0.22) 0 2px,
+            transparent 2px 26px
+        );
+    animation: guideTacticalGreenPulse 1.35s ease-out forwards;
+}
+
+@keyframes guideTacticalGreenPulse {
+    0% {
+        opacity: 0;
+        transform: scale(0.98);
+    }
+
+    35% {
+        opacity: 0.55;
+    }
+
+    100% {
+        opacity: 0;
+        transform: scale(1);
+    }
+}
+
+.guide-tactical-floating-label {
+    margin: 0.35rem 0 0;
+    text-align: center;
+    font-family: var(--font-display);
+    font-size: 0.62rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: rgba(130, 190, 155, 0.88);
+    text-shadow: 0 0 12px rgba(80, 140, 110, 0.35);
+    opacity: 0;
+    transform: translateY(4px);
+    transition:
+        opacity 0.4s ease,
+        transform 0.4s ease;
+}
+
+.guide-tactical-floating-label.is-visible {
+    opacity: 1;
+    transform: translateY(0);
 }
 
 .tactical-claim-overlay {

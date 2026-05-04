@@ -545,173 +545,281 @@ function initVoidStarfield() {
 
 /* ============================================
    GUIDEBOOK POWER-UP DEMOS
-   Self-contained loops. No gameState access.
+   Looped via intervals/timeouts; guidebook-cinematic calls sync per page.
    ============================================ */
 (function initGuidebookPowerUpDemos() {
-    const onReady = (fn) => {
-        if (document.readyState === 'loading') {
-            document.addEventListener('DOMContentLoaded', fn, { once: true });
-        } else {
-            fn();
-        }
+    window.guideDemoIntervals = window.guideDemoIntervals || [];
+    window.guideDemoTimeouts = window.guideDemoTimeouts || [];
+    let guideDemoRunId = 0;
+
+    function pushInterval(fn, ms) {
+        const id = window.setInterval(fn, ms);
+        window.guideDemoIntervals.push(id);
+        return id;
+    }
+
+    function pushTimeout(fn, ms) {
+        const id = window.setTimeout(fn, ms);
+        window.guideDemoTimeouts.push(id);
+        return id;
+    }
+
+    function guardRun(runId, fn) {
+        return function guarded() {
+            if (runId !== guideDemoRunId) return;
+            return fn.apply(this, arguments);
+        };
+    }
+
+    window.stopAllGuideDemos = function stopAllGuideDemos() {
+        guideDemoRunId++;
+        window.guideDemoIntervals.forEach((id) => window.clearInterval(id));
+        window.guideDemoTimeouts.forEach((id) => window.clearTimeout(id));
+        window.guideDemoIntervals.length = 0;
+        window.guideDemoTimeouts.length = 0;
     };
 
-    onReady(() => {
-        const setDots = (page, activeIndex) => {
-            if (!page) return;
-            page.querySelectorAll('.guide-demo-dots span').forEach((dot, index) => {
-                dot.classList.toggle('is-active', index === activeIndex);
-            });
-        };
+    function setDots(page, activeIndex) {
+        if (!page) return;
+        page.querySelectorAll('.guide-demo-dots span').forEach((dot, index) => {
+            dot.classList.toggle('is-active', index === activeIndex);
+        });
+    }
 
+    window.startHintPulseDemo = function startHintPulseDemo() {
+        const runId = guideDemoRunId;
         const hintPage = document.querySelector('.guide-page[data-page="4"]');
-        if (hintPage) {
-            const cells = hintPage.querySelectorAll('.mini-cell');
-            const status = hintPage.querySelector('[data-status]');
-            const hintTexts = [
-                'Scanning the board for the best line...',
-                'Best move found in the center node.',
-                'Hint Pulse is active. Take the center.'
-            ];
-            let phase = 0;
+        if (!hintPage) return;
+        const cells = hintPage.querySelectorAll('[data-demo="hint-pulse"] .mini-cell');
+        const status = hintPage.querySelector('[data-status]');
+        const hintTexts = [
+            'Scanning the board for the best line...',
+            'Best move found in the center node.',
+            'Hint Pulse is active. Take the center.',
+        ];
+        let phase = 0;
 
-            const runHintPhase = () => {
-                cells.forEach((cell) => cell.classList.remove('hint-pulse'));
-                if (phase >= 1 && cells[4]) {
-                    cells[4].classList.add('hint-pulse');
-                }
-                if (status) status.textContent = hintTexts[phase];
-                setDots(hintPage, phase);
-                phase = (phase + 1) % 3;
-            };
+        const tick = guardRun(runId, () => {
+            cells.forEach((cell) => cell.classList.remove('hint-pulse'));
+            if (phase >= 1 && cells[4]) cells[4].classList.add('hint-pulse');
+            if (status) status.textContent = hintTexts[phase];
+            setDots(hintPage, phase);
+            phase = (phase + 1) % 3;
+        });
 
-            runHintPhase();
-            window.setInterval(runHintPhase, 1800);
-        }
+        tick();
+        pushInterval(tick, 1800);
+    };
 
+    window.startBoardShakeDemo = function startBoardShakeDemo() {
+        const runId = guideDemoRunId;
         const shakePage = document.querySelector('.guide-page[data-page="5"]');
-        if (shakePage) {
-            const board = shakePage.querySelector('[data-demo="board-shake"]');
-            const status = shakePage.querySelector('[data-status]');
-            const cells = Array.from(shakePage.querySelectorAll('.mini-cell'));
-            const baseMarks = ['✕', '◯', '', '', '✕', '', '◯', '', '✕'];
-            let dotPhase = 0;
+        if (!shakePage) return;
+        const container = shakePage.querySelector('.guide-board-shake-container');
+        const board = shakePage.querySelector('[data-demo="board-shake"]');
+        const status = shakePage.querySelector('[data-status]');
+        const cells = Array.from(shakePage.querySelectorAll('[data-demo="board-shake"] .mini-cell'));
+        if (cells.length !== 9 || !board) return;
 
-            const applyPermutation = () => {
-                const nextMarks = baseMarks.slice();
-                for (let i = nextMarks.length - 1; i > 0; i--) {
-                    const j = Math.floor(Math.random() * (i + 1));
-                    [nextMarks[i], nextMarks[j]] = [nextMarks[j], nextMarks[i]];
-                }
-                cells.forEach((cell, index) => {
-                    cell.textContent = nextMarks[index];
-                    cell.classList.remove('remap-pop');
-                    if (nextMarks[index]) {
-                        void cell.offsetWidth;
-                        cell.classList.add('remap-pop');
+        const frozenInitial = cells.map((c) => c.textContent.trim());
+        let rotation = 0;
+        const STAGGER_MS = 120;
+        const SHAKE_MS = 450;
+
+        const runCycle = guardRun(runId, () => {
+            rotation = (rotation + 2) % 9;
+            if (status) status.textContent = 'Board Shake — grid loses its anchor.';
+            setDots(shakePage, 0);
+
+            if (container) {
+                container.classList.remove('shaking');
+                void container.offsetWidth;
+                container.classList.add('shaking');
+            }
+            board.classList.remove('board-shake');
+            void board.offsetWidth;
+            board.classList.add('board-shake');
+
+            pushTimeout(
+                guardRun(runId, () => {
+                    if (status) status.textContent = 'Remapping cells — marks stay, positions shift.';
+                    setDots(shakePage, 1);
+                    for (let step = 0; step < 9; step++) {
+                        pushTimeout(
+                            guardRun(runId, () => {
+                                const slot = step;
+                                const mark = frozenInitial[(slot + rotation) % 9] || '';
+                                const cell = cells[slot];
+                                cell.textContent = mark;
+                                cell.classList.remove('remap-pop', 'remapping');
+                                void cell.offsetWidth;
+                                cell.classList.add('remap-pop', 'remapping');
+                            }),
+                            step * STAGGER_MS,
+                        );
                     }
-                });
-            };
 
-            const triggerBoardShake = () => {
-                if (!board) return;
-                status.textContent = 'Board Shake triggers. The grid is losing its anchor.';
-                setDots(shakePage, dotPhase % 3);
-                dotPhase += 1;
-                board.classList.remove('board-shake');
-                void board.offsetWidth;
-                board.classList.add('board-shake');
+                    pushTimeout(
+                        guardRun(runId, () => {
+                            if (status) status.textContent = 'Board rests. Next shake in 5s.';
+                            setDots(shakePage, 2);
+                        }),
+                        9 * STAGGER_MS + 400,
+                    );
+                }),
+                SHAKE_MS,
+            );
+        });
 
-                window.setTimeout(() => {
-                    applyPermutation();
-                    status.textContent = 'Cells remapped. The marks remain, but their meaning has shifted.';
-                    setDots(shakePage, 2);
-                }, 450);
+        runCycle();
+        pushInterval(guardRun(runId, runCycle), 5000);
+    };
 
-                window.setTimeout(() => {
-                    status.textContent = 'Board rests before the next remap.';
-                    setDots(shakePage, 0);
-                }, 1850);
-            };
+    window.startLastStandDemo = function startLastStandDemo() {
+        const runId = guideDemoRunId;
+        const page = document.querySelector('.guide-page[data-page="6"]');
+        if (!page) return;
+        const board = page.querySelector('[data-demo="last-stand"]');
+        const cells = page.querySelectorAll('.mini-cell');
+        const status = page.querySelector('[data-status]');
+        const badge = page.querySelector('.guide-last-stand-scheduled-badge');
+        const threatIdx = 2;
+        const lineIdx = [0, 1, 2];
+        const BASE_LAST_STAND = ['◯', '◯', '', '✕', '', '◯', '', '✕', ''];
 
-            triggerBoardShake();
-            window.setInterval(triggerBoardShake, 3200);
-        }
+        const resetVisual = guardRun(runId, () => {
+            cells.forEach((c, i) => {
+                c.classList.remove('losing-line', 'is-threat', 'laststand-granted', 'hint-pulse');
+                c.textContent = BASE_LAST_STAND[i] || '';
+            });
+            if (board) board.classList.remove('last-stand');
+            if (badge) badge.classList.remove('is-visible');
+        });
 
-        const lastStandPage = document.querySelector('.guide-page[data-page="6"]');
-        if (lastStandPage) {
-            const board = lastStandPage.querySelector('[data-demo="last-stand"]');
-            const cells = lastStandPage.querySelectorAll('.mini-cell');
-            const status = lastStandPage.querySelector('[data-status]');
-            const texts = [
-                'Watching for a lethal AI turn...',
-                'Threat detected. The AI is about to claim the top row.',
-                'Last Stand triggers and floods the board with gold.',
-                'An extra move is granted. The line is interrupted.'
-            ];
-            let phase = 0;
+        const runCycle = guardRun(runId, () => {
+            resetVisual();
+            if (status) status.textContent = 'The AI lines up two marks — one cell away from winning.';
+            setDots(page, 0);
 
-            const runLastStandPhase = () => {
-                const threatCell = cells[2];
-                if (!threatCell) return;
-                threatCell.classList.remove('is-threat', 'is-saved');
-                threatCell.textContent = '';
-                if (board) board.classList.remove('last-stand');
+            pushTimeout(
+                guardRun(runId, () => {
+                    if (badge) badge.classList.add('is-visible');
+                    if (status) status.textContent = 'Last Stand scheduled — watching the lethal third square.';
+                    setDots(page, 1);
+                }),
+                900,
+            );
 
-                if (phase === 1) {
-                    threatCell.classList.add('is-threat');
-                }
-                if (phase === 2) {
-                    threatCell.classList.add('is-saved');
+            pushTimeout(
+                guardRun(runId, () => {
+                    lineIdx.forEach((i) => cells[i].classList.add('losing-line'));
+                    cells[threatIdx].classList.add('is-threat');
+                    if (status) status.textContent = 'Threat on the top row. The AI strikes next.';
+                    setDots(page, 2);
+                }),
+                2400,
+            );
+
+            pushTimeout(
+                guardRun(runId, () => {
                     if (board) {
+                        board.classList.remove('last-stand');
                         void board.offsetWidth;
                         board.classList.add('last-stand');
                     }
-                }
-                if (phase === 3) {
-                    threatCell.classList.add('is-saved');
-                    threatCell.textContent = '✕';
-                }
+                    if (status) status.textContent = 'Last Stand floods the lattice with gold.';
+                    setDots(page, 3);
+                }),
+                3800,
+            );
 
-                if (status) status.textContent = texts[phase];
-                setDots(lastStandPage, phase);
-                phase = (phase + 1) % 4;
-            };
+            pushTimeout(
+                guardRun(runId, () => {
+                    cells[threatIdx].textContent = '✕';
+                    cells[threatIdx].classList.remove('is-threat');
+                    cells[threatIdx].classList.add('laststand-granted');
+                    lineIdx.forEach((i) => cells[i].classList.remove('losing-line'));
+                    if (status) status.textContent = 'Your blocking move appears — the line is interrupted.';
+                }),
+                4800,
+            );
 
-            runLastStandPhase();
-            window.setInterval(runLastStandPhase, 2200);
-        }
+            pushTimeout(
+                guardRun(runId, () => {
+                    if (badge) badge.classList.remove('is-visible');
+                }),
+                7200,
+            );
+        });
 
-        const tacticalPage = document.querySelector('.guide-page[data-page="7"]');
-        if (tacticalPage) {
-            const overlay = tacticalPage.querySelector('.tactical-claim-overlay');
-            const status = tacticalPage.querySelector('[data-status]');
-            let phase = 0;
-            const statuses = [
-                'The AI is waiting to answer your advantage.',
-                'Tactical Claim ignites a steel grid across the board.',
-                'The wave fades, but the warning remains.'
-            ];
+        runCycle();
+        pushInterval(guardRun(runId, runCycle), 8000);
+    };
 
-            const fireTacticalWave = () => {
-                if (!overlay) return;
-                status.textContent = statuses[phase % statuses.length];
-                setDots(tacticalPage, phase % 3);
-                phase += 1;
+    window.startTacticalClaimDemo = function startTacticalClaimDemo() {
+        const runId = guideDemoRunId;
+        const page = document.querySelector('.guide-page[data-page="7"]');
+        if (!page) return;
+        const overlay = page.querySelector('.guide-tactical-claim-overlay');
+        const label = page.querySelector('.guide-tactical-floating-label');
+        const status = page.querySelector('[data-status]');
+
+        const pulse = guardRun(runId, () => {
+            if (status) status.textContent = 'AI-only ritual — no cells are locked.';
+            setDots(page, 0);
+            if (label) label.classList.add('is-visible');
+            if (overlay) {
                 overlay.classList.remove('is-active');
                 void overlay.offsetWidth;
                 overlay.classList.add('is-active');
+            }
+            pushTimeout(guardRun(runId, () => setDots(page, 1)), 500);
+            pushTimeout(
+                guardRun(runId, () => {
+                    if (status)
+                        status.textContent =
+                            'A green lattice pulses while the AI recalculates strategy.';
+                    setDots(page, 2);
+                }),
+                1200,
+            );
+            pushTimeout(
+                guardRun(runId, () => {
+                    if (label) label.classList.remove('is-visible');
+                    if (overlay) overlay.classList.remove('is-active');
+                }),
+                2600,
+            );
+        });
 
-                window.setTimeout(() => {
-                    status.textContent = statuses[2];
-                    setDots(tacticalPage, 2);
-                }, 1200);
-            };
+        pulse();
+        pushInterval(guardRun(runId, pulse), 4000);
+    };
 
-            fireTacticalWave();
-            window.setInterval(fireTacticalWave, 2800);
+    window.syncGuidebookPowerDemoPage = function syncGuidebookPowerDemoPage(pageIdx) {
+        if (typeof window.stopAllGuideDemos === 'function') window.stopAllGuideDemos();
+        const reduced =
+            typeof window.matchMedia === 'function' &&
+            window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+        if (reduced) return;
+
+        switch (pageIdx) {
+            case 3:
+                window.startHintPulseDemo();
+                break;
+            case 4:
+                window.startBoardShakeDemo();
+                break;
+            case 5:
+                window.startLastStandDemo();
+                break;
+            case 6:
+                window.startTacticalClaimDemo();
+                break;
+            default:
+                break;
         }
-    });
+    };
 })();
 
 function initRitualWelcomeStarfield() {

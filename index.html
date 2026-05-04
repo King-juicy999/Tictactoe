@@ -531,7 +531,8 @@
                 aria-label="Power-up demos repository">
                 <div class="guide-page" data-page="4">
                     <h3 class="guide-demo-title">Hint Pulse</h3>
-                    <div class="guide-demo-board mini-board" data-demo="hint-pulse" aria-hidden="true">
+                    <div class="guide-demo-board mini-board guide-hint-pulse-demo" data-demo="hint-pulse"
+                        aria-hidden="true">
                         <div class="mini-cell">✕</div>
                         <div class="mini-cell"></div>
                         <div class="mini-cell">◯</div>
@@ -554,16 +555,19 @@
                 </div>
                 <div class="guide-page" data-page="5">
                     <h3 class="guide-demo-title">Board Shake</h3>
-                    <div class="guide-demo-board mini-board" data-demo="board-shake" aria-hidden="true">
-                        <div class="mini-cell">✕</div>
-                        <div class="mini-cell">◯</div>
-                        <div class="mini-cell"></div>
-                        <div class="mini-cell"></div>
-                        <div class="mini-cell">✕</div>
-                        <div class="mini-cell"></div>
-                        <div class="mini-cell">◯</div>
-                        <div class="mini-cell"></div>
-                        <div class="mini-cell">✕</div>
+                    <div class="guide-board-shake-container">
+                        <div class="guide-demo-board mini-board guide-board-shake-demo" data-demo="board-shake"
+                            aria-hidden="true">
+                            <div class="mini-cell">✕</div>
+                            <div class="mini-cell">◯</div>
+                            <div class="mini-cell"></div>
+                            <div class="mini-cell"></div>
+                            <div class="mini-cell">✕</div>
+                            <div class="mini-cell"></div>
+                            <div class="mini-cell">◯</div>
+                            <div class="mini-cell"></div>
+                            <div class="mini-cell">✕</div>
+                        </div>
                     </div>
                     <p class="guide-demo-status" data-status>Board rests before the remap.</p>
                     <div class="guide-demo-dots" aria-hidden="true">
@@ -577,15 +581,17 @@
                 </div>
                 <div class="guide-page" data-page="6">
                     <h3 class="guide-demo-title">Last Stand</h3>
-                    <div class="guide-demo-board mini-board" data-demo="last-stand" aria-hidden="true">
-                        <div class="mini-cell">✕</div>
-                        <div class="mini-cell">✕</div>
-                        <div class="mini-cell"></div>
+                    <div class="guide-demo-board mini-board guide-last-stand-board" data-demo="last-stand"
+                        aria-hidden="true">
+                        <span class="guide-last-stand-scheduled-badge" aria-hidden="true">Scheduled</span>
                         <div class="mini-cell">◯</div>
                         <div class="mini-cell">◯</div>
                         <div class="mini-cell"></div>
+                        <div class="mini-cell">✕</div>
                         <div class="mini-cell"></div>
+                        <div class="mini-cell">◯</div>
                         <div class="mini-cell"></div>
+                        <div class="mini-cell">✕</div>
                         <div class="mini-cell"></div>
                     </div>
                     <p class="guide-demo-status" data-status>Watching for a lethal AI turn...</p>
@@ -600,18 +606,21 @@
                 </div>
                 <div class="guide-page" data-page="7">
                     <h3 class="guide-demo-title">Tactical Claim</h3>
-                    <div class="guide-demo-board mini-board tactical-demo-board" data-demo="tactical-claim"
-                        aria-hidden="true">
-                        <div class="mini-cell">◯</div>
-                        <div class="mini-cell"></div>
-                        <div class="mini-cell">✕</div>
-                        <div class="mini-cell"></div>
-                        <div class="mini-cell">◯</div>
-                        <div class="mini-cell"></div>
-                        <div class="mini-cell">✕</div>
-                        <div class="mini-cell"></div>
-                        <div class="mini-cell"></div>
-                        <div class="tactical-claim-overlay" aria-hidden="true"></div>
+                    <div class="guide-tactical-demo-column">
+                        <div class="guide-demo-board mini-board tactical-demo-board guide-tactical-claim-board"
+                            data-demo="tactical-claim" aria-hidden="true">
+                            <div class="mini-cell">◯</div>
+                            <div class="mini-cell"></div>
+                            <div class="mini-cell">✕</div>
+                            <div class="mini-cell"></div>
+                            <div class="mini-cell">◯</div>
+                            <div class="mini-cell"></div>
+                            <div class="mini-cell">✕</div>
+                            <div class="mini-cell"></div>
+                            <div class="mini-cell"></div>
+                            <div class="tactical-claim-overlay guide-tactical-claim-overlay" aria-hidden="true"></div>
+                        </div>
+                        <p class="guide-tactical-floating-label" aria-hidden="true">AI recalculates strategy…</p>
                     </div>
                     <p class="guide-demo-status" data-status>The AI is waiting to answer your advantage.</p>
                     <div class="guide-demo-dots" aria-hidden="true">

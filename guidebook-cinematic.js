@@ -171,6 +171,9 @@
         defsCache[pageIdx].mount(rb);
         setHint(defsCache[pageIdx].hint);
         footerFor(defsCache.length);
+        if (typeof window.syncGuidebookPowerDemoPage === 'function') {
+            window.syncGuidebookPowerDemoPage(pageIdx);
+        }
     }
 
     /** @private */
@@ -301,6 +304,9 @@
     }
 
     function closeOverlay() {
+        if (typeof window.stopAllGuideDemos === 'function') {
+            window.stopAllGuideDemos();
+        }
         stashDemos(qs('guidebook-reading-body'));
         if (overlayRef) {
             overlayRef.classList.add('hidden');
