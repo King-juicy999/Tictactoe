@@ -5151,6 +5151,8 @@ button:not(.pu-orbit-node):disabled::after {
 
     #game-screen.active {
         max-height: none;
+        /* Reserve space so the fixed power-up dock doesn't cover the right-side cells. */
+        padding-inline-end: calc(6.75rem + env(safe-area-inset-right, 0px));
         padding-bottom: calc(8.5rem + env(safe-area-inset-bottom, 0px));
     }
 
@@ -5213,6 +5215,32 @@ button:not(.pu-orbit-node):disabled::after {
 
     .powerup-orbit-caption {
         display: none;
+    }
+
+    /* Guidebook overlay: allow scrolling on short viewports, keep footer reachable */
+    .guidebook-cinematic-overlay {
+        max-height: 100dvh;
+        height: 100dvh;
+    }
+
+    .guidebook-cinematic-centered {
+        align-items: flex-start;
+        justify-content: flex-start;
+        overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
+        padding: max(0.75rem, env(safe-area-inset-top, 0px))
+            max(0.75rem, env(safe-area-inset-right, 0px))
+            0
+            max(0.75rem, env(safe-area-inset-left, 0px));
+    }
+
+    .guidebook-float-wrap {
+        width: min(520px, 96vw);
+        max-height: none;
+    }
+
+    .guidebook-cinematic-footer {
+        padding-bottom: calc(1rem + env(safe-area-inset-bottom, 0px));
     }
 }
 
