@@ -658,6 +658,18 @@
                 ? window.__ANGELIC_SOCKET_URL.trim()
                 : undefined;
         const socket = __adminSock ? io(__adminSock) : io();
+
+        /** Same origin as Socket.IO when deployed on static hosting (Vercel); relative paths for local Express. */
+        function apiUrl(path) {
+            const p = path.startsWith('/') ? path : `/${path}`;
+            if (!__adminSock) return p;
+            try {
+                return new URL(p, __adminSock).toString();
+            } catch {
+                const base = __adminSock.replace(/\/?$/, '');
+                return base + p;
+            }
+        }
         
         // Verify socket connection
         socket.on('connect', () => {
@@ -1204,7 +1216,7 @@
         // Load AI stats on connect
         socket.on('connect', async () => {
             try {
-                const res = await fetch('/api/ai/stats');
+                const res = await fetch(apiUrl('/api/ai/stats'));
                 if (res.ok) {
                     const data = await res.json();
                     if (data.ok) {
@@ -1329,7 +1341,7 @@
                 btn.onclick = async () => {
                     const who = btn.getAttribute('data-del');
                     try {
-                        const res = await fetch('/api/player/delete', {
+                        const res = await fetch(apiUrl('/api/player/delete'), {
                             method: 'POST',
                             headers: { 'Content-Type': 'application/json' },
                             body: JSON.stringify({ name: decodeURIComponent(who) })
@@ -1344,7 +1356,7 @@
             });
         }
         async function load() {
-            const res = await fetch('/api/stats');
+            const res = await fetch(apiUrl('/api/stats'));
             const data = await res.json();
             render(data.players || {});
         }
@@ -1362,7 +1374,7 @@
                 log(`Control sent (socket): ${type} ${JSON.stringify(value)}`);
                 return;
             }
-            fetch('/api/control', {
+            fetch(apiUrl('/api/control'), {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -1579,7 +1591,7 @@
             } else if (e && e.name) {
                 if (window.__spectateLastName !== e.name) {
                     window.__spectateLastName = e.name;
-                    fetch('/api/player/' + encodeURIComponent(e.name))
+                    fetch(apiUrl('/api/player/' + encodeURIComponent(e.name)))
                       .then(r => r.ok ? r.json() : null)
                       .then(data => {
                           if (data && data.ok && data.info) {
@@ -1985,14 +1997,6 @@
                 } catch (error) {
                     console.error('Error adding ICE candidate:', error);
                 }
-            }
-        });
-        
-        // Handle active streams list
-        socket.on('active-streams', (streams) => {
-            console.log('Active player streams:', streams);
-            if (streams.length > 0) {
-                log(`Active streams: ${streams.map(s => s.playerName).join(', ')}`);
             }
         });
         

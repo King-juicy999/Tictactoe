@@ -4,8 +4,8 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev": "node scripts/write-socket-config.mjs && vite",
-    "build": "tsc -b && node scripts/write-socket-config.mjs && vite build && node scripts/copy-legacy-to-dist.mjs",
+    "dev": "node scripts/write-socket-config.mjs && node scripts/sync-admin-html-to-root.mjs && vite",
+    "build": "tsc -b && node scripts/write-socket-config.mjs && vite build && node scripts/copy-legacy-to-dist.mjs && node scripts/sync-admin-html-to-root.mjs",
     "lint": "eslint .",
     "preview": "vite preview"
   },
