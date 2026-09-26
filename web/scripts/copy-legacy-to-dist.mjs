@@ -1,5 +1,5 @@
 /**
- * Vite dev uses middleware to serve ../ under /play — production builds need the same files in dist/play.
+ * Vite dev uses middleware to serve public/ under /play — production builds need the same files in dist/play.
  */
 import fs from 'node:fs'
 import path from 'node:path'
