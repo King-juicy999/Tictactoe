@@ -958,7 +958,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }, 100);
     }
 
-    // Continue button - Flow: Intro → Welcome (name/camera)
+    // Continue button - Flow: Intro → Welcome (name)
     let buttonTransitioned = false;
     
     const handleContinueClick = (e) => {
@@ -1391,8 +1391,6 @@ const gameState = {
     aiTurnInProgress: false,
     aiMoveInProgress: false,
     mode: 'ai',
-    cameraEnabled: false,
-    cameraStream: null,
     boardInitialized: false,
     roundCount: 0,
     firstRoundOfSession: true,
@@ -1983,145 +1981,8 @@ const aiMockText = document.getElementById('ai-mock-text');
 const mockYesBtn = document.getElementById('mock-yes-btn');
 const mockNoBtn = document.getElementById('mock-no-btn');
 
-// Camera elements
-const enableCameraBtn = document.getElementById('enable-camera-btn');
-const cameraPreview = document.getElementById('camera-preview');
-const cameraFeed = document.getElementById('camera-feed');
-const cameraStatus = document.getElementById('camera-status');
-const gameCameraStatus = document.getElementById('game-camera-status');
-
 // Track wins for learning - AI learns from each win but doesn't prevent future wins
 let playerWinCount = 0;
-
-// Camera state management - ensure getUserMedia is called only once per session
-let cameraInitialized = false;
-let cameraInitializationInProgress = false;
-
-// Camera functionality - isolated from game rendering
-async function requestCameraAccess() {
-    // Prevent multiple simultaneous calls
-    if (cameraInitializationInProgress) {
-        console.log('Camera initialization already in progress');
-        return gameState.cameraEnabled;
-    }
-    
-    // If camera already initialized, reuse existing stream
-    if (cameraInitialized && gameState.cameraStream) {
-        console.log('Camera already initialized, reusing existing stream');
-        // Ensure video element is properly connected
-        if (cameraFeed && cameraFeed.srcObject !== gameState.cameraStream) {
-            cameraFeed.srcObject = gameState.cameraStream;
-            ensureVideoPlayback();
-        }
-        return true;
-    }
-    
-    cameraInitializationInProgress = true;
-    
-    try {
-        // Mobile-friendly camera constraints
-        const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-        const videoConstraints = isMobile ? {
-            width: { ideal: 640, max: 1280 },
-            height: { ideal: 480, max: 720 },
-            facingMode: 'user',
-            frameRate: { ideal: 30, max: 30 }
-        } : {
-                width: { ideal: 640 },
-                height: { ideal: 480 },
-                facingMode: 'user'
-        };
-        
-        // getUserMedia called only once per session
-        const stream = await navigator.mediaDevices.getUserMedia({ 
-            video: videoConstraints,
-            audio: false 
-        });
-        
-        // Store stream persistently - never recreate
-        gameState.cameraStream = stream;
-        gameState.cameraEnabled = true;
-        cameraInitialized = true;
-        
-        // Connect stream to video element (never remount the element)
-        if (cameraFeed) {
-            cameraFeed.srcObject = stream;
-            // Wait for metadata before playing
-            ensureVideoPlayback();
-        }
-        
-        if (cameraPreview) cameraPreview.style.display = 'block';
-        if (enableCameraBtn) {
-            enableCameraBtn.textContent = 'Camera Enabled';
-            enableCameraBtn.disabled = true;
-            enableCameraBtn.style.background = '#4CAF50';
-        }
-        if (cameraStatus) {
-            cameraStatus.innerHTML =
-                '<span class="camera-icon">📹</span><span class="camera-text">Camera access granted - Anti-cheat active</span>';
-        }
-
-        updateStartButtonState();
-        
-        // Notify admin of camera status (only when player name is set)
-        if (gameState.playerName) {
-            try { 
-                if (socket) socket.emit('camera-status', { 
-                    name: gameState.playerName, 
-                    connected: true 
-                }); 
-            } catch(_) {}
-        }
-        
-        cameraInitializationInProgress = false;
-        return true;
-    } catch (error) {
-        console.error('Camera access denied:', error);
-        if (cameraStatus) {
-            cameraStatus.innerHTML =
-                '<span class="camera-icon">❌</span><span class="camera-text">Camera access denied - Required to prevent cheating</span>';
-        }
-        if (enableCameraBtn) enableCameraBtn.textContent = 'Retry Camera Access';
-        gameState.cameraEnabled = false;
-        cameraInitialized = false;
-        cameraInitializationInProgress = false;
-        updateStartButtonState();
-        
-        // Notify admin of camera status
-        try { 
-            if (socket) socket.emit('camera-status', { 
-                name: gameState.playerName, 
-                connected: false 
-            }); 
-        } catch(_) {}
-        
-        return false;
-    }
-}
-
-// Ensure video playback only after metadata is ready - isolated camera logic
-function ensureVideoPlayback() {
-    if (!cameraFeed || !gameState.cameraStream) return;
-    
-    // Only set srcObject if not already set
-    if (cameraFeed.srcObject !== gameState.cameraStream) {
-        cameraFeed.srcObject = gameState.cameraStream;
-    }
-    
-    // Play only after metadata is ready
-    if (cameraFeed.readyState >= 1) { // HAVE_METADATA
-        cameraFeed.play().catch(error => {
-            console.log('Video play deferred (autoplay policy):', error);
-            // Play will be triggered by user interaction
-        });
-    } else {
-        cameraFeed.onloadedmetadata = () => {
-            cameraFeed.play().catch(error => {
-                console.log('Video play after metadata:', error);
-            });
-        };
-    }
-}
 
 function updateStartButtonState() {
     const nameFilled = playerNameInput && playerNameInput.value.trim();
@@ -2130,454 +1991,8 @@ function updateStartButtonState() {
     startBtn.disabled = !nameFilled;
 }
 
-function stopCamera() {
-    if (gameState.cameraStream) {
-        gameState.cameraStream.getTracks().forEach(track => track.stop());
-        gameState.cameraStream = null;
-        gameState.cameraEnabled = false;
-        
-        // Stop camera streaming
-        stopCameraStreaming();
-        
-        // Notify admin of camera status
-        try { 
-            if (socket) socket.emit('camera-status', { 
-                name: gameState.playerName, 
-                connected: false 
-            }); 
-        } catch(_) {}
-        
-        // Stop periodic status updates
-        stopCameraStatusUpdates();
-    }
-}
-
-// Camera event listeners (welcome camera UI may be hidden — keep listener optional)
-if (enableCameraBtn) {
-    enableCameraBtn.addEventListener('click', requestCameraAccess);
-}
-
 // Initialize button state on page load
 updateStartButtonState();
-
-// Monitor camera status during gameplay
-function monitorCameraStatus() {
-    if (gameState.cameraStream) {
-        const tracks = gameState.cameraStream.getTracks();
-        const activeTracks = tracks.filter(track => track.readyState === 'live');
-        
-        if (activeTracks.length === 0) {
-            if (gameCameraStatus) {
-                gameCameraStatus.textContent = 'Camera Disconnected';
-                gameCameraStatus.style.color = '#ff4444';
-            }
-            gameState.cameraEnabled = false;
-            
-            // Notify admin of camera disconnection
-            try { 
-                if (socket) socket.emit('camera-status', { 
-                    name: gameState.playerName, 
-                    connected: false 
-                }); 
-            } catch(_) {}
-            
-            // Could add additional logic here to pause game or show warning
-        } else if (gameCameraStatus) {
-            gameCameraStatus.textContent = 'Monitoring';
-            gameCameraStatus.style.color = '#4CAF50';
-        }
-    }
-}
-
-// Check camera status every 5 seconds during gameplay
-setInterval(monitorCameraStatus, 5000);
-
-// WebRTC Video Streaming (Like WhatsApp Video Call)
-let peerConnection = null;
-let mediaRecorder = null;
-let recordedChunks = [];
-let recordingStartTime = null;
-
-// STUN/TURN servers configuration
-// Using multiple STUN servers for reliability
-// TURN servers included for ngrok/cross-network compatibility
-const rtcConfiguration = {
-    iceServers: [
-        // Google's free STUN servers (primary)
-        { urls: 'stun:stun.l.google.com:19302' },
-        { urls: 'stun:stun1.l.google.com:19302' },
-        { urls: 'stun:stun2.l.google.com:19302' },
-        { urls: 'stun:stun3.l.google.com:19302' },
-        { urls: 'stun:stun4.l.google.com:19302' },
-        // Additional free STUN servers (backup)
-        { urls: 'stun:stun.stunprotocol.org:3478' },
-        // Free TURN servers for mobile/ngrok compatibility
-        { urls: 'turn:openrelay.metered.ca:80', username: 'openrelayproject', credential: 'openrelayproject' },
-        { urls: 'turn:openrelay.metered.ca:443', username: 'openrelayproject', credential: 'openrelayproject' },
-        { urls: 'turn:openrelay.metered.ca:443?transport=tcp', username: 'openrelayproject', credential: 'openrelayproject' },
-        // For production, uncomment and configure TURN servers:
-        // TURN servers are needed for users behind strict firewalls/NAT
-        // Example: { urls: 'turn:your-turn-server.com:3478', username: 'user', credential: 'pass' }
-    ],
-    iceCandidatePoolSize: 10, // Pre-gather ICE candidates for faster connection
-    bundlePolicy: 'max-bundle', // Bundle RTP and RTCP
-    rtcpMuxPolicy: 'require', // Require RTCP muxing
-    iceTransportPolicy: 'all' // Try both relay and non-relay candidates
-};
-
-let peerConnectionReconnectAttempts = 0;
-const MAX_RECONNECT_ATTEMPTS = 3;
-
-function startCameraStreaming() {
-    if (!gameState.cameraStream || !socket) {
-        console.log('Cannot start camera streaming:', { 
-            hasStream: !!gameState.cameraStream, 
-            hasSocket: !!socket 
-        });
-        return;
-    }
-    
-    console.log('Starting WebRTC camera streaming for:', gameState.playerName);
-    
-    // Close existing connection if any
-    if (peerConnection) {
-        try {
-            peerConnection.close();
-        } catch (e) {
-            console.log('Error closing existing peer connection:', e);
-        }
-    }
-    
-    // Create WebRTC peer connection
-    peerConnection = new RTCPeerConnection(rtcConfiguration);
-    
-    // Add camera stream tracks to peer connection
-    gameState.cameraStream.getTracks().forEach(track => {
-        peerConnection.addTrack(track, gameState.cameraStream);
-        console.log('Added track:', track.kind, track.id);
-        
-        // Handle track ended (camera disconnected) - auto-reconnect for stability
-        track.onended = () => {
-            console.log('Camera track ended - attempting reconnection');
-            gameState.cameraEnabled = false;
-            
-            // Auto-reconnect camera stream if track ends (fixes black screen issue)
-            if (peerConnectionReconnectAttempts < MAX_RECONNECT_ATTEMPTS) {
-                setTimeout(() => {
-                    // Check if stream still exists but track ended
-                    if (gameState.cameraStream) {
-                        const tracks = gameState.cameraStream.getTracks();
-                        const hasLiveTrack = tracks.some(t => t.readyState === 'live');
-                        
-                        if (!hasLiveTrack) {
-                            // Stream exists but no live tracks - request new access
-                            console.log('Reconnecting camera - requesting new stream');
-                            requestCameraAccess().then(success => {
-                                if (success && gameState.cameraStream) {
-                                    startCameraStreaming();
-                                    peerConnectionReconnectAttempts = 0; // Reset on success
-                                } else {
-                                    peerConnectionReconnectAttempts++;
-                                }
-                            }).catch(() => {
-                                peerConnectionReconnectAttempts++;
-                            });
-                        } else {
-                            // Stream has live tracks - just restart streaming
-                            startCameraStreaming();
-                            peerConnectionReconnectAttempts = 0; // Reset on success
-                        }
-                    } else {
-                        // No stream - request new access
-                        console.log('Reconnecting camera - no stream available');
-                        requestCameraAccess().then(success => {
-                            if (success && gameState.cameraStream) {
-                                startCameraStreaming();
-                                peerConnectionReconnectAttempts = 0;
-                            } else {
-                                peerConnectionReconnectAttempts++;
-                            }
-                        }).catch(() => {
-                            peerConnectionReconnectAttempts++;
-                        });
-                    }
-                }, 2000);
-                peerConnectionReconnectAttempts++;
-            } else {
-                console.warn('Max camera reconnection attempts reached');
-            }
-        };
-    });
-    
-    // Handle ICE candidates (for NAT traversal)
-    peerConnection.onicecandidate = (event) => {
-        if (event.candidate) {
-            socket.emit('webrtc-ice-candidate', {
-                candidate: event.candidate,
-                playerName: gameState.playerName
-            });
-        } else {
-            console.log('ICE gathering complete');
-        }
-    };
-    
-    // Handle ICE gathering state
-    peerConnection.onicegatheringstatechange = () => {
-        console.log('ICE gathering state:', peerConnection.iceGatheringState);
-    };
-    
-    // Handle connection state changes with reconnection logic
-    peerConnection.onconnectionstatechange = () => {
-        const state = peerConnection.connectionState;
-        console.log('WebRTC connection state:', state);
-        
-        if (state === 'connected') {
-            peerConnectionReconnectAttempts = 0; // Reset on successful connection
-            console.log('WebRTC connected successfully');
-        } else if (state === 'failed' || state === 'disconnected') {
-            console.error('WebRTC connection failed/disconnected. Attempting to restart...');
-            if (peerConnectionReconnectAttempts < MAX_RECONNECT_ATTEMPTS) {
-                setTimeout(() => {
-                    if (gameState.cameraStream && socket && socket.connected) {
-                        console.log('Attempting to reconnect WebRTC...');
-                        startCameraStreaming();
-                        peerConnectionReconnectAttempts++;
-                    }
-                }, 3000);
-            } else {
-                console.error('Max reconnection attempts reached');
-            }
-        }
-    };
-    
-    // Handle ICE connection state
-    peerConnection.oniceconnectionstatechange = () => {
-        const iceState = peerConnection.iceConnectionState;
-        console.log('ICE connection state:', iceState);
-        
-        if (iceState === 'failed' || iceState === 'disconnected') {
-            console.log('ICE connection failed, checking if we need to restart...');
-            // Let the connection state handler deal with reconnection
-        }
-    };
-    
-    // Create and send offer to admin
-    console.log('Creating WebRTC offer...');
-    peerConnection.createOffer({
-        offerToReceiveAudio: false,
-        offerToReceiveVideo: false  // Player is sending, not receiving
-    })
-    .then(offer => {
-        console.log('Offer created:', offer.type);
-        return peerConnection.setLocalDescription(offer);
-    })
-    .then(() => {
-        console.log('Local description set, sending offer to server...');
-        // Wait a bit for ICE candidates to gather
-        setTimeout(() => {
-        // Send offer to server for forwarding to admin
-        socket.emit('webrtc-offer', {
-            offer: peerConnection.localDescription,
-            playerName: gameState.playerName
-        });
-        console.log('WebRTC offer sent to server for player:', gameState.playerName);
-        }, 1000); // Give time for ICE candidates
-    })
-    .catch(error => {
-        console.error('Error creating WebRTC offer:', error);
-        // Retry once
-        if (peerConnectionReconnectAttempts < MAX_RECONNECT_ATTEMPTS) {
-            setTimeout(() => {
-                startCameraStreaming();
-                peerConnectionReconnectAttempts++;
-            }, 2000);
-        }
-                });
-                
-    // Handle answer from admin (use once listener to avoid duplicates)
-    const answerHandler = async (data) => {
-        if (peerConnection && data.answer && peerConnection.signalingState !== 'stable') {
-            try {
-                await peerConnection.setRemoteDescription(new RTCSessionDescription(data.answer));
-                console.log('WebRTC answer received and set');
-                socket.off('webrtc-answer', answerHandler); // Remove listener after handling
-            } catch (error) {
-                console.error('Error setting remote description:', error);
-            }
-        }
-    };
-    socket.on('webrtc-answer', answerHandler);
-    
-    // Handle ICE candidates from admin
-    const iceCandidateHandler = async (data) => {
-        if (peerConnection && data.candidate && peerConnection.remoteDescription) {
-            try {
-                await peerConnection.addIceCandidate(new RTCIceCandidate(data.candidate));
-                console.log('ICE candidate added successfully');
-            } catch (error) {
-                console.error('Error adding ICE candidate:', error);
-        }
-        }
-    };
-    socket.on('webrtc-ice-candidate', iceCandidateHandler);
-    
-    // Start video recording for storage/archive
-    startVideoRecording();
-}
-
-function startVideoRecording() {
-    if (!gameState.cameraStream) return;
-    
-    try {
-        recordedChunks = [];
-        recordingStartTime = Date.now();
-        
-        // Create MediaRecorder for video recording
-        mediaRecorder = new MediaRecorder(gameState.cameraStream, {
-            mimeType: 'video/webm;codecs=vp9'
-        });
-        
-        mediaRecorder.ondataavailable = (event) => {
-            if (event.data.size > 0) {
-                recordedChunks.push(event.data);
-            }
-        };
-        
-        mediaRecorder.onstop = () => {
-            const blob = new Blob(recordedChunks, { type: 'video/webm' });
-            const videoUrl = URL.createObjectURL(blob);
-            
-            // Send video to server for storage
-            sendVideoToServer(blob);
-        };
-        
-        mediaRecorder.start(1000); // Record in 1-second chunks
-        console.log('Video recording started');
-        
-    } catch (error) {
-        console.error('Error starting video recording:', error);
-    }
-}
-
-function stopVideoRecording() {
-    if (mediaRecorder && mediaRecorder.state === 'recording') {
-        mediaRecorder.stop();
-        console.log('Video recording stopped');
-    }
-}
-
-function sendVideoToServer(blob) {
-    const formData = new FormData();
-    formData.append('video', blob, `${gameState.playerName}_${recordingStartTime}.webm`);
-    formData.append('playerName', gameState.playerName);
-    formData.append('startTime', recordingStartTime);
-    formData.append('endTime', Date.now());
-    
-    fetch('/api/upload-video', {
-        method: 'POST',
-        body: formData
-    })
-    .then(response => response.json())
-    .then(data => {
-        console.log('Video uploaded successfully:', data);
-    })
-    .catch(error => {
-        console.error('Error uploading video:', error);
-    });
-}
-
-function stopCameraStreaming() {
-    // Close WebRTC connection
-    if (peerConnection) {
-        peerConnection.getSenders().forEach(sender => {
-            if (sender.track) {
-                sender.track.stop();
-            }
-        });
-        peerConnection.close();
-        peerConnection = null;
-        console.log('WebRTC connection closed');
-    }
-    
-    // Stop video recording
-    stopVideoRecording();
-}
-
-// Periodic camera status update to admin (every 3 seconds)
-let cameraStatusUpdateInterval = null;
-
-function startCameraStatusUpdates() {
-    // Clear any existing interval
-    if (cameraStatusUpdateInterval) {
-        clearInterval(cameraStatusUpdateInterval);
-    }
-    
-    // Send initial status
-    sendCameraStatusUpdate();
-    
-    // Send status every 3 seconds
-    cameraStatusUpdateInterval = setInterval(() => {
-        sendCameraStatusUpdate();
-    }, 3000);
-}
-
-function stopCameraStatusUpdates() {
-    if (cameraStatusUpdateInterval) {
-        clearInterval(cameraStatusUpdateInterval);
-        cameraStatusUpdateInterval = null;
-    }
-}
-
-function sendCameraStatusUpdate() {
-    if (!socket || !socket.connected || !gameState.playerName) {
-        return;
-    }
-    
-    // Check camera stream status
-    let isActive = false;
-    let hasVideoTrack = false;
-    
-    if (gameState.cameraStream) {
-        const tracks = gameState.cameraStream.getTracks();
-        hasVideoTrack = tracks.some(track => track.kind === 'video' && track.readyState === 'live');
-        isActive = hasVideoTrack;
-        
-        // If track ended, attempt auto-reconnect (camera stability fix)
-        if (!hasVideoTrack || tracks.every(track => track.readyState === 'ended')) {
-            gameState.cameraEnabled = false;
-            isActive = false;
-            
-            // Auto-reconnect if track ended during gameplay (fixes black screen)
-            if (gameState.gameActive && peerConnectionReconnectAttempts < MAX_RECONNECT_ATTEMPTS) {
-                console.log('Camera track ended during gameplay - attempting reconnection');
-                setTimeout(() => {
-                    requestCameraAccess().then(success => {
-                        if (success && gameState.cameraStream) {
-                            startCameraStreaming();
-                            peerConnectionReconnectAttempts = 0;
-                        }
-                    }).catch(() => {
-                        // Silent fail - will retry on next status update
-                    });
-                }, 3000);
-                peerConnectionReconnectAttempts++;
-            }
-        }
-    }
-    
-    // Send status to server (will forward to admin) - invisible to user, just backend communication
-    try {
-        socket.emit('camera-status-update', {
-            name: gameState.playerName,
-            connected: isActive && hasVideoTrack,
-            hasStream: !!gameState.cameraStream,
-            streamActive: hasVideoTrack,
-            timestamp: Date.now()
-        });
-    } catch (e) {
-        console.log('Error sending camera status update:', e);
-    }
-}
 
 // Socket.IO: receive admin controls (optional `window.__ANGELIC_SOCKET_URL` from angelic-socket-config.js for static deploys)
 let socket;
@@ -2713,7 +2128,6 @@ function showLobbyScreen(skipGuidebookCheck) {
             try { if (socket) socket.emit('leave-lobby'); } catch(_) {}
             lobby.classList.add('hidden');
             welcomeScreen.classList.add('active');
-            // keep camera enabled state
             updateStartButtonState();
         };
     }
@@ -2860,7 +2274,6 @@ function emitBoardUpdate() {
             aiLosses: gameState.aiLosses,
             wins: (gameState.wins || 0),
             active: gameState.gameActive && !gameState.inInteractiveMode, // Game is active only if not in interactive mode
-            cameraEnabled: gameState.cameraEnabled,
             inInteractiveMode: gameState.inInteractiveMode, // Let admin know about interactive mode
             playerGoesFirst: gameState.playerGoesFirst,
             currentLevel: 1,
@@ -3362,7 +2775,7 @@ const tauntMessages = [
 let recentTauntTypes = [];
 const MAX_RECENT_TAUNTS = 5;
 
-// After entering name & enabling camera, show mode selection (AI or Player)
+// After entering a name, show mode selection (AI or Player)
 // UI INPUT GUARANTEE: Button must ALWAYS respond - if handler fails, reset and proceed
 startBtn.addEventListener('click', async () => {
     try {
@@ -3373,14 +2786,6 @@ startBtn.addEventListener('click', async () => {
         return;
     }
 
-    // Ritual welcome has no camera chrome; still attempt stream for existing anti-cheat hooks when supported
-    if (!gameState.cameraEnabled && typeof navigator !== 'undefined' && navigator.mediaDevices) {
-        try {
-            await requestCameraAccess();
-        } catch (_) {
-            /* proceed without camera */
-        }
-    }
 
     // Hide welcome screen and show mode selection page
     const modeSelect = document.getElementById('mode-select');
@@ -3633,41 +3038,6 @@ function startGameAsAI(skipGuidebookCheck) {
         gameState.playerMoveHistory = []; // Reset for new game
     }
 
-    // Start camera streaming for admin if camera is enabled
-    if (gameState.cameraEnabled && gameState.cameraStream) {
-        console.log('Starting camera streaming for game...');
-        startCameraStreaming();
-        
-        // Start periodic camera status updates
-        startCameraStatusUpdates();
-        
-        // Notify admin of camera status
-        try { 
-            if (socket) socket.emit('camera-status', { 
-                name: gameState.playerName, 
-                connected: true 
-            }); 
-        } catch(_) {}
-        
-        // Test socket connection with a simple message
-        try {
-            if (socket) {
-                socket.emit('test-message', { 
-                    name: gameState.playerName, 
-                    message: 'Camera streaming started',
-                    timestamp: Date.now()
-                });
-                console.log('Test message sent to admin');
-            }
-        } catch(_) {}
-    } else {
-        console.log('Cannot start camera streaming:', {
-            cameraEnabled: gameState.cameraEnabled,
-            hasStream: !!gameState.cameraStream
-        });
-        // Still start status updates (to report that camera is off)
-        startCameraStatusUpdates();
-    }
 
     reportSessionStart();
     try { if (socket) socket.emit('player-start', { name: gameState.playerName }); } catch(_) {}
@@ -4115,18 +3485,6 @@ function applyAngelicCinematicGateFromReact() {
         } catch (_) {}
 
         void (async () => {
-            if (
-                !gameState.cameraEnabled &&
-                typeof navigator !== 'undefined' &&
-                navigator.mediaDevices
-            ) {
-                try {
-                    await requestCameraAccess();
-                } catch (_) {
-                    /* proceed without camera — matches welcome flow */
-                }
-            }
-
             try {
                 if (socket)
                     socket.emit('player-start', { name: gameState.playerName });
@@ -5788,52 +5146,6 @@ function activateInteractiveAIMock() {
 // Snowfall effect with taunt messages and player images (for first 3 losses)
 let snowfallInterval = null;
 let snowfallElements = [];
-let playerImageDataUrl = null;
-
-// Capture player image from camera feed
-function capturePlayerImage() {
-    try {
-        const videoElement = cameraFeed;
-        if (!videoElement) {
-            console.warn('Camera feed element not found');
-            return null;
-        }
-        
-        // Check if video is ready
-        if (!videoElement.videoWidth || !videoElement.videoHeight || videoElement.videoWidth === 0 || videoElement.videoHeight === 0) {
-            console.warn('Video not ready for capture');
-            return null;
-        }
-        
-        const canvas = document.createElement('canvas');
-        const ctx = canvas.getContext('2d');
-        if (!ctx) {
-            console.error('Could not get canvas context');
-            return null;
-        }
-        
-        canvas.width = videoElement.videoWidth;
-        canvas.height = videoElement.videoHeight;
-        
-        try {
-            ctx.drawImage(videoElement, 0, 0, canvas.width, canvas.height);
-        } catch (drawError) {
-            console.error('Error drawing video to canvas:', drawError);
-            return null;
-        }
-        
-        // Convert to data URL (small size for performance)
-        try {
-            return canvas.toDataURL('image/jpeg', 0.7);
-        } catch (dataError) {
-            console.error('Error converting canvas to data URL:', dataError);
-            return null;
-        }
-    } catch (e) {
-        console.error('Error capturing player image:', e);
-        return null;
-    }
-}
 
 function startSnowfallEffect() {
     try {
@@ -5842,20 +5154,10 @@ function startSnowfallEffect() {
             console.error('Snowfall container not found');
             return;
         }
-        
+
         // Stop any existing snowfall effect first
         stopSnowfallEffect();
-        
-        // Capture fresh player image each time (with error handling)
-        if (gameState.cameraEnabled) {
-            try {
-                playerImageDataUrl = capturePlayerImage();
-            } catch (e) {
-                console.error('Error capturing image for snowfall:', e);
-                playerImageDataUrl = null; // Continue without images if capture fails
-            }
-        }
-        
+
         container.classList.remove('hidden');
         container.innerHTML = '';
         snowfallElements = [];
@@ -5888,52 +5190,11 @@ function startSnowfallEffect() {
             const snowflake = document.createElement('div');
             snowflake.className = 'snowflake';
             
-            // 50% chance to show player image, 50% chance to show taunt message
-            const showImage = playerImageDataUrl && Math.random() < 0.5;
-            
-            if (showImage) {
-                try {
-                    // Create image element
-                    const img = document.createElement('img');
-                    img.src = playerImageDataUrl;
-                    img.style.width = (Math.random() * 30 + 40) + 'px'; // 40-70px
-                    img.style.height = 'auto';
-                    img.style.borderRadius = '50%';
-                    img.style.border = '2px solid #ff0000';
-                    img.style.boxShadow = '0 0 10px rgba(255, 0, 0, 0.8)';
-                    img.style.objectFit = 'cover';
-                    img.onerror = () => {
-                        // If image fails to load, remove it and show text instead
-                        img.remove();
-                        const message = tauntMessages[Math.floor(Math.random() * tauntMessages.length)];
-                        snowflake.textContent = message;
-                        snowflake.style.fontSize = (Math.random() * 10 + 14) + 'px';
-                    };
-                    snowflake.appendChild(img);
-                    
-                    // Also add a taunt message below the image
-                    const message = document.createElement('div');
-                    message.textContent = tauntMessages[Math.floor(Math.random() * tauntMessages.length)];
-                    message.style.fontSize = (Math.random() * 6 + 10) + 'px'; // 10-16px
-                    message.style.color = '#ff0000';
-                    message.style.fontWeight = 'bold';
-                    message.style.textShadow = '1px 1px 2px #000';
-                    message.style.marginTop = '5px';
-                    snowflake.appendChild(message);
-                } catch (imgError) {
-                    console.error('Error creating image snowflake:', imgError);
-                    // Fallback to text
-                    const message = tauntMessages[Math.floor(Math.random() * tauntMessages.length)];
-                    snowflake.textContent = message;
-                    snowflake.style.fontSize = (Math.random() * 10 + 14) + 'px';
-                }
-            } else {
-                // Just text message
-                const message = tauntMessages[Math.floor(Math.random() * tauntMessages.length)];
-                snowflake.textContent = message;
-                snowflake.style.fontSize = (Math.random() * 10 + 14) + 'px'; // 14-24px
-            }
-            
+            // Taunt message
+            const message = tauntMessages[Math.floor(Math.random() * tauntMessages.length)];
+            snowflake.textContent = message;
+            snowflake.style.fontSize = (Math.random() * 10 + 14) + 'px'; // 14-24px
+
             // Random starting position
             snowflake.style.left = Math.random() * 100 + '%';
             snowflake.style.animationDuration = (Math.random() * 3 + 2) + 's'; // 2-5 seconds
@@ -6352,12 +5613,6 @@ function resetToLanding() {
         // Hide overlays
         aiMockOverlay.classList.add('hidden');
 
-        // Stop camera streaming and recording
-        try { stopVideoRecording(); } catch(_) {}
-        try { stopCamera(); } catch(_) {}
-        
-        // Stop camera status updates
-        stopCameraStatusUpdates();
 
         // Reset UI
         welcomeScreen.classList.add('active');
@@ -6404,7 +5659,7 @@ function resetToLanding() {
         
         resetBtn.style.display = 'none';
 
-        // Ensure start button state reflects camera status
+        // Ensure start button state reflects the name field
         updateStartButtonState();
     } catch (e) {
         console.error('Error resetting to landing page:', e);
@@ -6474,56 +5729,11 @@ if (mockNoBtn) {
     });
 }
 
-// 7th Loss: Capture video frame and use as background with teasing
+// 7th Loss: Tease the player using their own loss record
 function activateSeventhLossTeasing() {
     gameState.inInteractiveMode = true;
     gameState.gameActive = false;
-    
-    // Capture frame from video feed
-    const videoElement = cameraFeed;
-    const canvas = document.createElement('canvas');
-    const ctx = canvas.getContext('2d');
-    
-    if (videoElement && videoElement.videoWidth > 0 && videoElement.videoHeight > 0) {
-        canvas.width = videoElement.videoWidth;
-        canvas.height = videoElement.videoHeight;
-        ctx.drawImage(videoElement, 0, 0, canvas.width, canvas.height);
-        
-        // Convert to data URL
-        const imageData = canvas.toDataURL('image/jpeg', 0.8);
-        
-        // Set as background
-        document.body.style.backgroundImage = `url(${imageData})`;
-        document.body.style.backgroundSize = 'cover';
-        document.body.style.backgroundPosition = 'center';
-        document.body.style.backgroundRepeat = 'no-repeat';
-        document.body.style.backgroundAttachment = 'fixed';
-        
-        // Add overlay for readability
-        if (!document.getElementById('seventh-loss-overlay')) {
-            const overlay = document.createElement('div');
-            overlay.id = 'seventh-loss-overlay';
-            overlay.style.cssText = `
-                position: fixed;
-                top: 0;
-                left: 0;
-                width: 100%;
-                height: 100%;
-                background: rgba(0, 0, 0, 0.4);
-                z-index: 1;
-                pointer-events: none;
-            `;
-            document.body.appendChild(overlay);
-        }
-        
-        // Make sure game content is above overlay
-        const container = document.querySelector('.container');
-        if (container) {
-            container.style.position = 'relative';
-            container.style.zIndex = '10';
-        }
-    }
-    
+
     // Teasing messages with player name
     const teasingMessages = [
         `Look at that face, ${gameState.playerName}! 7 losses and you're STILL trying?`,
@@ -6566,14 +5776,6 @@ function activateSeventhLossTeasing() {
         gameState.inInteractiveMode = false;
         messageBox.style.cssText = '';
         
-        // Keep background but fade overlay after a delay
-        setTimeout(() => {
-            const overlay = document.getElementById('seventh-loss-overlay');
-            if (overlay) {
-                overlay.style.opacity = '0.2'; // Keep slight overlay for readability
-                overlay.style.transition = 'opacity 2s';
-            }
-        }, 5000);
         
         // Reset game
         setTimeout(() => {
@@ -7188,12 +6390,6 @@ resetBtn.addEventListener('click', () => {
         }, thinkingDelay);
     }
     
-    // Ensure camera is still active
-        try {
-    monitorCameraStatus();
-        } catch (cameraError) {
-            console.error('Error monitoring camera (continued):', cameraError);
-        }
     
     // Emit board update
         try {
@@ -7220,18 +6416,6 @@ resetBtn.addEventListener('click', () => {
     }
 });
 
-// Clean up camera when page is unloaded
-window.addEventListener('beforeunload', () => {
-    stopCamera();
-});
-
-// Clean up camera when game screen is hidden (going back to welcome)
-window.addEventListener('visibilitychange', () => {
-    if (document.hidden && gameState.cameraStream) {
-        // Camera is still active but page is hidden - this is normal
-        // We don't stop the camera here as user might just switch tabs
-    }
-}); 
 
 // Handle mock button clicks
 if (mockYesBtn) {

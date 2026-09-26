@@ -8,11 +8,11 @@ import react from '@vitejs/plugin-react'
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 
 /**
- * Repo-root game (Vanilla index.html + script.js) — same-origin under `/play/` so SPA can hand off via sessionStorage.
+ * The vanilla game (index.html + script.js) lives in `public/` — same-origin under `/play/` so SPA can hand off via sessionStorage.
  * Use `/play/index.html`; prefer this over hosting the standalone file from another origin.
  */
 function legacyPlayPlugin(): Plugin {
-  const repoRoot = path.resolve(__dirname, '..')
+  const publicDir = path.resolve(__dirname, 'public')
   return {
     name: 'legacy-play-repo-root',
     configureServer(server) {
@@ -31,7 +31,7 @@ function legacyPlayPlugin(): Plugin {
         }
         next()
       })
-      server.middlewares.use('/play', sirv(repoRoot, { dev: true }))
+      server.middlewares.use('/play', sirv(publicDir, { dev: true }))
     },
     configurePreviewServer(server) {
       server.middlewares.use((req, res, next) => {
@@ -49,7 +49,7 @@ function legacyPlayPlugin(): Plugin {
         }
         next()
       })
-      server.middlewares.use('/play', sirv(repoRoot, { dev: true }))
+      server.middlewares.use('/play', sirv(publicDir, { dev: true }))
     },
   }
 }

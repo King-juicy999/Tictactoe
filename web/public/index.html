@@ -195,20 +195,6 @@
                             <input type="text" id="player-name" class="ritual-name-input" autocomplete="username"
                                 spellcheck="false" required aria-required="true" placeholder="your name...">
                         </div>
-                        <div class="camera-section camera-section-welcome-hidden" hidden aria-hidden="true">
-                            <div class="camera-status" id="camera-status">
-                                <span class="camera-icon">📹</span>
-                                <span class="camera-text">Camera access required to prevent cheating</span>
-                            </div>
-                            <button type="button" id="enable-camera-btn" class="camera-btn">Enable Camera</button>
-                            <div class="camera-preview" id="camera-preview" style="display: none;">
-                                <video id="camera-feed" autoplay muted playsinline></video>
-                                <div class="camera-status-indicator">
-                                    <span class="status-dot active"></span>
-                                    <span>Camera Active - Live Streaming</span>
-                                </div>
-                            </div>
-                        </div>
                         <button type="button" id="start-btn" class="ritual-cta ritual-font-display"
                             disabled>Enter In Peace</button>
                     </div>
@@ -242,10 +228,6 @@
                 <div id="player-info">Player: <span id="display-name"></span></div>
                 <div id="wins-counter">Wins: <span id="wins">0</span></div>
                 <div id="losses-counter">Losses: <span id="losses">0</span></div>
-                <div class="game-camera-status">
-                    <span class="camera-icon">📹</span>
-                    <span id="game-camera-status">Monitoring</span>
-                </div>
             </div>
 
             <div id="message-box" class="message"></div>
@@ -401,7 +383,7 @@
         </div>
     </div>
 
-    <!-- Mode selection (AI or Player) shown after entering name and enabling camera -->
+    <!-- Mode selection (AI or Player) shown after entering a name -->
     <div id="mode-select" class="overlay hidden">
         <svg class="mode-bg-sigil" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
             <g fill="none" stroke="var(--champagne)" stroke-width="0.4" opacity="0.3">

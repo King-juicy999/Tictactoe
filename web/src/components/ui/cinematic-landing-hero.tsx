@@ -45,8 +45,8 @@ export function AngelicCinematicHero({
     <>
       <span className="text-white font-semibold">Angelic</span> is a
       psychological tic-tac-toe engine that learns your opening patterns,
-      counters your strategy, and escalates with every loss. Power-ups. Camera
-      anti-cheat. No second chances.
+      counters your strategy, and escalates with every loss. Power-ups. No second
+      chances.
     </>
   ),
   metricValue = 5,

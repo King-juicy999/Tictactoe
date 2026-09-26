@@ -405,83 +405,6 @@ button:disabled:hover {
     flex-wrap: wrap;
 }
 
-.camera-section {
-    margin: 1rem 0;
-    padding: 1rem;
-    background: rgba(255, 255, 255, 0.5);
-    border: 2px solid var(--primary-color);
-    border-radius: 10px;
-    text-align: center;
-}
-
-.camera-status {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 0.5rem;
-    margin-bottom: 1rem;
-    font-size: 1rem;
-    color: #5a4a00;
-}
-
-.camera-icon {
-    font-size: 1.2rem;
-}
-
-.camera-btn {
-    background: #4CAF50;
-    color: white;
-    padding: 0.8rem 1.5rem;
-    font-size: 1.1rem;
-    border: none;
-    border-radius: 8px;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    margin-bottom: 1rem;
-}
-
-.camera-btn:hover {
-    background: #45a049;
-    transform: translateY(-1px);
-}
-
-.camera-btn:disabled {
-    background: #cccccc;
-    cursor: not-allowed;
-    transform: none;
-}
-
-.camera-preview {
-    position: relative;
-    max-width: 200px;
-    margin: 0 auto;
-    border-radius: 10px;
-    overflow: hidden;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
-}
-
-#camera-feed {
-    width: 100%;
-    height: 150px;
-    object-fit: cover;
-    background: #f0f0f0;
-}
-
-.camera-status-indicator {
-    position: absolute;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    background: rgba(0, 0, 0, 0.7);
-    color: white;
-    padding: 0.5rem;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 0.5rem;
-    font-size: 0.9rem;
-}
-
 .status-dot {
     width: 8px;
     height: 8px;
@@ -504,14 +427,6 @@ button:disabled:hover {
     50% {
         opacity: 0.5;
     }
-}
-
-.game-camera-status {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    font-size: 1rem;
-    color: #4CAF50;
 }
 
 .message {
@@ -848,47 +763,6 @@ button:disabled:hover {
         min-height: 64px;
         border-radius: 12px;
         border-width: 3px;
-    }
-
-    .camera-section {
-        margin: 2rem 0;
-        padding: 1.5rem;
-        border-radius: 16px;
-        border-width: 3px;
-    }
-
-    .camera-status {
-        font-size: 1.3rem;
-        margin-bottom: 1.25rem;
-        font-weight: 500;
-    }
-
-    .camera-btn {
-        padding: 1.25rem 2rem;
-        font-size: 1.4rem;
-        min-height: 60px;
-        font-weight: 600;
-        border-radius: 12px;
-    }
-
-    .camera-preview {
-        max-width: 280px;
-        margin: 1rem auto;
-    }
-
-    #camera-feed {
-        height: 210px;
-    }
-
-    .camera-status-indicator {
-        padding: 1rem;
-        font-size: 1.1rem;
-        font-weight: 500;
-    }
-
-    .game-camera-status {
-        font-size: 1.3rem;
-        font-weight: 500;
     }
 
     #reset-btn {
@@ -1804,39 +1678,6 @@ button:disabled:hover {
         /* MVP: Reduced spacing */
     }
 
-    .camera-section {
-        padding: 1.25rem;
-        margin: 1.75rem 0;
-    }
-
-    .camera-status {
-        font-size: 1.2rem;
-        flex-wrap: wrap;
-        text-align: center;
-        margin-bottom: 1.25rem;
-        font-weight: 500;
-    }
-
-    .camera-btn {
-        padding: 1.15rem 1.75rem;
-        font-size: 1.3rem;
-        min-height: 58px;
-        font-weight: 600;
-    }
-
-    .camera-preview {
-        max-width: 240px;
-    }
-
-    #camera-feed {
-        height: 180px;
-    }
-
-    .game-camera-status {
-        font-size: 1.2rem;
-        font-weight: 500;
-    }
-
     .sharingan {
         width: 300px;
         height: 300px;
@@ -1937,35 +1778,6 @@ button:disabled:hover {
         font-weight: 600;
         margin: clamp(0.4rem, 2vw, 0.6rem) 0;
         /* MVP: Minimal spacing */
-    }
-
-    .camera-section {
-        padding: 1.15rem;
-        margin: 1.5rem 0;
-    }
-
-    .camera-status {
-        font-size: 1.1rem;
-        margin-bottom: 1.15rem;
-    }
-
-    .camera-btn {
-        font-size: 1.2rem;
-        padding: 1.1rem 1.6rem;
-        min-height: 55px;
-        font-weight: 600;
-    }
-
-    .camera-preview {
-        max-width: 220px;
-    }
-
-    #camera-feed {
-        height: 165px;
-    }
-
-    .game-camera-status {
-        font-size: 1.15rem;
     }
 
     .sharingan {
@@ -2625,10 +2437,6 @@ button:disabled:hover {
     margin: 0 auto;
     gap: 0.45rem;
     text-align: left;
-}
-
-#welcome-screen.ritual-welcome-screen .camera-section-welcome-hidden {
-    display: none !important;
 }
 
 .ritual-name-label {

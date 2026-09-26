@@ -4,7 +4,6 @@ const path = require('path');
 const fs = require('fs');
 const cors = require('cors');
 const { Server } = require('socket.io');
-const { getRTCConfiguration } = require('./webrtc-config');
 
 const app = express();
 const server = http.createServer(app);
@@ -62,7 +61,7 @@ function resolvePlayerKey(players, nameInput) {
 app.use(cors());
 app.use(express.json());
 
-/** Bundled Socket.IO client for admin + static pages (same path as Vercel `web/public/socket.io.min.js`). */
+/** Bundled Socket.IO client for static pages (same path as Vercel `web/public/socket.io.min.js`). */
 app.get('/socket.io.min.js', (req, res) => {
     res.sendFile(
         path.join(__dirname, 'node_modules', 'socket.io', 'client-dist', 'socket.io.min.js'),
@@ -71,11 +70,6 @@ app.get('/socket.io.min.js', (req, res) => {
 
 // Serve the static frontend from project root
 app.use(express.static(path.join(__dirname, '..')));
-
-// Friendly admin route
-app.get('/admin', (req, res) => {
-    res.sendFile(path.join(__dirname, '..', 'admin.html'));
-});
 
 app.get('/api/stats', (req, res) => {
     const db = readDb();
@@ -230,198 +224,42 @@ app.delete('/api/player/:name', (req, res) => {
 
 // Track presence (socket -> name)
 const socketIdToName = new Map();
-// Track WebRTC connections: playerName -> { socketId, peerConnection }
-const webrtcConnections = new Map();
 // Map player name -> socket id for matchmaking and invites
 const nameToSocketId = new Map();
-// Track admin connections
-const adminConnections = new Set();
 
 io.on('connection', (socket) => {
     socket.emit('hello', { message: 'connected' });
-    
-    // WebRTC Signaling for video streaming
-    socket.on('webrtc-offer', async (data) => {
-        const { offer, playerName } = data;
-        if (!offer || !playerName) {
-            console.error('Invalid WebRTC offer data:', data);
-            return;
-        }
-        
-        console.log(`WebRTC offer received from player: ${playerName}, Socket ID: ${socket.id}`);
-        
-        // Store player's WebRTC connection
-        webrtcConnections.set(playerName, {
-            socketId: socket.id,
-            playerName: playerName,
-            createdAt: Date.now()
-        });
-        
-        // Forward offer to all admin connections
-        if (adminConnections.size === 0) {
-            console.log('WARNING: No admin connections registered. Offer will not be forwarded.');
-        }
-        
-        adminConnections.forEach(adminSocketId => {
-            console.log(`Forwarding offer to admin: ${adminSocketId}`);
-            io.to(adminSocketId).emit('webrtc-offer', {
-                offer: offer,
-                playerName: playerName,
-                socketId: socket.id
-            });
-        });
-        
-        console.log(`WebRTC offer forwarded to ${adminConnections.size} admin(s)`);
-    });
-    
-    socket.on('webrtc-answer', (data) => {
-        const { answer, playerSocketId } = data;
-        if (!answer || !playerSocketId) return;
-        
-        // Forward answer back to player
-        io.to(playerSocketId).emit('webrtc-answer', { answer });
-        console.log(`WebRTC answer sent to player: ${playerSocketId}`);
-    });
-    
-    socket.on('webrtc-ice-candidate', (data) => {
-        const { candidate, targetSocketId, playerName } = data;
-        if (!candidate) return;
-        
-        if (targetSocketId) {
-            // Forward ICE candidate to specific target
-            io.to(targetSocketId).emit('webrtc-ice-candidate', {
-                candidate: candidate,
-                playerName: playerName
-            });
-        } else {
-            // Broadcast to all admins if no specific target
-            adminConnections.forEach(adminSocketId => {
-                io.to(adminSocketId).emit('webrtc-ice-candidate', {
-                    candidate: candidate,
-                    playerName: playerName
-                });
-            });
-        }
-    });
-    
-    // Admin registration for WebRTC
-    socket.on('admin-register', () => {
-        adminConnections.add(socket.id);
-        console.log(`Admin registered: ${socket.id}`);
-        console.log(`Total admin connections: ${adminConnections.size}`);
-        
-        // Send list of active player streams
-        const activeStreams = Array.from(webrtcConnections.entries()).map(([name, conn]) => ({
-            playerName: name,
-            socketId: conn.socketId
-        }));
-        socket.emit('active-streams', activeStreams);
-        console.log(`Sent ${activeStreams.length} active streams to admin`);
-    });
-    
-    // Request to watch a specific player's stream
-    socket.on('request-player-stream', (data) => {
-        const { playerName } = data;
-        if (!playerName) return;
-        
-        const connection = webrtcConnections.get(playerName);
-        if (connection) {
-            socket.emit('player-stream-available', {
-                playerName: playerName,
-                socketId: connection.socketId
-            });
-        } else {
-            socket.emit('player-stream-unavailable', { playerName });
-        }
-    });
 
-    // Admin control passthrough
-    socket.on('admin-control', (payload) => {
-        // Forward to specific player if targetPlayer is specified
-        if (payload.targetPlayer) {
-            // Find socket ID for target player
-            const targetSocket = Array.from(io.sockets.sockets.values())
-                .find(s => s.playerName === payload.targetPlayer);
-            if (targetSocket) {
-                targetSocket.emit('control', payload);
-            } else {
-                // Fallback: broadcast to all (player will filter)
-                io.emit('control', payload);
-            }
-        } else {
-            io.emit('control', payload);
-        }
-    });
-    
-    // Power-up event forwarding to admins
+    // Power-up event broadcasting
     socket.on('powerup-event', (payload) => {
-        adminConnections.forEach(adminSocketId => {
-            io.to(adminSocketId).emit('powerup-event', payload);
-        });
+        io.emit('powerup-event', payload);
     });
 
     // Spectate: rebroadcast board snapshots
     socket.on('board-update', (payload) => {
         io.emit('spectate', payload);
-        // Also broadcast to admins with full details
-        adminConnections.forEach(adminSocketId => {
-            io.to(adminSocketId).emit('board-update', payload);
-        });
+        io.emit('board-update', payload);
     });
-    
-    // Interactive mode events - notify admins
+
+    // Interactive mode events
     socket.on('interactive-mode-start', (payload) => {
         console.log(`Interactive mode started for ${payload.name} (${payload.losses} losses)`);
-        adminConnections.forEach(adminSocketId => {
-            io.to(adminSocketId).emit('interactive-mode-start', payload);
-        });
+        io.emit('interactive-mode-start', payload);
     });
-    
+
     socket.on('interactive-mode-end', (payload) => {
         console.log(`Interactive mode ended for ${payload.name}`);
-        adminConnections.forEach(adminSocketId => {
-            io.to(adminSocketId).emit('interactive-mode-end', payload);
-        });
+        io.emit('interactive-mode-end', payload);
     });
-    
+
     socket.on('interactive-mode-choice', (payload) => {
         console.log(`${payload.name} chose ${payload.choice} in interactive mode`);
-        adminConnections.forEach(adminSocketId => {
-            io.to(adminSocketId).emit('interactive-mode-choice', payload);
-        });
+        io.emit('interactive-mode-choice', payload);
     });
 
     // Spectate: rebroadcast jumpscare notifications from clients
     socket.on('client-jumpscare', (payload) => {
         io.emit('spectate-jumpscare', payload);
-    });
-
-    // Camera feed streaming
-    socket.on('camera-feed', (payload) => {
-        io.emit('camera-feed', payload);
-    });
-
-    // Live camera feed streaming (30 FPS)
-    socket.on('live-camera-feed', (payload) => {
-        io.emit('live-camera-feed', payload);
-    });
-
-    // Camera status updates
-    socket.on('camera-status', (payload) => {
-        io.emit('camera-status', payload);
-    });
-    
-    // Periodic camera status updates from players (every 3 seconds)
-    socket.on('camera-status-update', (payload) => {
-        // Forward to all admin connections
-        adminConnections.forEach(adminSocketId => {
-            io.to(adminSocketId).emit('camera-status-update', payload);
-        });
-    });
-
-    // Test message handler
-    socket.on('test-message', (payload) => {
-        io.emit('test-message', payload);
     });
 
     // Behavior analysis data handler
@@ -526,7 +364,7 @@ io.on('connection', (socket) => {
         
         writeDb(db);
         
-        // Broadcast to admins
+        // Broadcast to all connected clients
         io.emit('ai-move', payload);
     });
     
@@ -563,7 +401,7 @@ io.on('connection', (socket) => {
         
         writeDb(db);
         
-        // Broadcast to admins
+        // Broadcast to all connected clients
         io.emit('ai-stats-update', payload);
     });
 
@@ -644,19 +482,6 @@ io.on('connection', (socket) => {
         const name = socketIdToName.get(socket.id);
         socketIdToName.delete(socket.id);
         if (name) nameToSocketId.delete(name);
-        adminConnections.delete(socket.id);
-        
-        // Clean up WebRTC connections
-        for (const [playerName, conn] of webrtcConnections.entries()) {
-            if (conn.socketId === socket.id) {
-                webrtcConnections.delete(playerName);
-                // Notify admins that stream ended
-                adminConnections.forEach(adminSocketId => {
-                    io.to(adminSocketId).emit('player-stream-ended', { playerName });
-                });
-                break;
-            }
-        }
         // Broadcast updated lobby player list to all connected clients
         const players = Array.from(nameToSocketId.keys()).map(n => ({ name: n }));
         io.emit('lobby-players', players);

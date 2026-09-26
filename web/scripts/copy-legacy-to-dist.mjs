@@ -7,14 +7,15 @@ import { fileURLToPath } from 'node:url'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const webRoot = path.resolve(__dirname, '..')
-const repoRoot = path.resolve(webRoot, '..')
+const publicDir = path.join(webRoot, 'public')
 const distPlay = path.join(webRoot, 'dist', 'play')
 
-const rootFiles = [
+const publicFiles = [
   'styles.css',
   'script.js',
   'guidebook-cinematic.js',
   'animations.js',
+  'angelic-socket-config.js',
   'madara.webp',
   'demon.avif',
   'button.mp3',
@@ -26,19 +27,12 @@ const rootFiles = [
   'blackbear - hot girl bummer [Low Budget Video](MP3_128K)_[cut_2sec].mp3',
 ]
 
-const socketClient = path.join(
-  repoRoot,
-  'server',
-  'node_modules',
-  'socket.io',
-  'client-dist',
-  'socket.io.min.js',
-)
+const socketClient = path.join(publicDir, 'socket.io.min.js')
 
 fs.mkdirSync(distPlay, { recursive: true })
 
-for (const f of rootFiles) {
-  const src = path.join(repoRoot, f)
+for (const f of publicFiles) {
+  const src = path.join(publicDir, f)
   if (fs.existsSync(src)) {
     fs.copyFileSync(src, path.join(distPlay, f))
   }
@@ -47,7 +41,7 @@ for (const f of rootFiles) {
 const serverOut = path.join(distPlay, 'server')
 fs.mkdirSync(serverOut, { recursive: true })
 for (const f of ['behavior_analyzer.js', 'ai_learning.js']) {
-  const src = path.join(repoRoot, 'server', f)
+  const src = path.join(publicDir, 'server', f)
   if (fs.existsSync(src)) fs.copyFileSync(src, path.join(serverOut, f))
 }
 
@@ -55,14 +49,7 @@ if (fs.existsSync(socketClient)) {
   fs.copyFileSync(socketClient, path.join(distPlay, 'socket.io.min.js'))
 }
 
-const socketCfgRepo = path.join(repoRoot, 'angelic-socket-config.js')
-const socketCfgPublic = path.join(webRoot, 'public', 'angelic-socket-config.js')
-const socketCfgSrc = fs.existsSync(socketCfgRepo) ? socketCfgRepo : socketCfgPublic
-if (fs.existsSync(socketCfgSrc)) {
-  fs.copyFileSync(socketCfgSrc, path.join(distPlay, 'angelic-socket-config.js'))
-}
-
-const indexSrc = path.join(repoRoot, 'index.html')
+const indexSrc = path.join(publicDir, 'index.html')
 let html = fs.readFileSync(indexSrc, 'utf8')
 html = html.replace(
   '<script src="/socket.io/socket.io.js"></script>',
